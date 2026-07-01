@@ -1,0 +1,355 @@
+using Godot;
+using ProceduralRts.Controllers;
+using ProceduralRts.Core;
+using ProceduralRts.Ui;
+using ProceduralRts.World;
+
+namespace ProceduralRts;
+
+public partial class BattleRoot
+{
+    private void OnStatusChanged(string status)
+    {
+        _hud.SetStatus(status);
+        AddStatusAlert(status);
+    }
+
+    private void AddCommandAcknowledgement(CommandAcknowledgementKind kind, Vector2 position)
+    {
+        _commandAcknowledgements.Add(kind, position);
+    }
+
+    private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
+    {
+        foreach (var death in deaths)
+        {
+            if (!_unitViews.Remove(death.Id, out var view))
+            {
+                continue;
+            }
+
+            var style = UnitDeathSpecReadPathFor(death);
+            _combatEffects.AddUnitDeath(style.Death, style.EffectAccent);
+
+            view.QueueFree();
+        }
+    }
+
+    private void OnUnitInstancesRemoved(IReadOnlyList<UnitInstanceDeathInfo> deaths)
+    {
+        foreach (var death in deaths)
+        {
+            if (_unitInstanceViews.Remove(death.Id, out var view))
+            {
+                view.QueueFree();
+            }
+
+            _combatEffects.AddUnitDeath(death, UnitFactionAccent(death.Faction, death.PlayerSlotId));
+        }
+    }
+
+    private void OnUnitInstanceAttacked(UnitInstance target, UnitInstance attacker)
+    {
+        _combatEffects.AddImpactFlash(
+            target.Position,
+            target.Spec.Collision.Radius,
+            UnitFactionAccent(target.Spec.Faction, target.PlayerSlotId),
+            target.Spec.Stats.WeightClass,
+            target.Spec.Movement.Domain,
+            target.LastDamageAmount,
+            target.LastDamageAmmoKind);
+
+        if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
+        {
+            return;
+        }
+
+        AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", target.Spec.Label), target.Position);
+        PlayAudioCue(TacticalAudioCue.Alert);
+    }
+
+    private void OnUnitInstanceAttackedByBuilding(UnitInstance target, UnitBattlefieldBuildingSnapshot attacker)
+    {
+        _combatEffects.AddImpactFlash(
+            target.Position,
+            target.Spec.Collision.Radius,
+            UnitFactionAccent(target.Spec.Faction, target.PlayerSlotId),
+            target.Spec.Stats.WeightClass,
+            target.Spec.Movement.Domain,
+            target.LastDamageAmount,
+            target.LastDamageAmmoKind);
+
+        if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
+        {
+            return;
+        }
+
+        AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", target.Spec.Label), target.Position);
+        PlayAudioCue(TacticalAudioCue.Alert);
+    }
+
+    private void OnUnitBattlefieldBuildingAttacked(UnitBattlefieldBuildingSnapshot target, UnitInstance attacker)
+    {
+        var spec = BuildSpecCatalog.For(target.Kind);
+        if (_state.BuildingById(target.Id) is { } building)
+        {
+            building.Hp = target.Hp;
+            building.HitPulse = 1;
+        }
+
+        _combatEffects.AddImpactFlash(
+            target.Position,
+            Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
+            UnitFactionAccent(target.Faction, target.PlayerSlotId),
+            UnitWeightClass.Heavy,
+            MovementDomain.Land);
+        if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"building-attack:{target.Id}", CombatAlertCooldown))
+        {
+            return;
+        }
+
+        AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", BuildSpecCatalog.For(target.Kind).Label), target.Position);
+        PlayAudioCue(TacticalAudioCue.Alert);
+    }
+
+    private void OnUnitBattlefieldBuildingsRemoved(IReadOnlyList<UnitBattlefieldBuildingDeathInfo> deaths)
+    {
+        foreach (var death in deaths)
+        {
+            var building = _state.BuildingById(death.Id);
+            if (building is not null)
+            {
+                building.Hp = 0;
+            }
+
+            if (_buildingViews.Remove(death.Id, out var view))
+            {
+                if (death.PlayerSlotId == PlayerSlotId.One)
+                {
+                    AddAlert(AlertKind.Building, GameText.Format("ui.building.destroyed", BuildSpecCatalog.For(death.Kind).Label), death.Position);
+                    if (death.Kind == BuildingDesignIds.PowerPlant)
+                    {
+                        UpdatePowerAlert(true);
+                    }
+                }
+
+                view.QueueFree();
+            }
+        }
+    }
+
+    private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
+    {
+        OnOutcomeChanged(outcome);
+    }
+
+    private void OnBuildingsRemoved(IReadOnlyList<int> buildingIds)
+    {
+        foreach (var id in buildingIds)
+        {
+            _unitBattlefield.RemoveBuildingTarget(id);
+            if (!_buildingViews.Remove(id, out var view))
+            {
+                continue;
+            }
+
+            if (view.Building.Owner == ProceduralRts.Core.Owner.Player)
+            {
+                AddAlert(AlertKind.Building, GameText.Format("ui.building.destroyed", BuildSpecCatalog.For(view.Building.Kind).Label), view.Building.Position);
+                if (view.Building.Kind == BuildingDesignIds.PowerPlant)
+                {
+                    UpdatePowerAlert(true);
+                }
+            }
+
+            view.QueueFree();
+        }
+    }
+
+    private void OnProductionCompleted(BuildingModel building, CompletedProductionItem completed)
+    {
+        if (UseUnitDesignRuntime)
+        {
+            return;
+        }
+
+        var spec = UnitDesignCatalog.Spec(completed.DesignId);
+        _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
+        _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
+        AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
+        PlayAudioCue(TacticalAudioCue.Production);
+        RefreshCommandCard();
+    }
+
+    private void OnUnitBattlefieldProductionCompleted(UnitBattlefieldBuildingSnapshot building, UnitProductionQueueItem item, UnitInstance unit)
+    {
+        AddUnitInstanceView(unit);
+        var spec = UnitDesignCatalog.Spec(item.DesignId);
+        _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
+        _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
+        AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
+        PlayAudioCue(TacticalAudioCue.Production);
+        RefreshCommandCard();
+    }
+
+    private void OnProductionRequested(ProductionKind productionKind)
+    {
+        _unitBattlefield.EnqueueProduction(productionKind, PlayerSlotId.One, out var status);
+        _hud.SetStatus(status);
+        _hud.SetProductionStatus(status);
+        AddStatusAlert(status);
+        RefreshCommandCard();
+    }
+
+    private void OnProductionDesignRequested(string designId)
+    {
+        _unitBattlefield.EnqueueProductionDesign(designId, PlayerSlotId.One, out var status);
+        _hud.SetStatus(status);
+        _hud.SetProductionStatus(status);
+        AddStatusAlert(status);
+        RefreshCommandCard();
+    }
+
+    private void OnProductionStatusChanged(string status)
+    {
+        _hud.SetProductionStatus(status);
+        AddStatusAlert(status);
+    }
+
+    private void OnResourceInventoryChanged(ProceduralRts.Core.Owner owner, ResourceInventory inventory)
+    {
+        if (UseUnitDesignRuntime && !_syncingResourceInventories)
+        {
+            _syncingResourceInventories = true;
+            _unitBattlefield.SetCredits(PlayerSlotForOwner(owner), inventory.Credits);
+            _syncingResourceInventories = false;
+        }
+
+        if (owner != ProceduralRts.Core.Owner.Player)
+        {
+            return;
+        }
+
+        _hud.SetResourceCredits(inventory.Credits);
+        RefreshCommandCard();
+    }
+
+    private void OnUnitBattlefieldResourceInventoryChanged(PlayerSlotId playerSlotId, ResourceInventory inventory)
+    {
+        if (UseUnitDesignRuntime && !_syncingResourceInventories && OwnerForPlayerSlot(playerSlotId) is { } owner)
+        {
+            _syncingResourceInventories = true;
+            _state.SetCredits(owner, inventory.Credits);
+            _syncingResourceInventories = false;
+        }
+
+        if (playerSlotId != PlayerSlotId.One)
+        {
+            return;
+        }
+
+        _hud.SetResourceCredits(inventory.Credits);
+        RefreshCommandCard();
+    }
+
+    private void OnMinimapJumpRequested(Vector2 worldPoint)
+    {
+        _camera.FocusOnWorldPoint(worldPoint);
+        RefreshViewCulling();
+        _hud.SetStatus(GameText.Format("ui.camera.moved", worldPoint.X, worldPoint.Y));
+    }
+
+    private void OnMoveModeRequested(MoveCommandMode mode)
+    {
+        _selection.SetMoveCommandMode(mode);
+        _hud.SetMoveCommandMode(mode);
+        _hud.SetStatus(mode switch
+        {
+            MoveCommandMode.Attack => GameText.T("move.attack"),
+            MoveCommandMode.Ignore => GameText.T("move.ignore"),
+            _ => GameText.T("move.direct"),
+        });
+        PlayAudioCue(mode == MoveCommandMode.Attack ? TacticalAudioCue.Attack : TacticalAudioCue.Move);
+    }
+
+    private void OnUnitStanceRequested(UnitStance stance)
+    {
+        if (_unitBattlefield.SelectedCount(PlayerSlotId.One) > 0)
+        {
+            var changed = _unitBattlefield.CommandSetSelectedStance(PlayerSlotId.One, stance);
+            if (changed == 0)
+            {
+                _hud.SetStatus(GameText.T("stance.selectRequired"));
+                PlayAudioCue(TacticalAudioCue.Invalid);
+                return;
+            }
+
+            _hud.SetSelectedUnitStance(stance);
+            _hud.SetStatus(GameText.Format("stance.changed", changed, StanceLabel(stance)));
+            PlayAudioCue(TacticalAudioCue.Selection);
+            return;
+        }
+
+        var selectedCount = _state.SelectedUnits().Count();
+        if (selectedCount == 0)
+        {
+            _hud.SetStatus(GameText.T("stance.selectRequired"));
+            PlayAudioCue(TacticalAudioCue.Invalid);
+            return;
+        }
+
+        _state.SetSelectedStance(stance);
+        _hud.SetSelectedUnitStance(stance);
+        _hud.SetStatus(GameText.Format("stance.changed", selectedCount, StanceLabel(stance)));
+        PlayAudioCue(TacticalAudioCue.Selection);
+    }
+
+    private void OnSettingsRequested()
+    {
+        _pauseMenu.SetPaused(true);
+        _pauseMenu.OpenSettings();
+    }
+
+    private void OnEntityAttacked(ProceduralRts.Core.Owner owner, FactionId factionId, Vector2 position, string label)
+    {
+        _combatEffects.AddImpactFlash(
+            position,
+            24,
+            _state.VisualAccent(owner, factionId, FactionCatalog.For(factionId).Accent),
+            UnitWeightClass.Medium,
+            MovementDomain.Land);
+
+        if (!FactionRelations.IsAllied(ProceduralRts.Core.Owner.Player, _state.MatchConfig.PlayerFaction, owner, factionId)
+            || !TryUseAlertCooldown($"attack:{label}", CombatAlertCooldown))
+        {
+            return;
+        }
+
+        AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", label), position);
+        PlayAudioCue(TacticalAudioCue.Alert);
+    }
+
+    private void OnOutcomeChanged(GameOutcome outcome)
+    {
+        if (outcome == GameOutcome.InProgress || _displayedOutcome != GameOutcome.InProgress)
+        {
+            return;
+        }
+
+        _displayedOutcome = outcome;
+        var detail = outcome == GameOutcome.Victory
+            ? GameText.T("ui.outcome.enemyHqDestroyed")
+            : GameText.T("ui.outcome.playerHqDestroyed");
+        _hud.SetOutcomeBanner(outcome, detail);
+        _hud.SetStatus(outcome == GameOutcome.Victory ? GameText.T("ui.status.victory") : GameText.T("ui.status.defeat"));
+        _pauseMenu.InputEnabled = false;
+        _outcomeScreen.ShowOutcome(outcome, detail);
+        PlayAudioCue(outcome == GameOutcome.Victory ? TacticalAudioCue.OutcomeVictory : TacticalAudioCue.OutcomeDefeat);
+        AddAlert(outcome == GameOutcome.Victory ? AlertKind.Production : AlertKind.Combat, detail);
+    }
+
+    private void PlayAudioCue(TacticalAudioCue cue)
+    {
+        _audio?.Play(cue);
+    }
+}

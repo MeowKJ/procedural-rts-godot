@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProceduralRts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CombatBehaviorCatalogs\**\*.cs" Link="CombatBehaviorCatalogs\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorCatalogDefinitions\**\*.cs" Link="CombatBehaviorCatalogDefinitions\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorLegacy\**\*.cs" Link="CombatBehaviorLegacy\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorLegacyBuildings\**\*.cs" Link="CombatBehaviorLegacyBuildings\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorPresentation\**\*.cs" Link="CombatBehaviorPresentation\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorPresentationRelations\**\*.cs" Link="CombatBehaviorPresentationRelations\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorPresentationSelection\**\*.cs" Link="CombatBehaviorPresentationSelection\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorProduction\**\*.cs" Link="CombatBehaviorProduction\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorProductionEconomy\**\*.cs" Link="CombatBehaviorProductionEconomy\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorProductionPresentation\**\*.cs" Link="CombatBehaviorProductionPresentation\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorRuntime\**\*.cs" Link="CombatBehaviorRuntime\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorRuntimeUnits\**\*.cs" Link="CombatBehaviorRuntimeUnits\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CombatBehaviorSkirmish\**\*.cs" Link="CombatBehaviorSkirmish\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

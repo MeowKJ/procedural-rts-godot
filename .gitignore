@@ -1,0 +1,81 @@
+# Godot generated files
+.godot/
+.import/
+.mono/
+export.cfg
+*.translation
+
+# Keep Godot source metadata tracked:
+# - *.import files are asset import settings
+# - *.uid files are stable resource/script identifiers
+
+# Godot export/build output
+builds/**
+!builds/
+!builds/**/
+!builds/**/.gitkeep
+*.pck
+*.apk
+*.aab
+*.ipa
+
+# Local QA and generated artifacts
+artifacts/
+captures/
+screenshots/
+recordings/
+
+# Review records and TODO archives are part of reproducible planning evidence.
+docs/*COMPLETION_NOTE*.md
+
+# .NET / C# build output
+[Bb]in/
+[Oo]bj/
+TestResults/
+coverage/
+coverage*/
+*.coverage
+*.coveragexml
+*.trx
+*.nupkg
+*.snupkg
+packages/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.csproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Local assistant/editor settings
+.claude/settings.local.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*~
+.cache/
+tmp/
+temp/
+
+# OS metadata
+.DS_Store
+._*
+.Spotlight-V100/
+.Trashes/
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

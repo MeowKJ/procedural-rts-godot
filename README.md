@@ -1,0 +1,65 @@
+# Procedural RTS Godot
+
+Desktop RTS prototype built with Godot 4.7 Mono and C#.
+
+## Run
+
+Open this folder in Godot 4.7 Mono:
+
+```powershell
+& "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7-stable_mono_win64\Godot_v4.7-stable_mono_win64.exe" --path .
+```
+
+Build C# from the command line:
+
+```powershell
+dotnet build .\ProceduralRts.csproj
+```
+
+Verify with Godot headless:
+
+```powershell
+& "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7-stable_mono_win64\Godot_v4.7-stable_mono_win64_console.exe" --headless --path . --scene res://scenes/Battle.tscn --quit-after 3
+```
+
+## Headless Linux Development
+
+The C# simulation and validation tools are cross-platform. On a headless Linux
+worker, install .NET 8 and Godot 4.7 Mono, then point `GODOT_BIN` at the Godot
+executable if it is not already on `PATH`.
+
+```sh
+export GODOT_BIN=/opt/godot/Godot_v4.7-stable_mono_linux.x86_64
+dotnet build ProceduralRts.csproj --no-restore
+sh tools/verify-all.sh
+```
+
+`tools/VerifyAll` also searches `godot`, `godot4`, `godot-mono`,
+`godot4-mono`, `Godot_v4.7-stable_mono_linux.x86_64`, and the Windows Godot
+Mono executable names on `PATH`.
+
+## Export
+
+The project includes a Windows export preset named `Windows Desktop`.
+
+```powershell
+& "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7-stable_mono_win64\Godot_v4.7-stable_mono_win64_console.exe" --headless --path . --export-release "Windows Desktop" .\builds\windows\ProceduralRTS.exe
+```
+
+Godot export templates must be installed locally before release export can produce the `.exe`.
+
+Run the export smoke script to build C#, validate `export_presets.cfg`, and export only when local Windows templates exist:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\ExportSmoke.ps1
+```
+
+## Current Prototype
+
+- Programmatic 2D grid
+- Procedural vector-like unit drawing
+- Player and enemy units
+- Camera movement and zoom
+- Drag selection
+- Right-click move commands
+- HUD shell

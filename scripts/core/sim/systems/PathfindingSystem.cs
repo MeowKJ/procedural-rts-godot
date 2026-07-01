@@ -1,0 +1,372 @@
+using Godot;
+
+namespace ProceduralRts.Core;
+
+/// <summary>
+/// Converts authoritative movement intents into deterministic waypoint paths
+/// before MovementSystem consumes them. It keeps dynamic-unit avoidance local to
+/// MovementSystem/SeparationSystem and plans only around static EntityWorld
+/// blockers such as buildings, using PathfindingMath's LOS simplification.
+/// </summary>
+public sealed class PathfindingSystem : ISimSystem
+{
+    private const float SamePointDistanceSquared = 1f;
+    private readonly float _cellSize;
+    private readonly List<GridObstacle> _obstacles = [];
+    private readonly HashSet<GridObstacle> _seenObstacles = [];
+    private readonly HashSet<int> _sharedPlanned = [];
+    private readonly Dictionary<SharedMoveKey, List<SharedMoveCandidate>> _sharedGroups = [];
+    private readonly List<SharedMoveKey> _sharedGroupKeys = [];
+    private readonly List<PathfindingCorridorMember> _sharedMembers = [];
+    private readonly Dictionary<int, PathfindingCorridorAssignment> _sharedAssignments = [];
+
+    public PathfindingSystem(float cellSize = 64f)
+    {
+        _cellSize = cellSize;
+    }
+
+    public void Step(SimContext context)
+    {
+        if (_cellSize <= 0)
+        {
+            return;
+        }
+
+        var world = context.World;
+        var sharedPlanned = PlanSharedCorridors(world);
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (sharedPlanned.Contains(entity.Id.Value))
+            {
+                continue;
+            }
+
+            if (!entity.Components.TryGet<MovementComponentState>(out var movement)
+                || !entity.Components.TryGet<MovementProfileComponentState>(out _))
+            {
+                entity.Components.Remove<PathfindingComponentState>();
+                continue;
+            }
+
+            if (entity.Components.TryGet<DeployComponentState>(out var deploy) && deploy.IsDeployed)
+            {
+                entity.Components.Remove<PathfindingComponentState>();
+                continue;
+            }
+
+            if (movement.MoveTarget is not { } moveTarget)
+            {
+                AdvanceOrClearPath(entity, movement);
+                continue;
+            }
+
+            if (entity.Components.TryGet<PathfindingComponentState>(out var path)
+                && IsFollowingCurrentPath(moveTarget, path))
+            {
+                continue;
+            }
+
+            PlanPath(world, entity, movement, moveTarget);
+        }
+    }
+
+    private HashSet<int> PlanSharedCorridors(EntityWorld world)
+    {
+        _sharedPlanned.Clear();
+        ClearSharedGroups();
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (!TryGetSharedMoveCandidate(world, entity, out var candidate))
+            {
+                continue;
+            }
+
+            var key = new SharedMoveKey(
+                entity.OwnerId.Value,
+                candidate.Domain,
+                Quantize(candidate.Intent.X),
+                Quantize(candidate.Intent.Y),
+                candidate.MoveMode);
+            if (!_sharedGroups.TryGetValue(key, out var group))
+            {
+                group = [];
+                _sharedGroups[key] = group;
+            }
+
+            if (group.Count == 0)
+            {
+                _sharedGroupKeys.Add(key);
+            }
+
+            group.Add(candidate);
+        }
+
+        foreach (var key in _sharedGroupKeys)
+        {
+            var group = _sharedGroups[key];
+            if (group.Count <= 1)
+            {
+                continue;
+            }
+
+            BuildStaticBlockers(world, movingEntityId: 0, group[0].Domain);
+            _sharedMembers.Clear();
+            foreach (var candidate in group)
+            {
+                _sharedMembers.Add(new PathfindingCorridorMember(
+                    candidate.Entity.Id.Value,
+                    candidate.Entity.Transform.Position.X,
+                    candidate.Entity.Transform.Position.Y,
+                    candidate.Slot.X,
+                    candidate.Slot.Y));
+            }
+
+            var corridor = PathfindingMath.FindSharedCorridor(
+                _sharedMembers,
+                group[0].Intent.X,
+                group[0].Intent.Y,
+                world.WorldWidth,
+                world.WorldHeight,
+                _cellSize,
+                _obstacles,
+                group[0].Domain,
+                []);
+            _sharedAssignments.Clear();
+            foreach (var assignment in corridor.Assignments)
+            {
+                _sharedAssignments[assignment.Id] = assignment;
+            }
+
+            foreach (var candidate in group)
+            {
+                if (!_sharedAssignments.TryGetValue(candidate.Entity.Id.Value, out var assignment))
+                {
+                    continue;
+                }
+
+                var waypoints = assignment.Path.Count == 0
+                    ? [new PathPoint(candidate.Slot.X, candidate.Slot.Y)]
+                    : assignment.Path.ToArray();
+                var path = new PathfindingComponentState(
+                    new PathPoint(candidate.Slot.X, candidate.Slot.Y),
+                    waypoints,
+                    NextWaypointIndex: 0);
+                SetNextWaypoint(candidate.Entity, candidate.Movement, path);
+                _sharedPlanned.Add(candidate.Entity.Id.Value);
+            }
+        }
+
+        return _sharedPlanned;
+    }
+
+    private void ClearSharedGroups()
+    {
+        foreach (var key in _sharedGroupKeys)
+        {
+            _sharedGroups[key].Clear();
+        }
+
+        _sharedGroupKeys.Clear();
+    }
+
+    private static bool TryGetSharedMoveCandidate(
+        EntityWorld world,
+        EntityInstance entity,
+        out SharedMoveCandidate candidate)
+    {
+        candidate = default;
+        if (!entity.Components.TryGet<MovementComponentState>(out var movement)
+            || !entity.Components.TryGet<MovementProfileComponentState>(out _)
+            || movement.MoveTarget is null
+            || movement.FormationSlot is not { } slot
+            || !entity.Components.TryGet<CommandableComponentState>(out var commandable)
+            || commandable.PlayerIntentTarget is not { } intent
+            || (entity.Components.TryGet<WeaponUserComponentState>(out var weapon) && weapon.AttackTargetIsManual)
+            || (entity.Components.TryGet<DeployComponentState>(out var deploy) && deploy.IsDeployed))
+        {
+            return false;
+        }
+
+        if (entity.Components.TryGet<PathfindingComponentState>(out var path)
+            && IsFollowingCurrentPath(movement.MoveTarget.Value, path))
+        {
+            return false;
+        }
+
+        var domain = MovementDomain.Land;
+        if (world.TryGetSpec(entity.SpecId, out var spec) && spec.Movement is not null)
+        {
+            domain = spec.Movement.Domain;
+        }
+
+        candidate = new SharedMoveCandidate(entity, movement, slot, intent, domain, commandable.MoveMode);
+        return true;
+    }
+
+    private void AdvanceOrClearPath(EntityInstance entity, MovementComponentState movement)
+    {
+        if (!entity.Components.TryGet<PathfindingComponentState>(out var path))
+        {
+            return;
+        }
+
+        if (path.NextWaypointIndex >= path.Waypoints.Count)
+        {
+            entity.Components.Remove<PathfindingComponentState>();
+            return;
+        }
+
+        if (path.NextWaypointIndex > 0
+            && !SamePoint(entity.Transform.Position, path.Waypoints[path.NextWaypointIndex - 1]))
+        {
+            entity.Components.Remove<PathfindingComponentState>();
+            return;
+        }
+
+        SetNextWaypoint(entity, movement, path);
+    }
+
+    private void PlanPath(
+        EntityWorld world,
+        EntityInstance entity,
+        MovementComponentState movement,
+        Vector2 goal)
+    {
+        var domain = MovementDomain.Land;
+        if (world.TryGetSpec(entity.SpecId, out var spec) && spec.Movement is not null)
+        {
+            domain = spec.Movement.Domain;
+        }
+
+        BuildStaticBlockers(world, entity.Id.Value, domain);
+
+        var result = PathfindingMath.FindPathWithDebug(
+            entity.Transform.Position.X,
+            entity.Transform.Position.Y,
+            goal.X,
+            goal.Y,
+            world.WorldWidth,
+            world.WorldHeight,
+            _cellSize,
+            _obstacles,
+            domain,
+            []);
+
+        var waypoints = result.Path.Count == 0
+            ? [new PathPoint(goal.X, goal.Y)]
+            : result.Path.ToArray();
+
+        var path = new PathfindingComponentState(
+            new PathPoint(goal.X, goal.Y),
+            waypoints,
+            NextWaypointIndex: 0);
+        SetNextWaypoint(entity, movement, path);
+    }
+
+    private void SetNextWaypoint(
+        EntityInstance entity,
+        MovementComponentState movement,
+        PathfindingComponentState path)
+    {
+        if (path.NextWaypointIndex >= path.Waypoints.Count)
+        {
+            entity.Components.Remove<PathfindingComponentState>();
+            return;
+        }
+
+        var waypoint = path.Waypoints[path.NextWaypointIndex];
+        entity.Components.Set(path with { NextWaypointIndex = path.NextWaypointIndex + 1 });
+        entity.Components.Set(movement with { MoveTarget = new Vector2(waypoint.X, waypoint.Y) });
+    }
+
+    private void BuildStaticBlockers(EntityWorld world, int movingEntityId, MovementDomain domain)
+    {
+        _obstacles.Clear();
+        if (TerrainPassability.IgnoresBuildingBlockers(domain))
+        {
+            return;
+        }
+
+        var width = Math.Max(1, (int)MathF.Ceiling(world.WorldWidth / _cellSize));
+        var height = Math.Max(1, (int)MathF.Ceiling(world.WorldHeight / _cellSize));
+        _seenObstacles.Clear();
+
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (entity.Id.Value == movingEntityId
+                || !entity.Components.TryGet<CollisionComponentState>(out var collision)
+                || !collision.BlocksMovement
+                || !IsStaticPathBlocker(world, entity))
+            {
+                continue;
+            }
+
+            var minX = Math.Clamp((int)MathF.Floor((entity.Transform.Position.X - collision.Radius) / _cellSize), 0, width - 1);
+            var maxX = Math.Clamp((int)MathF.Floor((entity.Transform.Position.X + collision.Radius) / _cellSize), 0, width - 1);
+            var minY = Math.Clamp((int)MathF.Floor((entity.Transform.Position.Y - collision.Radius) / _cellSize), 0, height - 1);
+            var maxY = Math.Clamp((int)MathF.Floor((entity.Transform.Position.Y + collision.Radius) / _cellSize), 0, height - 1);
+
+            for (var x = minX; x <= maxX; x++)
+            {
+                for (var y = minY; y <= maxY; y++)
+                {
+                    var cell = new GridObstacle(x, y);
+                    if (_seenObstacles.Add(cell))
+                    {
+                        _obstacles.Add(cell);
+                    }
+                }
+            }
+        }
+    }
+
+    private static bool IsStaticPathBlocker(EntityWorld world, EntityInstance entity)
+    {
+        return world.TryGetSpec(entity.SpecId, out var spec)
+            && spec.Kind is EntityKind.Building or EntityKind.Turret or EntityKind.Objective;
+    }
+
+    private static bool IsFollowingCurrentPath(Vector2 target, PathfindingComponentState path)
+    {
+        if (path.NextWaypointIndex > 0
+            && SamePoint(target, path.Waypoints[path.NextWaypointIndex - 1]))
+        {
+            return true;
+        }
+
+        return path.NextWaypointIndex >= path.Waypoints.Count
+            && SamePoint(target, path.Goal);
+    }
+
+    private static bool SamePoint(Vector2 point, PathPoint pathPoint)
+    {
+        return SamePoint(point.X, point.Y, pathPoint.X, pathPoint.Y);
+    }
+
+    private static bool SamePoint(float ax, float ay, float bx, float by)
+    {
+        var dx = ax - bx;
+        var dy = ay - by;
+        return dx * dx + dy * dy <= SamePointDistanceSquared;
+    }
+
+    private static int Quantize(float value)
+    {
+        return (int)MathF.Round(value * 10f);
+    }
+
+    private readonly record struct SharedMoveKey(
+        int Owner,
+        MovementDomain Domain,
+        int IntentX,
+        int IntentY,
+        MoveCommandMode MoveMode);
+
+    private readonly record struct SharedMoveCandidate(
+        EntityInstance Entity,
+        MovementComponentState Movement,
+        Vector2 Slot,
+        Vector2 Intent,
+        MovementDomain Domain,
+        MoveCommandMode MoveMode);
+}

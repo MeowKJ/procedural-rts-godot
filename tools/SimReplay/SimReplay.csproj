@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProceduralRts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SimReplayCombatAbilities\**\*.cs" Link="SimReplayCombatAbilities\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatCommandAbilities\**\*.cs" Link="SimReplayCombatCommandAbilities\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatCommands\**\*.cs" Link="SimReplayCombatCommands\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatFieldAbilities\**\*.cs" Link="SimReplayCombatFieldAbilities\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatTactics\**\*.cs" Link="SimReplayCombatTactics\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatTacticsPositioning\**\*.cs" Link="SimReplayCombatTacticsPositioning\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatTargets\**\*.cs" Link="SimReplayCombatTargets\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatTargetSignals\**\*.cs" Link="SimReplayCombatTargetSignals\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayConstructionCore\**\*.cs" Link="SimReplayConstructionCore\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayConstructionLifecycle\**\*.cs" Link="SimReplayConstructionLifecycle\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayConstructionScenarios\**\*.cs" Link="SimReplayConstructionScenarios\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayContent\**\*.cs" Link="SimReplayContent\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCoreInvariants\**\*.cs" Link="SimReplayCoreInvariants\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCoreTimingPathing\**\*.cs" Link="SimReplayCoreTimingPathing\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayEconomy\**\*.cs" Link="SimReplayEconomy\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayEconomyProduction\**\*.cs" Link="SimReplayEconomyProduction\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayMovement\**\*.cs" Link="SimReplayMovement\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

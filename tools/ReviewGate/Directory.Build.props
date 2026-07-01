@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <ReviewGateArtifactsRoot>$(MSBuildThisFileDirectory)..\..\artifacts\dotnet\ReviewGate\</ReviewGateArtifactsRoot>
+    <BaseOutputPath>$(ReviewGateArtifactsRoot)bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(ReviewGateArtifactsRoot)obj\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

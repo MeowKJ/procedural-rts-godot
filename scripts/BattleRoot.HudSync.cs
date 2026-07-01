@@ -1,0 +1,319 @@
+﻿using Godot;
+using ProceduralRts.Controllers;
+using ProceduralRts.Core;
+using ProceduralRts.Ui;
+using ProceduralRts.World;
+
+namespace ProceduralRts;
+
+public partial class BattleRoot
+{
+    private void RefreshMinimap()
+    {
+        var units = _state.Units
+            .Where(unit => unit.Hp > 0)
+            .Where(unit => _state.IsVisibleToPlayer(unit))
+            .Select(unit => new HudLayer.MinimapUnit(unit.Position, unit.Owner, unit.FactionId, unit.Selected, unit.AlertPulse))
+            .ToList();
+
+        var buildings = UseUnitDesignRuntime
+            ? UnitBattlefieldMinimapBuildings()
+            : _state.Buildings
+                .Where(building => building.Hp > 0)
+                .Where(building => _state.IsExploredByPlayer(building))
+                .Select(building =>
+                {
+                    var spec = BuildSpecCatalog.For(building.Kind);
+                    return new HudLayer.MinimapBuilding(
+                        building.Position,
+                        spec.Footprint,
+                        building.Owner,
+                        building.FactionId,
+                        building.Selected,
+                        Mathf.Max(building.HitPulse, building.DeliveryPulse * 0.45f));
+                })
+                .ToList();
+
+        var resources = _unitBattlefield.ResourcePips(_state.IsExploredByPlayer)
+            .Select(resource => new HudLayer.MinimapResource(
+                resource.Position,
+                resource.Radius,
+                resource.RemainingRatio))
+            .ToList();
+
+        _hud.SetMinimapState(
+            _state.WorldSize,
+            _camera.VisibleWorldRect(),
+            units,
+            buildings,
+            resources,
+            _state.FogOfWar.MaskTexture(),
+            _unitBattlefield.MinimapPips(PlayerSlotId.One));
+    }
+
+    private List<HudLayer.MinimapBuilding> UnitBattlefieldMinimapBuildings()
+    {
+        return _unitBattlefield
+            .BuildingMinimapProjections(PlayerSlotId.One, rect => _state.FogOfWar.AnyExplored(rect))
+            .Select(building => new HudLayer.MinimapBuilding(
+                building.Position,
+                building.Footprint,
+                OwnerForPlayerSlot(building.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
+                ToLegacyFaction(building.Faction),
+                building.Selected,
+                building.AlertPulse))
+            .ToList();
+    }
+
+    private Rect2 BuildingWorldRect(BuildingModel building)
+    {
+        var spec = BuildSpecCatalog.For(building.Kind);
+        return new Rect2(building.Position - spec.Footprint / 2f, spec.Footprint);
+    }
+
+    private static Rect2 BuildingProjectionWorldRect(BuildingPresentationProjection building)
+    {
+        return new Rect2(building.Entity.Position - building.Footprint / 2f, building.Footprint);
+    }
+
+    private void RefreshControlGroups()
+    {
+        _hud.SetControlGroups(_controlGroups.Snapshots());
+    }
+    private void RefreshCommandCard()
+    {
+        _hud.SetCommandCardState(UseUnitDesignRuntime
+            ? _unitBattlefield.ProductionDesignOptionStates(PlayerSlotId.One)
+            : _unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
+        _hud.SetProductionQueueSummary(_unitBattlefield.ProductionQueueSummary(PlayerSlotId.One), _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
+    }
+
+    private void OnCancelProductionRequested()
+    {
+        _unitBattlefield.CancelFirstProduction(PlayerSlotId.One, out var status);
+        _hud.SetStatus(status);
+        _hud.SetProductionStatus(status);
+        RefreshCommandCard();
+    }
+
+    private void RefreshSelectionInfo()
+    {
+        var selectedUnitInstances = _unitBattlefield.SelectedUnits(PlayerSlotId.One).ToList();
+        if (selectedUnitInstances.Count > 0)
+        {
+            _hud.SetHudContext(true, false, _buildPlacement.IsActive);
+            _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnitInstances));
+            if (selectedUnitInstances.Count == 1)
+            {
+                SetUnitInstanceSelectionInfo(selectedUnitInstances[0]);
+            }
+            else
+            {
+                SetUnitInstanceGroupSelectionInfo(selectedUnitInstances);
+            }
+
+            return;
+        }
+
+        if (UseUnitDesignRuntime)
+        {
+            var selectedBuildingProjections = _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
+            if (selectedBuildingProjections.Count > 0)
+            {
+                _hud.SetHudContext(true, true, _buildPlacement.IsActive);
+                _hud.SetSelectedUnitStance(null);
+                if (selectedBuildingProjections.Count == 1)
+                {
+                    SetUnitBattlefieldBuildingSelectionInfo(selectedBuildingProjections[0]);
+                }
+                else
+                {
+                    SetUnitBattlefieldBuildingGroupSelectionInfo(selectedBuildingProjections);
+                }
+
+                return;
+            }
+        }
+
+        var selectedUnits = _state.SelectedUnits().ToList();
+        var selectedBuildings = _state.SelectedBuildings().ToList();
+        var total = selectedUnits.Count + selectedBuildings.Count;
+
+        if (total == 0)
+        {
+            _hud.SetHudContext(false, false, _buildPlacement.IsActive);
+            _hud.SetSelectedUnitStance(null);
+            _hud.SetSelectedCount(0);
+            return;
+        }
+
+        _hud.SetHudContext(true, selectedBuildings.Count > 0, _buildPlacement.IsActive);
+        _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnits));
+
+        if (total > 1)
+        {
+            var combatUnits = selectedUnits.Count(unit => !IsEconomyUnit(unit));
+            var economyUnits = selectedUnits.Count(IsEconomyUnit);
+            var cargo = selectedUnits.Sum(unit => unit.Cargo);
+            var avgHealth = selectedUnits.Count == 0
+                ? selectedBuildings.Average(building => building.Hp / BuildSpecCatalog.For(building.Kind).MaxHp)
+                : selectedUnits.Average(UnitHealthRatioForSelection);
+            _hud.SetSelectionInfo(
+                GameText.Format("ui.multi.title", total),
+                GameText.Format("ui.multi.meta", combatUnits, economyUnits, selectedBuildings.Count),
+                GameText.Format("ui.multi.stats", Mathf.RoundToInt(avgHealth * 100), cargo),
+                GameText.T("ui.multi.detail"),
+                "multi",
+                IconGlyph.Group,
+                SelectionIconSummary(selectedUnits, selectedBuildings),
+                HudMint);
+            return;
+        }
+
+        if (selectedUnits.Count == 1)
+        {
+            SetUnitSelectionInfo(selectedUnits[0]);
+            return;
+        }
+
+        SetBuildingSelectionInfo(selectedBuildings[0]);
+    }
+
+    private void SetUnitInstanceSelectionInfo(UnitInstance unit)
+    {
+        var spec = unit.Spec;
+        var weapon = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind];
+        var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(spec.Stats.MaxHp)}";
+        var role = GameText.T(spec.RoleKey);
+        var cargo = GameText.Format("ui.detail.cargo", unit.Cargo, 700);
+        var detail = spec.RoleTags.Contains(UnitRoleTag.Economy)
+            ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
+            : GameText.Format("ui.detail.cooldown", weapon.Label, weapon.Cooldown);
+
+        _hud.SetSelectionInfo(
+            spec.Label.ToUpperInvariant(),
+            $"{PlayerSlotLabel(unit.PlayerSlotId)} / {UnitFactionLabel(spec.Faction)}",
+            GameText.Format("ui.stat.unit", health, role, weapon.Range),
+            detail,
+            "unit",
+            spec.Icon,
+            [],
+            PlayerSlotAccent(unit.PlayerSlotId),
+            spec.Id);
+    }
+
+    private void SetUnitInstanceGroupSelectionInfo(IReadOnlyList<UnitInstance> units)
+    {
+        var combatUnits = units.Count(unit => !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy));
+        var economyUnits = units.Count(unit => unit.Spec.RoleTags.Contains(UnitRoleTag.Economy));
+        var cargo = units.Sum(unit => unit.Cargo);
+        var avgHealth = units.Average(unit => unit.Hp / unit.Spec.Stats.MaxHp);
+
+        _hud.SetSelectionInfo(
+            GameText.Format("ui.multi.title", units.Count),
+            $"{PlayerSlotLabel(PlayerSlotId.One)} / UnitSpec runtime",
+            GameText.Format("ui.multi.stats", Mathf.RoundToInt(avgHealth * 100), cargo),
+            GameText.Format("ui.multi.meta", combatUnits, economyUnits, 0),
+            "multi",
+            IconGlyph.Group,
+            UnitInstanceIconSummary(units),
+            PlayerSlotAccent(PlayerSlotId.One));
+    }
+
+    private void SetUnitBattlefieldBuildingSelectionInfo(BuildingSelectionProjection building)
+    {
+        var health = $"{Mathf.CeilToInt(building.Hp)}/{Mathf.CeilToInt(building.MaxHp)}";
+        var queue = building.ProductionQueue.Count == 0
+            ? GameText.T("ui.queue.empty").ToUpperInvariant()
+            : ProductionDetail(building.ProductionQueue);
+        var rally = building.HasRallyPoint ? GameText.T("ui.rally.set") : GameText.T("ui.rally.none");
+
+        _hud.SetSelectionInfo(
+            building.Label.ToUpperInvariant(),
+            $"{PlayerSlotLabel(building.PlayerSlotId)} / {UnitFactionLabel(building.Faction)}",
+            GameText.Format("ui.stat.building", health, building.SightRange),
+            GameText.Format("ui.detail.building", queue, rally),
+            "building",
+            building.Icon,
+            [],
+            building.Accent);
+    }
+
+    private void SetUnitBattlefieldBuildingGroupSelectionInfo(IReadOnlyList<BuildingSelectionProjection> buildings)
+    {
+        var avgHealth = buildings.Average(building => building.MaxHp <= 0 ? 0 : building.Hp / building.MaxHp);
+        _hud.SetSelectionInfo(
+            GameText.Format("ui.multi.title", buildings.Count),
+            $"{PlayerSlotLabel(PlayerSlotId.One)} / UnitSpec structures",
+            GameText.Format("ui.multi.stats", Mathf.RoundToInt(avgHealth * 100), 0),
+            GameText.Format("ui.multi.meta", 0, 0, buildings.Count),
+            "multi",
+            IconGlyph.Group,
+            UnitBattlefieldBuildingIconSummary(buildings),
+            PlayerSlotAccent(PlayerSlotId.One));
+    }
+
+    private static IReadOnlyList<HudLayer.SelectionIconItem> UnitBattlefieldBuildingIconSummary(IReadOnlyList<BuildingSelectionProjection> buildings)
+    {
+        return buildings
+            .GroupBy(building => building.Kind)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key)
+            .Select(group =>
+            {
+                var sample = group.First();
+                return new HudLayer.SelectionIconItem(
+                    null,
+                    sample.Icon,
+                    sample.ShortCode,
+                    group.Count(),
+                    sample.Accent);
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<HudLayer.SelectionIconItem> UnitInstanceIconSummary(IReadOnlyList<UnitInstance> units)
+    {
+        return units
+            .GroupBy(unit => unit.Spec.Id)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key)
+            .Select(group =>
+            {
+                var sample = group.First();
+                return new HudLayer.SelectionIconItem(
+                    null,
+                    sample.Spec.Icon,
+                    sample.Spec.ShortCode,
+                    group.Count(),
+                    PlayerSlotAccent(sample.PlayerSlotId),
+                    sample.Spec.Id);
+            })
+            .ToList();
+    }
+
+    private void SetUnitSelectionInfo(UnitModel unit)
+    {
+        var style = UnitSpecReadPathFor(unit);
+        var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(style.Descriptor.MaxHp)}";
+        var isEconomy = style.Spec.RoleTags.Contains(UnitRoleTag.Economy);
+        var cargo = isEconomy
+            ? GameText.Format("ui.detail.cargo", unit.Cargo, GameState.HarvesterCargoCapacity)
+            : GameText.Format("ui.detail.damage", style.Descriptor.Damage);
+        var detail = isEconomy
+            ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
+            : GameText.Format("ui.detail.cooldown", StanceLabel(unit.Stance), style.Descriptor.AttackCooldown);
+
+        _hud.SetSelectionInfo(
+            GameText.T(style.Presentation.NameKey).ToUpperInvariant(),
+            UnitAffiliationLabel(unit),
+            GameText.Format("ui.stat.unit", health, GameText.T(style.Presentation.RoleKey), style.Descriptor.AttackRange),
+            detail,
+            style.Presentation.PortraitMode,
+            style.Presentation.Icon,
+            [],
+            style.EntityAccent,
+            style.Spec.Id);
+    }
+
+}

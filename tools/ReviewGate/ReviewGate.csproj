@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\ReviewGateCore\**\*.cs" Link="ReviewGateCore\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ReviewGateDomains\**\*.cs" Link="ReviewGateDomains\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ReviewGateFileSize\**\*.cs" Link="ReviewGateFileSize\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
