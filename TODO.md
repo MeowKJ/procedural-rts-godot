@@ -3,6 +3,12 @@
 > File rules: UTF-8, ASCII-only where possible. `[x]` done, `[ ]` open - no Unicode checkboxes.
 > Full historical backlog (645 lines, all completed milestones) is archived in
 > `docs/TODO-Archive-2026-06-29.md`. This file is the living, de-duplicated plan.
+>
+> GitHub issue workflow: active open work is now mirrored as private repository
+> issues at `https://github.com/MeowKJ/procedural-rts-godot/issues`. Use issues
+> for new agent assignments, progress comments, verification evidence, and close
+> decisions. Keep this file as the planning source/snapshot until a later cleanup
+> removes duplicated completed detail.
 
 ## Vision - The Most Elegant RTS Framework
 
