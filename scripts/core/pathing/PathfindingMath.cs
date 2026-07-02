@@ -27,9 +27,36 @@ public static partial class PathfindingMath
         MovementDomain movementDomain,
         IReadOnlyCollection<GridTerrain> terrain)
     {
+        var assignments = new List<PathfindingCorridorAssignment>(members.Count);
+        return FindSharedCorridor(
+            members,
+            intentX,
+            intentY,
+            worldWidth,
+            worldHeight,
+            cellSize,
+            obstacles,
+            movementDomain,
+            terrain,
+            assignments);
+    }
+
+    public static PathfindingSharedCorridorResult FindSharedCorridor(
+        IReadOnlyList<PathfindingCorridorMember> members,
+        float intentX,
+        float intentY,
+        float worldWidth,
+        float worldHeight,
+        float cellSize,
+        IReadOnlyCollection<GridObstacle> obstacles,
+        MovementDomain movementDomain,
+        IReadOnlyCollection<GridTerrain> terrain,
+        List<PathfindingCorridorAssignment> assignments)
+    {
+        assignments.Clear();
         if (members.Count == 0)
         {
-            return new PathfindingSharedCorridorResult([], []);
+            return new PathfindingSharedCorridorResult([], assignments);
         }
 
         var anchorX = 0f;
@@ -64,7 +91,6 @@ public static partial class PathfindingMath
         BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell);
         var allowedLayers = TerrainPassability.AllowedLayers(movementDomain);
 
-        var assignments = new List<PathfindingCorridorAssignment>(members.Count);
         foreach (var member in members)
         {
             assignments.Add(BuildSharedCorridorAssignment(

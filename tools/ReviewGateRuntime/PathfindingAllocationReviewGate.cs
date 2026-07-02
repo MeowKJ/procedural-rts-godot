@@ -11,6 +11,7 @@ static class PathfindingAllocationReviewGate
         RequireText(math, "PathfindingWorkspace workspace", "FindPathWithDebug must expose a caller-owned workspace overload.", result);
         RequireText(math, "var validNeighbors = workspace.ValidNeighbors", "FindPathWithDebug must reuse the workspace neighbor buffer for A* expansion.", result);
         RequireText(math, "CollectValidNeighbors(current, width, height, blocked, terrainByCell, allowedLayers, validNeighbors)", "A* expansion must fill the caller-owned neighbor buffer.", result);
+        RequireText(math, "List<PathfindingCorridorAssignment> assignments)", "FindSharedCorridor must expose a caller-owned assignment result buffer overload.", result);
         ForbidText(math, "members.Average(", "FindSharedCorridor must not allocate LINQ Average enumerators.", result);
         ForbidText(math, "shared.Path.ToList()", "FindSharedCorridor must not copy the shared path list.", result);
         ForbidText(math, "obstacles.ToHashSet()", "Pathfinding passability setup must not allocate blocker sets through LINQ materialization.", result);
@@ -26,7 +27,9 @@ static class PathfindingAllocationReviewGate
 
         var pathfindingSystem = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
         RequireText(pathfindingSystem, "private readonly PathfindingWorkspace _pathWorkspace = new();", "PathfindingSystem must own a reusable single-path workspace.", result);
+        RequireText(pathfindingSystem, "private readonly List<PathfindingCorridorAssignment> _sharedAssignmentResults = [];", "PathfindingSystem must reuse shared-corridor assignment result storage.", result);
         RequireText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            _pathWorkspace,", "PathfindingSystem single-path planning must use the workspace overload.", result);
+        RequireText(pathfindingSystem, "_sharedAssignmentResults);", "PathfindingSystem shared-corridor planning must use the assignment buffer overload.", result);
         ForbidText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            entity.Transform.Position.X", "PathfindingSystem single-path planning must not use the allocating compatibility overload.", result);
     }
 }

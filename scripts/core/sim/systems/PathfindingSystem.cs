@@ -18,6 +18,7 @@ public sealed class PathfindingSystem : ISimSystem
     private readonly Dictionary<SharedMoveKey, List<SharedMoveCandidate>> _sharedGroups = [];
     private readonly List<SharedMoveKey> _sharedGroupKeys = [];
     private readonly List<PathfindingCorridorMember> _sharedMembers = [];
+    private readonly List<PathfindingCorridorAssignment> _sharedAssignmentResults = [];
     private readonly Dictionary<int, PathfindingCorridorAssignment> _sharedAssignments = [];
     private readonly PathfindingWorkspace _pathWorkspace = new();
 
@@ -131,7 +132,8 @@ public sealed class PathfindingSystem : ISimSystem
                 _cellSize,
                 _obstacles,
                 group[0].Domain,
-                []);
+                [],
+                _sharedAssignmentResults);
             _sharedAssignments.Clear();
             foreach (var assignment in corridor.Assignments)
             {
