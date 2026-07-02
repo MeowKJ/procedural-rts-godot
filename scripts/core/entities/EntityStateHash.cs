@@ -45,9 +45,21 @@ public static class EntityStateHash
 
     public static ulong Add(ulong hash, string value)
     {
-        foreach (var b in Encoding.UTF8.GetBytes(value))
+        Span<byte> utf8 = stackalloc byte[4];
+        for (var index = 0; index < value.Length;)
         {
-            hash = Add(hash, b);
+            var charCount = char.IsHighSurrogate(value[index])
+                && index + 1 < value.Length
+                && char.IsLowSurrogate(value[index + 1])
+                    ? 2
+                    : 1;
+            var written = Encoding.UTF8.GetBytes(value.AsSpan(index, charCount), utf8);
+            for (var byteIndex = 0; byteIndex < written; byteIndex++)
+            {
+                hash = Add(hash, utf8[byteIndex]);
+            }
+
+            index += charCount;
         }
 
         return Add(hash, 0);

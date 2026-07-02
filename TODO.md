@@ -1350,6 +1350,11 @@ Wiring & coverage gaps (found during the sweep):
     buffer, replacing the hash-path `StableValues` sorted-list allocation while
     preserving component type-name ordering and replay hashes. `ReviewGate
     regression` locks the hash path against reintroducing `entity.Components.StableValues`.
+    Follow-up: #125 changed `EntityStateHash.Add(string)` to encode UTF-8 through
+    a 4-byte stack buffer instead of allocating `Encoding.UTF8.GetBytes(value)`
+    arrays, grouping valid surrogate pairs so the hashed byte sequence and replay
+    hashes stay unchanged. `ReviewGate regression` locks the stack-buffer string
+    hash path and forbids the byte-array allocation from returning.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

@@ -61,6 +61,9 @@ static class RegressionReviewGate
         var entityWorld = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityWorld.cs");
         RequireText(entityWorld, "StableValuesInto(_stateHashComponentValues)", "DeterministicStateHash must reuse a component ordering buffer.", result);
         ForbidText(entityWorld, "foreach (var component in entity.Components.StableValues)", "DeterministicStateHash must not allocate StableValues lists per entity.", result);
+        var stateHash = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityStateHash.cs");
+        RequireText(stateHash, "stackalloc byte[4]", "EntityStateHash string hashing must use stack UTF-8 storage.", result);
+        ForbidText(stateHash, "Encoding.UTF8.GetBytes(value)", "EntityStateHash string hashing must not allocate byte arrays.", result);
     }
     private static void RequireSimHotAllocationEvidence(string root, GateResult result)
     {
@@ -105,7 +108,6 @@ static class RegressionReviewGate
         RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding)", "Projectile culling must include the tracer segment, not only the head point.", result);
         RequireText(draw, "IsProjectileVisibleToPlayer(tail, position)", "Projectiles drawn above fog must remain gated by player visibility.", result);
         ForbidRegex(draw, @"UnitBattlefield\s*\.\s*ProjectileProjections\s*\(\s*\)", "CombatEffectsLayer.DrawProjectiles must not call the allocating projectile projection API.", result);
-
         var projector = ReviewGateSource.Read(root, "scripts", "core", "sim", "ProjectilePresentationProjection.cs");
         RequireText(projector, "ProjectInto(EntityWorld world, PlayerSlotId viewer, List<ProjectilePresentationProjection> result)", "ProjectilePresentationProjector must expose a caller-owned buffer API.", result);
         RequireText(projector, "result.Clear();", "ProjectilePresentationProjector.ProjectInto must clear and reuse the caller-owned buffer.", result);
@@ -118,10 +120,8 @@ static class RegressionReviewGate
         RequireText(projectileStyle, "MinimumHeadRadius = 3.4f", "Ordinary projectile heads must keep a readable minimum radius.", result);
         RequireText(projectileStyle, "MinimumCoreAlpha = 0.82f", "Projectile cores must remain bright enough under theme/fog overlays.", result);
         RequireText(projectileStyle, "AmmoKind.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
-
         var gameStateCombat = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
         RequireText(gameStateCombat, "ProjectileVfxMath.StyleFor(ammo.LegacyKind)", "Legacy GameState projectiles must initialize from the shared projectile readability style.", result);
-
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         RequireText(battleRoot, "AddChild(_fogOfWar);\n\n        _combatEffects", "CombatEffectsLayer must be added after fog so visible projectiles render above the fog overlay.", result);
 
