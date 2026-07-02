@@ -1,70 +1,11 @@
 ﻿using Godot;
-using ProceduralRts.Controllers;
 using ProceduralRts.Core;
 using ProceduralRts.Ui;
-using ProceduralRts.World;
 
 namespace ProceduralRts;
 
 public partial class BattleRoot
 {
-    private void RefreshMinimap()
-    {
-        var units = _state.Units
-            .Where(unit => unit.Hp > 0)
-            .Where(unit => _state.IsVisibleToPlayer(unit))
-            .Select(unit => new HudLayer.MinimapUnit(unit.Position, unit.Owner, unit.FactionId, unit.Selected, unit.AlertPulse))
-            .ToList();
-
-        var buildings = UseUnitDesignRuntime
-            ? UnitBattlefieldMinimapBuildings()
-            : _state.Buildings
-                .Where(building => building.Hp > 0)
-                .Where(building => _state.IsExploredByPlayer(building))
-                .Select(building =>
-                {
-                    var spec = BuildSpecCatalog.For(building.Kind);
-                    return new HudLayer.MinimapBuilding(
-                        building.Position,
-                        spec.Footprint,
-                        building.Owner,
-                        building.FactionId,
-                        building.Selected,
-                        Mathf.Max(building.HitPulse, building.DeliveryPulse * 0.45f));
-                })
-                .ToList();
-
-        var resources = _unitBattlefield.ResourcePips(_state.IsExploredByPlayer)
-            .Select(resource => new HudLayer.MinimapResource(
-                resource.Position,
-                resource.Radius,
-                resource.RemainingRatio))
-            .ToList();
-
-        _hud.SetMinimapState(
-            _state.WorldSize,
-            _camera.VisibleWorldRect(),
-            units,
-            buildings,
-            resources,
-            _state.FogOfWar.MaskTexture(),
-            _unitBattlefield.MinimapPips(PlayerSlotId.One));
-    }
-
-    private List<HudLayer.MinimapBuilding> UnitBattlefieldMinimapBuildings()
-    {
-        return _unitBattlefield
-            .BuildingMinimapProjections(PlayerSlotId.One, rect => _state.FogOfWar.AnyExplored(rect))
-            .Select(building => new HudLayer.MinimapBuilding(
-                building.Position,
-                building.Footprint,
-                OwnerForPlayerSlot(building.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
-                ToLegacyFaction(building.Faction),
-                building.Selected,
-                building.AlertPulse))
-            .ToList();
-    }
-
     private Rect2 BuildingWorldRect(BuildingModel building)
     {
         var spec = BuildSpecCatalog.For(building.Kind);
