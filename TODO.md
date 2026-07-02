@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 140 C# source files / 18940 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 996 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 141 C# source files / 19048 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 997 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1303,6 +1303,10 @@ Wiring & coverage gaps (found during the sweep):
     `Where/OrderBy/FirstOrDefault` chains and center `Select/ToList/Aggregate`
     materialization. `TargetScans.cs` keeps the added helpers under 200 lines,
     and `ReviewGate simhot` locks the no-LINQ target/center scan contract.
+    Follow-up: #109 reused enemy production AI option/building/harvester/id
+    buffers, replaced production/construction/economy candidate LINQ
+    materialization with explicit scans, and moved construction offsets to static
+    data. `ReviewGate simhot` locks the no-LINQ enemy production AI contract.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

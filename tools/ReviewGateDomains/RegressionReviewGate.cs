@@ -16,6 +16,7 @@ static class RegressionReviewGate
         RequireConstructionPlacementBufferEvidence(root, result);
         RequireAbilitySystemCooldownBufferEvidence(root, result);
         EnemyAttackWaveAiReviewGate.Check(root, result);
+        EnemyProductionAiReviewGate.Check(root, result);
     }
 
     private static void RequireToolProjects(string root, GateResult result)
