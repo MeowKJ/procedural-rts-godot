@@ -42,6 +42,15 @@ public sealed partial class GameState
     private readonly List<int> _legacyRemovedBuildingIds = [];
     private readonly HashSet<int> _legacyRemovedBuildingIdSet = [];
     private readonly List<BuildingModel> _legacyRemovedBuildings = [];
+    private readonly List<ProductionLaneSnapshot> _legacyProductionLaneSnapshotBuffer = [];
+    private readonly Dictionary<int, List<ProductionQueueSnapshot>> _legacyProductionQueueSnapshotBuffers = [];
+    private readonly List<BuildOptionSnapshot> _legacyBuildOptionSnapshotBuffer = [];
+    private readonly HashSet<string> _legacyReadyBuildingKinds = [];
+    private readonly List<PlacementObstacle> _legacyPlacementObstacles = [];
+    private readonly List<GridObstacle> _legacyPathObstacles = [];
+    private readonly HashSet<GridObstacle> _legacyPathObstacleSet = [];
+    private readonly Dictionary<GridObstacle, DynamicBlobObstacleBounds> _legacyDenseBlobObstacles = [];
+    private readonly List<(Vector2 Position, float SightRange)> _legacyFogVisionSources = [];
 
     public Vector2 WorldSize { get; }
     public List<UnitModel> Units { get; } = [];

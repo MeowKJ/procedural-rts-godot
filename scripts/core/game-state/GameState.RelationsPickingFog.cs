@@ -216,27 +216,53 @@ public sealed partial class GameState
         IEnumerable<(Vector2 Position, float SightRange)>? extraUnitSources = null,
         bool includeLegacyUnitSources = true)
     {
-        var unitSources = includeLegacyUnitSources
-            ? Units
-                .Where(unit => IsAlliedWithPlayer(unit) && unit.Hp > 0)
-                .Select(unit => (unit.Position, unit.RuntimeDescriptor.SightRange))
-            : [];
-        if (extraUnitSources is not null)
-        {
-            unitSources = unitSources.Concat(extraUnitSources);
-        }
-
-        var buildingSources = Buildings
-            .Where(building => IsAlliedWithPlayer(building) && building.Hp > 0 && building.BuildProgress >= 1)
-            .Select(building => (building.Position, BuildSpecCatalog.For(building.Kind).SightRange));
-        var signalSources = SignalNodes
-            .Where(node => SignalNetworkMath.EmitsNightVision(node, VisualTheme))
-            .Select(node => (node.Position, node.NightVisionRadius));
-
+        CollectFogVisionSources(extraUnitSources, includeLegacyUnitSources, _legacyFogVisionSources);
         _fogUpdateStopwatch.Restart();
-        FogOfWar.Update(WorldSize, unitSources.Concat(buildingSources).Concat(signalSources));
+        FogOfWar.Update(WorldSize, _legacyFogVisionSources);
         _fogUpdateStopwatch.Stop();
         LastFogUpdateMs = _fogUpdateStopwatch.Elapsed.TotalMilliseconds;
+    }
+
+    private void CollectFogVisionSources(
+        IEnumerable<(Vector2 Position, float SightRange)>? extraUnitSources,
+        bool includeLegacyUnitSources,
+        List<(Vector2 Position, float SightRange)> result)
+    {
+        result.Clear();
+        if (includeLegacyUnitSources)
+        {
+            foreach (var unit in Units)
+            {
+                if (IsAlliedWithPlayer(unit) && unit.Hp > 0)
+                {
+                    result.Add((unit.Position, unit.RuntimeDescriptor.SightRange));
+                }
+            }
+        }
+
+        if (extraUnitSources is not null)
+        {
+            foreach (var source in extraUnitSources)
+            {
+                result.Add(source);
+            }
+        }
+
+        foreach (var building in Buildings)
+        {
+            if (IsAlliedWithPlayer(building) && building.Hp > 0 && building.BuildProgress >= 1)
+            {
+                result.Add((building.Position, BuildSpecCatalog.For(building.Kind).SightRange));
+            }
+        }
+
+        foreach (var node in SignalNodes)
+        {
+            if (SignalNetworkMath.EmitsNightVision(node, VisualTheme))
+            {
+                result.Add((node.Position, node.NightVisionRadius));
+            }
+        }
     }
 
     public float CombatTargetRadius(CombatTargetKind targetKind, int targetId)

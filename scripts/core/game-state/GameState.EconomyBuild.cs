@@ -145,76 +145,6 @@ public sealed partial class GameState
         }
     }
 
-    public IReadOnlyList<ProductionLaneSnapshot> ProductionLaneSnapshots(Owner owner)
-    {
-        return Buildings
-            .Where(building => building.Owner == owner && IsProductionBuilding(building))
-            .OrderBy(building => building.Kind)
-            .ThenBy(building => building.Id)
-            .Select(building => new ProductionLaneSnapshot(
-                building.Id,
-                building.Kind,
-                building.FactionId,
-                BuildSpecCatalog.For(building.Kind).Label,
-                building.Powered,
-                building.BuildProgress >= 1,
-                building.RallyPoint,
-                building.ProductionQueue
-                    .Select(item =>
-                    {
-                        var spec = UnitDesignCatalog.Spec(item.DesignId);
-                        var production = spec.Production
-                            ?? throw new InvalidOperationException($"UnitDesign '{spec.Id}' cannot describe production queue item {item.Kind}.");
-                        var presentation = UnitPresentationCatalog.ForProductionSpec(item.Kind, spec);
-                        return new ProductionQueueSnapshot(
-                            item.Id,
-                            item.Kind,
-                            spec.Id,
-                            item.FactionId,
-                            Mathf.Clamp(item.Progress / production.Duration, 0, 1),
-                            spec.Stats.Cost,
-                            Mathf.RoundToInt(spec.Stats.Cost * ProductionRefundRatio),
-                            building.ProductionQueue[0] == item);
-                    })
-                    .ToList()))
-            .ToList();
-    }
-
-    public IReadOnlyList<BuildOptionSnapshot> BuildOptionSnapshots(Owner owner)
-    {
-        var credits = Credits(owner);
-        var ownedReadyBuildings = Buildings
-            .Where(building => building.Owner == owner && building.Hp > 0 && building.BuildProgress >= 1)
-            .Select(building => building.Kind)
-            .ToHashSet();
-        return BuildSpecCatalog.Definitions
-            .OrderBy(entry => entry.Value.Category)
-            .ThenBy(entry => entry.Key)
-            .Select(entry =>
-            {
-                var spec = entry.Value;
-                var hasPrerequisites = spec.RequiredBuildings.All(ownedReadyBuildings.Contains);
-                var canAfford = credits >= spec.Cost;
-                var disabledReason = hasPrerequisites
-                    ? canAfford ? "" : "ui.needCredits"
-                    : "build.disabled.prerequisites";
-                return new BuildOptionSnapshot(
-                    spec.Kind,
-                    spec.Category,
-                    spec.Icon,
-                    spec.Cost,
-                    spec.BuildTime,
-                    spec.Footprint,
-                    canAfford,
-                    hasPrerequisites,
-                    disabledReason,
-                    spec.PowerProvided,
-                    spec.PowerUsed,
-                    spec.BuildRadius);
-            })
-            .ToList();
-    }
-
     public void SetCredits(Owner owner, int credits)
     {
         var inventory = ResourceInventory(owner);
@@ -225,6 +155,7 @@ public sealed partial class GameState
     public PlacementResult ValidateBuildingPlacement(string kind, Vector2 desiredPosition)
     {
         var spec = BuildSpecCatalog.For(kind);
+        CollectBuildingObstacles(_legacyPlacementObstacles);
         return PlacementMath.Validate(
             desiredPosition.X,
             desiredPosition.Y,
@@ -232,13 +163,14 @@ public sealed partial class GameState
             spec.Footprint.Y,
             WorldSize.X,
             WorldSize.Y,
-            BuildingObstacles());
+            _legacyPlacementObstacles);
     }
 
     public PlacementResult ValidateBuildingPlacement(string kind, Owner owner, Vector2 desiredPosition)
     {
         var spec = BuildSpecCatalog.For(kind);
         var requiresBuildAuthority = spec.RequiredProducer is not null || spec.RequiredBuildings.Count > 0;
+        CollectBuildingObstacles(_legacyPlacementObstacles);
         return PlacementMath.ValidateBuildableArea(
             desiredPosition.X,
             desiredPosition.Y,
@@ -248,7 +180,7 @@ public sealed partial class GameState
             WorldSize.Y,
             spec.PlacementDomain,
             BuildPlacementAnchors(owner),
-            BuildingObstacles(),
+            _legacyPlacementObstacles,
             requiresBuildAuthority: requiresBuildAuthority,
             padding: 12);
     }

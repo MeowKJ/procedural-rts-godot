@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 144 C# source files / 19357 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 144 C# source files / 19394 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1369,6 +1369,14 @@ Wiring & coverage gaps (found during the sweep):
     locks the no-LINQ targeting/refinery contracts and no-list death cleanup
     contract. Verified with build, CombatBehavior, PlayerLoopQa, and
     `ReviewGate simhot`; full VerifyAll passed 23/23.
+    Follow-up: #138/#139/#140 reused legacy `GameState` fog source,
+    production lane/build option snapshot, and placement/path obstacle buffers,
+    replacing fog `Concat` aggregation, production snapshot LINQ/hashset
+    materialization, `BuildingObstacles()` list construction, and path obstacle
+    `Concat`/`SelectMany`/`Distinct`/dense-blob `GroupBy` chains. `ReviewGate
+    simhot`/`regression` lock the no-LINQ/no-list contracts, `ReviewGate
+    filesize` locks the updated validation-tool source-budget evidence, and
+    full VerifyAll passed 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
