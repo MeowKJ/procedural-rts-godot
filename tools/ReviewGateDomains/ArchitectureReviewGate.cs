@@ -66,7 +66,7 @@ static class ArchitectureReviewGate
 
     private static void ForbidDuplicatedWeaponRangeHelpers(string root, GateResult result)
     {
-        var weaponMath = ReviewGateSource.Read(root, "scripts", "core", "sim", "WeaponMath.cs");
+        var weaponMath = ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs");
         RequireText(weaponMath, "BaseRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)", "WeaponMath must own non-deploy weapon range math.", result);
 
         var systemsRoot = Path.Combine(root, "scripts", "core", "sim", "systems");

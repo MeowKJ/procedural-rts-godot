@@ -1002,7 +1002,7 @@ Duplication - one concept, many copies (highest priority):
 [x] Shared `WeaponMath` helper: `WeaponRange(...)` was reimplemented in 6 systems
     (Combat, BuildingTargetCombat, Command, Movement, Separation, TurretCombat) and
     damage math in 3 (Combat, BuildingTargetCombat, TurretCombat). DONE: extracted
-    `scripts/core/sim/WeaponMath.cs` with composable cores - `MaxMountRange`,
+    `scripts/core/sim/weapon/WeaponMath.cs` with composable cores - `MaxMountRange`,
     `MaxRangeAndCooling` (single-pass for hot anchor checks), `EffectiveRange`
     (deploy-aware), `ResolveTargetProfile`, `BaseDamage`. Each caller keeps exact
     semantics (deploy multiplier opt-in; only CombatSystem layers RNG jitter; only
@@ -1032,7 +1032,10 @@ Single responsibility - god-class breakup:
     same-prefix/directory crowding is surfaced as warnings. The validation system
     itself is stricter: every `tools/ReviewGate/**/*.cs` source file must stay at
     200 lines or below; the old monolithic `Program.cs` and historical
-    `ReviewGateChecks` aggregate cannot return.
+    `ReviewGateChecks` aggregate cannot return. Follow-up (2026-07-02, #69):
+    moved the weapon engagement domain cluster to `scripts/core/sim/weapon/`, dropping
+    the `scripts/core/sim/` root from 31 to 25 C# files so `ReviewGate filesize
+    --max-warnings=0` is clean again.
 [x] ReviewGate system budget cleanup: the old ~16k-line validation system is no
     longer preserved as hundreds of historical C# checks. `ReviewGateRunner` and
     `ReviewGateRegistry` now keep the stable command surface, historical narrow

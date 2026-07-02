@@ -7,7 +7,7 @@ Reviewer AI: ReviewGate architecture / SimReplay
 Integrator AI: Remote Linux Codex
 
 Scope:
-- Files/folders: `scripts/core/sim/WeaponMath.cs`, `scripts/core/sim/systems/BuildingTargetCombatSystem.cs`, `scripts/core/sim/systems/TurretCombatSystem.cs`, `scripts/core/sim/systems/combat/CombatEngagementSystem.cs`, `scripts/core/sim/systems/command/CommandSystem.CombatOrders.cs`, `tools/ReviewGateDomains/ArchitectureReviewGate.cs`, `TODO.md`.
+- Files/folders: `scripts/core/sim/weapon/WeaponMath.cs`, `scripts/core/sim/systems/BuildingTargetCombatSystem.cs`, `scripts/core/sim/systems/TurretCombatSystem.cs`, `scripts/core/sim/systems/combat/CombatEngagementSystem.cs`, `scripts/core/sim/systems/command/CommandSystem.CombatOrders.cs`, `tools/ReviewGateDomains/ArchitectureReviewGate.cs`, `TODO.md`.
 - Issue: #68, split from #11 / #58.
 - Non-goals: changing weapon range values, changing deploy semantics, changing damage/cooldown/targeting rules, or merging the combat system family.
 
