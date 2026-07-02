@@ -938,6 +938,16 @@ All as data/components on the shared entity language - never new runtime classes
 
 [ ] AI planners (Economy/Production/Defense/AttackWave/Scout/TacticalMicro) submit
     commands through the same buffer; no direct state writes; only sees `VisibilityIndex`.
+    Progress: player-control architecture ADR added
+    `docs/PlayerControlArchitecture.md` to lock `Faction` as content, `PlayerSlot`
+    as identity, `PlayerController` as input source, `PlayerAgent` as thinking
+    strategy, `Transport` as channel, `SimulationAuthority` as referee, and
+    `CommandSystem` as the only authoritative command entry. The ADR documents
+    single-player, local multiplayer, cloud multiplayer, replay, AI QA/RL/LLM, and
+    external-agent data flows through `ObservationView -> PlayerCommand[] ->
+    CommandGateway -> CommandSystem -> Simulation Tick`, and leaves runtime
+    implementation to child issues for the controller contract, observation
+    snapshot, and gateway validation shell.
 [ ] Objective-graph campaign (trigger/condition/action/tone-cue) over entities.
 [ ] Sandbox stronger than missions: spawn any spec, switch owner/faction/team/
     relation/environment, time scale, debug overlays (paths/slots/avoidance/rings/
