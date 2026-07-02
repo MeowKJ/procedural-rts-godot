@@ -10,6 +10,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireConstructionSubjectBuffers(root, result);
         RequireSelectedBuildingRallyBuffers(root, result);
         RequireBuildingProjectionBuffers(root, result);
+        RequireUnitResourceProjectionBuffers(root, result);
     }
 
     private static void RequireBuildingTargetIdBuffers(string root, GateResult result)
@@ -24,14 +25,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "CollectBuildingTargetIds(_buildingTargetIdBuffer)", "UnitBattlefield hot building scans must fill reusable buffers.", result);
         ForbidText(battlefield, "BuildingTargetIds()", "UnitBattlefield building scans must not use an allocating BuildingTargetIds helper.", result);
 
-        var projection = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.BuildingProjection.cs");
+        var projection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingProjection.cs");
         RequireText(projection, "private void CollectBuildingTargetIds(List<int> result)", "Building target id scans must use caller-owned buffers.", result);
         RequireText(projection, "result.Sort(CompareBuildingIds)", "Building target id scans must preserve stable building-id order.", result);
         ForbidText(projection, "var ids = new List<int>();", "Building target id scans must not allocate a fresh id list.", result);
@@ -61,14 +55,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<UnitInstance> _unitCommandBuffer", "UnitBattlefield harvest/repair commands must reuse unit storage.", result);
         RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield harvest/repair commands must reuse entity subject storage.", result);
 
-        var harvestRepair = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.HarvestRepair.cs");
+        var harvestRepair = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.HarvestRepair.cs");
         RequireText(harvestRepair, "CollectSelectedCommandUnits(playerSlotId, IsHarvester, _unitCommandBuffer)", "Selected harvest commands must fill the reusable unit buffer.", result);
         RequireText(harvestRepair, "CollectRequestedCommandUnits(playerSlotId, unitIds, IsHarvester, _unitCommandBuffer)", "Explicit harvest commands must fill the reusable unit buffer.", result);
         RequireText(harvestRepair, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Harvest/repair commands must fill reusable entity subject storage.", result);
@@ -112,14 +99,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "HashSet<int> _removedUnitIdBuffer", "UnitBattlefield death removal must reuse removed-unit id storage.", result);
         RequireText(battlefield, "HashSet<int> _removedBuildingIdBuffer", "UnitBattlefield death removal must reuse removed-building id storage.", result);
 
-        var removal = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.CommandApplyRemoval.cs");
+        var removal = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandApplyRemoval.cs");
         RequireText(removal, "_buildingDeathBuffer.Clear();", "Building death removal must clear reusable death storage.", result);
         RequireText(removal, "_unitDeathBuffer.Clear();", "Unit death removal must clear reusable death storage.", result);
         RequireText(removal, "Units.RemoveAll(IsRemovedUnit)", "Unit removal must use the reusable removed-unit id set.", result);
@@ -138,14 +118,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<UnitBattlefieldProductionQueueSnapshot> _productionQueuedBefore", "Production sync must reuse queued-before snapshots.", result);
         RequireText(battlefield, "List<EntityInstance> _productionNewUnitEntities", "Production sync must reuse new unit entity storage.", result);
 
-        var production = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionSync.cs");
+        var production = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionSync.cs");
         RequireText(production, "CollectActiveProducerIds(_productionActiveProducerIds)", "Production sync must fill the reusable active producer buffer.", result);
         RequireText(production, "CollectKnownProductionEntityIds(_productionKnownEntityIds)", "Production sync must fill the reusable known entity set.", result);
         RequireText(production, "CollectQueuedProductionSnapshots(_productionActiveProducerIds, _productionQueuedBefore)", "Production sync must fill queued snapshots explicitly.", result);
@@ -163,14 +136,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<int> _constructionSubjectBuildingIds", "Construction command bridge must reuse subject building-id storage.", result);
         RequireText(battlefield, "List<EntityId> _constructionSubjectEntityBuffer", "Construction command bridge must reuse subject entity-id storage.", result);
 
-        var commandBridge = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.CommandBridge.cs");
+        var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
         RequireText(commandBridge, "CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer)", "Construction commands must fill reusable subject buffers.", result);
         RequireText(commandBridge, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
         ForbidText(commandBridge, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject bridge must not allocate snapshot LINQ chains.", result);
@@ -183,18 +149,25 @@ static class UnitBattlefieldAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<int> _selectedBuildingRallyProducerIds", "Selected building rally commands must reuse producer-id storage.", result);
 
-        var rally = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionRally.cs");
+        var rally = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionRally.cs");
         RequireText(battlefield, "CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds)", "Selected building rally commands must fill reusable producer storage.", result);
         RequireText(battlefield, "result.Sort(CompareBuildingIds)", "Selected building rally producers must sort the reusable buffer in place.", result);
         ForbidText(rally, "var selected = BuildingTargetIds()\n            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)\n            .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)\n            .ToList();", "Selected building rally commands must not allocate selected-building lists.", result);
         ForbidText(rally, "var producers = selected\n            .Where(HasAnyProductionForCore)\n            .OrderBy(buildingId => buildingId)\n            .ToList();", "Selected building rally commands must not allocate producer lists.", result);
+    }
+
+    private static void RequireUnitResourceProjectionBuffers(string root, GateResult result) {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<EntityProjection> _unitProjectionBuffer", "UnitProjections must reuse result storage.", result);
+        RequireText(battlefield, "List<UnitBattlefieldResourcePip> _resourcePipSecondaryBuffer", "ResourcePips must preserve adjacent snapshot comparisons with reusable storage.", result);
+        RequireText(battlefield, "List<UnitMinimapPip> _unitMinimapPipSecondaryBuffer", "Unit minimap pips must preserve adjacent snapshot comparisons with reusable storage.", result);
+        RequireText(battlefield, "List<UnitSelectionSummaryItem> _selectionSummaryBuffer", "SelectionSummary must reuse result storage.", result);
+        var core = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CoreQueries.cs");
+        ForbidText(core, ".OrderBy(unit => unit.EntityId.Value)", "UnitProjections must sort reusable storage in place.", result);
+        ForbidText(core, ".ToList()", "Unit/resource projection paths must not allocate result lists.", result);
+        var visibility = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.VisibilityCombat.cs");
+        ForbidText(visibility, ".GroupBy(unit =>", "SelectionSummary must not allocate grouping enumerables.", result);
+        ForbidText(visibility, ".ToList()", "Unit minimap and selection summary paths must not allocate result lists.", result);
     }
 
 }

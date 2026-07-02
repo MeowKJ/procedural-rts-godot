@@ -34,12 +34,19 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<EntityProjection> UnitProjections()
     {
         SyncUnitEntities();
-        return Units
-            .OrderBy(unit => unit.EntityId.Value)
-            .Select(unit => EntityProjector.ProjectOne(_entityWorld, _entityWorld.TryGet(unit.EntityId, out var entity)
-                ? entity
-                : throw new InvalidOperationException($"Unit {unit.Id} is missing EntityWorld mirror {unit.EntityId}.")))
-            .ToList();
+        _unitProjectionBuffer.Clear();
+        foreach (var unit in Units)
+        {
+            if (!_entityWorld.TryGet(unit.EntityId, out var entity))
+            {
+                throw new InvalidOperationException($"Unit {unit.Id} is missing EntityWorld mirror {unit.EntityId}.");
+            }
+
+            _unitProjectionBuffer.Add(EntityProjector.ProjectOne(_entityWorld, entity));
+        }
+
+        _unitProjectionBuffer.Sort(CompareEntityProjectionIds);
+        return _unitProjectionBuffer;
     }
 
     public UnitProjectionDriftReport UnitProjectionDrift()
@@ -102,23 +109,49 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<UnitBattlefieldVisionSource> VisionSources(PlayerSlotId viewer)
     {
-        return Units
-            .Where(unit => unit.Hp > 0)
-            .Where(unit => Relations.Relation(viewer, unit.PlayerSlotId) is PlayerRelation.Self or PlayerRelation.Allied)
-            .Select(unit => new UnitBattlefieldVisionSource(unit.Position, unit.Spec.Stats.SightRange))
-            .ToList();
+        _visionSourceBuffer.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Hp > 0
+                && Relations.Relation(viewer, unit.PlayerSlotId) is PlayerRelation.Self or PlayerRelation.Allied)
+            {
+                _visionSourceBuffer.Add(new UnitBattlefieldVisionSource(unit.Position, unit.Spec.Stats.SightRange));
+            }
+        }
+
+        return _visionSourceBuffer;
     }
 
     public IReadOnlyList<UnitBattlefieldResourcePip> ResourcePips(Func<Vector2, bool>? isExplored = null)
     {
-        return ResourceFields
-            .Where(field => field.Amount > 0)
-            .Where(field => isExplored?.Invoke(field.Position) ?? true)
-            .Select(field => new UnitBattlefieldResourcePip(
+        var result = NextResourcePipBuffer();
+        foreach (var field in ResourceFields)
+        {
+            if (field.Amount <= 0 || !(isExplored?.Invoke(field.Position) ?? true))
+            {
+                continue;
+            }
+
+            result.Add(new UnitBattlefieldResourcePip(
                 field.Position,
                 field.Radius,
-                field.MaxAmount <= 0 ? 0 : Mathf.Clamp((float)field.Amount / field.MaxAmount, 0, 1)))
-            .ToList();
+                field.MaxAmount <= 0 ? 0 : Mathf.Clamp((float)field.Amount / field.MaxAmount, 0, 1)));
+        }
+
+        return result;
+    }
+
+    private List<UnitBattlefieldResourcePip> NextResourcePipBuffer()
+    {
+        _useSecondaryResourcePipBuffer = !_useSecondaryResourcePipBuffer;
+        var result = _useSecondaryResourcePipBuffer ? _resourcePipSecondaryBuffer : _resourcePipBuffer;
+        result.Clear();
+        return result;
+    }
+
+    private static int CompareEntityProjectionIds(EntityProjection left, EntityProjection right)
+    {
+        return left.Id.Value.CompareTo(right.Id.Value);
     }
 
 }

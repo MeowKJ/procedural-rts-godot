@@ -6,15 +6,27 @@ public sealed partial class UnitBattlefield
 {
     public IReadOnlyList<UnitMinimapPip> MinimapPips(PlayerSlotId viewer)
     {
-        return Units
-            .Select(unit => new UnitMinimapPip(
+        var result = NextUnitMinimapPipBuffer();
+        foreach (var unit in Units)
+        {
+            result.Add(new UnitMinimapPip(
                 unit.Position,
                 unit.PlayerSlotId,
                 unit.Spec.Faction,
                 Relations.Relation(viewer, unit.PlayerSlotId),
                 unit.Selected,
-                unit.AlertPulse))
-            .ToList();
+                unit.AlertPulse));
+        }
+
+        return result;
+    }
+
+    private List<UnitMinimapPip> NextUnitMinimapPipBuffer()
+    {
+        _useSecondaryUnitMinimapPipBuffer = !_useSecondaryUnitMinimapPipBuffer;
+        var result = _useSecondaryUnitMinimapPipBuffer ? _unitMinimapPipSecondaryBuffer : _unitMinimapPipBuffer;
+        result.Clear();
+        return result;
     }
 
     public void RebuildVisibilityIndex()
@@ -45,8 +57,13 @@ public sealed partial class UnitBattlefield
 
     private void MarkVisibleBuildingFootprints()
     {
-        foreach (var viewer in Units.Where(unit => unit.Hp > 0))
+        foreach (var viewer in Units)
         {
+            if (viewer.Hp <= 0)
+            {
+                continue;
+            }
+
             MarkVisibleBuildingFootprints(
                 viewer.PlayerSlotId,
                 viewer.Position,
@@ -104,23 +121,44 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<UnitSelectionSummaryItem> SelectionSummary()
     {
-        return Units
-            .Where(unit => unit.Selected)
-            .GroupBy(unit => new { unit.Spec.Id, unit.PlayerSlotId })
-            .Select(group =>
+        _selectionSummaryBuffer.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Selected)
             {
-                var sample = group.First();
-                return new UnitSelectionSummaryItem(
-                    sample.Spec.Id,
-                    sample.PlayerSlotId,
-                    sample.Spec.Faction,
-                    sample.Spec.Icon,
-                    sample.Spec.Label,
-                    sample.Spec.ShortCode,
-                    group.Count());
-            })
-            .OrderBy(item => item.DesignId)
-            .ToList();
+                AddSelectionSummaryUnit(unit);
+            }
+        }
+
+        _selectionSummaryBuffer.Sort(CompareUnitSelectionSummaryItems);
+        return _selectionSummaryBuffer;
+    }
+
+    private void AddSelectionSummaryUnit(UnitInstance unit)
+    {
+        for (var index = 0; index < _selectionSummaryBuffer.Count; index++)
+        {
+            var item = _selectionSummaryBuffer[index];
+            if (item.DesignId == unit.Spec.Id && item.PlayerSlotId == unit.PlayerSlotId)
+            {
+                _selectionSummaryBuffer[index] = item with { Count = item.Count + 1 };
+                return;
+            }
+        }
+
+        _selectionSummaryBuffer.Add(new UnitSelectionSummaryItem(
+            unit.Spec.Id,
+            unit.PlayerSlotId,
+            unit.Spec.Faction,
+            unit.Spec.Icon,
+            unit.Spec.Label,
+            unit.Spec.ShortCode,
+            1));
+    }
+
+    private static int CompareUnitSelectionSummaryItems(UnitSelectionSummaryItem left, UnitSelectionSummaryItem right)
+    {
+        return string.Compare(left.DesignId, right.DesignId, StringComparison.Ordinal);
     }
 
     private static void UpdateMovementIntent(UnitInstance unit, float dt)
