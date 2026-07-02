@@ -6,7 +6,12 @@ static class PathfindingAllocationReviewGate
         RequireText(math, "for (var index = 0; index < members.Count; index++)", "FindSharedCorridor must scan members without LINQ Average.", result);
         RequireText(math, "AppendUnique(points, sharedPath, entryIndex)", "Shared-corridor entry append must use index-based copy.", result);
         RequireText(math, "AppendUnique(points, sharedPath, 1)", "Shared-corridor connector append must use index-based copy.", result);
+        RequireText(math, "ReconstructPath(\n                    workspace,", "FindPathWithDebug must pass workspace into path reconstruction.", result);
         RequireText(math, "for (var index = 1; index < cells.Count; index++)", "ReconstructPath must build path points without LINQ Skip/Select.", result);
+        RequireText(math, "var cells = workspace.ReconstructedCells", "ReconstructPath must reuse workspace raw-cell scratch storage.", result);
+        RequireText(math, "var points = workspace.ReconstructedPoints", "ReconstructPath must reuse workspace point scratch storage.", result);
+        RequireText(math, "DurableSearchPath(path, points)", "ReconstructPath must not return workspace point scratch storage.", result);
+        RequireText(math, "new List<GridObstacle>(cells)", "ReconstructPath raw cells must copy only at the durable result boundary.", result);
         RequireText(math, "BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell)", "Pathfinding passability setup must use explicit fill helpers.", result);
         RequireText(math, "PathfindingWorkspace workspace", "FindPathWithDebug must expose a caller-owned workspace overload.", result);
         RequireText(math, "var validNeighbors = workspace.ValidNeighbors", "FindPathWithDebug must reuse the workspace neighbor buffer for A* expansion.", result);
@@ -28,6 +33,8 @@ static class PathfindingAllocationReviewGate
         ForbidText(math, "var points = new List<PathPoint>()", "Shared-corridor assignments must not allocate per-member point scratch lists.", result);
         ForbidText(math, "var blocked = new HashSet<GridObstacle>()", "Shared-corridor assignment LOS checks must not allocate blocked lookup sets.", result);
         ForbidText(math, "var terrainByCell = new Dictionary<GridObstacle, TerrainLayer>()", "Shared-corridor assignment LOS checks must not allocate terrain lookup dictionaries.", result);
+        ForbidText(math, "var cells = new List<GridObstacle> { current }", "ReconstructPath must not allocate raw-cell scratch lists.", result);
+        ForbidText(math, "var points = new List<PathPoint>(Math.Max(0, cells.Count - 1))", "ReconstructPath must not allocate point scratch lists.", result);
         ForbidText(math, "var shared = FindPathWithDebug(\n            anchorX", "Shared-corridor root path must not use the allocating compatibility workspace.", result);
         ForbidText(math, "var fallback = FindPathWithDebug(\n                member.StartX", "Shared-corridor fallback path must not use the allocating compatibility workspace.", result);
         ForbidText(math, "var connector = FindPathWithDebug(\n                member.StartX", "Shared-corridor connector path must not use the allocating compatibility workspace.", result);
@@ -38,11 +45,9 @@ static class PathfindingAllocationReviewGate
         ForbidText(math, "yield return (cell, offset.Cost)", "Pathfinding neighbor expansion must not allocate yield iterator state.", result);
         ForbidText(math, ".Skip(", "PathfindingMath hot paths must not allocate Skip iterators.", result);
         ForbidText(math, ".Select(cell => CellCenter", "ReconstructPath must not allocate Select iterators.", result);
-
         var pathing = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathingAvoidance.cs");
         RequireText(pathing, "for (var index = 1; index < unit.GlobalCorridor.Count; index++)", "Legacy AssignPath must enqueue the global corridor with an index loop.", result);
         ForbidText(pathing, "unit.GlobalCorridor.Skip(1)", "Legacy AssignPath must not allocate a Skip iterator.", result);
-
         var pathfindingSystem = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
         RequireText(pathfindingSystem, "private readonly PathfindingWorkspace _pathWorkspace = new();", "PathfindingSystem must own a reusable single-path workspace.", result);
         RequireText(pathfindingSystem, "private readonly List<PathfindingCorridorAssignment> _sharedAssignmentResults = [];", "PathfindingSystem must reuse shared-corridor assignment result storage.", result);
@@ -50,11 +55,12 @@ static class PathfindingAllocationReviewGate
         RequireText(pathfindingSystem, "PathfindingMath.FindSharedCorridor(\n                _pathWorkspace,", "PathfindingSystem shared-corridor planning must use the workspace overload.", result);
         RequireText(pathfindingSystem, "_sharedAssignmentResults);", "PathfindingSystem shared-corridor planning must use the assignment buffer overload.", result);
         ForbidText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            entity.Transform.Position.X", "PathfindingSystem single-path planning must not use the allocating compatibility overload.", result);
-
         var workspace = ReviewGateSource.Read(root, "scripts", "core", "pathing", "PathfindingWorkspace.cs");
         RequireText(workspace, "internal List<PathPoint> SharedCorridorPoints { get; } = [];", "PathfindingWorkspace must own shared-corridor point scratch storage.", result);
         RequireText(workspace, "internal List<GridObstacle> SharedCorridorRawCells { get; } = [];", "PathfindingWorkspace must own shared-corridor raw-cell scratch storage.", result);
         RequireText(workspace, "internal HashSet<GridObstacle> SharedCorridorBlocked { get; } = [];", "PathfindingWorkspace must own dedicated shared-corridor blocked lookup storage.", result);
         RequireText(workspace, "internal Dictionary<GridObstacle, TerrainLayer> SharedCorridorTerrainByCell { get; } = [];", "PathfindingWorkspace must own dedicated shared-corridor terrain lookup storage.", result);
+        RequireText(workspace, "internal List<GridObstacle> ReconstructedCells { get; } = [];", "PathfindingWorkspace must own path reconstruction raw-cell scratch storage.", result);
+        RequireText(workspace, "internal List<PathPoint> ReconstructedPoints { get; } = [];", "PathfindingWorkspace must own path reconstruction point scratch storage.", result);
     }
 }

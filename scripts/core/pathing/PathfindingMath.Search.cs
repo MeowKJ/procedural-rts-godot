@@ -135,6 +135,7 @@ public static partial class PathfindingMath
             if (current == goal)
             {
                 return ReconstructPath(
+                    workspace,
                     cameFrom,
                     current,
                     cellSize,

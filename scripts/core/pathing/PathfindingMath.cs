@@ -223,6 +223,7 @@ public static partial class PathfindingMath
     }
 
     private static PathfindingDebugResult ReconstructPath(
+        PathfindingWorkspace workspace,
         Dictionary<GridObstacle, GridObstacle> cameFrom,
         GridObstacle current,
         float cellSize,
@@ -236,7 +237,9 @@ public static partial class PathfindingMath
         IReadOnlyDictionary<GridObstacle, TerrainLayer> terrainByCell,
         TerrainLayer allowedLayers)
     {
-        var cells = new List<GridObstacle> { current };
+        var cells = workspace.ReconstructedCells;
+        cells.Clear();
+        cells.Add(current);
         while (cameFrom.TryGetValue(current, out var parent))
         {
             current = parent;
@@ -244,7 +247,8 @@ public static partial class PathfindingMath
         }
 
         cells.Reverse();
-        var points = new List<PathPoint>(Math.Max(0, cells.Count - 1));
+        var points = workspace.ReconstructedPoints;
+        points.Clear();
         for (var index = 1; index < cells.Count; index++)
         {
             points.Add(CellCenter(cells[index], cellSize));
@@ -268,7 +272,18 @@ public static partial class PathfindingMath
             blocked,
             terrainByCell,
             allowedLayers);
-        return new PathfindingDebugResult(path, cells);
+        return new PathfindingDebugResult(
+            DurableSearchPath(path, points),
+            new List<GridObstacle>(cells));
+    }
+
+    private static IReadOnlyList<PathPoint> DurableSearchPath(
+        IReadOnlyList<PathPoint> path,
+        List<PathPoint> scratchPoints)
+    {
+        return ReferenceEquals(path, scratchPoints)
+            ? new List<PathPoint>(scratchPoints)
+            : path;
     }
 
     private static GridObstacle WorldToCell(float x, float y, float cellSize)
