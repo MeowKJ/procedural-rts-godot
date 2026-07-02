@@ -12,7 +12,7 @@ public sealed partial class CombatSystem
         float dt)
     {
         var world = context.World;
-        var weaponRange = WeaponRange(world, attacker, weapon);
+        var weaponRange = WeaponMath.EffectiveRange(world, attacker, weapon);
         var targetRadius = target.Components.TryGet<CollisionComponentState>(out var targetCollision) ? targetCollision.Radius : 0f;
         var standoffRadius = AttackSlotMath.StandoffRadius(weaponRange, targetRadius);
         var origin = attacker.Transform.Position;
@@ -121,12 +121,6 @@ public sealed partial class CombatSystem
     {
         return !world.TryGetSpec(target.SpecId, out var spec)
             || spec.Movement?.Domain != MovementDomain.Air;
-    }
-
-    private static float WeaponRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)
-    {
-        // Mobile units honor a finished deploy's range multiplier.
-        return WeaponMath.EffectiveRange(world, attacker, weapon);
     }
 
     private static void CoolMounts(EntityInstance entity, WeaponUserComponentState weapon, float dt)

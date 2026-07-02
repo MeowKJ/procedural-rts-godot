@@ -150,7 +150,7 @@ public sealed partial class CombatSystem
             return false;
         }
 
-        var range = WeaponRange(world, attacker, weapon);
+        var range = WeaponMath.EffectiveRange(world, attacker, weapon);
         return range > 0
             && range <= LastKnownShortRangeChaseThreshold
             && !UsesTrackingProjectileRule(world, weapon);

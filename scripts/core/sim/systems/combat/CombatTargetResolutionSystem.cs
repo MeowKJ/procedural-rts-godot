@@ -103,7 +103,7 @@ public sealed partial class CombatSystem
                 return null;
             }
 
-            var acceptableRange = AcceptableStickinessRange(acquireRange, WeaponRange(world, attacker, weapon));
+            var acceptableRange = AcceptableStickinessRange(acquireRange, WeaponMath.EffectiveRange(world, attacker, weapon));
             var currentDistanceSq = attacker.Transform.Position.DistanceSquaredTo(current.Transform.Position);
             if (isCoolingDown || currentDistanceSq <= acceptableRange * acceptableRange)
             {
@@ -169,7 +169,7 @@ public sealed partial class CombatSystem
         }
 
         var autonomy = EffectiveAutonomy(world, attacker, weapon);
-        var range = WeaponRange(world, attacker, weapon);
+        var range = WeaponMath.EffectiveRange(world, attacker, weapon);
         if (range <= 0
             || attacker.Transform.Position.DistanceSquaredTo(target.Transform.Position) > range * range
             || IsOutsideRetaliationLeash(attacker, target, autonomy)

@@ -80,7 +80,7 @@ public sealed partial class CombatSystem
             || !victim.Components.TryGet<WeaponUserComponentState>(out var weapon)
             || weapon.AttackTargetIsManual
             || weapon.Mounts.Count == 0
-            || WeaponRange(world, victim, weapon) <= 0
+            || WeaponMath.EffectiveRange(world, victim, weapon) <= 0
             || !world.Relations.CanAttack(victim.OwnerId, attacker.OwnerId)
             || !IsVisibleToOwner(world, victim.OwnerId, attacker)
             || TargetPriority(world, weapon, attacker) <= 0)

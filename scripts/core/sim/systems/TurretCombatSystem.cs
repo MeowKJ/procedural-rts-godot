@@ -141,7 +141,7 @@ public sealed class TurretCombatSystem : ISimSystem
 
     private static bool IsInRange(EntityWorld world, EntityInstance turret, WeaponUserComponentState weapon, EntityInstance target)
     {
-        var range = WeaponRange(world, turret, weapon);
+        var range = WeaponMath.BaseRange(world, turret, weapon);
         var targetRadius = target.Components.TryGet<CollisionComponentState>(out var collision) ? collision.Radius : 0;
         return turret.Transform.Position.DistanceTo(target.Transform.Position) <= range + targetRadius;
     }
@@ -198,13 +198,6 @@ public sealed class TurretCombatSystem : ISimSystem
 
         return best;
     }
-
-    private static float WeaponRange(EntityWorld world, EntityInstance turret, WeaponUserComponentState weapon)
-    {
-        // Turrets do not deploy; base mount range only.
-        return UpgradeResolver.WeaponRange(world, turret, WeaponMath.MaxMountRange(world, weapon));
-    }
-
 
     private static void SetWeaponState(EntityInstance turret, WeaponUserComponentState weapon)
     {

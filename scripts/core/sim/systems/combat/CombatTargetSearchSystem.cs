@@ -248,7 +248,7 @@ public sealed partial class CombatSystem
 
         if (stance == UnitStance.Hold)
         {
-            var holdRange = WeaponRange(world, responder, responderWeapon) + HoldSharedThreatSlack;
+            var holdRange = WeaponMath.EffectiveRange(world, responder, responderWeapon) + HoldSharedThreatSlack;
             return responder.Transform.Position.DistanceSquaredTo(target.Transform.Position) <= holdRange * holdRange;
         }
 

@@ -12,7 +12,7 @@ public sealed partial class CombatSystem
         var stance = entity.Components.TryGet<StanceComponentState>(out var stanceState)
             ? stanceState.Stance
             : UnitStance.Aggressive;
-        var weaponRange = WeaponRange(world, entity, weapon);
+        var weaponRange = WeaponMath.EffectiveRange(world, entity, weapon);
         var acquireRange = entity.Components.TryGet<AutonomyComponentState>(out var autonomy)
             ? autonomy.AcquireRange
             : entity.Components.TryGet<VisionComponentState>(out var vision)

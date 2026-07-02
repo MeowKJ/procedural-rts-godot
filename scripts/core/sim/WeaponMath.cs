@@ -101,6 +101,22 @@ public static class WeaponMath
     }
 
     /// <summary>
+    /// Base mount range scaled by upgrades, without deploy's positional range
+    /// multiplier. Used by turrets and group attack-slot planning.
+    /// </summary>
+    public static float BaseRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)
+    {
+        return UpgradeResolver.WeaponRange(world, attacker, MaxMountRange(world, weapon));
+    }
+
+    public static float BaseRange(EntityWorld world, EntityInstance attacker)
+    {
+        return attacker.Components.TryGet<WeaponUserComponentState>(out var weapon)
+            ? BaseRange(world, attacker, weapon)
+            : 0f;
+    }
+
+    /// <summary>
     /// Resolves a target's (weight, armor, domain) from its spec, with the same
     /// defaults the combat systems used when the spec or a sub-spec is missing.
     /// </summary>

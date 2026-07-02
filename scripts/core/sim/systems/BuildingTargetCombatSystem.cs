@@ -68,7 +68,7 @@ public sealed class BuildingTargetCombatSystem : ISimSystem
     {
         var toTarget = target.Transform.Position - attacker.Transform.Position;
         var distance = toTarget.Length();
-        var range = WeaponRange(context.World, attacker, weapon)
+        var range = WeaponMath.EffectiveRange(context.World, attacker, weapon)
             + (target.Components.TryGet<CollisionComponentState>(out var targetCollision) ? targetCollision.Radius : 0);
         var inRange = distance <= range;
 
@@ -125,9 +125,4 @@ public sealed class BuildingTargetCombatSystem : ISimSystem
         });
     }
 
-    private static float WeaponRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)
-    {
-        // Deploy-aware (siege buildings); shared with the mobile combat system.
-        return WeaponMath.EffectiveRange(world, attacker, weapon);
-    }
 }

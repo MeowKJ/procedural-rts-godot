@@ -1045,7 +1045,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17742 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17765 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1169,10 +1169,15 @@ Wiring & coverage gaps (found during the sweep):
     placement-list allocation paydown.
 
 Discipline (keep it from regressing):
-[ ] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
-    `(int X,int Y) Cell(Vector2` in combat/vision/separation (M9 debt #2). Still want a
-    general check for duplicated `WeaponRange`-style helpers and system files > 600
-    lines, so this debt cannot silently reaccumulate.
+[x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
+    `(int X,int Y) Cell(Vector2` in combat/vision/separation (M9 debt #2).
+    DONE (2026-07-02, #68): `ReviewGate architecture` now also scans
+    `scripts/core/sim/systems/**/*.cs` and fails if a private
+    `WeaponRange(...)` helper returns to a system/command partial. The remaining
+    non-deploy range math lives in `WeaponMath.BaseRange(...)`, while mobile
+    deploy-aware range still uses `WeaponMath.EffectiveRange(...)`. System file
+    red lines are covered by `ReviewGate filesize`, which fails unregistered C#
+    source over 600 lines.
 [ ] Comment discipline: critical public/internal APIs, system entrypoints, cross-layer
     boundaries, deterministic/performance invariants, compatibility bridges, and
     non-obvious algorithms must explain responsibility and safe usage. Do not require

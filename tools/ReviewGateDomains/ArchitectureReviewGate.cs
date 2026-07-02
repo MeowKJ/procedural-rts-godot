@@ -7,6 +7,7 @@ static class ArchitectureReviewGate
         ForbidDeletedMigrationTypes(root, result);
         RequireCommandBoundary(root, result);
         RequireMovementGridConvergence(root, result);
+        ForbidDuplicatedWeaponRangeHelpers(root, result);
     }
 
     private static void RequireCoreFiles(string root, GateResult result)
@@ -61,5 +62,27 @@ static class ArchitectureReviewGate
         var policy = ReviewGateSource.Read(root, "scripts", "core", "pathing", "AdvancedPathingPolicy.cs");
         RequireText(policy, "UseSpatialGridLocalAvoidance", "AdvancedPathingPolicy should name the shared spatial-grid avoidance path.", result);
         ForbidText(policy, "UseSpatialHashLocalAvoidance", "AdvancedPathingPolicy must not advertise the retired spatial-hash avoidance path.", result);
+    }
+
+    private static void ForbidDuplicatedWeaponRangeHelpers(string root, GateResult result)
+    {
+        var weaponMath = ReviewGateSource.Read(root, "scripts", "core", "sim", "WeaponMath.cs");
+        RequireText(weaponMath, "BaseRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)", "WeaponMath must own non-deploy weapon range math.", result);
+
+        var systemsRoot = Path.Combine(root, "scripts", "core", "sim", "systems");
+        if (!Directory.Exists(systemsRoot))
+        {
+            result.Error("Simulation systems source directory is missing.");
+            return;
+        }
+
+        foreach (var path in Directory.EnumerateFiles(systemsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            var relative = Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/');
+            ForbidRegex(File.ReadAllText(path), @"private\s+static\s+float\s+WeaponRange\s*\(", $"{relative} must call WeaponMath for weapon range math instead of defining a private WeaponRange helper.", result);
+        }
     }
 }

@@ -32,7 +32,7 @@ public sealed partial class CommandSystem
         _groupAttackSlotUnits.Clear();
         foreach (var entity in _groupOrderMembers)
         {
-            _groupAttackSlotUnits.Add(new AttackSlotUnit(entity.Id.Value, entity.Transform.Position, WeaponRange(world, entity)));
+            _groupAttackSlotUnits.Add(new AttackSlotUnit(entity.Id.Value, entity.Transform.Position, WeaponMath.BaseRange(world, entity)));
         }
 
         AttackSlotMath.AssignAttackSlotsInto(
@@ -100,11 +100,4 @@ public sealed partial class CommandSystem
         });
     }
 
-    private static float WeaponRange(EntityWorld world, EntityInstance entity)
-    {
-        // Base mount range, no deploy bonus (group attack-slot positioning).
-        return entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
-            ? UpgradeResolver.WeaponRange(world, entity, WeaponMath.MaxMountRange(world, weapon))
-            : 0f;
-    }
 }
