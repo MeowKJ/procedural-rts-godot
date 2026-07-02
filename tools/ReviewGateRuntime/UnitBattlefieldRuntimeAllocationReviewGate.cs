@@ -6,6 +6,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireOwnerRelationSyncBuffers(root, result);
         RequireResourceHarvestSyncBuffers(root, result);
         RequireAutoAcquireTargetScan(root, result);
+        RequireBuildingTargetCombatEventBuffers(root, result);
     }
 
     private static void RequireConstructBuildingAdoptionBuffers(string root, GateResult result)
@@ -105,5 +106,31 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(visibility, ".OrderByDescending(candidate => candidate.Priority)", "Auto-acquire must not allocate ordered target candidate chains.", result);
         ForbidText(visibility, ".ThenBy(candidate => candidate.Distance)", "Auto-acquire must not allocate secondary ordered target candidate chains.", result);
         ForbidText(visibility, ".FirstOrDefault();", "Auto-acquire must not materialize candidate queries.", result);
+    }
+
+    private static void RequireBuildingTargetCombatEventBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "HashSet<int> _combatDamagedBuildingIds", "Building-target combat events must reuse damaged-building id storage.", result);
+        RequireText(battlefield, "HashSet<int> _combatDestroyedBuildingIds", "Building-target combat events must reuse destroyed-building id storage.", result);
+        RequireText(battlefield, "HashSet<int> _combatDeadBuildingIds", "Building-target combat events must reuse dead-building de-duplication storage.", result);
+
+        var bridge = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.BuildingTargetCombatBridge.cs");
+        RequireText(bridge, "private bool HasBuildingTargetCombatWork()", "Building-target combat bridge must use an explicit work check.", result);
+        RequireText(bridge, "CollectDeadBuildingTargetIdsFromCombatEvents()", "Building-target combat events must collect dead ids through reusable buffers.", result);
+        RequireText(bridge, "AddCombatDeadBuildingId", "Building-target combat event de-duplication must use reusable storage.", result);
+        ForbidText(bridge, "Units.Any(unit =>", "Building-target combat work check must not allocate LINQ enumerators.", result);
+        ForbidText(bridge, "foreach (var unit in Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building || unit.MoveMode == MoveCommandMode.Attack))", "Building-target combat state sync must not allocate filtered unit enumerables.", result);
+        ForbidText(bridge, "new HashSet<int>()", "Building-target combat events must not allocate local HashSet instances.", result);
+        ForbidText(bridge, ".Concat(_combatDestroyedBuildingIds)", "Building-target combat events must not allocate chained dead-id enumerables.", result);
+        ForbidText(bridge, ".Distinct()\n            .ToList();", "Building-target combat events must not materialize distinct dead-id lists.", result);
     }
 }

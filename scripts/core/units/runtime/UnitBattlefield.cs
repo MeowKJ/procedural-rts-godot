@@ -49,6 +49,9 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitInstanceDeathInfo> _unitDeathBuffer = [];
     private readonly List<UnitBattlefieldBuildingDeathInfo> _buildingDeathBuffer = [];
     private readonly List<int> _deadBuildingIdBuffer = [];
+    private readonly HashSet<int> _combatDamagedBuildingIds = [];
+    private readonly HashSet<int> _combatDestroyedBuildingIds = [];
+    private readonly HashSet<int> _combatDeadBuildingIds = [];
     private readonly HashSet<int> _removedUnitIdBuffer = [];
     private readonly HashSet<int> _removedBuildingIdBuffer = [];
     private readonly List<int> _productionActiveProducerIds = [];

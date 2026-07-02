@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 137 C# source files / 18595 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 952 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 137 C# source files / 18622 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 952 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1257,6 +1257,10 @@ Wiring & coverage gaps (found during the sweep):
     `Where/Select/OrderByDescending/ThenBy/FirstOrDefault` candidate chain with a
     single explicit best-target scan that preserves priority-then-distance
     selection. `ReviewGate simhot` locks the no-ordered-LINQ auto-acquire contract.
+    Follow-up: #98 reused building-target combat event buffers for damaged,
+    destroyed, and dead building ids, and replaced bridge `Units.Any(...)` /
+    `Units.Where(...)` scans with explicit loops. `ReviewGate simhot` locks the
+    no-local-HashSet/no-dead-id-LINQ event path.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
