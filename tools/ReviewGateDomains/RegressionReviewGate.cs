@@ -104,18 +104,25 @@ static class RegressionReviewGate
     {
         var commandSystem = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "CommandSystem.cs"));
         RequireText(commandSystem, "List<EntityInstance> _groupOrderMembers", "CommandSystem must reuse a group-order member buffer.", result);
+        RequireText(commandSystem, "List<FormationDestination> _groupMoveDestinationResults", "CommandSystem must reuse FormationMath destination result storage.", result);
+        RequireText(commandSystem, "List<(float X, float Y)> _groupMoveRemainingSlots", "CommandSystem must reuse FormationMath remaining-slot storage.", result);
         RequireText(commandSystem, "Dictionary<int, FormationDestination> _groupMoveDestinations", "CommandSystem must reuse group-move destination lookup storage.", result);
         RequireText(commandSystem, "List<AttackSlotAssignment> _groupAttackAssignmentResults", "CommandSystem must reuse AttackSlotMath assignment result storage.", result);
         RequireText(commandSystem, "List<Vector2> _groupAttackFreeSlots", "CommandSystem must reuse AttackSlotMath free-slot storage.", result);
         RequireText(commandSystem, "Dictionary<int, AttackSlotAssignment> _groupAttackAssignments", "CommandSystem must reuse group-attack assignment lookup storage.", result);
         RequireText(commandSystem, "CollectOwnedSubjects(world, command.Issuer, command.Subjects, _groupOrderMembers)", "CommandSystem group orders must collect owned subjects into the reusable buffer.", result);
+        RequireText(commandSystem, "FormationMath.CreateMoveDestinationsInto", "CommandSystem group move must use the caller-owned FormationMath buffer API.", result);
         RequireText(commandSystem, "AttackSlotMath.AssignAttackSlotsInto", "CommandSystem group attack must use the caller-owned AttackSlotMath buffer API.", result);
         ForbidText(commandSystem, "OwnedSubjects(world, command.Issuer, command.Subjects).ToList()", "CommandSystem group orders must not allocate a subject list per command.", result);
+        ForbidText(commandSystem, "FormationMath.CreateMoveDestinations(", "CommandSystem group move must not call the allocating FormationMath API.", result);
         ForbidText(commandSystem, ".ToDictionary(d => d.Id)", "CommandSystem group move must not allocate a destination dictionary per command.", result);
         ForbidText(commandSystem, ".ToDictionary(a => a.Id)", "CommandSystem group attack must not allocate an assignment dictionary per command.", result);
         ForbidText(commandSystem, "AttackSlotMath.AssignAttackSlots(", "CommandSystem group attack must not call the allocating AttackSlotMath API.", result);
 
         var attackSlots = ReviewGateSource.Read(root, "scripts", "core", "sim", "AttackSlotMath.cs");
         RequireText(attackSlots, "AssignAttackSlotsInto", "AttackSlotMath must expose a caller-owned buffer API.", result);
+
+        var formations = ReviewGateSource.Read(root, "scripts", "core", "commands", "FormationMath.cs");
+        RequireText(formations, "CreateMoveDestinationsInto", "FormationMath must expose a caller-owned buffer API.", result);
     }
 }

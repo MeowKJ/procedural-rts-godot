@@ -178,13 +178,19 @@ public sealed partial class CommandSystem
             _groupMoveFormationUnits.Add(new FormationUnit(entity.Id.Value, entity.Transform.Position.X, entity.Transform.Position.Y, radius));
         }
 
-        _groupMoveDestinations.Clear();
-        foreach (var destination in FormationMath.CreateMoveDestinations(
+        FormationMath.CreateMoveDestinationsInto(
             _groupMoveFormationUnits,
             command.Target.X,
             command.Target.Y,
             world.WorldWidth,
-            world.WorldHeight))
+            world.WorldHeight,
+            _groupMoveDestinationResults,
+            _groupMoveOrderedUnits,
+            _groupMoveSlots,
+            _groupMoveRemainingSlots);
+
+        _groupMoveDestinations.Clear();
+        foreach (var destination in _groupMoveDestinationResults)
         {
             _groupMoveDestinations[destination.Id] = destination;
         }
@@ -222,6 +228,7 @@ public sealed partial class CommandSystem
 
         _groupOrderMembers.Clear();
         _groupMoveFormationUnits.Clear();
+        _groupMoveDestinationResults.Clear();
         _groupMoveDestinations.Clear();
     }
 

@@ -13,40 +13,58 @@ public static class FormationMath
         float worldWidth,
         float worldHeight)
     {
+        var destinations = new List<FormationDestination>(units.Count);
+        CreateMoveDestinationsInto(
+            units,
+            targetX,
+            targetY,
+            worldWidth,
+            worldHeight,
+            destinations,
+            new List<FormationUnit>(units.Count),
+            new List<(float X, float Y)>(units.Count),
+            new List<(float X, float Y)>(units.Count));
+        return destinations;
+    }
+
+    public static void CreateMoveDestinationsInto(
+        IReadOnlyList<FormationUnit> units,
+        float targetX,
+        float targetY,
+        float worldWidth,
+        float worldHeight,
+        List<FormationDestination> destinations,
+        List<FormationUnit> orderedUnits,
+        List<(float X, float Y)> slots,
+        List<(float X, float Y)> remainingSlots)
+    {
+        destinations.Clear();
+        orderedUnits.Clear();
+        slots.Clear();
+        remainingSlots.Clear();
         if (units.Count == 0)
         {
-            return [];
+            return;
         }
 
         if (units.Count == 1)
         {
             var unit = units[0];
             var destination = ClampToWorld(targetX, targetY, unit.Radius, worldWidth, worldHeight);
-            return [new FormationDestination(unit.Id, destination.X, destination.Y)];
+            destinations.Add(new FormationDestination(unit.Id, destination.X, destination.Y));
+            return;
         }
 
-        var rawDestinations = BuildCompactFormation(units, targetX, targetY);
+        var maxRadius = 0f;
+        for (var index = 0; index < units.Count; index++)
+        {
+            maxRadius = MathF.Max(maxRadius, units[index].Radius);
+            orderedUnits.Add(units[index]);
+        }
 
-        return rawDestinations
-            .Select(destination =>
-            {
-                var unit = units.First(unit => unit.Id == destination.Id);
-                var clamped = ClampToWorld(destination.X, destination.Y, unit.Radius, worldWidth, worldHeight);
-                return new FormationDestination(destination.Id, clamped.X, clamped.Y);
-            })
-            .ToList();
-    }
-
-    private static IReadOnlyList<FormationDestination> BuildCompactFormation(
-        IReadOnlyList<FormationUnit> units,
-        float targetX,
-        float targetY)
-    {
-        var maxRadius = units.Max(unit => unit.Radius);
         var spacing = MathF.Max(52, maxRadius * 2 + 18);
         var columns = (int)MathF.Ceiling(MathF.Sqrt(units.Count));
         var rows = (int)MathF.Ceiling(units.Count / (float)columns);
-        var slots = new List<(float X, float Y)>(units.Count);
 
         for (var index = 0; index < units.Count; index++)
         {
@@ -54,25 +72,28 @@ public static class FormationMath
             var row = index / columns;
             var offsetX = (col - (columns - 1) / 2f) * spacing;
             var offsetY = (row - (rows - 1) / 2f) * spacing;
-            slots.Add((targetX + offsetX, targetY + offsetY));
+            var slot = (targetX + offsetX, targetY + offsetY);
+            slots.Add(slot);
+            remainingSlots.Add(slot);
         }
 
-        var remainingSlots = slots.ToList();
-        var destinations = new List<FormationDestination>(units.Count);
-        foreach (var unit in units
-            .OrderByDescending(unit => Distance(unit.X, unit.Y, targetX, targetY))
-            .ThenBy(unit => unit.Id))
+        while (orderedUnits.Count > 0)
         {
-            var nearestSlot = remainingSlots
-                .OrderBy(slot => Distance(unit.X, unit.Y, slot.X, slot.Y))
-                .ThenBy(slot => slot.Y)
-                .ThenBy(slot => slot.X)
-                .First();
-            remainingSlots.Remove(nearestSlot);
-            destinations.Add(new FormationDestination(unit.Id, nearestSlot.X, nearestSlot.Y));
+            var unitIndex = IndexOfFarthestUnit(orderedUnits, targetX, targetY);
+            var unit = orderedUnits[unitIndex];
+            orderedUnits.RemoveAt(unitIndex);
+
+            var slotIndex = IndexOfNearestSlot(remainingSlots, unit);
+            var nearestSlot = remainingSlots[slotIndex];
+            remainingSlots.RemoveAt(slotIndex);
+
+            var clamped = ClampToWorld(nearestSlot.X, nearestSlot.Y, unit.Radius, worldWidth, worldHeight);
+            destinations.Add(new FormationDestination(unit.Id, clamped.X, clamped.Y));
         }
 
-        return destinations;
+        orderedUnits.Clear();
+        slots.Clear();
+        remainingSlots.Clear();
     }
 
     private static (float X, float Y) ClampToWorld(float x, float y, float radius, float worldWidth, float worldHeight)
@@ -84,10 +105,53 @@ public static class FormationMath
         );
     }
 
-    private static float Distance(float ax, float ay, float bx, float by)
+    private static int IndexOfFarthestUnit(List<FormationUnit> units, float targetX, float targetY)
+    {
+        var bestIndex = 0;
+        var bestDistSq = float.MinValue;
+        var bestId = int.MaxValue;
+        for (var index = 0; index < units.Count; index++)
+        {
+            var unit = units[index];
+            var distSq = DistanceSquared(unit.X, unit.Y, targetX, targetY);
+            if (distSq > bestDistSq || (distSq == bestDistSq && unit.Id < bestId))
+            {
+                bestDistSq = distSq;
+                bestId = unit.Id;
+                bestIndex = index;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    private static int IndexOfNearestSlot(List<(float X, float Y)> remainingSlots, FormationUnit unit)
+    {
+        var bestIndex = 0;
+        var bestDistSq = float.MaxValue;
+        var bestY = float.MaxValue;
+        var bestX = float.MaxValue;
+        for (var index = 0; index < remainingSlots.Count; index++)
+        {
+            var slot = remainingSlots[index];
+            var distSq = DistanceSquared(unit.X, unit.Y, slot.X, slot.Y);
+            if (distSq < bestDistSq
+                || (distSq == bestDistSq && (slot.Y < bestY || (slot.Y == bestY && slot.X < bestX))))
+            {
+                bestDistSq = distSq;
+                bestY = slot.Y;
+                bestX = slot.X;
+                bestIndex = index;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    private static float DistanceSquared(float ax, float ay, float bx, float by)
     {
         var dx = ax - bx;
         var dy = ay - by;
-        return MathF.Sqrt(dx * dx + dy * dy);
+        return dx * dx + dy * dy;
     }
 }

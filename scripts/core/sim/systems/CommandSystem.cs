@@ -13,6 +13,10 @@ public sealed partial class CommandSystem : ISimSystem
 {
     private readonly List<EntityInstance> _groupOrderMembers = [];
     private readonly List<FormationUnit> _groupMoveFormationUnits = [];
+    private readonly List<FormationDestination> _groupMoveDestinationResults = [];
+    private readonly List<FormationUnit> _groupMoveOrderedUnits = [];
+    private readonly List<(float X, float Y)> _groupMoveSlots = [];
+    private readonly List<(float X, float Y)> _groupMoveRemainingSlots = [];
     private readonly Dictionary<int, FormationDestination> _groupMoveDestinations = [];
     private readonly List<AttackSlotUnit> _groupAttackSlotUnits = [];
     private readonly List<AttackSlotAssignment> _groupAttackAssignmentResults = [];
