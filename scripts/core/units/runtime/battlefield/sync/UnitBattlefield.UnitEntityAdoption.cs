@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 namespace ProceduralRts.Core;
@@ -29,9 +30,6 @@ public sealed partial class UnitBattlefield
             MoveTarget = movement?.MoveTarget,
             MoveMode = commandable?.MoveMode ?? MoveCommandMode.Direct,
             Stance = entity.Components.TryGet<StanceComponentState>(out var stance) ? stance.Stance : spec.Weapons.Count > 0 ? UnitStance.Aggressive : UnitStance.Ignore,
-            WeaponMounts = entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
-                ? weapon.Mounts.ToList()
-                : spec.Weapons.Select(mount => new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, entity.Transform.Facing, 0, mount.LegacyWeaponKind)).ToList(),
             HarvesterMode = entity.Components.TryGet<HarvesterComponentState>(out var harvester) ? harvester.Mode : HarvesterMode.Idle,
             HarvestFieldId = harvester is null ? null : LegacyResourceFieldId(harvester.FieldId),
             HarvestRefineryId = harvester is null ? null : LegacyBuildingTargetId(harvester.RefineryId),
@@ -39,7 +37,33 @@ public sealed partial class UnitBattlefield
             Cargo = entity.Components.TryGet<ResourceCargoComponentState>(out var cargo) ? cargo.Cargo : 0,
         };
 
+        FillAdoptedWeaponMounts(unit.WeaponMounts, entity, spec);
         Units.Add(unit);
         return unit;
+    }
+
+    private static void FillAdoptedWeaponMounts(List<WeaponMountRuntimeState> result, EntityInstance entity, UnitSpec spec)
+    {
+        result.Clear();
+        if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
+        {
+            for (var index = 0; index < weapon.Mounts.Count; index++)
+            {
+                result.Add(weapon.Mounts[index]);
+            }
+
+            return;
+        }
+
+        FillDefaultWeaponMounts(result, spec, entity.Transform.Facing);
+    }
+
+    private static void FillDefaultWeaponMounts(List<WeaponMountRuntimeState> result, UnitSpec spec, float facing)
+    {
+        for (var index = 0; index < spec.Weapons.Count; index++)
+        {
+            var mount = spec.Weapons[index];
+            result.Add(new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind));
+        }
     }
 }
