@@ -10,6 +10,7 @@ static class RegressionReviewGate
         RequireCommandSystemGroupOrderBufferEvidence(root, result);
         CommandSystemAllocationReviewGate.Check(root, result);
         RequireConstructionPlacementBufferEvidence(root, result);
+        RequireAbilitySystemCooldownBufferEvidence(root, result);
     }
 
     private static void RequireToolProjects(string root, GateResult result)
@@ -175,5 +176,18 @@ static class RegressionReviewGate
         ForbidText(constructionSystem, "Subjects.OrderBy(id => id.Value)", "Construction commands must not allocate ordered subject enumerables.", result);
         ForbidText(constructionSystem, "subjects.OrderBy(id => id.Value)", "Construction producer lookup must not allocate ordered subject enumerables.", result);
         ForbidText(constructionSystem, ".ToList()", "ConstructionSystem must not allocate LINQ lists in construction placement validation paths.", result);
+    }
+
+    private static void RequireAbilitySystemCooldownBufferEvidence(string root, GateResult result)
+    {
+        var abilitySystem = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "AbilitySystem.cs"));
+        RequireText(abilitySystem, "List<AbilityCooldownState> _cooldownScratch", "AbilitySystem must reuse cooldown scratch storage.", result);
+        RequireText(abilitySystem, "private void TickCooldowns(EntityWorld world, float dt)", "AbilitySystem cooldown ticking must use instance scratch storage.", result);
+        RequireText(abilitySystem, "private void SetCooldown(", "AbilitySystem cooldown writes must use instance scratch storage.", result);
+        RequireText(abilitySystem, "_cooldownScratch.Add(cooldown with { CooldownRemaining = next })", "AbilitySystem cooldown ticking must fill the scratch buffer.", result);
+        RequireText(abilitySystem, "_cooldownScratch.Add(new AbilityCooldownState(kind, seconds))", "AbilitySystem new cooldown writes must fill the scratch buffer.", result);
+        ForbidText(abilitySystem, "runtime.Cooldowns.ToArray()", "AbilitySystem cooldown paths must not copy runtime cooldowns before mutation.", result);
+        ForbidText(abilitySystem, "Append(new AbilityCooldownState", "AbilitySystem cooldown writes must not use LINQ Append.", result);
+        ForbidText(abilitySystem, "runtime.Cooldowns.Any(", "AbilitySystem cooldown checks must not use LINQ Any.", result);
     }
 }

@@ -106,7 +106,15 @@ public sealed partial class AbilitySystem
 
     private static bool IsOnCooldown(AbilityRuntimeComponentState runtime, AbilityKind kind)
     {
-        return runtime.Cooldowns.Any(cooldown => cooldown.Kind == kind && cooldown.CooldownRemaining > 0);
+        foreach (var cooldown in runtime.Cooldowns)
+        {
+            if (cooldown.Kind == kind && cooldown.CooldownRemaining > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsDeployed(EntityInstance entity)
@@ -119,27 +127,33 @@ public sealed partial class AbilitySystem
         return world.Relations.Relation(caster.OwnerId, candidate.OwnerId) is PlayerRelation.Self or PlayerRelation.Allied;
     }
 
-    private static void SetCooldown(
+    private void SetCooldown(
         EntityInstance caster,
         AbilityRuntimeComponentState runtime,
         AbilityKind kind,
         float seconds)
     {
-        var cooldowns = runtime.Cooldowns.ToArray();
-        for (var index = 0; index < cooldowns.Length; index++)
+        _cooldownScratch.Clear();
+        var found = false;
+        foreach (var cooldown in runtime.Cooldowns)
         {
-            if (cooldowns[index].Kind == kind)
+            if (cooldown.Kind == kind)
             {
-                cooldowns[index] = cooldowns[index] with { CooldownRemaining = seconds };
-                caster.Components.Set(runtime with { Cooldowns = cooldowns });
-                return;
+                _cooldownScratch.Add(cooldown with { CooldownRemaining = seconds });
+                found = true;
+                continue;
             }
+
+            _cooldownScratch.Add(cooldown);
         }
 
-        caster.Components.Set(runtime with
+        if (!found)
         {
-            Cooldowns = cooldowns.Append(new AbilityCooldownState(kind, seconds)).ToArray(),
-        });
+            _cooldownScratch.Add(new AbilityCooldownState(kind, seconds));
+        }
+
+        caster.Components.Set(runtime with { Cooldowns = _cooldownScratch.ToArray() });
+        _cooldownScratch.Clear();
     }
 
     private static bool IsDead(EntityInstance entity)

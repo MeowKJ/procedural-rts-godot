@@ -2,7 +2,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class AbilitySystem
 {
-    private static void TickCooldowns(EntityWorld world, float dt)
+    private void TickCooldowns(EntityWorld world, float dt)
     {
         foreach (var entity in world.OrderedEntities)
         {
@@ -13,23 +13,27 @@ public sealed partial class AbilitySystem
             }
 
             var changed = false;
-            var cooldowns = runtime.Cooldowns.ToArray();
-            for (var index = 0; index < cooldowns.Length; index++)
+            _cooldownScratch.Clear();
+            foreach (var cooldown in runtime.Cooldowns)
             {
-                var cooldown = cooldowns[index];
                 var next = MathF.Max(0, cooldown.CooldownRemaining - dt);
                 if (MathF.Abs(next - cooldown.CooldownRemaining) > 0.0001f)
                 {
-                    cooldowns[index] = cooldown with { CooldownRemaining = next };
+                    _cooldownScratch.Add(cooldown with { CooldownRemaining = next });
                     changed = true;
+                    continue;
                 }
+
+                _cooldownScratch.Add(cooldown);
             }
 
             if (changed)
             {
-                entity.Components.Set(runtime with { Cooldowns = cooldowns });
+                entity.Components.Set(runtime with { Cooldowns = _cooldownScratch.ToArray() });
             }
         }
+
+        _cooldownScratch.Clear();
     }
 
     private static void TickShields(EntityWorld world, float dt)

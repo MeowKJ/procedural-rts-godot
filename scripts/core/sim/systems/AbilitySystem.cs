@@ -16,6 +16,7 @@ public sealed partial class AbilitySystem : ISimSystem
     private const float DeployCooldownSeconds = 0.5f;
     private const float DefaultDeploySetupSeconds = 0.6f;
     private const float DefaultDeployRangeMultiplier = 1.55f;
+    private readonly List<AbilityCooldownState> _cooldownScratch = new();
 
     public void Step(SimContext context)
     {
@@ -33,7 +34,7 @@ public sealed partial class AbilitySystem : ISimSystem
         }
     }
 
-    private static void ApplyAbility(EntityWorld world, AbilityEntityCommand command)
+    private void ApplyAbility(EntityWorld world, AbilityEntityCommand command)
     {
         foreach (var subjectId in command.Subjects)
         {
