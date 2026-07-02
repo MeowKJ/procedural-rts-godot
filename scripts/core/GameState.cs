@@ -37,6 +37,7 @@ public sealed partial class GameState
     private readonly List<PlacementObstacle> _mapObstacles = [];
     private readonly List<PlacementBuildAnchor> _legacyPlacementBuildAnchors = [];
     private readonly List<(ProductionKind Kind, UnitSpec Spec, ProductionSpec Production)> _legacyProductionSpecBuffer = [];
+    private readonly List<ProductionOptionState> _legacyProductionOptionStates = [];
     private readonly List<UnitDeathInfo> _legacyUnitDeathBuffer = [];
     private readonly HashSet<int> _legacyRemovedUnitIds = [];
     private readonly List<int> _legacyRemovedBuildingIds = [];

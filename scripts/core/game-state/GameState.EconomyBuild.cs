@@ -18,7 +18,7 @@ public sealed partial class GameState
     {
         var credits = Credits(owner);
         CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer);
-        var states = new List<ProductionOptionState>(_legacyProductionSpecBuffer.Count);
+        _legacyProductionOptionStates.Clear();
         foreach (var option in _legacyProductionSpecBuffer)
         {
             var kind = option.Kind;
@@ -31,7 +31,7 @@ public sealed partial class GameState
             var disabledReason = hasProducer
                 ? enoughCredits ? "" : "ui.needCredits"
                 : "ui.producerUnavailable";
-            states.Add(new ProductionOptionState(
+            _legacyProductionOptionStates.Add(new ProductionOptionState(
                 kind,
                 production.Category,
                 production.ProducerKind,
@@ -49,7 +49,7 @@ public sealed partial class GameState
                 disabledReason));
         }
 
-        return states;
+        return _legacyProductionOptionStates;
     }
 
     private static void CollectProductionSpecsFor(

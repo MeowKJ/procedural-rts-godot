@@ -5,6 +5,7 @@ static class GameStateAllocationReviewGate
         var gameState = ReviewGateSource.Read(root, "scripts", "core", "GameState.cs");
         RequireText(gameState, "List<PlacementBuildAnchor> _legacyPlacementBuildAnchors", "Legacy GameState placement validation must reuse build-anchor storage.", result);
         RequireText(gameState, "List<(ProductionKind Kind, UnitSpec Spec, ProductionSpec Production)> _legacyProductionSpecBuffer", "Legacy GameState production option states must reuse spec ordering storage.", result);
+        RequireText(gameState, "List<ProductionOptionState> _legacyProductionOptionStates", "Legacy GameState production option states must reuse result storage.", result);
         RequireText(gameState, "List<UnitDeathInfo> _legacyUnitDeathBuffer", "Legacy GameState unit removal must reuse death event storage.", result);
         RequireText(gameState, "HashSet<int> _legacyRemovedUnitIds", "Legacy GameState unit removal must reuse removed-unit id storage.", result);
         RequireText(gameState, "List<int> _legacyRemovedBuildingIds", "Legacy GameState building removal must reuse removed-building event storage.", result);
@@ -24,6 +25,8 @@ static class GameStateAllocationReviewGate
 
         var economy = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.EconomyBuild.cs");
         RequireText(economy, "CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer)", "Legacy GameState production option states must fill reusable spec storage.", result);
+        RequireText(economy, "_legacyProductionOptionStates.Clear()", "Legacy GameState production option states must clear reusable result storage.", result);
+        RequireText(economy, "_legacyProductionOptionStates.Add(new ProductionOptionState", "Legacy GameState production option states must fill reusable result storage.", result);
         RequireText(economy, "ProductionOptionMetrics(owner, spec.Id, production)", "Legacy GameState production option states must scan producer metrics explicitly.", result);
         RequireText(economy, "result.Sort(CompareLegacyProductionSpecs)", "Legacy GameState production option specs must sort reusable storage in place.", result);
         RequireText(economy, "TryFindLeastQueuedProductionProducer(", "Legacy GameState production enqueue must scan for the least queued producer explicitly.", result);
@@ -31,6 +34,7 @@ static class GameStateAllocationReviewGate
         RequireText(economy, "CollectBuildingBuildAnchors(owner, _legacyPlacementBuildAnchors)", "Legacy GameState placement validation must fill reusable build-anchor storage.", result);
         RequireText(economy, "CollectBuildingObstacles(_legacyPlacementObstacles)", "Legacy GameState placement validation must fill reusable obstacle storage.", result);
         ForbidText(economy, "ProductionSpecsFor(MatchConfig.FactionForOwner(owner))", "Legacy GameState production option states must not allocate production spec query chains.", result);
+        ForbidText(economy, "new List<ProductionOptionState>", "Legacy GameState production option states must not allocate result lists per refresh.", result);
         ForbidText(economy, "var producers = Buildings", "Legacy GameState production option states must not materialize producer lists.", result);
         ForbidText(economy, "producers.Sum", "Legacy GameState production option metrics must not allocate LINQ Sum queries.", result);
         ForbidText(economy, ".DefaultIfEmpty(0)", "Legacy GameState production option progress must not allocate fallback query chains.", result);
