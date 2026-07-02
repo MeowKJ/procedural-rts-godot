@@ -71,7 +71,10 @@ public static class EntityStateHash
         return value is null ? hash : Add(hash, value);
     }
 
-    public static ulong Add(ulong hash, EntityComponentState state)
+    public static ulong Add(
+        ulong hash,
+        EntityComponentState state,
+        List<AbilityCooldownState>? abilityCooldownOrder = null)
     {
         return state switch
         {
@@ -96,7 +99,7 @@ public static class EntityStateHash
             ResourceRegenerationAuraComponentState aura => AddResourceRegenerationAura(hash, aura),
             SignalNetworkComponentState signal => AddSignalNetwork(hash, signal),
             ProductionQueueComponentState production => AddProduction(hash, production),
-            AbilityRuntimeComponentState ability => AddAbilityRuntime(hash, ability),
+            AbilityRuntimeComponentState ability => AddAbilityRuntime(hash, ability, abilityCooldownOrder),
             ShieldComponentState shield => Add(Add(hash, shield.AbsorbRemaining), shield.DurationRemaining),
             ScanRevealComponentState scan => Add(Add(hash, scan.Radius), scan.DurationRemaining),
             DeployComponentState deploy => Add(Add(Add(hash, deploy.IsDeployed ? 1 : 0), deploy.SetupRemaining), deploy.RangeMultiplier),
@@ -295,16 +298,44 @@ public static class EntityStateHash
         return hash;
     }
 
-    private static ulong AddAbilityRuntime(ulong hash, AbilityRuntimeComponentState state)
+    private static ulong AddAbilityRuntime(
+        ulong hash,
+        AbilityRuntimeComponentState state,
+        List<AbilityCooldownState>? abilityCooldownOrder)
     {
         hash = Add(hash, state.Cooldowns.Count);
-        foreach (var cooldown in state.Cooldowns.OrderBy(cooldown => cooldown.Kind))
+        var ordered = abilityCooldownOrder ?? new List<AbilityCooldownState>(state.Cooldowns.Count);
+        ordered.Clear();
+        foreach (var cooldown in state.Cooldowns)
+        {
+            ordered.Add(cooldown);
+        }
+
+        SortAbilityCooldownsByKind(ordered);
+        foreach (var cooldown in ordered)
         {
             hash = Add(hash, (int)cooldown.Kind);
             hash = Add(hash, cooldown.CooldownRemaining);
         }
 
+        ordered.Clear();
         return hash;
+    }
+
+    private static void SortAbilityCooldownsByKind(List<AbilityCooldownState> values)
+    {
+        for (var index = 1; index < values.Count; index++)
+        {
+            var current = values[index];
+            var previous = index - 1;
+            while (previous >= 0 && values[previous].Kind > current.Kind)
+            {
+                values[previous + 1] = values[previous];
+                previous--;
+            }
+
+            values[previous + 1] = current;
+        }
     }
 
     private static ulong AddCommandQueue(ulong hash, CommandQueueComponentState state)

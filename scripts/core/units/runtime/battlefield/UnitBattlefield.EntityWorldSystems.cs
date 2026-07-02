@@ -13,10 +13,7 @@ public sealed partial class UnitBattlefield
 
     private void UpdateConstructionFromEntityWorld(float dt)
     {
-        if (!_entityWorld.OrderedEntities.Any(entity =>
-            entity.Components.TryGet<ConstructionComponentState>(out var construction)
-            && construction.Progress < 1
-            && construction.Phase is ConstructionPhase.Building or ConstructionPhase.Queued))
+        if (!HasActiveConstructionWork())
         {
             return;
         }
@@ -30,6 +27,21 @@ public sealed partial class UnitBattlefield
             dt,
             Array.Empty<SequencedCommandEnvelope>()));
         AdoptUnmappedConstructedBuildings();
+    }
+
+    private bool HasActiveConstructionWork()
+    {
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (entity.Components.TryGet<ConstructionComponentState>(out var construction)
+                && construction.Progress < 1
+                && construction.Phase is ConstructionPhase.Building or ConstructionPhase.Queued)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void CollectCandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId, List<int> result)
@@ -101,11 +113,18 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        return UnitDesignFactionRosterCatalog.For(identity.Faction)
-            .PlayableDesignIds
-            .Select(UnitDesignCatalog.Spec)
-            .Any(spec => spec.Production?.ProducerKind == identity.Kind
-                && ProducerTechTier(identity.Kind) >= spec.Stats.TechTier);
+        var producerTechTier = ProducerTechTier(identity.Kind);
+        foreach (var designId in UnitDesignFactionRosterCatalog.For(identity.Faction).PlayableDesignIds)
+        {
+            var spec = UnitDesignCatalog.Spec(designId);
+            if (spec.Production?.ProducerKind == identity.Kind
+                && producerTechTier >= spec.Stats.TechTier)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int ProducerTechTier(string kind)

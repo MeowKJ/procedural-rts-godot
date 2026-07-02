@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 145 C# source files / 19429 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 996 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 146 C# source files / 19459 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 993 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1391,6 +1391,12 @@ Wiring & coverage gaps (found during the sweep):
     controller-owned snapshot list and selected-id set, and replacing legacy/runtime
     snapshot `ToHashSet()` / `ToList()` / LINQ count chains with explicit scans.
     The stable entry file is now 78 lines; group/snapshot partials are 175/184 lines.
+    Follow-up: #144/#145 replaced `UnitBattlefield` construction-work
+    `OrderedEntities.Any(...)` and production-availability roster `Select(...).Any(...)`
+    checks with explicit early-exit scans. #146 routed `EntityWorld`
+    deterministic hashing through a reusable ability-cooldown ordering buffer and
+    stable in-place sort, removing the `EntityStateHash` cooldown `OrderBy(...)`
+    allocation. `ReviewGate simhot` / `regression` lock these contracts.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

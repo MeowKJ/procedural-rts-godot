@@ -87,5 +87,7 @@ static class UnitBattlefieldProductionAllocationReviewGate
             "UnitBattlefield.EntityWorldSystems.cs");
         ForbidText(systems, "private IEnumerable<int> CandidateProducerIds", "UnitBattlefield production candidates must use caller-owned buffers, not allocating enumerable helpers.", result);
         ForbidText(systems, "private IEnumerable<UnitSpec> ProductionDesignSpecs", "Production design option states must use caller-owned spec buffers, not allocating enumerable helpers.", result);
+        RequireText(systems, "foreach (var designId in UnitDesignFactionRosterCatalog.For(identity.Faction).PlayableDesignIds)", "UnitBattlefield production availability must scan playable design ids explicitly.", result);
+        ForbidText(systems, ".PlayableDesignIds\n            .Select(UnitDesignCatalog.Spec)\n            .Any(spec =>", "UnitBattlefield production availability must not allocate roster projection/predicate chains.", result);
     }
 }

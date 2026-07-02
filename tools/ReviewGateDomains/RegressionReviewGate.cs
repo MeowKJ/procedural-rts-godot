@@ -5,6 +5,7 @@ static class RegressionReviewGate
         RequireToolProjects(root, result);
         RequireVerifyAllCoverage(root, result);
         RequireDeterministicEvidence(root, result);
+        EntityStateHashAllocationReviewGate.Check(root, result);
         RequireSimHotAllocationEvidence(root, result);
         TurretCombatAllocationReviewGate.Check(root, result);
         RequireProjectileProjectionBufferEvidence(root, result);
@@ -59,12 +60,6 @@ static class RegressionReviewGate
         ReviewGateSource.RequireAnyText(root, result, "upgrade-progression", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "DeterministicStateHash", "scripts/core/entities", "tools/SimReplay", "tools/CombatBehavior");
         ReviewGateSource.RequireAnyText(root, result, "CommandAttackUnits", "tools/AiOpponentLoopQa", "tools/CombatBehavior", "scripts");
-        var entityWorld = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityWorld.cs");
-        RequireText(entityWorld, "StableValuesInto(_stateHashComponentValues)", "DeterministicStateHash must reuse a component ordering buffer.", result);
-        ForbidText(entityWorld, "foreach (var component in entity.Components.StableValues)", "DeterministicStateHash must not allocate StableValues lists per entity.", result);
-        var stateHash = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityStateHash.cs");
-        RequireText(stateHash, "stackalloc byte[4]", "EntityStateHash string hashing must use stack UTF-8 storage.", result);
-        ForbidText(stateHash, "Encoding.UTF8.GetBytes(value)", "EntityStateHash string hashing must not allocate byte arrays.", result);
     }
     private static void RequireSimHotAllocationEvidence(string root, GateResult result)
     {

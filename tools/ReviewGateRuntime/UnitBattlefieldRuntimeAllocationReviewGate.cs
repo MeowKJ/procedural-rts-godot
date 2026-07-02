@@ -10,6 +10,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireSimEventDrainBuffer(root, result);
         RequireExplicitUnitBridgeFilters(root, result);
         RequirePlacementQueryBuffers(root, result);
+        RequireConstructionWorkScan(root, result);
     }
 
     private static void RequireConstructBuildingAdoptionBuffers(string root, GateResult result)
@@ -187,5 +188,20 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(systems, "private IReadOnlyList<PlacementObstacle> BuildingPlacementObstacles", "Building placement obstacle collection must not allocate lists per placement validation.", result);
         ForbidText(systems, "BuildingTargetIds()\n            .Select(BuildingSnapshot)", "Placement query helpers must not allocate snapshot LINQ chains.", result);
         ForbidText(systems, ".ToList();", "Placement query helpers must not materialize lists with LINQ.", result);
+    }
+
+    private static void RequireConstructionWorkScan(string root, GateResult result)
+    {
+        var systems = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.EntityWorldSystems.cs");
+        RequireText(systems, "private bool HasActiveConstructionWork()", "UnitBattlefield construction updates must use an explicit work scan helper.", result);
+        RequireText(systems, "construction.Phase is ConstructionPhase.Building or ConstructionPhase.Queued", "Construction work scan must preserve building/queued phase filtering.", result);
+        ForbidText(systems, "_entityWorld.OrderedEntities.Any(entity =>", "UnitBattlefield construction work checks must not allocate LINQ Any iterators.", result);
     }
 }
