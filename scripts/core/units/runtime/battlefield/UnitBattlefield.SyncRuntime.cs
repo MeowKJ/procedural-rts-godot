@@ -297,12 +297,12 @@ public sealed partial class UnitBattlefield
 
     private void UpdateResourceHarvestersFromEntityWorld(float dt)
     {
-        if (!Units.Any(IsHarvester))
+        if (!HasHarvesters())
         {
             return;
         }
 
-        var creditsBefore = ResourceInventories.ToDictionary(pair => pair.Key, pair => pair.Value.Credits);
+        CollectResourceCreditsBefore(_resourceCreditsBefore);
         SyncResourceFieldEntities();
         SyncBuildingTargetEntities();
         SyncUnitEntities();
@@ -310,14 +310,14 @@ public sealed partial class UnitBattlefield
         SyncResourceFieldsFromEntities();
         SyncDockStateFromEntities();
         SyncHarvestersFromEntities();
-        SyncAllCreditsFromEntityWorld(creditsBefore);
+        SyncAllCreditsFromEntityWorld(_resourceCreditsBefore);
     }
 
     private void SyncHarvestersFromEntities()
     {
-        foreach (var unit in Units.Where(IsHarvester))
+        foreach (var unit in Units)
         {
-            if (_entityWorld.TryGet(unit.EntityId, out var entity))
+            if (IsHarvester(unit) && _entityWorld.TryGet(unit.EntityId, out var entity))
             {
                 ApplyEntityResourceStateToUnit(unit, entity);
             }
@@ -356,9 +356,13 @@ public sealed partial class UnitBattlefield
 
     private void SyncDockStateFromEntities()
     {
-        foreach (var refineryId in BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.Kind == BuildingDesignIds.Refinery))
+        foreach (var refineryId in BuildingTargetIds())
         {
+            if (BuildingIdentity(refineryId)?.Kind != BuildingDesignIds.Refinery)
+            {
+                continue;
+            }
+
             if (BuildingEntityByTargetId(refineryId) is not { } entity
                 || !entity.Components.TryGet<DockComponentState>(out var dock))
             {

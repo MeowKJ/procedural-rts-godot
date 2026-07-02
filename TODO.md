@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 136 C# source files / 18485 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 951 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 137 C# source files / 18575 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 952 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1244,6 +1244,15 @@ Wiring & coverage gaps (found during the sweep):
     no-LINQ selected-building rally bridge path. Verified #88-#90 together with
     build, SelectionStress, CombatBehavior, PlayerLoopQa, ReviewGate simhot, full
     ReviewGate, review-record gates, and full VerifyAll 23/23.
+    Follow-up: #94 reused the direct `ConstructBuilding(...)` adoption path's
+    existing construction entity-id snapshot and constructed-entity scanner;
+    #95 replaced `SyncOwnerRelations()` slot LINQ materialization with a reusable
+    owner-slot buffer and explicit scans; #96 reused harvester credit-before and
+    owner-id sync buffers while removing simple harvester/refinery filter chains.
+    The new `tools/ReviewGateRuntime` suite keeps these UnitBattlefield runtime
+    allocation checks out of the already-full `ReviewGateDomains` suite. Verified
+    with build, PlayerLoopQa, CombatBehavior, AiOpponentLoopQa, ReviewGate simhot,
+    full ReviewGate, review-record gates, and full VerifyAll 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

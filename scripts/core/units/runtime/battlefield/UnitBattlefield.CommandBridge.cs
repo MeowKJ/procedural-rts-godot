@@ -126,22 +126,10 @@ public sealed partial class UnitBattlefield
 
     private void SyncOwnerRelations()
     {
-        var slots = Units
-            .Select(unit => unit.PlayerSlotId)
-            .Concat(BuildingTargetIds()
-                .Select(BuildingIdentity)
-                .Where(identity => identity is not null)
-                .Select(identity => identity!.PlayerSlotId))
-            .Concat(ResourceInventories.Keys)
-            .Concat([PlayerSlotId.One, PlayerSlotId.Two])
-            .Where(slot => slot.Value > 0)
-            .Distinct()
-            .OrderBy(slot => slot.Value)
-            .ToList();
-
-        foreach (var first in slots)
+        CollectOwnerRelationSlots(_ownerRelationSlots);
+        foreach (var first in _ownerRelationSlots)
         {
-            foreach (var second in slots)
+            foreach (var second in _ownerRelationSlots)
             {
                 if (first == second)
                 {
@@ -154,6 +142,60 @@ public sealed partial class UnitBattlefield
                     Relations.Relation(first, second));
             }
         }
+    }
+
+    private void CollectOwnerRelationSlots(List<PlayerSlotId> result)
+    {
+        result.Clear();
+        foreach (var unit in Units)
+        {
+            AddOwnerRelationSlot(result, unit.PlayerSlotId);
+        }
+
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (entity.Components.TryGet<BuildingIdentityComponentState>(out var identity))
+            {
+                AddOwnerRelationSlot(result, identity.PlayerSlotId);
+            }
+        }
+
+        foreach (var slot in ResourceInventories.Keys)
+        {
+            AddOwnerRelationSlot(result, slot);
+        }
+
+        AddOwnerRelationSlot(result, PlayerSlotId.One);
+        AddOwnerRelationSlot(result, PlayerSlotId.Two);
+        result.Sort(ComparePlayerSlotIds);
+    }
+
+    private static void AddOwnerRelationSlot(List<PlayerSlotId> result, PlayerSlotId slot)
+    {
+        if (slot.Value <= 0 || ContainsPlayerSlotId(result, slot))
+        {
+            return;
+        }
+
+        result.Add(slot);
+    }
+
+    private static bool ContainsPlayerSlotId(IReadOnlyList<PlayerSlotId> slots, PlayerSlotId candidate)
+    {
+        foreach (var slot in slots)
+        {
+            if (slot == candidate)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int ComparePlayerSlotIds(PlayerSlotId left, PlayerSlotId right)
+    {
+        return left.Value.CompareTo(right.Value);
     }
 
     private IReadOnlyList<EntityId> ConstructionSubjectEntities(PlayerSlotId playerSlotId, BuildSpec spec)

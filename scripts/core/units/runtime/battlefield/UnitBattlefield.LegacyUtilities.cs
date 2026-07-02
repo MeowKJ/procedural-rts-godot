@@ -6,12 +6,8 @@ public sealed partial class UnitBattlefield
 {
     private void SyncAllCreditsFromEntityWorld(IReadOnlyDictionary<PlayerSlotId, int> creditsBefore)
     {
-        var owners = _entityWorld.ResourceInventories.Keys
-            .Concat(_entityWorld.OrderedEntities.Select(entity => entity.OwnerId.Value))
-            .Where(owner => owner > 0)
-            .Distinct()
-            .OrderBy(owner => owner);
-        foreach (var ownerValue in owners)
+        CollectResourceCreditOwnerIds(_resourceCreditOwnerIds);
+        foreach (var ownerValue in _resourceCreditOwnerIds)
         {
             var owner = new OwnerId(ownerValue);
             var playerSlotId = owner.ToPlayerSlot();
@@ -22,6 +18,32 @@ public sealed partial class UnitBattlefield
                 ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
             }
         }
+    }
+
+    private void CollectResourceCreditOwnerIds(List<int> result)
+    {
+        result.Clear();
+        foreach (var ownerValue in _entityWorld.ResourceInventories.Keys)
+        {
+            AddResourceCreditOwnerId(result, ownerValue);
+        }
+
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            AddResourceCreditOwnerId(result, entity.OwnerId.Value);
+        }
+
+        result.Sort();
+    }
+
+    private static void AddResourceCreditOwnerId(List<int> result, int ownerValue)
+    {
+        if (ownerValue <= 0 || result.Contains(ownerValue))
+        {
+            return;
+        }
+
+        result.Add(ownerValue);
     }
 
     private EntityId AttackTargetEntityId(UnitInstance unit)

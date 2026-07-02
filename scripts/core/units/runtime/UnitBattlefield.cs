@@ -35,6 +35,9 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
     private readonly List<int> _constructionSubjectBuildingIds = [];
     private readonly List<EntityId> _constructionSubjectEntityBuffer = [];
+    private readonly List<PlayerSlotId> _ownerRelationSlots = [];
+    private readonly Dictionary<PlayerSlotId, int> _resourceCreditsBefore = [];
+    private readonly List<int> _resourceCreditOwnerIds = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];

@@ -69,9 +69,7 @@ public sealed partial class UnitBattlefield
         _entityWorld.WorldHeight = WorldSize.Y;
         _entityWorld.ResourceInventory(owner).Credits = inventory.Credits;
 
-        var before = _entityWorld.OrderedEntities
-            .Select(entity => entity.Id.Value)
-            .ToHashSet();
+        CollectEntityIds(_constructionEntityIdsBefore);
         var command = new StartConstructionEntityCommand(
             owner,
             ConstructionSubjectEntities(playerSlotId, spec),
@@ -81,22 +79,15 @@ public sealed partial class UnitBattlefield
             facing);
         SubmitConstructionCommand(command);
 
-        var rejection = _entityWorld.Events.Drain()
-            .OfType<ConstructionRejectedEvent>()
-            .LastOrDefault();
-        if (rejection is not null && rejection.Tick == command.Tick && rejection.Owner == owner && rejection.BuildingSpecId == kind)
+        var rejection = DrainConstructionRejection(command.Tick, owner, kind);
+        if (rejection is not null)
         {
             status = rejection.Reason;
             SyncCreditsFromEntityWorld(playerSlotId);
             return false;
         }
 
-        var entity = _entityWorld.OrderedEntities
-            .Where(entity => !before.Contains(entity.Id.Value))
-            .Where(entity => entity.OwnerId == owner)
-            .Where(entity => EntityBuildingSpecId(entity) == kind)
-            .OrderBy(entity => entity.Id.Value)
-            .LastOrDefault();
+        var entity = LastNewConstructedEntity(owner, kind, _constructionEntityIdsBefore);
         if (entity is null)
         {
             status = "placement.rejected";
