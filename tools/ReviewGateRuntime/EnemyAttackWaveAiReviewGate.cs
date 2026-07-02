@@ -1,0 +1,82 @@
+static class EnemyAttackWaveAiReviewGate
+{
+    public static void Check(string root, GateResult result)
+    {
+        RequirePartialSplit(root, result);
+        RequireUnitSelectionBuffers(root, result);
+    }
+
+    private static void RequirePartialSplit(string root, GateResult result)
+    {
+        var relativeFiles = new[]
+        {
+            Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs"),
+            Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.UnitSelection.cs"),
+            Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs"),
+            Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Geometry.cs"),
+        };
+
+        foreach (var relativeFile in relativeFiles)
+        {
+            RequireFileUnderLineBudget(root, result, relativeFile);
+        }
+
+        var main = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs");
+        RequireText(main, "public sealed partial class UnitBattlefieldEnemyAttackWaveAi", "Enemy attack wave AI main file must be partial.", result);
+        ForbidText(main, "private static IEnumerable<UnitInstance> AvailableWaveUnits", "Enemy attack wave AI unit selection must stay in its partial file.", result);
+        ForbidText(main, "private bool TryFindTarget", "Enemy attack wave AI target search must stay in its partial file.", result);
+        ForbidText(main, "private static Vector2 EnemyCenter", "Enemy attack wave AI geometry helpers must stay in their partial file.", result);
+    }
+
+    private static void RequireUnitSelectionBuffers(string root, GateResult result)
+    {
+        var ai = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs"));
+        RequireText(ai, "List<UnitInstance> _waveCandidateUnits", "Enemy attack wave AI must reuse wave candidate storage.", result);
+        RequireText(ai, "List<UnitInstance> _waveUnits", "Enemy attack wave AI must reuse wave unit storage.", result);
+        RequireText(ai, "List<int> _waveUnitIds", "Enemy attack wave AI must reuse wave command id storage.", result);
+        RequireText(ai, "List<UnitInstance> _defenseUnits", "Enemy attack wave AI must reuse defense unit storage.", result);
+        RequireText(ai, "List<int> _defenseUnitIds", "Enemy attack wave AI must reuse defense command id storage.", result);
+        RequireText(ai, "UnitDistanceComparer _unitDistanceComparer", "Enemy attack wave AI must reuse distance sort comparison state.", result);
+
+        var main = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs");
+        RequireText(main, "CollectAvailableWaveUnits(", "Enemy wave selection must fill the reusable wave unit buffer.", result);
+        RequireText(main, "CollectUnitIds(_waveUnits, _waveUnitIds)", "Enemy wave attack commands must fill reusable id storage.", result);
+        RequireText(main, "TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds", "Enemy scout waves must reuse the wave id storage.", result);
+        RequireText(main, "CollectAvailableDefenseUnits(", "Enemy defense selection must fill reusable defender storage.", result);
+        RequireText(main, "CollectUnitIds(_defenseUnits, _defenseUnitIds)", "Enemy defense commands must fill reusable id storage.", result);
+        ForbidText(main, "var waveUnits = AvailableWaveUnits(", "Enemy wave selection must not allocate via enumerable ToList.", result);
+        ForbidText(main, "var defenders = AvailableDefenseUnits(", "Enemy defense selection must not allocate via enumerable Take/ToList.", result);
+        ForbidText(main, ".Select(unit => unit.Id).ToList()", "Enemy attack wave AI must not allocate command id lists.", result);
+        ForbidText(main, "waveUnits.Where(unit => unit.AttackTargetId is not null)", "Enemy wave pulse updates must use an explicit loop.", result);
+
+        var selection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.UnitSelection.cs");
+        RequireText(selection, "CollectAvailableWaveUnits(", "Enemy wave unit selection must use a caller-owned buffer helper.", result);
+        RequireText(selection, "CollectAvailableDefenseUnits(", "Enemy defense unit selection must use a caller-owned buffer helper.", result);
+        RequireText(selection, "CollectUnitIds(IReadOnlyList<UnitInstance> units, List<int> result)", "Enemy attack wave AI must centralize id buffer fills.", result);
+        ForbidText(selection, ".ToList()", "Enemy unit selection must not materialize LINQ lists.", result);
+        ForbidText(selection, ".ToHashSet()", "Enemy wave reserve must not allocate HashSets.", result);
+        ForbidText(selection, "IEnumerable<UnitInstance> Available", "Enemy unit selection helpers must not return allocating enumerables.", result);
+
+        var targeting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs");
+        RequireText(targeting, "CollectUnitIds(waveUnits, unitIds)", "Enemy scout waves must fill the reusable id buffer.", result);
+        ForbidText(targeting, "waveUnits.Select(unit => unit.Id)", "Enemy scout waves must not allocate id enumerables.", result);
+    }
+
+    private static void RequireFileUnderLineBudget(string root, GateResult result, string relativeFile)
+    {
+        var path = Path.Combine(root, relativeFile);
+        var normalized = relativeFile.Replace(Path.DirectorySeparatorChar, '/');
+        if (!File.Exists(path))
+        {
+            result.Error($"Enemy attack wave AI partial is missing: {normalized}.");
+            return;
+        }
+
+        var lineCount = File.ReadAllLines(path).Length;
+        if (lineCount > 200)
+        {
+            result.Error($"Enemy attack wave AI partial exceeds 200 lines: {normalized} has {lineCount} lines.");
+        }
+    }
+}

@@ -69,13 +69,15 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         UnitBattlefield battlefield,
         PlayerSlotId enemyPlayerSlotId,
         IReadOnlyList<UnitInstance> waveUnits,
+        List<int> unitIds,
         out string status)
     {
         status = string.Empty;
         var scoutPoint = ScoutPoint(battlefield, enemyPlayerSlotId);
+        CollectUnitIds(waveUnits, unitIds);
         var moved = battlefield.CommandMoveUnits(
             enemyPlayerSlotId,
-            waveUnits.Select(unit => unit.Id),
+            unitIds,
             scoutPoint,
             battlefield.WorldSize,
             MoveCommandMode.Attack);

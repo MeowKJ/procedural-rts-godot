@@ -8,6 +8,12 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
     private const float DefenseRadius = 900f;
 
     private readonly EnemyDifficultyProfile _profile;
+    private readonly List<UnitInstance> _waveCandidateUnits = new();
+    private readonly List<UnitInstance> _waveUnits = new();
+    private readonly List<int> _waveUnitIds = new();
+    private readonly List<UnitInstance> _defenseUnits = new();
+    private readonly List<int> _defenseUnitIds = new();
+    private readonly UnitDistanceComparer _unitDistanceComparer = new();
     private float _waveTimer;
     private float _defenseTimer;
 
@@ -47,21 +53,22 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         }
 
         battlefield.RebuildVisibilityIndex();
-        var waveUnits = AvailableWaveUnits(
+        CollectAvailableWaveUnits(
             battlefield,
             enemyPlayerSlotId,
             _profile.MinimumWaveUnits,
-            _profile.MaximumWaveUnits).ToList();
-        if (waveUnits.Count < _profile.MinimumWaveUnits)
+            _profile.MaximumWaveUnits,
+            _waveUnits);
+        if (_waveUnits.Count < _profile.MinimumWaveUnits)
         {
             _waveTimer = 5f;
-            LastStatus = $"Enemy wave waiting ({waveUnits.Count}/{_profile.MinimumWaveUnits})";
+            LastStatus = $"Enemy wave waiting ({_waveUnits.Count}/{_profile.MinimumWaveUnits})";
             return;
         }
 
         if (!TryFindTarget(battlefield, enemyPlayerSlotId, _profile.AggressionRadius, out var targetKind, out var targetUnit, out var targetBuilding, out var targetPosition))
         {
-            if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, waveUnits, out var scoutStatus))
+            if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds, out var scoutStatus))
             {
                 WavesLaunched++;
                 _waveTimer = Math.Min(_profile.AttackWaveInterval, 6f);
@@ -74,11 +81,11 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return;
         }
 
-        var unitIds = waveUnits.Select(unit => unit.Id).ToList();
+        CollectUnitIds(_waveUnits, _waveUnitIds);
         var commanded = targetKind == CombatTargetKind.Building && targetBuilding is { } buildingTarget
-            ? battlefield.CommandAttackUnits(enemyPlayerSlotId, unitIds, buildingTarget.Id)
+            ? battlefield.CommandAttackUnits(enemyPlayerSlotId, _waveUnitIds, buildingTarget.Id)
             : targetUnit is not null
-                ? battlefield.CommandAttackUnits(enemyPlayerSlotId, unitIds, targetUnit)
+                ? battlefield.CommandAttackUnits(enemyPlayerSlotId, _waveUnitIds, targetUnit)
                 : 0;
         if (commanded == 0)
         {
@@ -87,8 +94,13 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return;
         }
 
-        foreach (var unit in waveUnits.Where(unit => unit.AttackTargetId is not null))
+        foreach (var unit in _waveUnits)
         {
+            if (unit.AttackTargetId is null)
+            {
+                continue;
+            }
+
             unit.PlayerIntentTarget = targetPosition;
             unit.CommandVisualTarget = targetPosition;
             unit.CommandPulse = 1;
@@ -99,7 +111,7 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         LastStatus = $"Enemy wave launched ({commanded} units)";
     }
 
-    private static bool TryIssueDefenseOrder(UnitBattlefield battlefield, PlayerSlotId playerSlotId, out string status)
+    private bool TryIssueDefenseOrder(UnitBattlefield battlefield, PlayerSlotId playerSlotId, out string status)
     {
         status = string.Empty;
         if (battlefield.LiveBuildingCount(playerSlotId) == 0)
@@ -113,26 +125,24 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return false;
         }
 
-        var defenders = AvailableDefenseUnits(battlefield, playerSlotId, targetPosition)
-            .Take(6)
-            .ToList();
-        if (defenders.Count == 0)
+        CollectAvailableDefenseUnits(battlefield, playerSlotId, targetPosition, 6, _defenseUnits);
+        if (_defenseUnits.Count == 0)
         {
             return false;
         }
 
-        var defenderIds = defenders.Select(unit => unit.Id).ToList();
+        CollectUnitIds(_defenseUnits, _defenseUnitIds);
         var commanded = targetKind == CombatTargetKind.Building && targetBuilding is { } buildingTarget
-            ? battlefield.CommandAttackUnits(playerSlotId, defenderIds, buildingTarget.Id)
+            ? battlefield.CommandAttackUnits(playerSlotId, _defenseUnitIds, buildingTarget.Id)
             : targetUnit is not null
-                ? battlefield.CommandAttackUnits(playerSlotId, defenderIds, targetUnit)
+                ? battlefield.CommandAttackUnits(playerSlotId, _defenseUnitIds, targetUnit)
                 : 0;
         if (commanded == 0)
         {
             return false;
         }
 
-        foreach (var defender in defenders)
+        foreach (var defender in _defenseUnits)
         {
             defender.PlayerIntentTarget = targetPosition;
             defender.CommandVisualTarget = targetPosition;
