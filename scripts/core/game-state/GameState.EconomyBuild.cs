@@ -122,8 +122,17 @@ public sealed partial class GameState
         return laneOrder != 0 ? laneOrder : left.Kind.CompareTo(right.Kind);
     }
 
-    private IEnumerable<(BuildingModel Producer, UnitSpec Spec, ProductionSpec Production)> CandidateProductionProducers(Owner owner, ProductionKind productionKind)
+    private bool TryFindLeastQueuedProductionProducer(
+        Owner owner,
+        ProductionKind productionKind,
+        out BuildingModel? bestProducer,
+        out UnitSpec? bestSpec,
+        out ProductionSpec? bestProduction)
     {
+        bestProducer = null;
+        bestSpec = null;
+        bestProduction = null;
+        var bestQueueCount = int.MaxValue;
         foreach (var building in Buildings)
         {
             if (!ProductionKindDesignBridge.TrySpecFor(building.FactionId, productionKind, out var spec)
@@ -141,8 +150,21 @@ public sealed partial class GameState
                 continue;
             }
 
-            yield return (building, spec, production);
+            var queueCount = building.ProductionQueue.Count;
+            if (bestProducer is not null
+                && (queueCount > bestQueueCount
+                    || (queueCount == bestQueueCount && building.Id >= bestProducer.Id)))
+            {
+                continue;
+            }
+
+            bestProducer = building;
+            bestSpec = spec;
+            bestProduction = production;
+            bestQueueCount = queueCount;
         }
+
+        return bestProducer is not null;
     }
 
     public void SetCredits(Owner owner, int credits)
@@ -219,20 +241,19 @@ public sealed partial class GameState
         var requestedSpec = ProductionKindDesignBridge.SpecFor(requestedFaction, productionKind);
         var requestedProduction = requestedSpec.Production
             ?? throw new InvalidOperationException($"UnitDesign '{requestedSpec.Id}' cannot be queued because it has no ProductionSpec.");
-        var producerOption = CandidateProductionProducers(owner, productionKind)
-            .OrderBy(option => option.Producer.ProductionQueue.Count)
-            .ThenBy(option => option.Producer.Id)
-            .FirstOrDefault();
-
-        if (producerOption.Producer is null)
+        if (!TryFindLeastQueuedProductionProducer(
+                owner,
+                productionKind,
+                out var producer,
+                out var spec,
+                out _))
         {
             status = GameText.Format("production.needProducer", BuildSpecCatalog.For(requestedProduction.ProducerKind).Label, requestedSpec.Label);
             return false;
         }
 
-        var (producer, spec, _) = producerOption;
         var inventory = ResourceInventory(owner);
-        if (inventory.Credits < spec.Stats.Cost)
+        if (inventory.Credits < spec!.Stats.Cost)
         {
             status = GameText.Format("production.needCredits", spec.Stats.Cost, spec.Label, inventory.Credits);
             return false;
@@ -243,7 +264,7 @@ public sealed partial class GameState
             Id = _nextProductionId++,
             Kind = productionKind,
             DesignId = spec.Id,
-            FactionId = producer.FactionId,
+            FactionId = producer!.FactionId,
         };
         inventory.Credits -= spec.Stats.Cost;
         producer.ProductionQueue.Add(item);
@@ -255,11 +276,7 @@ public sealed partial class GameState
 
     public bool CancelFirstProduction(Owner owner, out string status)
     {
-        var producer = Buildings
-            .Where(building => building.Owner == owner)
-            .Where(building => building.ProductionQueue.Count > 0)
-            .OrderBy(building => building.ProductionQueue[0].Id)
-            .FirstOrDefault();
+        var producer = TryFindFirstQueuedProductionProducer(owner);
 
         if (producer is null)
         {
@@ -276,5 +293,29 @@ public sealed partial class GameState
         ResourceInventoryChanged?.Invoke(owner, inventory);
         status = GameText.Format("production.cancelled", spec.Label, refund);
         return true;
+    }
+
+    private BuildingModel? TryFindFirstQueuedProductionProducer(Owner owner)
+    {
+        BuildingModel? best = null;
+        var bestQueueItemId = int.MaxValue;
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner || building.ProductionQueue.Count == 0)
+            {
+                continue;
+            }
+
+            var queueItemId = building.ProductionQueue[0].Id;
+            if (queueItemId >= bestQueueItemId)
+            {
+                continue;
+            }
+
+            best = building;
+            bestQueueItemId = queueItemId;
+        }
+
+        return best;
     }
 }

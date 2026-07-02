@@ -25,12 +25,19 @@ static class GameStateAllocationReviewGate
         RequireText(economy, "CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer)", "Legacy GameState production option states must fill reusable spec storage.", result);
         RequireText(economy, "ProductionOptionMetrics(owner, spec.Id, production)", "Legacy GameState production option states must scan producer metrics explicitly.", result);
         RequireText(economy, "result.Sort(CompareLegacyProductionSpecs)", "Legacy GameState production option specs must sort reusable storage in place.", result);
+        RequireText(economy, "TryFindLeastQueuedProductionProducer(", "Legacy GameState production enqueue must scan for the least queued producer explicitly.", result);
+        RequireText(economy, "TryFindFirstQueuedProductionProducer(owner)", "Legacy GameState production cancel must scan for the first queued producer explicitly.", result);
         RequireText(economy, "CollectBuildingBuildAnchors(owner, _legacyPlacementBuildAnchors)", "Legacy GameState placement validation must fill reusable build-anchor storage.", result);
         RequireText(economy, "CollectBuildingObstacles(_legacyPlacementObstacles)", "Legacy GameState placement validation must fill reusable obstacle storage.", result);
         ForbidText(economy, "ProductionSpecsFor(MatchConfig.FactionForOwner(owner))", "Legacy GameState production option states must not allocate production spec query chains.", result);
         ForbidText(economy, "var producers = Buildings", "Legacy GameState production option states must not materialize producer lists.", result);
         ForbidText(economy, "producers.Sum", "Legacy GameState production option metrics must not allocate LINQ Sum queries.", result);
         ForbidText(economy, ".DefaultIfEmpty(0)", "Legacy GameState production option progress must not allocate fallback query chains.", result);
+        ForbidText(economy, "CandidateProductionProducers(owner, productionKind)", "Legacy GameState production enqueue must not allocate candidate producer iterators.", result);
+        ForbidText(economy, ".OrderBy(option => option.Producer.ProductionQueue.Count)", "Legacy GameState production enqueue must not allocate producer ordering chains.", result);
+        ForbidText(economy, ".ThenBy(option => option.Producer.Id)", "Legacy GameState production enqueue must not allocate producer id tie-break ordering chains.", result);
+        ForbidText(economy, ".Where(building => building.Owner == owner)", "Legacy GameState production cancel must not allocate owner filter chains.", result);
+        ForbidText(economy, ".OrderBy(building => building.ProductionQueue[0].Id)", "Legacy GameState production cancel must not allocate queue item ordering chains.", result);
 
         var productionSnapshots = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.ProductionSnapshots.cs");
         RequireText(productionSnapshots, "CollectProductionLaneSnapshots(owner, _legacyProductionLaneSnapshotBuffer)", "Legacy GameState production lane snapshots must fill reusable lane storage.", result);

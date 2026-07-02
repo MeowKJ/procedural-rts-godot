@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19585 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19592 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1229,7 +1229,10 @@ Wiring & coverage gaps (found during the sweep):
     checks. Follow-up: #160 reused legacy `GameState` local-avoidance body and hash
     buffers, replacing the `Units.Where(...).Select(...).ToList()` body list and
     `LocalAvoidanceMath.BuildHash(...)` dictionary copy path with
-    `BuildHashInto(...)`.
+    `BuildHashInto(...)`. Follow-up: #161 replaced legacy `GameState`
+    production enqueue/cancel producer ordering LINQ with explicit least-queued
+    producer and earliest queue-item scans, locking those no-iterator/no-ordering
+    contracts in `ReviewGate regression`.
     Follow-up: #73 reused `CommandSystem` scalar movement/combat/stance subject
     buffers for Move, Patrol, Guard, Attack, Stop, and Stance commands, replacing
     those `OwnedSubjects(...)` yield-iterator paths while leaving harvest/repair
