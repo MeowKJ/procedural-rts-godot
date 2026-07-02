@@ -164,39 +164,6 @@ public partial class BattleRoot
         return faction.Lerp(PlayerSlotAccent(playerSlotId), 0.36f);
     }
 
-    private IReadOnlyList<HudLayer.SelectionIconItem> SelectionIconSummary(
-        IReadOnlyList<UnitModel> units,
-        IReadOnlyList<BuildingModel> buildings)
-    {
-        var items = units
-            .GroupBy(unit => unit.DesignId)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group =>
-            {
-                var factionId = group.Select(unit => unit.FactionId).Distinct().Count() == 1
-                    ? group.First().FactionId
-                    : (FactionId?)null;
-                var sample = group.First();
-                var style = UnitSpecReadPathFor(sample);
-                return new HudLayer.SelectionIconItem(factionId, style.Presentation.Icon, style.Presentation.ShortCode, group.Count(), style.EntityAccent, style.Spec.Id);
-            })
-            .ToList();
-
-        if (buildings.Count > 0)
-        {
-            var factionId = buildings.Select(building => building.FactionId).Distinct().Count() == 1
-                ? buildings[0].FactionId
-                : (FactionId?)null;
-            var sample = buildings[0];
-            var spec = BuildSpecCatalog.For(sample.Kind);
-            var entityAccent = _state.VisualAccent(sample.Owner, sample.FactionId, spec.Accent);
-            items.Add(new HudLayer.SelectionIconItem(factionId, spec.Icon, spec.ShortCode, buildings.Count, entityAccent));
-        }
-
-        return items;
-    }
-
     private static string StanceLabel(UnitStance stance)
     {
         return stance switch

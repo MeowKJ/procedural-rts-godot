@@ -21,6 +21,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))", "UnitBattlefieldVisionSources must copy vision sources explicitly.", result);
         RequireText(process, "_unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));", "UnitBattlefieldVisionSources must fill the reusable vision-source buffer.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
+        var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);
         RequireText(hudSync, "CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer)", "Legacy selection HUD sync must fill the reusable selected-unit buffer.", result);
@@ -28,6 +29,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "foreach (var unit in units)", "Runtime selection HUD group stats must use explicit loops.", result);
         RequireText(hudSync, "foreach (var unit in selectedUnits)", "Legacy selection HUD unit stats must use explicit loops.", result);
         RequireText(hudSync, "foreach (var building in selectedBuildings)", "Legacy selection HUD building stats must use explicit loops.", result);
+        RequireText(iconSummary, "List<SelectionIconSummaryEntry> _selectionIconSummaryEntries", "Selection icon summaries must reuse aggregation storage.", result);
+        RequireText(iconSummary, "List<HudLayer.SelectionIconItem> _selectionIconSummarySecondaryBuffer", "Selection icon summaries must double-buffer HUD-owned item storage.", result);
+        RequireText(iconSummary, "NextSelectionIconSummaryBuffer()", "Selection icon summaries must acquire reusable HUD item storage.", result);
+        RequireText(iconSummary, "_useSecondarySelectionIconSummaryBuffer", "Selection icon summaries must alternate HUD item buffers.", result);
         RequireText(battleRoot, "FillMinimapUnits(units)", "RefreshMinimap must fill the reusable unit buffer.", result);
         RequireText(battleRoot, "FillUnitBattlefieldMinimapBuildings(buildings)", "RefreshMinimap must fill the reusable runtime building buffer.", result);
         RequireText(battleRoot, "FillMinimapResources(resources)", "RefreshMinimap must fill the reusable resource buffer.", result);
@@ -52,6 +57,13 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(hudSync, "selectedUnits.Sum(unit => unit.Cargo)", "Legacy selection HUD group stats must not allocate LINQ sum iterators.", result);
         ForbidText(hudSync, "selectedUnits.Average(", "Legacy selection HUD group stats must not allocate LINQ average iterators.", result);
         ForbidText(hudSync, "selectedBuildings.Average(", "Legacy selection HUD group stats must not allocate LINQ average iterators.", result);
+        ForbidText(hudSync, ".GroupBy(", "Selection HUD sync must not allocate icon summary grouping chains.", result);
+        ForbidText(hudSync, ".ToList()", "Selection HUD sync must not materialize icon summary lists.", result);
+        ForbidText(iconSummary, ".GroupBy(", "Selection icon summaries must not allocate grouping chains.", result);
+        ForbidText(iconSummary, ".OrderBy", "Selection icon summaries must sort reusable entries in place.", result);
+        ForbidText(iconSummary, ".Select(", "Selection icon summaries must not allocate projection chains.", result);
+        ForbidText(iconSummary, ".Distinct()", "Selection icon summaries must track faction uniformity explicitly.", result);
+        ForbidText(iconSummary, ".ToList()", "Selection icon summaries must not allocate materialized lists.", result);
         ForbidText(alerts, ".OrderByDescending(alert => alert.CreatedAt)", "RefreshAlerts must not allocate ordered alert queries.", result);
         ForbidText(alerts, ".Take(4)", "RefreshAlerts must not allocate LINQ take queries.", result);
         ForbidText(alerts, ".Select(alert => new HudLayer.AlertLine", "RefreshAlerts must not allocate alert projection chains.", result);

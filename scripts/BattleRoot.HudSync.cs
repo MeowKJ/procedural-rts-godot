@@ -272,45 +272,6 @@ public partial class BattleRoot
             PlayerSlotAccent(PlayerSlotId.One));
     }
 
-    private static IReadOnlyList<HudLayer.SelectionIconItem> UnitBattlefieldBuildingIconSummary(IReadOnlyList<BuildingSelectionProjection> buildings)
-    {
-        return buildings
-            .GroupBy(building => building.Kind)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group =>
-            {
-                var sample = group.First();
-                return new HudLayer.SelectionIconItem(
-                    null,
-                    sample.Icon,
-                    sample.ShortCode,
-                    group.Count(),
-                    sample.Accent);
-            })
-            .ToList();
-    }
-
-    private static IReadOnlyList<HudLayer.SelectionIconItem> UnitInstanceIconSummary(IReadOnlyList<UnitInstance> units)
-    {
-        return units
-            .GroupBy(unit => unit.Spec.Id)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group =>
-            {
-                var sample = group.First();
-                return new HudLayer.SelectionIconItem(
-                    null,
-                    sample.Spec.Icon,
-                    sample.Spec.ShortCode,
-                    group.Count(),
-                    PlayerSlotAccent(sample.PlayerSlotId),
-                    sample.Spec.Id);
-            })
-            .ToList();
-    }
-
     private void SetUnitSelectionInfo(UnitModel unit)
     {
         var style = UnitSpecReadPathFor(unit);
