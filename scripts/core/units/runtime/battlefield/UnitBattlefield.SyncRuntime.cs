@@ -356,7 +356,8 @@ public sealed partial class UnitBattlefield
 
     private void SyncDockStateFromEntities()
     {
-        foreach (var refineryId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var refineryId in _buildingTargetIdBuffer)
         {
             if (BuildingIdentity(refineryId)?.Kind != BuildingDesignIds.Refinery)
             {

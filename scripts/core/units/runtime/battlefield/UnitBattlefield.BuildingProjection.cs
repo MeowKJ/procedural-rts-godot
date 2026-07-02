@@ -26,27 +26,29 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<UnitBattlefieldBuildingSnapshot> BuildingSnapshots()
     {
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Select(BuildingSnapshot)
             .Where(snapshot => snapshot is not null)
             .Select(snapshot => snapshot!.Value)
             .ToArray();
     }
 
-    private IReadOnlyList<int> BuildingTargetIds()
+    private void CollectBuildingTargetIds(List<int> result)
     {
-        var ids = new List<int>();
-        var seen = new HashSet<int>();
-        foreach (var entity in _entityWorld.OrderedEntities)
+        result.Clear();
+        foreach (var entry in _buildingTargetEntityIds)
         {
-            if (entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                && seen.Add(identity.LegacyBuildingId))
+            if (!_entityWorld.TryGet(entry.Value, out var entity)
+                || !entity.Components.TryGet<BuildingIdentityComponentState>(out var identity))
             {
-                ids.Add(identity.LegacyBuildingId);
+                continue;
             }
+
+            result.Add(identity.LegacyBuildingId);
         }
 
-        return ids;
+        result.Sort(CompareBuildingIds);
     }
 
     public UnitBattlefieldBuildingSnapshot? BuildingSnapshot(int id)
@@ -119,7 +121,8 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<BuildingRallyProjection> SelectedBuildingRallyProjections(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
             .Select(BuildingPresentationProjection)
             .Where(projection => projection is { Entity.Selected: true, RallyPoint: not null })
@@ -135,7 +138,8 @@ public sealed partial class UnitBattlefield
     public bool HasSelectedBuildings(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
             .Select(BuildingProjection)
             .Any(projection => projection?.Selected == true);
@@ -144,7 +148,8 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<BuildingSelectionProjection> SelectedBuildingSelectionProjections(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
             .OrderBy(buildingId => buildingId)
             .Select(BuildingSelectionProjection)
@@ -156,7 +161,8 @@ public sealed partial class UnitBattlefield
     private IEnumerable<EntityId> SelectedBuildingEntityIds(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
             .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)
             .Where(buildingId => _buildingTargetEntityIds.ContainsKey(buildingId))

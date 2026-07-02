@@ -6,7 +6,8 @@ public sealed partial class UnitBattlefield
     {
         result.Clear();
         var hasSelected = false;
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingIdentity(buildingId)?.PlayerSlotId != playerSlotId
                 || BuildingProjection(buildingId)?.Selected != true)

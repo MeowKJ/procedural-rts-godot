@@ -4,9 +4,19 @@ public sealed partial class UnitBattlefield
 {
     private void UpdateBuildingCombatFromEntityWorld(float dt)
     {
-        if (!BuildingTargetIds()
-            .Select(BuildingIdentity)
-            .Any(identity => identity is not null && BuildSpecCatalog.For(identity.Kind).WeaponKind is not null))
+        CollectBuildingTargetIds(_buildingTargetIdSecondaryBuffer);
+        var hasWeaponBuilding = false;
+        foreach (var buildingId in _buildingTargetIdSecondaryBuffer)
+        {
+            if (BuildingIdentity(buildingId) is { } identity
+                && BuildSpecCatalog.For(identity.Kind).WeaponKind is not null)
+            {
+                hasWeaponBuilding = true;
+                break;
+            }
+        }
+
+        if (!hasWeaponBuilding)
         {
             return;
         }

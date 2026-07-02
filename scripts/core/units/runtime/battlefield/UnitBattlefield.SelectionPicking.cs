@@ -97,7 +97,8 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<BuildingHitPulseProjection> BuildingHitPulseProjections()
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingProjection(buildingId) is { IsAlive: true })
             .OrderBy(buildingId => buildingId)
             .Select(BuildingHitPulseProjection)
@@ -129,7 +130,8 @@ public sealed partial class UnitBattlefield
         Func<Rect2, bool>? isExplored = null)
     {
         SyncBuildingTargetEntities();
-        return BuildingTargetIds()
+        CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
+        return _buildingProjectionTargetIdBuffer
             .Where(buildingId => BuildingProjection(buildingId) is { IsAlive: true })
             .OrderBy(buildingId => buildingId)
             .Select(buildingId => BuildingMinimapProjection(viewer, buildingId, isExplored))

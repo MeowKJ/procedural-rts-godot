@@ -217,7 +217,8 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingSnapshot(buildingId) is { } building
                 && building.PlayerSlotId == playerSlotId
@@ -325,11 +326,14 @@ public sealed partial class UnitBattlefield
 
     private UnitFactionId FactionForSlot(PlayerSlotId playerSlotId)
     {
-        if (BuildingTargetIds()
-            .Select(BuildingIdentity)
-            .FirstOrDefault(identity => identity?.PlayerSlotId == playerSlotId) is { } identity)
+        CollectBuildingTargetIds(_buildingTargetIdSecondaryBuffer);
+        foreach (var buildingId in _buildingTargetIdSecondaryBuffer)
         {
-            return identity.Faction;
+            if (BuildingIdentity(buildingId) is { PlayerSlotId: var slot } identity
+                && slot == playerSlotId)
+            {
+                return identity.Faction;
+            }
         }
 
         if (Units.FirstOrDefault(unit => unit.PlayerSlotId == playerSlotId) is { } unit)

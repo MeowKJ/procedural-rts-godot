@@ -2,12 +2,40 @@ static class UnitBattlefieldAllocationReviewGate
 {
     public static void Check(string root, GateResult result)
     {
+        RequireBuildingTargetIdBuffers(root, result);
         RequireHarvestRepairCommandBuffers(root, result);
         RequireGroupCommandSubjectBuffers(root, result);
         RequireDeathRemovalBuffers(root, result);
         RequireProductionSyncBuffers(root, result);
         RequireConstructionSubjectBuffers(root, result);
         RequireSelectedBuildingRallyBuffers(root, result);
+    }
+
+    private static void RequireBuildingTargetIdBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<int> _buildingTargetIdBuffer", "UnitBattlefield building scans must reuse primary building-id storage.", result);
+        RequireText(battlefield, "List<int> _buildingTargetIdSecondaryBuffer", "UnitBattlefield nested building scans must reuse secondary building-id storage.", result);
+        RequireText(battlefield, "List<int> _buildingProjectionTargetIdBuffer", "UnitBattlefield projection scans must reuse building-id storage.", result);
+        RequireText(battlefield, "List<int> _buildingVisibilityViewerIdBuffer", "UnitBattlefield visibility viewer scans must reuse building-id storage.", result);
+        RequireText(battlefield, "List<int> _buildingVisibilityTargetIdBuffer", "UnitBattlefield visibility target scans must reuse building-id storage.", result);
+        RequireText(battlefield, "CollectBuildingTargetIds(_buildingTargetIdBuffer)", "UnitBattlefield hot building scans must fill reusable buffers.", result);
+        ForbidText(battlefield, "BuildingTargetIds()", "UnitBattlefield building scans must not use an allocating BuildingTargetIds helper.", result);
+
+        var projection = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.BuildingProjection.cs");
+        RequireText(projection, "private void CollectBuildingTargetIds(List<int> result)", "Building target id scans must use caller-owned buffers.", result);
+        RequireText(projection, "result.Sort(CompareBuildingIds)", "Building target id scans must preserve stable building-id order.", result);
+        ForbidText(projection, "var ids = new List<int>();", "Building target id scans must not allocate a fresh id list.", result);
+        ForbidText(projection, "var seen = new HashSet<int>();", "Building target id scans must not allocate a fresh de-duplication set.", result);
+        ForbidText(projection, "private IReadOnlyList<int> BuildingTargetIds()", "Building target id scans must not return allocating snapshots.", result);
     }
 
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)

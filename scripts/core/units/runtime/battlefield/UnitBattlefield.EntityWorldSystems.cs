@@ -35,7 +35,8 @@ public sealed partial class UnitBattlefield
     private void CollectCandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId, List<int> result)
     {
         result.Clear();
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingSnapshot(buildingId) is not { } building
                 || building.PlayerSlotId != playerSlotId
@@ -60,7 +61,8 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingSnapshot(buildingId) is not { } building
                 || building.PlayerSlotId != playerSlotId
@@ -125,7 +127,8 @@ public sealed partial class UnitBattlefield
     private void CollectBuildingBuildAnchors(PlayerSlotId playerSlotId, List<PlacementBuildAnchor> result)
     {
         result.Clear();
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingSnapshot(buildingId) is not { } building
                 || building.PlayerSlotId != playerSlotId
@@ -152,7 +155,8 @@ public sealed partial class UnitBattlefield
     private void CollectBuildingPlacementObstacles(List<PlacementObstacle> result)
     {
         result.Clear();
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingSnapshot(buildingId) is not { } building || building.Hp <= 0)
             {

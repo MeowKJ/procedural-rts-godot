@@ -368,7 +368,8 @@ public sealed partial class UnitBattlefield
             }
         }
 
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             if (BuildingAttackTargetKindCore(buildingId) == CombatTargetKind.Unit
                 && BuildingAttackTargetIdCore(buildingId) is { } targetId

@@ -53,12 +53,16 @@ public sealed partial class UnitBattlefield
                 viewer.Spec.Stats.SightRange);
         }
 
-        foreach (var viewer in BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.Hp > 0 && BuildingBuildProgress(building.Id) >= 1))
+        CollectBuildingTargetIds(_buildingVisibilityViewerIdBuffer);
+        foreach (var buildingId in _buildingVisibilityViewerIdBuffer)
         {
+            if (BuildingSnapshot(buildingId) is not { } viewer
+                || viewer.Hp <= 0
+                || BuildingBuildProgress(viewer.Id) < 1)
+            {
+                continue;
+            }
+
             MarkVisibleBuildingFootprints(
                 viewer.PlayerSlotId,
                 viewer.Position,
@@ -74,11 +78,14 @@ public sealed partial class UnitBattlefield
         }
 
         var owner = OwnerId.FromPlayerSlot(viewer);
-        foreach (var building in BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value))
+        CollectBuildingTargetIds(_buildingVisibilityTargetIdBuffer);
+        foreach (var buildingId in _buildingVisibilityTargetIdBuffer)
         {
+            if (BuildingSnapshot(buildingId) is not { } building)
+            {
+                continue;
+            }
+
             if (building.Hp <= 0
                 || !Relations.CanAttack(viewer, building.PlayerSlotId)
                 || !_buildingTargetEntityIds.TryGetValue(building.Id, out var entityId)

@@ -42,6 +42,11 @@ public sealed partial class UnitBattlefield
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];
     private readonly List<int> _selectedBuildingRallyProducerIds = [];
+    private readonly List<int> _buildingTargetIdBuffer = [];
+    private readonly List<int> _buildingTargetIdSecondaryBuffer = [];
+    private readonly List<int> _buildingProjectionTargetIdBuffer = [];
+    private readonly List<int> _buildingVisibilityViewerIdBuffer = [];
+    private readonly List<int> _buildingVisibilityTargetIdBuffer = [];
     private readonly List<int> _productionCandidateProducerIds = [];
     private readonly HashSet<int> _unitCommandIdBuffer = [];
     private readonly List<UnitInstance> _unitCommandBuffer = [];
@@ -142,7 +147,8 @@ public sealed partial class UnitBattlefield
             UpdateCombat(unit, dt);
         }
 
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             DecayBuildingPresentationPulses(buildingId, dt);
         }

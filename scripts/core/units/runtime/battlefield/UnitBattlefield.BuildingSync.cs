@@ -134,7 +134,8 @@ public sealed partial class UnitBattlefield
 
     private void SyncBuildingTargetEntities()
     {
-        foreach (var buildingId in BuildingTargetIds())
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        foreach (var buildingId in _buildingTargetIdBuffer)
         {
             SyncBuildingTargetEntity(buildingId);
         }
