@@ -205,6 +205,7 @@ public sealed partial class GameState
         var direction = (aimPoint - muzzle).LengthSquared() <= 0.01f
             ? Vector2.FromAngle(source.WeaponFacing)
             : (aimPoint - muzzle).Normalized();
+        var projectileStyle = ProjectileVfxMath.StyleFor(ammo.LegacyKind);
 
         Projectiles.Add(new ProjectileModel
         {
@@ -223,9 +224,9 @@ public sealed partial class GameState
             Damage = damage,
             HitRadiusMultiplier = ammo.AccuracyRadiusMultiplier,
             TrackingStrength = ammo.TrackingStrength,
-            TrailWidth = ammo.Kind == AmmoKind.NeedleDart ? 3.2f : ammo.Kind == AmmoKind.SeekerRocket ? 7.2f : 8.4f,
-            CoreWidth = ammo.Kind == AmmoKind.NeedleDart ? 1.1f : ammo.Kind == AmmoKind.SeekerRocket ? 2.4f : 2.8f,
-            HeadRadius = ammo.Kind == AmmoKind.NeedleDart ? 2.8f : ammo.Kind == AmmoKind.SeekerRocket ? 5.6f : 4.6f,
+            TrailWidth = projectileStyle.TrailWidth,
+            CoreWidth = projectileStyle.CoreWidth,
+            HeadRadius = projectileStyle.HeadRadius,
             Accent = FactionVisualPolicy.CommandAccent(Owner.Player, MatchConfig.PlayerFaction, source.Owner, source.FactionId, ammo.Accent),
         });
     }

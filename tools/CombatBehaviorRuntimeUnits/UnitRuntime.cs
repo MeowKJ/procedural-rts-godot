@@ -315,13 +315,19 @@ static partial class Program
         projectilePresentationBattlefield.CommandAttackSelected(PlayerSlotId.One, projectileTarget.Id);
         projectilePresentationBattlefield.Update(1 / 30.0);
         var projectileProjections = projectilePresentationBattlefield.ProjectileProjections();
+        var ordinaryProjectileStyle = ProjectileVfxMath.StyleFor(AmmoKind.NeedleDart);
+        var seekerProjectileStyle = ProjectileVfxMath.StyleFor(AmmoKind.SeekerRocket);
         if (projectileProjections.Count == 0
             || projectileProjections.All(projectile => projectile.LegacyAmmoKind != AmmoKind.SeekerRocket)
             || projectileProjections.Any(projectile => projectile.Velocity.LengthSquared() <= 0.01f)
             || projectileProjections.Any(projectile => projectile.TrailWidth <= projectile.CoreWidth)
-            || projectileProjections.Any(projectile => projectile.HeadRadius <= 0))
+            || projectileProjections.Any(projectile => projectile.HeadRadius <= 0)
+            || ordinaryProjectileStyle.CoreWidth < ProjectileVfxMath.MinimumCoreWidth
+            || ordinaryProjectileStyle.HeadRadius < ProjectileVfxMath.MinimumHeadRadius
+            || ordinaryProjectileStyle.TrailAlpha < ProjectileVfxMath.MinimumTrailAlpha
+            || projectileProjections.Any(projectile => projectile.LegacyAmmoKind == AmmoKind.SeekerRocket && projectile.Style != seekerProjectileStyle))
         {
-            throw new InvalidOperationException("UnitBattlefield should expose render-ready EntityWorld projectile projections for CombatEffectsLayer");
+            throw new InvalidOperationException("UnitBattlefield should expose render-ready, readable EntityWorld projectile projections for CombatEffectsLayer");
         }
 
         var hostilePips = newUnitBattlefield.MinimapPips(PlayerSlotId.One);

@@ -116,11 +116,11 @@ public partial class BattleRoot
         _unitBattlefield.ResourceInventoryChanged += OnUnitBattlefieldResourceInventoryChanged;
         _unitBattlefield.ProductionCompleted += OnUnitBattlefieldProductionCompleted;
 
-        _combatEffects = new CombatEffectsLayer { Name = "CombatEffects", State = _state, UnitBattlefield = _unitBattlefield };
-        AddChild(_combatEffects);
-
         _fogOfWar = new FogOfWarLayer { Name = "FogOfWar", State = _state, Quality = _state.FogQuality };
         AddChild(_fogOfWar);
+
+        _combatEffects = new CombatEffectsLayer { Name = "CombatEffects", State = _state, UnitBattlefield = _unitBattlefield };
+        AddChild(_combatEffects);
 
         _commandAcknowledgements = new CommandAcknowledgementLayer { Name = "CommandAcknowledgements" };
         AddChild(_commandAcknowledgements);

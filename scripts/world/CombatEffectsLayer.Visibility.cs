@@ -23,6 +23,13 @@ public partial class CombatEffectsLayer : Node2D
         return rect.Intersects(new Rect2(min, max - min));
     }
 
+    private bool IsProjectileVisibleToPlayer(Vector2 tail, Vector2 head)
+    {
+        return State.IsVisibleToPlayer(head)
+            || State.IsVisibleToPlayer(tail)
+            || State.IsVisibleToPlayer((tail + head) * 0.5f);
+    }
+
     private static float NoiseAngle(int seed, int index)
     {
         return Noise01(seed, index) * Mathf.Tau;

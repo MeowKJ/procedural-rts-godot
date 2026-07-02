@@ -833,6 +833,13 @@ All as data/components on the shared entity language - never new runtime classes
     vehicle damage profile so delayed tracking impacts still read as anti-vehicle
     counters. Gates passed: `BalanceReport`, `CounterReadabilityQa`, `SimReplay`,
     full `ReviewGate`, and `VerifyAll` 22/22.
+    回归修复 (2026-07-02, #76): `ProjectileVfxMath` now owns the shared readable
+    projectile style for legacy `GameState.Projectiles` and ECS
+    `ProjectilePresentationProjection`; `CombatEffectsLayer` uses segment culling,
+    fog visibility gating, and draws after `FogOfWarLayer` so visible ordinary
+    projectiles and seeker rockets are not swallowed by fog/theme overlays.
+    `CombatBehavior`, `ReviewGate simhot`, full `ReviewGate`, and `VerifyAll`
+    lock the legacy/ECS paths.
 [ ] Upgrade system as match-time derived modifiers, NEVER mutating the immutable
     `Spec`: an `UpgradeState` (per owner) resolves into derived combat/move/vision
     values applied on top of the spec. Tech tiers, weapon/armor upgrades, veterancy
@@ -1048,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17884 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17919 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API

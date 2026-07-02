@@ -124,6 +124,17 @@ static partial class Program
             throw new InvalidOperationException($"unit turret state transitions should deterministically cover idle, reloading, tracking, and firing; got idle={idleTurret.TurretState}, reload={reloadingTurret.TurretState}, tracking={trackingTurret.TurretState}, firing={firingTurret.TurretState}, projectiles={turretStateState.Projectiles.Count}");
         }
 
+        var cannonProjectile = turretStateState.Projectiles.First(projectile => projectile.SourceId == firingTurret.Id);
+        var cannonProjectileStyle = ProjectileVfxMath.StyleFor(cannonProjectile.AmmoKind);
+        if (cannonProjectile.TrailWidth != cannonProjectileStyle.TrailWidth
+            || cannonProjectile.CoreWidth != cannonProjectileStyle.CoreWidth
+            || cannonProjectile.HeadRadius != cannonProjectileStyle.HeadRadius
+            || cannonProjectile.CoreWidth < ProjectileVfxMath.MinimumCoreWidth
+            || cannonProjectile.HeadRadius < ProjectileVfxMath.MinimumHeadRadius)
+        {
+            throw new InvalidOperationException("legacy GameState projectile visuals should use the shared readable projectile style");
+        }
+
         var sharedThreatState = EmptyState();
         var attacker = Unit(1, UnitDesignIds.GenericLightTank, Owner.Player, new Vector2(800, 1000), UnitStance.Hold);
         var directTarget = Unit(2, UnitDesignIds.GenericLightTank, Owner.Enemy, new Vector2(1000, 1000), UnitStance.PassiveRetaliate);

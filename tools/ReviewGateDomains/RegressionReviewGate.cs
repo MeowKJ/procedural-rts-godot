@@ -93,12 +93,30 @@ static class RegressionReviewGate
 
         var draw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
         RequireText(draw, "ProjectileProjections(_projectileProjections)", "CombatEffectsLayer.DrawProjectiles must fill the reusable projectile projection buffer.", result);
+        RequireText(draw, "ProjectileVfxMath.StyleFor(projectile.AmmoKind)", "Legacy projectiles must use the shared projectile readability style.", result);
+        RequireText(draw, "projectile.Style", "ECS projectiles must carry the shared projectile readability style.", result);
+        RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding)", "Projectile culling must include the tracer segment, not only the head point.", result);
+        RequireText(draw, "IsProjectileVisibleToPlayer(tail, position)", "Projectiles drawn above fog must remain gated by player visibility.", result);
         ForbidRegex(draw, @"UnitBattlefield\s*\.\s*ProjectileProjections\s*\(\s*\)", "CombatEffectsLayer.DrawProjectiles must not call the allocating projectile projection API.", result);
 
         var projector = ReviewGateSource.Read(root, "scripts", "core", "sim", "ProjectilePresentationProjection.cs");
         RequireText(projector, "ProjectInto(EntityWorld world, PlayerSlotId viewer, List<ProjectilePresentationProjection> result)", "ProjectilePresentationProjector must expose a caller-owned buffer API.", result);
         RequireText(projector, "result.Clear();", "ProjectilePresentationProjector.ProjectInto must clear and reuse the caller-owned buffer.", result);
         RequireText(projector, "Count(EntityWorld world)", "ProjectilePresentationProjector must expose a count-only projectile path.", result);
+        RequireText(projector, "ProjectileVfxMath.StyleFor(ammo.LegacyKind)", "ECS projectile projections must use the shared projectile readability style.", result);
+
+        var projectileStyle = ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs");
+        RequireText(projectileStyle, "MinimumTrailWidth = 3.6f", "Ordinary projectile trails must keep a readable minimum width.", result);
+        RequireText(projectileStyle, "MinimumCoreWidth = 1.8f", "Ordinary projectile cores must keep a readable minimum width.", result);
+        RequireText(projectileStyle, "MinimumHeadRadius = 3.4f", "Ordinary projectile heads must keep a readable minimum radius.", result);
+        RequireText(projectileStyle, "MinimumCoreAlpha = 0.82f", "Projectile cores must remain bright enough under theme/fog overlays.", result);
+        RequireText(projectileStyle, "AmmoKind.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
+
+        var gameStateCombat = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
+        RequireText(gameStateCombat, "ProjectileVfxMath.StyleFor(ammo.LegacyKind)", "Legacy GameState projectiles must initialize from the shared projectile readability style.", result);
+
+        var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
+        RequireText(battleRoot, "AddChild(_fogOfWar);\n\n        _combatEffects", "CombatEffectsLayer must be added after fog so visible projectiles render above the fog overlay.", result);
 
         var battlefield = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProjectileProjection.cs");
         RequireText(battlefield, "ProjectileProjections(List<ProjectilePresentationProjection> result)", "UnitBattlefield must expose a projectile projection buffer-fill API.", result);

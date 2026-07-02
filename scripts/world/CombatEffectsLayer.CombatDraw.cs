@@ -68,13 +68,11 @@ public partial class CombatEffectsLayer : Node2D
     {
         foreach (var projectile in State.Projectiles)
         {
+            var style = ProjectileVfxMath.StyleFor(projectile.AmmoKind);
             DrawProjectile(
                 projectile.Position,
                 projectile.Velocity,
-                projectile.AmmoKind == AmmoKind.SeekerRocket ? 34 : projectile.AmmoKind == AmmoKind.NeedleDart ? 28 : 22,
-                projectile.TrailWidth,
-                projectile.CoreWidth,
-                projectile.HeadRadius,
+                style,
                 projectile.Accent,
                 projectile.AmmoKind == AmmoKind.SeekerRocket);
         }
@@ -90,10 +88,7 @@ public partial class CombatEffectsLayer : Node2D
             DrawProjectile(
                 projectile.Position,
                 projectile.Velocity,
-                projectile.TailLength,
-                projectile.TrailWidth,
-                projectile.CoreWidth,
-                projectile.HeadRadius,
+                projectile.Style,
                 projectile.Accent,
                 projectile.IsSeekerRocket);
         }
@@ -102,29 +97,27 @@ public partial class CombatEffectsLayer : Node2D
     private void DrawProjectile(
         Vector2 position,
         Vector2 velocity,
-        float tailLength,
-        float trailWidth,
-        float coreWidth,
-        float headRadius,
+        ProjectileVfxStyle style,
         Color accent,
         bool isSeekerRocket)
     {
-        if (!IsVisible(position, headRadius + 42))
-        {
-            return;
-        }
-
         var direction = velocity.LengthSquared() <= 0.01f
             ? Vector2.Right
             : velocity.Normalized();
 
-        var tail = position - direction * tailLength;
-        DrawLine(tail, position, new Color(accent, 0.38f), trailWidth, true);
-        DrawLine(tail, position, new Color("#ffffff", 0.72f), coreWidth, true);
-        DrawCircle(position, headRadius, new Color(accent, 0.94f));
+        var tail = position - direction * style.TailLength;
+        if (!IsSegmentVisible(tail, position, style.CullingPadding)
+            || !IsProjectileVisibleToPlayer(tail, position))
+        {
+            return;
+        }
+
+        DrawLine(tail, position, new Color(accent, style.TrailAlpha), style.TrailWidth, true);
+        DrawLine(tail, position, new Color("#ffffff", style.CoreAlpha), style.CoreWidth, true);
+        DrawCircle(position, style.HeadRadius, new Color(accent, style.HeadAlpha));
         if (isSeekerRocket)
         {
-            DrawCircle(tail, headRadius * 0.74f, new Color("#ffefad", 0.34f));
+            DrawCircle(tail, style.HeadRadius * 0.74f, style.TailFlare);
         }
     }
 }

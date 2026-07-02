@@ -15,20 +15,15 @@ public readonly record struct ProjectilePresentationProjection(
     ProjectileBehavior Behavior,
     HitRule HitRule,
     AmmoKind? LegacyAmmoKind,
-    float TrailWidth,
-    float CoreWidth,
-    float HeadRadius,
+    ProjectileVfxStyle Style,
     Color Accent)
 {
     public bool IsSeekerRocket => LegacyAmmoKind == AmmoKind.SeekerRocket;
-    public float CullingRadius => HeadRadius + 42f;
-
-    public float TailLength => LegacyAmmoKind switch
-    {
-        AmmoKind.SeekerRocket => 34f,
-        AmmoKind.NeedleDart => 28f,
-        _ => 22f,
-    };
+    public float CullingRadius => Style.HeadRadius + Style.CullingPadding;
+    public float TailLength => Style.TailLength;
+    public float TrailWidth => Style.TrailWidth;
+    public float CoreWidth => Style.CoreWidth;
+    public float HeadRadius => Style.HeadRadius;
 }
 
 public static class ProjectilePresentationProjector
@@ -89,40 +84,8 @@ public static class ProjectilePresentationProjector
             ammo.Behavior,
             ammo.HitRule,
             ammo.LegacyKind,
-            TrailWidthFor(ammo.LegacyKind),
-            CoreWidthFor(ammo.LegacyKind),
-            HeadRadiusFor(ammo.LegacyKind),
+            ProjectileVfxMath.StyleFor(ammo.LegacyKind),
             AccentFor(world, viewer, sourceOwner, ammo.Accent));
-    }
-
-    private static float TrailWidthFor(AmmoKind? ammoKind)
-    {
-        return ammoKind switch
-        {
-            AmmoKind.NeedleDart => 3.2f,
-            AmmoKind.SeekerRocket => 7.2f,
-            _ => 8.4f,
-        };
-    }
-
-    private static float CoreWidthFor(AmmoKind? ammoKind)
-    {
-        return ammoKind switch
-        {
-            AmmoKind.NeedleDart => 1.1f,
-            AmmoKind.SeekerRocket => 2.4f,
-            _ => 2.8f,
-        };
-    }
-
-    private static float HeadRadiusFor(AmmoKind? ammoKind)
-    {
-        return ammoKind switch
-        {
-            AmmoKind.NeedleDart => 2.8f,
-            AmmoKind.SeekerRocket => 5.6f,
-            _ => 4.6f,
-        };
     }
 
     private static Color AccentFor(EntityWorld world, OwnerId viewer, OwnerId sourceOwner, Color ammoAccent)
