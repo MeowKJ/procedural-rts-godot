@@ -16,12 +16,30 @@ public sealed partial class GameState
 
     public int SelectedCount()
     {
-        return SelectedUnits().Count() + SelectedBuildings().Count();
+        var count = SelectedUnitCount();
+        foreach (var building in Buildings)
+        {
+            if (building.Owner == Owner.Player && building.Selected)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     public IReadOnlyList<int> SelectedUnitIds()
     {
-        return SelectedUnits().Select(unit => unit.Id).ToList();
+        _legacySelectedUnitIds.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Owner == Owner.Player && unit.Selected)
+            {
+                _legacySelectedUnitIds.Add(unit.Id);
+            }
+        }
+
+        return _legacySelectedUnitIds;
     }
 
     public void ClearSelection()
@@ -96,22 +114,30 @@ public sealed partial class GameState
             }
         }
 
-        foreach (var unit in Units.Where(unit => unit.Owner == Owner.Player && unit.DesignId == hit.DesignId))
+        foreach (var unit in Units)
         {
-            unit.Selected = visibleWorldRect.HasPoint(unit.Position) || (additive && unit.Selected);
+            if (unit.Owner == Owner.Player && unit.DesignId == hit.DesignId)
+            {
+                unit.Selected = visibleWorldRect.HasPoint(unit.Position) || (additive && unit.Selected);
+            }
         }
 
-        return SelectedUnits().Count();
+        return SelectedUnitCount();
     }
 
     public int SelectUnitsByIds(IEnumerable<int> unitIds)
     {
-        var requestedIds = unitIds.ToHashSet();
+        _legacyRequestedSelectionIds.Clear();
+        foreach (var unitId in unitIds)
+        {
+            _legacyRequestedSelectionIds.Add(unitId);
+        }
+
         var selectedCount = 0;
 
         foreach (var unit in Units)
         {
-            unit.Selected = unit.Owner == Owner.Player && requestedIds.Contains(unit.Id);
+            unit.Selected = unit.Owner == Owner.Player && _legacyRequestedSelectionIds.Contains(unit.Id);
             if (unit.Selected)
             {
                 selectedCount++;
@@ -141,25 +167,64 @@ public sealed partial class GameState
         }
 
         var normalizedRect = NormalizedSelectionRect(worldRect);
-        var unitsInRect = Units
-            .Where(unit => unit.Owner == Owner.Player && UnitOverlapsSelectionRect(normalizedRect, unit))
-            .ToList();
-        var harvestersInRect = unitsInRect
-            .Where(IsHarvesterUnit)
-            .ToList();
-        var combatUnitsInRect = unitsInRect
-            .Where(unit => !IsHarvesterUnit(unit))
-            .ToList();
-        var includeHarvesters = ShouldIncludeHarvestersInSelectionRect(normalizedRect, harvestersInRect, combatUnitsInRect);
+        CollectSelectionRectUnits(normalizedRect, _legacySelectionRectHarvesters, _legacySelectionRectCombatUnits);
+        var includeHarvesters = ShouldIncludeHarvestersInSelectionRect(
+            normalizedRect,
+            _legacySelectionRectHarvesters,
+            _legacySelectionRectCombatUnits);
 
-        foreach (var unit in Units.Where(unit => unit.Owner == Owner.Player))
+        foreach (var unit in Units)
         {
+            if (unit.Owner != Owner.Player)
+            {
+                continue;
+            }
+
             var selectableByBox = UnitOverlapsSelectionRect(normalizedRect, unit)
                 && (!IsHarvesterUnit(unit) || includeHarvesters);
             unit.Selected = selectableByBox || (additive && unit.Selected);
         }
 
-        return SelectedUnits().Count();
+        return SelectedUnitCount();
+    }
+
+    private int SelectedUnitCount()
+    {
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.Owner == Owner.Player && unit.Selected)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private void CollectSelectionRectUnits(
+        Rect2 normalizedRect,
+        List<UnitModel> harvesters,
+        List<UnitModel> combatUnits)
+    {
+        harvesters.Clear();
+        combatUnits.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Owner != Owner.Player || !UnitOverlapsSelectionRect(normalizedRect, unit))
+            {
+                continue;
+            }
+
+            if (IsHarvesterUnit(unit))
+            {
+                harvesters.Add(unit);
+            }
+            else
+            {
+                combatUnits.Add(unit);
+            }
+        }
     }
 
     private bool UnitOverlapsSelectionRect(Rect2 worldRect, UnitModel unit)
@@ -213,8 +278,19 @@ public sealed partial class GameState
         }
 
         var center = worldRect.Position + worldRect.Size / 2f;
-        var nearestHarvester = harvestersInRect.Min(unit => unit.Position.DistanceTo(center));
-        var nearestCombat = combatUnitsInRect.Min(unit => unit.Position.DistanceTo(center));
+        var nearestHarvester = NearestSelectionDistance(harvestersInRect, center);
+        var nearestCombat = NearestSelectionDistance(combatUnitsInRect, center);
         return nearestHarvester <= nearestCombat + HarvesterBoxIntentCenterMargin;
+    }
+
+    private static float NearestSelectionDistance(IReadOnlyList<UnitModel> units, Vector2 center)
+    {
+        var nearest = float.MaxValue;
+        foreach (var unit in units)
+        {
+            nearest = Mathf.Min(nearest, unit.Position.DistanceTo(center));
+        }
+
+        return nearest;
     }
 }

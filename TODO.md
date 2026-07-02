@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 146 C# source files / 19475 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 993 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 147 C# source files / 19522 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 994 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1402,6 +1402,11 @@ Wiring & coverage gaps (found during the sweep):
     plus stable in-place sorts. `EntityStateHash.Ordering.cs` keeps the collection
     hash helpers below file-size warning thresholds, while `ReviewGate regression`
     forbids the old state-hash `OrderBy(...)` / `ThenBy(...)` allocation chains.
+    Follow-up: #150/#151/#152 reused legacy `SelectionController` command/preview
+    selected-unit scans, legacy `GameState` harvest/rally selected buffers, and
+    legacy `GameState.Selection` count/id/rect buffers. `ReviewGate presentation`
+    now locks the controller no-selected-LINQ path, and `ReviewGate regression`
+    locks the legacy GameState command/selection buffer contracts.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

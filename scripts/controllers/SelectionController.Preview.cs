@@ -32,7 +32,7 @@ public partial class SelectionController
         if (_hoveredUnit is { } hoveredUnit)
         {
             var isEnemy = State.IsHostileToPlayer(hoveredUnit);
-            if (isEnemy && State.SelectedUnits().Any())
+            if (isEnemy && HasSelectedLegacyUnits())
             {
                 return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attack"), screenPosition, hoveredUnit.Position, true);
             }
@@ -59,7 +59,7 @@ public partial class SelectionController
         if (_hoveredBuilding is { } hoveredBuilding)
         {
             var isEnemy = State.IsHostileToPlayer(hoveredBuilding);
-            if (isEnemy && State.SelectedUnits().Any())
+            if (isEnemy && HasSelectedLegacyUnits())
             {
                 return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attackStructure"), screenPosition, hoveredBuilding.Position, true);
             }
@@ -88,7 +88,7 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.Move, GameText.T("preview.move"), screenPosition, worldPosition, true);
         }
 
-        if (State.SelectedUnits().Any())
+        if (HasSelectedLegacyUnits())
         {
             return new CommandPreviewState(CommandPreviewKind.Move, GameText.T("preview.move"), screenPosition, worldPosition, true);
         }

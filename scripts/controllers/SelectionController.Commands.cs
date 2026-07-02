@@ -94,15 +94,16 @@ public partial class SelectionController
             return;
         }
 
-        var selectedUnits = State.SelectedUnits().ToList();
+        CollectSelectedLegacyUnits(_legacySelectedUnitCommandBuffer);
+        var hasSelectedUnits = _legacySelectedUnitCommandBuffer.Count > 0;
         var enemy = State.PickHostileUnit(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld());
-        if (enemy is not null && selectedUnits.Count > 0)
+        if (enemy is not null && hasSelectedUnits)
         {
             State.CommandAttackSelected(enemy);
             CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, enemy.Position);
             AudioCueRequested?.Invoke(TacticalAudioCue.Attack);
         }
-        else if (State.PickHostileBuilding(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld()) is { } enemyBuilding && selectedUnits.Count > 0)
+        else if (State.PickHostileBuilding(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld()) is { } enemyBuilding && hasSelectedUnits)
         {
             State.CommandAttackSelected(enemyBuilding);
             CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, enemyBuilding.Position);
@@ -112,9 +113,9 @@ public partial class SelectionController
         {
             bool accepted;
             string status;
-            if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedUnits(LocalPlayerSlotId).Any(IsHarvester))
+            if (UseUnitBattlefieldInput() && HasSelectedRuntimeHarvester())
             {
-                accepted = UnitBattlefield.CommandHarvestSelected(LocalPlayerSlotId, resourceField, out status);
+                accepted = UnitBattlefield!.CommandHarvestSelected(LocalPlayerSlotId, resourceField, out status);
             }
             else
             {
@@ -127,7 +128,7 @@ public partial class SelectionController
         }
         else
         {
-            if (selectedUnits.Count > 0)
+            if (hasSelectedUnits)
             {
                 State.CommandMoveSelected(worldPoint, moveMode);
                 StatusChanged?.Invoke(MoveModeStatus(moveMode));

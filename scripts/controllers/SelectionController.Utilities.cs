@@ -73,18 +73,82 @@ public partial class SelectionController
     private bool HasSelectedHarvester()
     {
         return UseUnitBattlefieldInput()
-            ? UnitBattlefield!.SelectedUnits(LocalPlayerSlotId).Any(IsHarvester)
-            : State.SelectedUnits().Any(IsHarvester);
+            ? HasSelectedRuntimeHarvester()
+            : HasSelectedLegacyHarvester();
     }
 
     private bool HasSelectedBuildingForPreview()
     {
         if (!UseUnitBattlefieldInput())
         {
-            return State.SelectedBuildings().Any();
+            return HasSelectedLegacyBuildings();
         }
 
         return UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId);
+    }
+
+    private void CollectSelectedLegacyUnits(List<UnitModel> result)
+    {
+        result.Clear();
+        foreach (var unit in State.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
+    private bool HasSelectedLegacyUnits()
+    {
+        foreach (var unit in State.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasSelectedLegacyHarvester()
+    {
+        foreach (var unit in State.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected && IsHarvester(unit))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasSelectedRuntimeHarvester()
+    {
+        foreach (var unit in UnitBattlefield!.SelectedUnits(LocalPlayerSlotId))
+        {
+            if (IsHarvester(unit))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasSelectedLegacyBuildings()
+    {
+        foreach (var building in State.Buildings)
+        {
+            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SyncBuildingSelectionFromUnitBattlefieldToState()

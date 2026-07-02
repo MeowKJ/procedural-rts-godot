@@ -101,5 +101,33 @@ static class GameStateAllocationReviewGate
         ForbidText(harvest, ".OrderBy(building => RefineryDockLoad(building, harvesterId))", "Legacy GameState refinery selection must not allocate ordered refinery queries.", result);
         ForbidText(harvest, ".ThenBy(building => building.Position.DistanceTo(position))", "Legacy GameState refinery selection must not allocate secondary ordered refinery queries.", result);
         ForbidText(harvest, "Buildings.Where(building => building.Kind == BuildingDesignIds.Refinery)", "Legacy GameState dock cleanup must not allocate refinery filter chains.", result);
+
+        var commands = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.Commands.cs");
+        RequireText(gameState, "List<UnitModel> _legacySelectedHarvesters", "Legacy GameState harvest commands must reuse selected-harvester storage.", result);
+        RequireText(gameState, "List<BuildingModel> _legacySelectedBuildings", "Legacy GameState rally commands must reuse selected-building storage.", result);
+        RequireText(gameState, "List<BuildingModel> _legacySelectedProducers", "Legacy GameState rally commands must reuse selected-producer storage.", result);
+        RequireText(commands, "CollectSelectedHarvesters(_legacySelectedHarvesters)", "Legacy harvest command must fill reusable harvester storage.", result);
+        RequireText(commands, "CollectSelectedBuildings(_legacySelectedBuildings)", "Legacy rally command must fill reusable selected-building storage.", result);
+        RequireText(commands, "CollectSelectedProductionBuildings(_legacySelectedBuildings, _legacySelectedProducers)", "Legacy rally command must fill reusable producer storage.", result);
+        ForbidText(commands, "SelectedUnits()\n            .Where(IsHarvesterUnit)\n            .ToList()", "Legacy harvest command must not materialize selected harvester lists.", result);
+        ForbidText(commands, "SelectedBuildings().ToList()", "Legacy rally command must not materialize selected building lists.", result);
+        ForbidText(commands, ".Where(IsProductionBuilding)\n            .ToList()", "Legacy rally command must not materialize selected producer lists.", result);
+
+        var selection = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.Selection.cs");
+        RequireText(gameState, "List<int> _legacySelectedUnitIds", "Legacy selection id snapshots must reuse id storage.", result);
+        RequireText(gameState, "HashSet<int> _legacyRequestedSelectionIds", "Legacy id recall must reuse requested-id storage.", result);
+        RequireText(gameState, "List<UnitModel> _legacySelectionRectHarvesters", "Legacy rect selection must reuse harvester storage.", result);
+        RequireText(gameState, "List<UnitModel> _legacySelectionRectCombatUnits", "Legacy rect selection must reuse combat-unit storage.", result);
+        RequireText(selection, "_legacySelectedUnitIds.Clear()", "Legacy SelectedUnitIds must fill reusable id storage.", result);
+        RequireText(selection, "_legacyRequestedSelectionIds.Clear()", "Legacy SelectUnitsByIds must reuse requested-id storage.", result);
+        RequireText(selection, "CollectSelectionRectUnits(normalizedRect, _legacySelectionRectHarvesters, _legacySelectionRectCombatUnits)", "Legacy rect selection must fill reusable unit-class buffers.", result);
+        RequireText(selection, "NearestSelectionDistance(harvestersInRect, center)", "Legacy rect selection must compute nearest harvester explicitly.", result);
+        ForbidText(selection, "SelectedUnits().Count()", "Legacy selection methods must not allocate selected-unit Count queries.", result);
+        ForbidText(selection, "SelectedBuildings().Count()", "Legacy selection methods must not allocate selected-building Count queries.", result);
+        ForbidText(selection, "SelectedUnits().Select(unit => unit.Id).ToList()", "Legacy SelectedUnitIds must not materialize LINQ id lists.", result);
+        ForbidText(selection, "unitIds.ToHashSet()", "Legacy SelectUnitsByIds must not allocate requested-id HashSets.", result);
+        ForbidText(selection, "var unitsInRect = Units\n            .Where", "Legacy rect selection must not materialize units-in-rect lists.", result);
+        ForbidText(selection, "harvestersInRect.Min(unit =>", "Legacy rect selection must not allocate nearest-harvester Min queries.", result);
+        ForbidText(selection, "combatUnitsInRect.Min(unit =>", "Legacy rect selection must not allocate nearest-combat Min queries.", result);
     }
 }

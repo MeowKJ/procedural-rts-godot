@@ -7,6 +7,7 @@ static class PresentationReviewGate
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);
         ControlGroupAllocationReviewGate.Check(root, result);
+        SelectionControllerAllocationReviewGate.Check(root, result);
     }
 
     private static void RequireHudAndTheme(string root, GateResult result)

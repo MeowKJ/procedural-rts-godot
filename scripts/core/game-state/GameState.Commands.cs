@@ -109,11 +109,8 @@ public sealed partial class GameState
 
     public bool CommandHarvestSelected(ResourceFieldModel field, out string status)
     {
-        var harvesters = SelectedUnits()
-            .Where(IsHarvesterUnit)
-            .ToList();
-
-        if (harvesters.Count == 0)
+        CollectSelectedHarvesters(_legacySelectedHarvesters);
+        if (_legacySelectedHarvesters.Count == 0)
         {
             status = GameText.T("harvest.selectHarvester");
             return false;
@@ -126,7 +123,7 @@ public sealed partial class GameState
         }
 
         var assigned = 0;
-        foreach (var harvester in harvesters)
+        foreach (var harvester in _legacySelectedHarvesters)
         {
             var refinery = FindBestRefineryForHarvester(harvester.Owner, field.Position, harvester.Id);
             if (refinery is null)
@@ -152,32 +149,30 @@ public sealed partial class GameState
 
     public bool CommandSetSelectedBuildingRallyPoint(Vector2 target, out string status)
     {
-        var selected = SelectedBuildings().ToList();
-        if (selected.Count == 0)
+        CollectSelectedBuildings(_legacySelectedBuildings);
+        if (_legacySelectedBuildings.Count == 0)
         {
             status = GameText.T("rally.selectProducer");
             return false;
         }
 
-        var producers = selected
-            .Where(IsProductionBuilding)
-            .ToList();
-        if (producers.Count == 0)
+        CollectSelectedProductionBuildings(_legacySelectedBuildings, _legacySelectedProducers);
+        if (_legacySelectedProducers.Count == 0)
         {
             status = GameText.T("rally.unsupported");
             return false;
         }
 
         var clamped = ClampInsideWorld(target, 80);
-        foreach (var building in producers)
+        foreach (var building in _legacySelectedProducers)
         {
             building.RallyPoint = clamped;
             building.RallyPulse = 1;
         }
 
-        status = producers.Count == 1
-            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(producers[0].Kind).Label)
-            : GameText.Format("rally.multiSet", producers.Count);
+        status = _legacySelectedProducers.Count == 1
+            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(_legacySelectedProducers[0].Kind).Label)
+            : GameText.Format("rally.multiSet", _legacySelectedProducers.Count);
         return true;
     }
 
@@ -335,5 +330,41 @@ public sealed partial class GameState
         }
 
         return bestSlot;
+    }
+
+    private void CollectSelectedHarvesters(List<UnitModel> result)
+    {
+        result.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Owner == Owner.Player && unit.Selected && IsHarvesterUnit(unit))
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
+    private void CollectSelectedBuildings(List<BuildingModel> result)
+    {
+        result.Clear();
+        foreach (var building in Buildings)
+        {
+            if (building.Owner == Owner.Player && building.Selected)
+            {
+                result.Add(building);
+            }
+        }
+    }
+
+    private static void CollectSelectedProductionBuildings(IReadOnlyList<BuildingModel> selected, List<BuildingModel> result)
+    {
+        result.Clear();
+        foreach (var building in selected)
+        {
+            if (IsProductionBuilding(building))
+            {
+                result.Add(building);
+            }
+        }
     }
 }

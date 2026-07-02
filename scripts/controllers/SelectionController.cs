@@ -33,6 +33,7 @@ public partial class SelectionController : Node2D
     private BuildingHoverProjection? _hoveredBuildingProjection;
     private BuildingModel? _hoveredBuilding;
     private ResourceFieldModel? _hoveredResourceField;
+    private readonly List<UnitModel> _legacySelectedUnitCommandBuffer = [];
     private float _redrawTimer;
 
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
