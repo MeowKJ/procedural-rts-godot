@@ -14,6 +14,9 @@ public sealed class PathfindingWorkspace
     internal Dictionary<GridObstacle, TerrainLayer> SharedCorridorTerrainByCell { get; } = [];
     internal List<GridObstacle> ReconstructedCells { get; } = [];
     internal List<PathPoint> ReconstructedPoints { get; } = [];
+    internal List<PathPoint> SmoothedPoints { get; } = [];
+    internal List<PathPoint> PrunedPoints { get; } = [];
+    internal List<PathPoint> FinalPathPoints { get; } = [];
 
     internal void ClearSearch(GridObstacle start)
     {

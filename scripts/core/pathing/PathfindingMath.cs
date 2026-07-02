@@ -263,8 +263,9 @@ public static partial class PathfindingMath
             points[^1] = new PathPoint(goalX, goalY);
         }
 
-        var path = PruneByLineOfSight(
-            SmoothCollinear(points),
+        var path = SmoothAndPrunePath(
+            workspace,
+            points,
             new PathPoint(startX, startY),
             width,
             height,
@@ -273,17 +274,8 @@ public static partial class PathfindingMath
             terrainByCell,
             allowedLayers);
         return new PathfindingDebugResult(
-            DurableSearchPath(path, points),
+            new List<PathPoint>(path),
             new List<GridObstacle>(cells));
-    }
-
-    private static IReadOnlyList<PathPoint> DurableSearchPath(
-        IReadOnlyList<PathPoint> path,
-        List<PathPoint> scratchPoints)
-    {
-        return ReferenceEquals(path, scratchPoints)
-            ? new List<PathPoint>(scratchPoints)
-            : path;
     }
 
     private static GridObstacle WorldToCell(float x, float y, float cellSize)

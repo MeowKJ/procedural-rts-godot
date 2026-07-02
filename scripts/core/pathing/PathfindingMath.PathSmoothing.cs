@@ -2,14 +2,46 @@ namespace ProceduralRts.Core;
 
 public static partial class PathfindingMath
 {
-    private static IReadOnlyList<PathPoint> SmoothCollinear(IReadOnlyList<PathPoint> points)
+    private static List<PathPoint> SmoothAndPrunePath(
+        PathfindingWorkspace workspace,
+        IReadOnlyList<PathPoint> points,
+        PathPoint start,
+        int width,
+        int height,
+        float cellSize,
+        HashSet<GridObstacle> blocked,
+        IReadOnlyDictionary<GridObstacle, TerrainLayer> terrainByCell,
+        TerrainLayer allowedLayers)
     {
+        SmoothCollinearInto(points, workspace.SmoothedPoints);
+        PruneByLineOfSightInto(
+            workspace.SmoothedPoints,
+            start,
+            width,
+            height,
+            cellSize,
+            blocked,
+            terrainByCell,
+            allowedLayers,
+            workspace.PrunedPoints);
+        SmoothCollinearInto(workspace.PrunedPoints, workspace.FinalPathPoints);
+        return workspace.FinalPathPoints;
+    }
+
+    private static void SmoothCollinearInto(IReadOnlyList<PathPoint> points, List<PathPoint> result)
+    {
+        result.Clear();
         if (points.Count <= 2)
         {
-            return points;
+            for (var index = 0; index < points.Count; index++)
+            {
+                result.Add(points[index]);
+            }
+
+            return;
         }
 
-        var result = new List<PathPoint> { points[0] };
+        result.Add(points[0]);
         for (var index = 1; index < points.Count - 1; index++)
         {
             var previous = result[^1];
@@ -26,10 +58,9 @@ public static partial class PathfindingMath
         }
 
         result.Add(points[^1]);
-        return result;
     }
 
-    private static IReadOnlyList<PathPoint> PruneByLineOfSight(
+    private static void PruneByLineOfSightInto(
         IReadOnlyList<PathPoint> points,
         PathPoint start,
         int width,
@@ -37,14 +68,20 @@ public static partial class PathfindingMath
         float cellSize,
         HashSet<GridObstacle> blocked,
         IReadOnlyDictionary<GridObstacle, TerrainLayer> terrainByCell,
-        TerrainLayer allowedLayers)
+        TerrainLayer allowedLayers,
+        List<PathPoint> result)
     {
+        result.Clear();
         if (points.Count <= 1)
         {
-            return points;
+            for (var copyIndex = 0; copyIndex < points.Count; copyIndex++)
+            {
+                result.Add(points[copyIndex]);
+            }
+
+            return;
         }
 
-        var result = new List<PathPoint>();
         var anchor = start;
         var index = 0;
         while (index < points.Count)
@@ -63,8 +100,6 @@ public static partial class PathfindingMath
             anchor = points[farthest];
             index = farthest + 1;
         }
-
-        return SmoothCollinear(result);
     }
 
     private static bool SegmentIsClear(

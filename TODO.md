@@ -1487,7 +1487,10 @@ Wiring & coverage gaps (found during the sweep):
     allocation while keeping those lookups independent from search lookup storage.
     Follow-up: #181 reused workspace-owned A* path reconstruction cells/points
     scratch buffers, replacing local reconstruction lists while preserving
-    durable returned raw-cell/path ownership.
+    durable returned raw-cell/path ownership. Follow-up: #182 reused workspace-owned
+    path smoothing/pruning point buffers, replacing local smoothing and LOS-pruning
+    result-list allocations while still copying returned paths at the durable
+    ownership boundary.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

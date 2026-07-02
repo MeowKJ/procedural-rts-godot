@@ -108,8 +108,9 @@ public static partial class PathfindingMath
             }
         }
 
-        var path = PruneByLineOfSight(
-            SmoothCollinear(points),
+        var path = SmoothAndPrunePath(
+            workspace,
+            points,
             memberStart,
             width,
             height,
@@ -119,7 +120,7 @@ public static partial class PathfindingMath
             allowedLayers);
         return new PathfindingCorridorAssignment(
             member.Id,
-            DurableSharedCorridorPath(path, points),
+            new List<PathPoint>(path),
             new List<GridObstacle>(rawCells));
     }
 
@@ -137,14 +138,5 @@ public static partial class PathfindingMath
         {
             target.Add(point);
         }
-    }
-
-    private static IReadOnlyList<PathPoint> DurableSharedCorridorPath(
-        IReadOnlyList<PathPoint> path,
-        List<PathPoint> scratchPoints)
-    {
-        return ReferenceEquals(path, scratchPoints)
-            ? new List<PathPoint>(scratchPoints)
-            : path;
     }
 }
