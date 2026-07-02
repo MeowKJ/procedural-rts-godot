@@ -39,7 +39,7 @@ public partial class BattleRoot
     {
         var hasSelectedBuildings = UseUnitDesignRuntime
             ? _unitBattlefield.HasSelectedBuildings(PlayerSlotId.One)
-            : _state.SelectedBuildings().Any();
+            : HasSelectedLegacyBuildings();
         _hud.SetCommandPreview(_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState);
         _hud.SetHudContext(
             _state.SelectedCount() > 0 || _unitBattlefield.SelectedCount(PlayerSlotId.One) > 0,
@@ -114,9 +114,7 @@ public partial class BattleRoot
     {
         var powerStable = UseUnitDesignRuntime
             ? _unitBattlefield.PowerStatus(PlayerSlotId.One).IsStable
-            : _state.Buildings
-                .Where(building => building.Owner == ProceduralRts.Core.Owner.Player && building.Hp > 0)
-                .Any(building => building.Kind == BuildingDesignIds.PowerPlant);
+            : HasLegacyPlayerPowerPlant();
         if (!force && powerStable == _powerStable)
         {
             return;
@@ -124,6 +122,34 @@ public partial class BattleRoot
 
         _powerStable = powerStable;
         AddAlert(AlertKind.Power, powerStable ? GameText.T("ui.alert.powerStable") : GameText.T("ui.alert.powerOffline"));
+    }
+
+    private bool HasSelectedLegacyBuildings()
+    {
+        foreach (var building in _state.Buildings)
+        {
+            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasLegacyPlayerPowerPlant()
+    {
+        foreach (var building in _state.Buildings)
+        {
+            if (building.Owner == ProceduralRts.Core.Owner.Player
+                && building.Hp > 0
+                && building.Kind == BuildingDesignIds.PowerPlant)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string CompactAlertText(string text)

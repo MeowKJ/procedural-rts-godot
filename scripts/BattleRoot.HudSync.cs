@@ -260,7 +260,13 @@ public partial class BattleRoot
 
     private void SetUnitBattlefieldBuildingGroupSelectionInfo(IReadOnlyList<BuildingSelectionProjection> buildings)
     {
-        var avgHealth = buildings.Average(building => building.MaxHp <= 0 ? 0 : building.Hp / building.MaxHp);
+        var healthRatioTotal = 0f;
+        foreach (var building in buildings)
+        {
+            healthRatioTotal += building.MaxHp <= 0 ? 0 : building.Hp / building.MaxHp;
+        }
+
+        var avgHealth = buildings.Count == 0 ? 0 : healthRatioTotal / buildings.Count;
         _hud.SetSelectionInfo(
             GameText.Format("ui.multi.title", buildings.Count),
             $"{PlayerSlotLabel(PlayerSlotId.One)} / UnitSpec structures",

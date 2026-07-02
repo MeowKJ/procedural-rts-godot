@@ -214,7 +214,15 @@ public partial class BattleRoot
         }
 
         var stance = selectedUnits[0].Stance;
-        return selectedUnits.All(unit => unit.Stance == stance) ? stance : null;
+        for (var index = 1; index < selectedUnits.Count; index++)
+        {
+            if (selectedUnits[index].Stance != stance)
+            {
+                return null;
+            }
+        }
+
+        return stance;
     }
 
     private static UnitStance? SelectedUniformStance(IReadOnlyList<UnitInstance> selectedUnits)
@@ -225,7 +233,15 @@ public partial class BattleRoot
         }
 
         var stance = selectedUnits[0].Stance;
-        return selectedUnits.All(unit => unit.Stance == stance) ? stance : null;
+        for (var index = 1; index < selectedUnits.Count; index++)
+        {
+            if (selectedUnits[index].Stance != stance)
+            {
+                return null;
+            }
+        }
+
+        return stance;
     }
 
     private static string HarvestModeLabel(HarvesterMode mode)
