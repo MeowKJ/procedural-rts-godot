@@ -113,6 +113,7 @@ public static partial class PathfindingMath
         var cameFrom = new Dictionary<GridObstacle, GridObstacle>();
         var gScore = new Dictionary<GridObstacle, float> { [start] = 0 };
         var open = new PriorityQueue<GridObstacle, float>();
+        var validNeighbors = new List<(GridObstacle Cell, float Cost)>(Neighbors.Length);
         open.Enqueue(start, Heuristic(start, goal));
 
         while (open.TryDequeue(out var current, out _))
@@ -134,7 +135,8 @@ public static partial class PathfindingMath
                     allowedLayers);
             }
 
-            foreach (var neighbor in ValidNeighbors(current, width, height, blocked, terrainByCell, allowedLayers))
+            CollectValidNeighbors(current, width, height, blocked, terrainByCell, allowedLayers, validNeighbors);
+            foreach (var neighbor in validNeighbors)
             {
                 var tentative = gScore[current] + neighbor.Cost + ClearancePenalty(neighbor.Cell, width, height, blocked, terrainByCell, allowedLayers);
                 if (gScore.TryGetValue(neighbor.Cell, out var existing) && tentative >= existing)
@@ -222,14 +224,16 @@ public static partial class PathfindingMath
         return new PathfindingSharedCorridorResult(sharedPath, assignments);
     }
 
-    private static IEnumerable<(GridObstacle Cell, float Cost)> ValidNeighbors(
+    private static void CollectValidNeighbors(
         GridObstacle current,
         int width,
         int height,
         HashSet<GridObstacle> blocked,
         IReadOnlyDictionary<GridObstacle, TerrainLayer> terrainByCell,
-        TerrainLayer allowedLayers)
+        TerrainLayer allowedLayers,
+        List<(GridObstacle Cell, float Cost)> validNeighbors)
     {
+        validNeighbors.Clear();
         foreach (var offset in Neighbors)
         {
             var cell = new GridObstacle(current.X + offset.X, current.Y + offset.Y);
@@ -245,7 +249,7 @@ public static partial class PathfindingMath
                 continue;
             }
 
-            yield return (cell, offset.Cost);
+            validNeighbors.Add((cell, offset.Cost));
         }
     }
 

@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19573 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19577 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1223,7 +1223,10 @@ Wiring & coverage gaps (found during the sweep):
     `PathfindingMath` passability setup from `obstacles.ToHashSet()` and
     `terrain.ToDictionary(...)` to explicit fill helpers, with
     `PathfindingAllocationReviewGate` locking the no-LINQ materialization
-    contract.
+    contract. Follow-up: #159 replaced the A* `ValidNeighbors(...)` yield iterator
+    with a caller-owned neighbor buffer in `FindPathWithDebug(...)`, removing
+    per-expanded-cell iterator state while preserving neighbor order and passability
+    checks.
     Follow-up: #73 reused `CommandSystem` scalar movement/combat/stance subject
     buffers for Move, Patrol, Guard, Attack, Stop, and Stance commands, replacing
     those `OwnedSubjects(...)` yield-iterator paths while leaving harvest/repair
