@@ -300,6 +300,30 @@ static partial class Program
         {
             throw new InvalidOperationException($"new unit battlefield should route building target damage through EntityWorld health, emit self-contained building combat/death alert data, remove destroyed building mirrors, and resolve HQ victory; damageEvents={buildingDamageEvents}, snapshotExists={destroyedBuildingSnapshot is not null}, snapshotHp={destroyedBuildingSnapshot?.Hp}, entityExists={destroyedBuildingEntityId is not null}, attackerTarget={buildingTargetAttacker.AttackTargetId}, attackEvents={buildingAttackEventTargets.Count}, deathEvents={buildingDeathEvents.Count}, outcomeEvents={unitBattlefieldOutcomeEvents.Count}, outcome={buildingTargetBattlefield.Outcome}");
         }
+
+        var projectilePresentationBattlefield = new UnitBattlefield();
+        var rocketAttacker = projectilePresentationBattlefield.Spawn("dog.rocket", PlayerSlotId.One, new Vector2(300, 500), 0);
+        var projectileTarget = projectilePresentationBattlefield.UpsertBuildingTarget(
+            88,
+            BuildingDesignIds.Headquarters,
+            PlayerSlotId.Two,
+            UnitFactionId.Cat,
+            new Vector2(620, 500),
+            Mathf.Pi,
+            BuildSpecCatalog.For(BuildingDesignIds.Headquarters).MaxHp);
+        projectilePresentationBattlefield.SelectUnitsByIds(PlayerSlotId.One, [rocketAttacker.Id]);
+        projectilePresentationBattlefield.CommandAttackSelected(PlayerSlotId.One, projectileTarget.Id);
+        projectilePresentationBattlefield.Update(1 / 30.0);
+        var projectileProjections = projectilePresentationBattlefield.ProjectileProjections();
+        if (projectileProjections.Count == 0
+            || projectileProjections.All(projectile => projectile.LegacyAmmoKind != AmmoKind.SeekerRocket)
+            || projectileProjections.Any(projectile => projectile.Velocity.LengthSquared() <= 0.01f)
+            || projectileProjections.Any(projectile => projectile.TrailWidth <= projectile.CoreWidth)
+            || projectileProjections.Any(projectile => projectile.HeadRadius <= 0))
+        {
+            throw new InvalidOperationException("UnitBattlefield should expose render-ready EntityWorld projectile projections for CombatEffectsLayer");
+        }
+
         var hostilePips = newUnitBattlefield.MinimapPips(PlayerSlotId.One);
         if (hostilePips.Count != newUnitBattlefield.Units.Count
             || hostilePips.All(pip => pip.Relation != PlayerRelation.Hostile)

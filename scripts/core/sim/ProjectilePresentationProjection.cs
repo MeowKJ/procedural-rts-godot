@@ -1,0 +1,130 @@
+using Godot;
+
+namespace ProceduralRts.Core;
+
+/// <summary>
+/// Render-ready snapshot for EntityWorld projectiles. Views consume this instead
+/// of reaching through to ProjectileComponentState.
+/// </summary>
+public readonly record struct ProjectilePresentationProjection(
+    EntityId Id,
+    Vector2 Position,
+    Vector2 Velocity,
+    string WeaponId,
+    string AmmoId,
+    ProjectileBehavior Behavior,
+    HitRule HitRule,
+    AmmoKind? LegacyAmmoKind,
+    float TrailWidth,
+    float CoreWidth,
+    float HeadRadius,
+    Color Accent)
+{
+    public bool IsSeekerRocket => LegacyAmmoKind == AmmoKind.SeekerRocket;
+    public float CullingRadius => HeadRadius + 42f;
+
+    public float TailLength => LegacyAmmoKind switch
+    {
+        AmmoKind.SeekerRocket => 34f,
+        AmmoKind.NeedleDart => 28f,
+        _ => 22f,
+    };
+}
+
+public static class ProjectilePresentationProjector
+{
+    public static IReadOnlyList<ProjectilePresentationProjection> Project(EntityWorld world, PlayerSlotId viewer)
+    {
+        var result = new List<ProjectilePresentationProjection>();
+        var viewerOwner = OwnerId.FromPlayerSlot(viewer);
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (ProjectOne(world, entity, viewerOwner) is { } projection)
+            {
+                result.Add(projection);
+            }
+        }
+
+        return result;
+    }
+
+    public static ProjectilePresentationProjection? ProjectOne(EntityWorld world, EntityInstance entity, OwnerId viewer)
+    {
+        if (!entity.Components.TryGet<ProjectileComponentState>(out var projectile)
+            || !world.TryGetAmmoDefinition(projectile.AmmoId, out var ammo))
+        {
+            return null;
+        }
+
+        var sourceOwner = world.TryGet(projectile.Source, out var source)
+            ? source.OwnerId
+            : entity.OwnerId;
+
+        return new ProjectilePresentationProjection(
+            entity.Id,
+            entity.Transform.Position,
+            projectile.Velocity,
+            projectile.WeaponId,
+            projectile.AmmoId,
+            ammo.Behavior,
+            ammo.HitRule,
+            ammo.LegacyKind,
+            TrailWidthFor(ammo.LegacyKind),
+            CoreWidthFor(ammo.LegacyKind),
+            HeadRadiusFor(ammo.LegacyKind),
+            AccentFor(world, viewer, sourceOwner, ammo.Accent));
+    }
+
+    private static float TrailWidthFor(AmmoKind? ammoKind)
+    {
+        return ammoKind switch
+        {
+            AmmoKind.NeedleDart => 3.2f,
+            AmmoKind.SeekerRocket => 7.2f,
+            _ => 8.4f,
+        };
+    }
+
+    private static float CoreWidthFor(AmmoKind? ammoKind)
+    {
+        return ammoKind switch
+        {
+            AmmoKind.NeedleDart => 1.1f,
+            AmmoKind.SeekerRocket => 2.4f,
+            _ => 2.8f,
+        };
+    }
+
+    private static float HeadRadiusFor(AmmoKind? ammoKind)
+    {
+        return ammoKind switch
+        {
+            AmmoKind.NeedleDart => 2.8f,
+            AmmoKind.SeekerRocket => 5.6f,
+            _ => 4.6f,
+        };
+    }
+
+    private static Color AccentFor(EntityWorld world, OwnerId viewer, OwnerId sourceOwner, Color ammoAccent)
+    {
+        return world.Relations.Relation(viewer, sourceOwner) switch
+        {
+            PlayerRelation.Hostile => FactionVisualPolicy.HostileOverlay,
+            PlayerRelation.Allied => ammoAccent.Lerp(FactionVisualPolicy.AlliedOverlay, 0.32f),
+            PlayerRelation.Neutral => ammoAccent.Lerp(FactionVisualPolicy.NeutralOverlay, 0.36f),
+            _ => ammoAccent.Lerp(PlayerSlotAccent(sourceOwner.ToPlayerSlot()), 0.36f),
+        };
+    }
+
+    private static Color PlayerSlotAccent(PlayerSlotId playerSlotId)
+    {
+        return playerSlotId.Value switch
+        {
+            1 => new Color("#68a6c8"),
+            2 => new Color("#c86c68"),
+            3 => new Color("#8abf74"),
+            4 => new Color("#c5a45d"),
+            _ => new Color("#b7ad9c"),
+        };
+    }
+}
