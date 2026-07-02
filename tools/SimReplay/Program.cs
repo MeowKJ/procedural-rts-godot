@@ -10,6 +10,7 @@ static partial class Program
     static void Main()
     {
         RunReplayPreludeAndMovementScenario();
+        AssertCommandGatewayValidationShell();
         RunCombatScenario();
         RunTargetStickinessScenario();
         RunTargetReacquireCooldownScenario();

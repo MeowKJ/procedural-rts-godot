@@ -44,7 +44,7 @@ Automated gates:
 Manual/visual gates:
 - Check: ReviewGate source size audit
   Result: pass
-  Evidence: `tools/ReviewGate` now has 28 non-generated files / 1525 total lines, no local `bin` or `obj`. ReviewGate current source budget: 26 C# source files / 1509 total lines; largest C# file tools/ReviewGate/FileSizeStructureChecks.cs has 174 lines.
+  Evidence: `tools/ReviewGate` keeps the runner below the locked budget. ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines.
 
 Reviewer result:
 - Status: pass

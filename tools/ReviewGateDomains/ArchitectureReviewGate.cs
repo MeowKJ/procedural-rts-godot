@@ -7,6 +7,7 @@ static class ArchitectureReviewGate
         ForbidDeletedMigrationTypes(root, result);
         RequireCommandBoundary(root, result);
         RequirePlayerControlContracts(root, result);
+        CommandGatewayReviewGate.Check(root, result);
         RequireMovementGridConvergence(root, result);
         ForbidDuplicatedWeaponRangeHelpers(root, result);
     }

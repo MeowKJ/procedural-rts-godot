@@ -65,8 +65,18 @@ public readonly record struct PlayerCommand(
     PlayerSlotId IssuerSlotId,
     int ClientSequence,
     int TargetTick,
-    PlayerCommandKind Kind)
+    PlayerCommandKind Kind,
+    PlayerCommandPayload Payload)
 {
+    public PlayerCommand(
+        PlayerSlotId issuerSlotId,
+        int clientSequence,
+        int targetTick,
+        PlayerCommandKind kind)
+        : this(issuerSlotId, clientSequence, targetTick, kind, PlayerCommandPayload.Empty)
+    {
+    }
+
     public bool IsIntent => Kind != PlayerCommandKind.None;
 }
 

@@ -14,6 +14,7 @@ static class ReviewGateModeCatalog
         "buildings",
         "buildingtarget",
         "commandscombat",
+        "commandgateway",
         "economy",
         "sandbox",
         "mapauthoring",
