@@ -8,6 +8,8 @@ namespace ProceduralRts;
 
 public partial class BattleRoot
 {
+    private readonly List<HudLayer.AlertLine> _alertLineBuffer = [];
+
     private void RefreshAlerts(float delta)
     {
         for (var index = _alerts.Count - 1; index >= 0; index--)
@@ -19,15 +21,18 @@ public partial class BattleRoot
             }
         }
 
-        _hud.SetAlerts(_alerts
-            .OrderByDescending(alert => alert.CreatedAt)
-            .Take(4)
-            .Select(alert => new HudLayer.AlertLine(
+        _alertLineBuffer.Clear();
+        for (var index = 0; index < _alerts.Count && _alertLineBuffer.Count < 4; index++)
+        {
+            var alert = _alerts[index];
+            _alertLineBuffer.Add(new HudLayer.AlertLine(
                 alert.Kind,
                 alert.FactionId,
                 alert.Text,
-                1 - Mathf.Clamp(alert.Age / alert.Lifetime, 0, 1)))
-            .ToList());
+                1 - Mathf.Clamp(alert.Age / alert.Lifetime, 0, 1)));
+        }
+
+        _hud.SetAlerts(_alertLineBuffer);
     }
 
     private void RefreshCommandPreview()
