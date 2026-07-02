@@ -15,6 +15,7 @@ public partial class ControlGroupController : Node
     public Action<string>? StatusChanged { get; init; }
 
     private readonly Dictionary<int, List<int>> _groups = [];
+    private readonly List<int> _emptySelection = [];
     private readonly float[] _feedbackPulses = new float[10];
     private int? _lastRecalledGroup;
     private double _lastRecallSeconds;
@@ -54,7 +55,13 @@ public partial class ControlGroupController : Node
 
     private void SaveGroup(int groupNumber)
     {
-        var selectedIds = SelectedUnitIds().ToList();
+        if (!_groups.TryGetValue(groupNumber, out var selectedIds))
+        {
+            selectedIds = [];
+            _groups[groupNumber] = selectedIds;
+        }
+
+        CollectSelectedUnitIds(selectedIds);
         _groups[groupNumber] = selectedIds;
         _feedbackPulses[groupNumber] = 1;
         StatusChanged?.Invoke(GameText.Format("group.saved", groupNumber, selectedIds.Count));
@@ -66,7 +73,7 @@ public partial class ControlGroupController : Node
         {
             _feedbackPulses[groupNumber] = 1;
             StatusChanged?.Invoke(GameText.Format("group.empty", groupNumber));
-            SelectionChanged?.Invoke(SelectUnitsByIds([]));
+            SelectionChanged?.Invoke(SelectUnitsByIds(_emptySelection));
             RememberRecall(groupNumber);
             return;
         }
@@ -122,52 +129,117 @@ public partial class ControlGroupController : Node
         return UnitBattlefield is not null && UnitBattlefield.Units.Count > 0;
     }
 
-    private IEnumerable<int> SelectedUnitIds()
+    private void CollectSelectedUnitIds(List<int> result)
     {
-        return UseUnitBattlefieldGroups()
-            ? UnitBattlefield!.SelectedUnits(LocalPlayerSlotId).Select(unit => unit.Id)
-            : State.SelectedUnitIds();
+        result.Clear();
+        if (UseUnitBattlefieldGroups())
+        {
+            foreach (var unit in UnitBattlefield!.Units)
+            {
+                if (unit.PlayerSlotId == LocalPlayerSlotId && unit.Selected)
+                {
+                    result.Add(unit.Id);
+                }
+            }
+
+            return;
+        }
+
+        foreach (var unit in State.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
+            {
+                result.Add(unit.Id);
+            }
+        }
     }
 
-    private int SelectUnitsByIds(IEnumerable<int> unitIds)
+    private int SelectUnitsByIds(IReadOnlyList<int> unitIds)
     {
         if (!UseUnitBattlefieldGroups())
         {
-            return State.SelectUnitsByIds(unitIds);
+            return SelectLegacyUnitsByIds(unitIds);
         }
 
         State.ClearSelection();
         return UnitBattlefield!.SelectUnitsByIds(LocalPlayerSlotId, unitIds).Count;
     }
 
-    private Vector2? GroupCenter(IEnumerable<int> unitIds)
+    private int SelectLegacyUnitsByIds(IReadOnlyList<int> unitIds)
     {
-        var requestedIds = unitIds.ToHashSet();
-        var positions = UseUnitBattlefieldGroups()
-            ? UnitBattlefield!.Units
-                .Where(unit => unit.PlayerSlotId == LocalPlayerSlotId
-                    && unit.Hp > 0
-                    && requestedIds.Contains(unit.Id))
-                .Select(unit => unit.Position)
-                .ToList()
-            : requestedIds
-                .Select(State.UnitById)
-                .Where(unit => unit is not null && unit.Owner == ProceduralRts.Core.Owner.Player && unit.Hp > 0)
-                .Select(unit => unit!.Position)
-                .ToList();
+        var selectedCount = 0;
+        foreach (var unit in State.Units)
+        {
+            unit.Selected = unit.Owner == ProceduralRts.Core.Owner.Player
+                && ContainsUnitId(unitIds, unit.Id);
+            if (unit.Selected)
+            {
+                selectedCount++;
+            }
+        }
 
-        if (positions.Count == 0)
+        foreach (var building in State.Buildings)
+        {
+            building.Selected = false;
+        }
+
+        return selectedCount;
+    }
+
+    private Vector2? GroupCenter(IReadOnlyList<int> unitIds)
+    {
+        var sum = Vector2.Zero;
+        var count = 0;
+        if (UseUnitBattlefieldGroups())
+        {
+            foreach (var unit in UnitBattlefield!.Units)
+            {
+                if (unit.PlayerSlotId != LocalPlayerSlotId
+                    || unit.Hp <= 0
+                    || !ContainsUnitId(unitIds, unit.Id))
+                {
+                    continue;
+                }
+
+                sum += unit.Position;
+                count++;
+            }
+        }
+        else
+        {
+            foreach (var unit in State.Units)
+            {
+                if (unit.Owner != ProceduralRts.Core.Owner.Player
+                    || unit.Hp <= 0
+                    || !ContainsUnitId(unitIds, unit.Id))
+                {
+                    continue;
+                }
+
+                sum += unit.Position;
+                count++;
+            }
+        }
+
+        if (count == 0)
         {
             return null;
         }
 
-        var sum = Vector2.Zero;
-        foreach (var position in positions)
+        return sum / count;
+    }
+
+    private static bool ContainsUnitId(IReadOnlyList<int> unitIds, int unitId)
+    {
+        for (var index = 0; index < unitIds.Count; index++)
         {
-            sum += position;
+            if (unitIds[index] == unitId)
+            {
+                return true;
+            }
         }
 
-        return sum / positions.Count;
+        return false;
     }
 
     private bool IsDoubleTapRecall(int groupNumber)
