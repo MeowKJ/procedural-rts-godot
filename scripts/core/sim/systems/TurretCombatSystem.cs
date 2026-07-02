@@ -9,10 +9,14 @@ namespace ProceduralRts.Core;
 /// </summary>
 public sealed class TurretCombatSystem : ISimSystem
 {
+    private readonly SpatialGrid<EntityInstance> _targetGrid = new(1f);
+    private float _targetGridMaxTargetRadius;
+
     public void Step(SimContext context)
     {
         var world = context.World;
         var dt = context.FixedDelta;
+        BuildTargetGrid(world);
 
         foreach (var turret in world.OrderedEntities)
         {
@@ -70,12 +74,61 @@ public sealed class TurretCombatSystem : ISimSystem
         return entity.Components.TryGet<ConstructionComponentState>(out var construction) && construction.Progress < 1;
     }
 
-    private static EntityInstance? ResolveTarget(EntityWorld world, EntityInstance turret, WeaponUserComponentState weapon)
+    private void BuildTargetGrid(EntityWorld world)
     {
+        var hasActiveTurret = false;
+        var maxRange = 1f;
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (!world.TryGetSpec(entity.SpecId, out var spec)
+                || spec.Kind != EntityKind.Turret
+                || !entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
+                || IsInactive(entity))
+            {
+                continue;
+            }
+
+            hasActiveTurret = true;
+            maxRange = MathF.Max(maxRange, WeaponMath.BaseRange(world, entity, weapon));
+        }
+
+        if (!hasActiveTurret)
+        {
+            _targetGrid.Reset(1f);
+            _targetGridMaxTargetRadius = 0f;
+            return;
+        }
+
+        _targetGrid.Reset(maxRange);
+        _targetGridMaxTargetRadius = 0f;
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (IsDead(entity) || !entity.Components.Has<HealthComponentState>())
+            {
+                continue;
+            }
+
+            if (entity.Components.TryGet<CollisionComponentState>(out var collision))
+            {
+                _targetGridMaxTargetRadius = MathF.Max(_targetGridMaxTargetRadius, collision.Radius);
+            }
+
+            _targetGrid.Add(entity.Transform.Position, entity);
+        }
+    }
+
+    private EntityInstance? ResolveTarget(EntityWorld world, EntityInstance turret, WeaponUserComponentState weapon)
+    {
+        var range = WeaponMath.BaseRange(world, turret, weapon);
+        if (range <= 0)
+        {
+            return null;
+        }
+
         if (weapon.AttackTarget.IsValid
             && world.TryGet(weapon.AttackTarget, out var manual)
             && IsTargetable(world, turret, weapon, manual, out _)
-            && IsInRange(world, turret, weapon, manual))
+            && IsInRange(world, turret, range, manual))
         {
             return manual;
         }
@@ -83,11 +136,12 @@ public sealed class TurretCombatSystem : ISimSystem
         EntityInstance? best = null;
         var bestPriority = 0f;
         var bestDistance = 0f;
-        foreach (var candidate in world.OrderedEntities)
+        var cellRadius = _targetGrid.CellRadiusFor(range + _targetGridMaxTargetRadius);
+        foreach (var candidate in _targetGrid.Neighbors(turret.Transform.Position, cellRadius))
         {
             if (candidate.Id == turret.Id
                 || !IsTargetable(world, turret, weapon, candidate, out _)
-                || !IsInRange(world, turret, weapon, candidate))
+                || !IsInRange(world, turret, range, candidate))
             {
                 continue;
             }
@@ -139,9 +193,13 @@ public sealed class TurretCombatSystem : ISimSystem
         return false;
     }
 
-    private static bool IsInRange(EntityWorld world, EntityInstance turret, WeaponUserComponentState weapon, EntityInstance target)
+    private static bool IsDead(EntityInstance entity)
     {
-        var range = WeaponMath.BaseRange(world, turret, weapon);
+        return entity.Components.TryGet<HealthComponentState>(out var health) && health.Hp <= 0;
+    }
+
+    private static bool IsInRange(EntityWorld world, EntityInstance turret, float range, EntityInstance target)
+    {
         var targetRadius = target.Components.TryGet<CollisionComponentState>(out var collision) ? collision.Radius : 0;
         return turret.Transform.Position.DistanceTo(target.Transform.Position) <= range + targetRadius;
     }

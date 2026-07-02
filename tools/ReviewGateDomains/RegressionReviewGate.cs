@@ -6,6 +6,7 @@ static class RegressionReviewGate
         RequireVerifyAllCoverage(root, result);
         RequireDeterministicEvidence(root, result);
         RequireSimHotAllocationEvidence(root, result);
+        TurretCombatAllocationReviewGate.Check(root, result);
         RequireProjectileProjectionBufferEvidence(root, result);
         RequireCommandSystemGroupOrderBufferEvidence(root, result);
         CommandSystemAllocationReviewGate.Check(root, result);
@@ -18,7 +19,6 @@ static class RegressionReviewGate
         EnemyAttackWaveAiReviewGate.Check(root, result);
         EnemyProductionAiReviewGate.Check(root, result);
     }
-
     private static void RequireToolProjects(string root, GateResult result)
     {
         foreach (var project in new[]
