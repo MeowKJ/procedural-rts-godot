@@ -84,7 +84,8 @@ public partial class CombatEffectsLayer : Node2D
             return;
         }
 
-        foreach (var projectile in UnitBattlefield.ProjectileProjections())
+        UnitBattlefield.ProjectileProjections(_projectileProjections);
+        foreach (var projectile in _projectileProjections)
         {
             DrawProjectile(
                 projectile.Position,

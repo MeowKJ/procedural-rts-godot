@@ -25,6 +25,7 @@ public partial class CombatEffectsLayer : Node2D
     private readonly List<UnitDeathEffect> _pooledUnitDeaths = [];
     private readonly List<ImpactFlashEffect> _impactFlashes = [];
     private readonly List<ImpactFlashEffect> _pooledImpactFlashes = [];
+    private readonly List<ProjectilePresentationProjection> _projectileProjections = [];
     public int ActiveEffectCount =>
         _unitDeaths.Count
         + _impactFlashes.Count

@@ -36,6 +36,13 @@ public static class ProjectilePresentationProjector
     public static IReadOnlyList<ProjectilePresentationProjection> Project(EntityWorld world, PlayerSlotId viewer)
     {
         var result = new List<ProjectilePresentationProjection>();
+        ProjectInto(world, viewer, result);
+        return result;
+    }
+
+    public static void ProjectInto(EntityWorld world, PlayerSlotId viewer, List<ProjectilePresentationProjection> result)
+    {
+        result.Clear();
         var viewerOwner = OwnerId.FromPlayerSlot(viewer);
         foreach (var entity in world.OrderedEntities)
         {
@@ -44,8 +51,6 @@ public static class ProjectilePresentationProjector
                 result.Add(projection);
             }
         }
-
-        return result;
     }
 
     public static int Count(EntityWorld world)
