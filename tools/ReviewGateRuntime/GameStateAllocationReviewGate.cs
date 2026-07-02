@@ -14,6 +14,7 @@ static class GameStateAllocationReviewGate
         RequireText(gameState, "Dictionary<int, List<ProductionQueueSnapshot>> _legacyProductionQueueSnapshotBuffers", "Legacy GameState production queue snapshots must reuse per-producer storage.", result);
         RequireText(gameState, "List<BuildOptionSnapshot> _legacyBuildOptionSnapshotBuffer", "Legacy GameState build option snapshots must reuse result storage.", result);
         RequireText(gameState, "HashSet<string> _legacyReadyBuildingKinds", "Legacy GameState build option snapshots must reuse prerequisite lookup storage.", result);
+        RequireText(gameState, "List<SpawnObstacle> _legacyProductionSpawnObstacles", "Legacy GameState produced-unit spawn placement must reuse spawn-obstacle storage.", result);
         RequireText(gameState, "List<PlacementObstacle> _legacyPlacementObstacles", "Legacy GameState placement/path checks must reuse obstacle storage.", result);
         RequireText(gameState, "HashSet<GridObstacle> _legacyPathObstacleSet", "Legacy GameState path obstacles must reuse de-duplication storage.", result);
         RequireText(gameState, "Dictionary<GridObstacle, DynamicBlobObstacleBounds> _legacyDenseBlobObstacles", "Legacy GameState dense-blob path obstacles must reuse aggregation storage.", result);
@@ -112,10 +113,17 @@ static class GameStateAllocationReviewGate
         RequireText(harvest, "BuildingModel? best = null", "Legacy GameState refinery selection must use an explicit best-candidate scan.", result);
         RequireText(harvest, "var load = RefineryDockLoad(building, harvesterId)", "Legacy GameState refinery selection must preserve dock-load priority.", result);
         RequireText(harvest, "load < bestLoad || (load == bestLoad && distance < bestDistance)", "Legacy GameState refinery selection must preserve distance tie-breaks.", result);
+        RequireText(harvest, "var buildingCount = Buildings.Count", "Legacy GameState production queue updates must scan buildings without a snapshot list.", result);
+        RequireText(harvest, "CollectUnitSpawnObstacles(_legacyProductionSpawnObstacles)", "Legacy GameState produced-unit spawn placement must fill reusable unit obstacle storage.", result);
+        ForbidText(harvest, "Buildings.ToList()", "Legacy GameState production queue updates must not allocate building snapshots.", result);
+        ForbidText(harvest, "UnitObstacles()", "Legacy GameState produced-unit spawn placement must not allocate unit obstacle snapshots.", result);
         ForbidText(harvest, ".Where(building => building.Owner == owner)", "Legacy GameState refinery selection must not allocate owner filter chains.", result);
         ForbidText(harvest, ".OrderBy(building => RefineryDockLoad(building, harvesterId))", "Legacy GameState refinery selection must not allocate ordered refinery queries.", result);
         ForbidText(harvest, ".ThenBy(building => building.Position.DistanceTo(position))", "Legacy GameState refinery selection must not allocate secondary ordered refinery queries.", result);
         ForbidText(harvest, "Buildings.Where(building => building.Kind == BuildingDesignIds.Refinery)", "Legacy GameState dock cleanup must not allocate refinery filter chains.", result);
+        var removalUtilities = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.RemovalDamageUtilities.cs");
+        RequireText(removalUtilities, "private void CollectUnitSpawnObstacles(List<SpawnObstacle> result)", "Legacy GameState spawn obstacles must use a caller-owned collector.", result);
+        ForbidText(removalUtilities, ".Select(unit => new SpawnObstacle", "Legacy GameState spawn obstacles must not allocate LINQ projection chains.", result);
 
         var commands = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.Commands.cs");
         RequireText(gameState, "List<UnitModel> _legacySelectedHarvesters", "Legacy GameState harvest commands must reuse selected-harvester storage.", result);

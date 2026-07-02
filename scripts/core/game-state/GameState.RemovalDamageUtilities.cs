@@ -4,11 +4,13 @@ namespace ProceduralRts.Core;
 
 public sealed partial class GameState
 {
-    private IReadOnlyList<SpawnObstacle> UnitObstacles()
+    private void CollectUnitSpawnObstacles(List<SpawnObstacle> result)
     {
-        return Units
-            .Select(unit => new SpawnObstacle(unit.Position.X, unit.Position.Y, unit.RuntimeDescriptor.Radius))
-            .ToList();
+        result.Clear();
+        foreach (var unit in Units)
+        {
+            result.Add(new SpawnObstacle(unit.Position.X, unit.Position.Y, unit.RuntimeDescriptor.Radius));
+        }
     }
 
     private void RemoveDeadUnits()

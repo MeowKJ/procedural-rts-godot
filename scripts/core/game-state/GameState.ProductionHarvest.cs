@@ -6,8 +6,10 @@ public sealed partial class GameState
 {
     private void UpdateProductionQueues(float dt)
     {
-        foreach (var building in Buildings.ToList())
+        var buildingCount = Buildings.Count;
+        for (var index = 0; index < buildingCount; index++)
         {
+            var building = Buildings[index];
             if (building.ProductionQueue.Count == 0 || building.Hp <= 0 || !building.Powered || building.BuildProgress < 1)
             {
                 continue;
@@ -73,7 +75,13 @@ public sealed partial class GameState
             unitDescriptor.Radius,
             WorldSize.X,
             WorldSize.Y,
-            UnitObstacles());
+            UnitSpawnObstacles());
+    }
+
+    private IReadOnlyList<SpawnObstacle> UnitSpawnObstacles()
+    {
+        CollectUnitSpawnObstacles(_legacyProductionSpawnObstacles);
+        return _legacyProductionSpawnObstacles;
     }
 
     private void UpdateHarvester(UnitModel unit, float dt)

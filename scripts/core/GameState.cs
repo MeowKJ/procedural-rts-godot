@@ -46,6 +46,7 @@ public sealed partial class GameState
     private readonly Dictionary<int, List<ProductionQueueSnapshot>> _legacyProductionQueueSnapshotBuffers = [];
     private readonly List<BuildOptionSnapshot> _legacyBuildOptionSnapshotBuffer = [];
     private readonly HashSet<string> _legacyReadyBuildingKinds = [];
+    private readonly List<SpawnObstacle> _legacyProductionSpawnObstacles = [];
     private readonly List<PlacementObstacle> _legacyPlacementObstacles = [];
     private readonly List<GridObstacle> _legacyPathObstacles = [];
     private readonly HashSet<GridObstacle> _legacyPathObstacleSet = [];
