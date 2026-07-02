@@ -8,6 +8,7 @@ static class CommandSystemAllocationReviewGate
         RequireEconomyOrderSubjectBuffer(root, result);
         RequireUnitBattlefieldConstructionTicketBuffers(root, result);
         RequireUnitBattlefieldSelectionBuffers(root, result);
+        RequireUnitBattlefieldCursorPickLoops(root, result);
     }
 
     private static void RequireEntityCommandBufferDrainBuffers(string root, GateResult result)
@@ -144,5 +145,44 @@ static class CommandSystemAllocationReviewGate
         RequireText(picking, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
         ForbidText(picking, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
         ForbidText(picking, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
+    }
+
+    private static void RequireUnitBattlefieldCursorPickLoops(string root, GateResult result)
+    {
+        var picking = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.PickingQueries.cs");
+        RequireText(picking, "NearestOwnedUnit", "UnitBattlefield cursor pick queries must use explicit nearest-unit scans.", result);
+        RequireText(picking, "NearestBuildingTargetId", "UnitBattlefield cursor pick queries must use an explicit nearest-building scan.", result);
+        RequireText(picking, "NearestResourceField", "UnitBattlefield resource pick queries must use an explicit nearest-field scan.", result);
+        ForbidText(picking, ".OrderBy(", "UnitBattlefield cursor pick helpers must not allocate ordered LINQ queries.", result);
+        ForbidText(picking, ".Where(", "UnitBattlefield cursor pick helpers must not allocate LINQ filters.", result);
+        ForbidText(picking, "Mathf.Pow", "UnitBattlefield cursor pick helpers must square radii directly.", result);
+
+        var selectionPicking = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.SelectionPicking.cs");
+        ForbidText(selectionPicking, ".OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))", "Unit pick methods must not allocate sorting chains.", result);
+        ForbidText(selectionPicking, ".Select(BuildingSnapshot)", "Building pick methods must not allocate snapshot projection chains.", result);
+
+        var coreQueries = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.CoreQueries.cs");
+        ForbidText(coreQueries, ".OrderBy(field => field.Position.DistanceSquaredTo(worldPoint))", "Resource pick must not allocate sorting chains.", result);
     }
 }

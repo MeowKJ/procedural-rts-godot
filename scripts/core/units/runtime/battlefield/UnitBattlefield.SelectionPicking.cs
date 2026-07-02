@@ -21,41 +21,22 @@ public sealed partial class UnitBattlefield
 
     public UnitInstance? PickUnit(Vector2 worldPoint, PlayerSlotId playerSlotId, float pickPadding = 8)
     {
-        return Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId)
-            .Where(unit => unit.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(unit.Spec.Collision.Radius + pickPadding, 2))
-            .OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))
-            .FirstOrDefault();
+        return NearestOwnedUnit(worldPoint, playerSlotId, pickPadding);
     }
 
     public UnitInstance? PickAnyUnit(Vector2 worldPoint, float pickPadding = 8)
     {
-        return Units
-            .Where(unit => unit.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(unit.Spec.Collision.Radius + pickPadding, 2))
-            .OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))
-            .FirstOrDefault();
+        return NearestAnyUnit(worldPoint, pickPadding);
     }
 
     public UnitInstance? PickHostileUnit(Vector2 worldPoint, PlayerSlotId attackerPlayerSlotId, float pickPadding = 8)
     {
-        return Units
-            .Where(unit => Relations.CanAttack(attackerPlayerSlotId, unit.PlayerSlotId))
-            .Where(unit => unit.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(unit.Spec.Collision.Radius + pickPadding, 2))
-            .OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))
-            .FirstOrDefault();
+        return NearestHostileUnit(worldPoint, attackerPlayerSlotId, pickPadding);
     }
 
     private int? PickHostileBuildingIdCore(Vector2 worldPoint, PlayerSlotId attackerPlayerSlotId, float pickPadding = 8)
     {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.Hp > 0 && Relations.CanAttack(attackerPlayerSlotId, building.PlayerSlotId))
-            .Where(building => building.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(BuildingTargetRadiusCore(building.Id, building.Kind) + pickPadding, 2))
-            .OrderBy(building => building.Position.DistanceSquaredTo(worldPoint))
-            .Select(building => (int?)building.Id)
-            .FirstOrDefault();
+        return NearestHostileBuildingTargetId(worldPoint, attackerPlayerSlotId, pickPadding);
     }
 
     public int? PickHostileBuildingId(Vector2 worldPoint, PlayerSlotId attackerPlayerSlotId, float pickPadding = 8)
@@ -71,16 +52,7 @@ public sealed partial class UnitBattlefield
 
     private int? PickBuildingTargetIdCore(Vector2 worldPoint, PlayerSlotId playerSlotId, float pickPadding = 8)
     {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.Hp > 0 && building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(BuildingTargetRadiusCore(building.Id, building.Kind) + pickPadding, 2))
-            .OrderBy(building => building.Position.DistanceSquaredTo(worldPoint))
-            .ThenBy(building => building.Id)
-            .Select(building => (int?)building.Id)
-            .FirstOrDefault();
+        return NearestOwnedBuildingTargetId(worldPoint, playerSlotId, pickPadding);
     }
 
     public int? PickBuildingTargetId(Vector2 worldPoint, PlayerSlotId playerSlotId, float pickPadding = 8)
@@ -90,16 +62,7 @@ public sealed partial class UnitBattlefield
 
     private int? PickAnyBuildingTargetIdCore(Vector2 worldPoint, float pickPadding = 8)
     {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.Hp > 0)
-            .Where(building => building.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(BuildingTargetRadiusCore(building.Id, building.Kind) + pickPadding, 2))
-            .OrderBy(building => building.Position.DistanceSquaredTo(worldPoint))
-            .ThenBy(building => building.Id)
-            .Select(building => (int?)building.Id)
-            .FirstOrDefault();
+        return NearestAnyBuildingTargetId(worldPoint, pickPadding);
     }
 
     public int? PickAnyBuildingTargetId(Vector2 worldPoint, float pickPadding = 8)

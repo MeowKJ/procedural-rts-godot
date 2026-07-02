@@ -97,11 +97,7 @@ public sealed partial class UnitBattlefield
 
     public ResourceFieldModel? PickResourceField(Vector2 worldPoint, float pickPadding = 8)
     {
-        return ResourceFields
-            .Where(field => field.Amount > 0)
-            .Where(field => field.Position.DistanceSquaredTo(worldPoint) <= Mathf.Pow(field.Radius + pickPadding, 2))
-            .OrderBy(field => field.Position.DistanceSquaredTo(worldPoint))
-            .FirstOrDefault();
+        return NearestResourceField(worldPoint, pickPadding);
     }
 
     public IReadOnlyList<UnitBattlefieldVisionSource> VisionSources(PlayerSlotId viewer)
