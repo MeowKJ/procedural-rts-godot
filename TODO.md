@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 135 C# source files / 18371 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 837 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 135 C# source files / 18392 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 858 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1235,7 +1235,13 @@ Wiring & coverage gaps (found during the sweep):
     building-id and entity-id buffers, replacing `ConstructionSubjectEntities(...)`
     snapshot/order `ToList()` materialization with explicit matching, in-place
     building-id sort, and subject entity fill. `ReviewGate simhot` locks the
-    no-LINQ construction subject bridge path.
+    no-LINQ construction subject bridge path. Follow-up: #90 reused a selected-
+    building rally producer-id buffer for both `SetSelectedBuildingRallyPoints(...)`
+    overloads, replacing selected/producers `ToList()` materialization with an
+    explicit selected-building scan and in-place producer sort. The helper lives in
+    `UnitBattlefield.ProductionRallySelection.cs` to keep `ProductionRally.cs`
+    below the yellow file-size threshold, and `ReviewGate simhot` locks the
+    no-LINQ selected-building rally bridge path.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

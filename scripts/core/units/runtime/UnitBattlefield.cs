@@ -38,6 +38,7 @@ public sealed partial class UnitBattlefield
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];
+    private readonly List<int> _selectedBuildingRallyProducerIds = [];
     private readonly HashSet<int> _unitCommandIdBuffer = [];
     private readonly List<UnitInstance> _unitCommandBuffer = [];
     private readonly List<EntityId> _unitCommandEntityBuffer = [];

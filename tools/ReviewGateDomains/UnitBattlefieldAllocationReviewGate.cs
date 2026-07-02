@@ -7,6 +7,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireDeathRemovalBuffers(root, result);
         RequireProductionSyncBuffers(root, result);
         RequireConstructionSubjectBuffers(root, result);
+        RequireSelectedBuildingRallyBuffers(root, result);
     }
 
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
@@ -131,5 +132,25 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(commandBridge, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
         ForbidText(commandBridge, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject bridge must not allocate snapshot LINQ chains.", result);
         ForbidText(commandBridge, ".OrderBy(building => building.Id)\n            .Select(building =>", "Construction subject bridge must not allocate ordered subject LINQ chains.", result);
+    }
+
+    private static void RequireSelectedBuildingRallyBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<int> _selectedBuildingRallyProducerIds", "Selected building rally commands must reuse producer-id storage.", result);
+
+        var rally = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.ProductionRally.cs");
+        RequireText(battlefield, "CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds)", "Selected building rally commands must fill reusable producer storage.", result);
+        RequireText(battlefield, "result.Sort(CompareBuildingIds)", "Selected building rally producers must sort the reusable buffer in place.", result);
+        ForbidText(rally, "var selected = BuildingTargetIds()\n            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)\n            .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)\n            .ToList();", "Selected building rally commands must not allocate selected-building lists.", result);
+        ForbidText(rally, "var producers = selected\n            .Where(HasAnyProductionForCore)\n            .OrderBy(buildingId => buildingId)\n            .ToList();", "Selected building rally commands must not allocate producer lists.", result);
     }
 }

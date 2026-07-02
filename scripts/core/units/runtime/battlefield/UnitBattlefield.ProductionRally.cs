@@ -45,55 +45,41 @@ public sealed partial class UnitBattlefield
 
     public bool SetSelectedBuildingRallyPoints(PlayerSlotId playerSlotId, Vector2 target, out string status)
     {
-        var selected = BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)
-            .ToList();
-        if (selected.Count == 0)
+        var hasSelected = CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds);
+        if (!hasSelected)
         {
             status = GameText.T("rally.selectProducer");
             return false;
         }
 
-        var producers = selected
-            .Where(HasAnyProductionForCore)
-            .OrderBy(buildingId => buildingId)
-            .ToList();
-        if (producers.Count == 0)
+        if (_selectedBuildingRallyProducerIds.Count == 0)
         {
             status = GameText.T("rally.unsupported");
             return false;
         }
 
         var clamped = ClampInsideWorld(target, 80);
-        foreach (var producerId in producers)
+        foreach (var producerId in _selectedBuildingRallyProducerIds)
         {
             SetRallyPoint(producerId, clamped, out _);
         }
 
-        status = producers.Count == 1
-            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(BuildingIdentity(producers[0])!.Kind).Label)
-            : GameText.Format("rally.multiSet", producers.Count);
+        status = _selectedBuildingRallyProducerIds.Count == 1
+            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(BuildingIdentity(_selectedBuildingRallyProducerIds[0])!.Kind).Label)
+            : GameText.Format("rally.multiSet", _selectedBuildingRallyProducerIds.Count);
         return true;
     }
 
     public bool SetSelectedBuildingRallyPoints(PlayerSlotId playerSlotId, ResourceFieldModel field, out string status)
     {
-        var selected = BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)
-            .ToList();
-        if (selected.Count == 0)
+        var hasSelected = CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds);
+        if (!hasSelected)
         {
             status = GameText.T("rally.selectProducer");
             return false;
         }
 
-        var producers = selected
-            .Where(HasAnyProductionForCore)
-            .OrderBy(buildingId => buildingId)
-            .ToList();
-        if (producers.Count == 0)
+        if (_selectedBuildingRallyProducerIds.Count == 0)
         {
             status = GameText.T("rally.unsupported");
             return false;
@@ -102,14 +88,14 @@ public sealed partial class UnitBattlefield
         SyncResourceFieldEntity(field);
         var clamped = ClampInsideWorld(field.Position, 80);
         var targetEntity = _resourceFieldEntityIds[field.Id];
-        foreach (var producerId in producers)
+        foreach (var producerId in _selectedBuildingRallyProducerIds)
         {
             SetRallyPoint(producerId, clamped, targetEntity, out _);
         }
 
-        status = producers.Count == 1
-            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(BuildingIdentity(producers[0])!.Kind).Label)
-            : GameText.Format("rally.multiSet", producers.Count);
+        status = _selectedBuildingRallyProducerIds.Count == 1
+            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(BuildingIdentity(_selectedBuildingRallyProducerIds[0])!.Kind).Label)
+            : GameText.Format("rally.multiSet", _selectedBuildingRallyProducerIds.Count);
         return true;
     }
 
