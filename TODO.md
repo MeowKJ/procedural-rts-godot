@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17947 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 614 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17972 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 639 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1209,7 +1209,13 @@ Wiring & coverage gaps (found during the sweep):
     explicit loops, and extended `ReviewGate simhot` to forbid the old
     `runtime.Cooldowns.ToArray()` / `Append(...).ToArray()` / cooldown `Any(...)`
     paths. Verified with build, SimReplay, ReviewGate simhot, full ReviewGate, and
-    full VerifyAll 23/23.
+    full VerifyAll 23/23. Follow-up: #80 reused UnitBattlefield construction
+    ticket buffers for queue/place bridge before-id tracking and ready-ticket
+    projection, replacing the construction ticket `ToHashSet()` and
+    `Where(...).OrderBy(...).LastOrDefault()` chains while preserving public
+    ready-ticket snapshot semantics. `ReviewGate simhot` locks the bridge evidence.
+    Verified with build, PlayerLoopQa, ReviewGate simhot, full ReviewGate, and full
+    VerifyAll 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

@@ -6,6 +6,7 @@ static class CommandSystemAllocationReviewGate
         RequireScalarOrderSubjectBuffer(root, result);
         RequireSelectionSubjectSet(root, result);
         RequireEconomyOrderSubjectBuffer(root, result);
+        RequireUnitBattlefieldConstructionTicketBuffers(root, result);
     }
 
     private static void RequireEntityCommandBufferDrainBuffers(string root, GateResult result)
@@ -96,5 +97,29 @@ static class CommandSystemAllocationReviewGate
         ForbidText(economy, "OwnedSubjects(world, command.Issuer, command.Subjects)", "Economy orders must not allocate the OwnedSubjects iterator.", result);
         ForbidText(economy, "new HarvestEntityCommand(", "AutoHarvest must not allocate a nested harvest command.", result);
         ForbidText(economy, "[entity.Id]", "AutoHarvest must not allocate a single-entity subject array.", result);
+    }
+
+    private static void RequireUnitBattlefieldConstructionTicketBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "HashSet<int> _constructionEntityIdsBefore", "UnitBattlefield construction commands must reuse the before-entity id set.", result);
+        RequireText(battlefield, "List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer", "UnitBattlefield construction tickets must reuse ticket snapshot storage.", result);
+
+        var tickets = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.ConstructionTickets.cs");
+        RequireText(tickets, "CollectEntityIds(_constructionEntityIdsBefore)", "Construction queue/place paths must fill the reusable before-entity id set.", result);
+        RequireText(tickets, "LastNewConstructionTicket(playerSlotId, kind, _constructionEntityIdsBefore)", "Queued tickets must be found through the reusable ticket buffer.", result);
+        RequireText(tickets, "LastNewConstructedEntity(owner, ticket.Kind, _constructionEntityIdsBefore)", "Placed buildings must be found without LINQ chains.", result);
+        RequireText(tickets, "CollectReadyConstructionTickets(playerSlotId, includeQueued: false, _constructionTicketBuffer)", "Ready ticket snapshots must use the reusable ticket buffer.", result);
+        ForbidText(tickets, ".ToHashSet()", "Construction ticket bridge must not allocate before-entity HashSets.", result);
+        ForbidText(tickets, ".Where(ticket", "Construction ticket bridge must not allocate LINQ ticket filters.", result);
+        ForbidText(tickets, ".Where(entity", "Construction ticket bridge must not allocate LINQ entity filters.", result);
     }
 }

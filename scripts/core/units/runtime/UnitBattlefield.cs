@@ -31,6 +31,8 @@ public sealed partial class UnitBattlefield
     private readonly Dictionary<EntityId, int> _buildingTargetIdsByEntityId = [];
     private readonly Dictionary<int, EntityId> _resourceFieldEntityIds = [];
     private readonly Dictionary<int, int?> _lastDockedHarvesterIds = [];
+    private readonly HashSet<int> _constructionEntityIdsBefore = [];
+    private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
 

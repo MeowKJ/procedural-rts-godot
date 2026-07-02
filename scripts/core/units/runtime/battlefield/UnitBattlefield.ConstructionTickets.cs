@@ -17,7 +17,7 @@ public sealed partial class UnitBattlefield
         _entityWorld.WorldHeight = WorldSize.Y;
         _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
 
-        var before = _entityWorld.OrderedEntities.Select(entity => entity.Id.Value).ToHashSet();
+        CollectEntityIds(_constructionEntityIdsBefore);
         var command = new QueueConstructionEntityCommand(
             owner,
             ConstructionSubjectEntities(playerSlotId, spec),
@@ -33,11 +33,7 @@ public sealed partial class UnitBattlefield
             return null;
         }
 
-        var ticket = ReadyConstructionTicketsCore(playerSlotId, includeQueued: true)
-            .Where(ticket => !before.Contains(ticket.EntityId.Value))
-            .Where(ticket => ticket.Kind == kind)
-            .OrderBy(ticket => ticket.EntityId.Value)
-            .LastOrDefault();
+        var ticket = LastNewConstructionTicket(playerSlotId, kind, _constructionEntityIdsBefore);
         if (!ticket.EntityId.IsValid)
         {
             status = "placement.queueRejected";
@@ -52,7 +48,8 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<UnitBattlefieldConstructionTicketSnapshot> ReadyConstructionTickets(PlayerSlotId playerSlotId)
     {
-        return ReadyConstructionTicketsCore(playerSlotId, includeQueued: false);
+        CollectReadyConstructionTickets(playerSlotId, includeQueued: false, _constructionTicketBuffer);
+        return _constructionTicketBuffer.ToArray();
     }
 
     public bool PlaceReadyConstructionTicket(
@@ -79,7 +76,7 @@ public sealed partial class UnitBattlefield
         _entityWorld.WorldHeight = WorldSize.Y;
         _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
 
-        var before = _entityWorld.OrderedEntities.Select(entity => entity.Id.Value).ToHashSet();
+        CollectEntityIds(_constructionEntityIdsBefore);
         var command = new StartConstructionEntityCommand(
             owner,
             ConstructionSubjectEntities(playerSlotId, spec),
@@ -98,12 +95,7 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var entity = _entityWorld.OrderedEntities
-            .Where(entity => !before.Contains(entity.Id.Value))
-            .Where(entity => entity.OwnerId == owner)
-            .Where(entity => EntityBuildingSpecId(entity) == ticket.Kind)
-            .OrderBy(entity => entity.Id.Value)
-            .LastOrDefault();
+        var entity = LastNewConstructedEntity(owner, ticket.Kind, _constructionEntityIdsBefore);
         if (entity is null)
         {
             status = "placement.rejected";
@@ -123,17 +115,63 @@ public sealed partial class UnitBattlefield
         return true;
     }
 
-    private IReadOnlyList<UnitBattlefieldConstructionTicketSnapshot> ReadyConstructionTicketsCore(
+    private void CollectReadyConstructionTickets(
         PlayerSlotId playerSlotId,
-        bool includeQueued)
+        bool includeQueued,
+        List<UnitBattlefieldConstructionTicketSnapshot> result)
     {
-        return _entityWorld.OrderedEntities
-            .Select(entity => ConstructionTicketSnapshot(entity, playerSlotId))
-            .Where(ticket => ticket is not null)
-            .Select(ticket => ticket!.Value)
-            .Where(ticket => includeQueued || ticket.ReadyToPlace)
-            .OrderBy(ticket => ticket.EntityId.Value)
-            .ToArray();
+        result.Clear();
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (ConstructionTicketSnapshot(entity, playerSlotId) is { } ticket
+                && (includeQueued || ticket.ReadyToPlace))
+            {
+                result.Add(ticket);
+            }
+        }
+    }
+
+    private UnitBattlefieldConstructionTicketSnapshot LastNewConstructionTicket(
+        PlayerSlotId playerSlotId,
+        string kind,
+        HashSet<int> before)
+    {
+        CollectReadyConstructionTickets(playerSlotId, includeQueued: true, _constructionTicketBuffer);
+        var found = default(UnitBattlefieldConstructionTicketSnapshot);
+        foreach (var ticket in _constructionTicketBuffer)
+        {
+            if (!before.Contains(ticket.EntityId.Value) && ticket.Kind == kind)
+            {
+                found = ticket;
+            }
+        }
+
+        return found;
+    }
+
+    private EntityInstance? LastNewConstructedEntity(OwnerId owner, string kind, HashSet<int> before)
+    {
+        EntityInstance? found = null;
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (!before.Contains(entity.Id.Value)
+                && entity.OwnerId == owner
+                && EntityBuildingSpecId(entity) == kind)
+            {
+                found = entity;
+            }
+        }
+
+        return found;
+    }
+
+    private void CollectEntityIds(HashSet<int> result)
+    {
+        result.Clear();
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            result.Add(entity.Id.Value);
+        }
     }
 
     private UnitBattlefieldConstructionTicketSnapshot? ConstructionTicketSnapshot(
