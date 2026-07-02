@@ -1081,7 +1081,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 149 C# source files / 19653 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 976 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 149 C# source files / 19659 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 976 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1464,7 +1464,11 @@ Wiring & coverage gaps (found during the sweep):
     `TryGetAbility(...)`, routed legacy `GameState`, `BattleRoot`,
     `SelectionController`, `UnitBattlefield`, and `UnitSpecEntityBridge` ability-kind
     checks through explicit scans, and locked the runtime/controller no-`Abilities.Any`
-    contract in `ReviewGate regression`.
+    contract in `ReviewGate regression`. Follow-up: #176 added a caller-owned
+    `PathfindingWorkspace` overload for `PathfindingMath.FindPathWithDebug(...)`,
+    routed `PathfindingSystem.PlanPath(...)` through a reusable single-path workspace,
+    and split `PathfindingMath.Search.cs` so pathfinding files remain below the
+    file-size warning threshold while preserving durable returned path ownership.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

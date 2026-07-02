@@ -19,6 +19,7 @@ public sealed class PathfindingSystem : ISimSystem
     private readonly List<SharedMoveKey> _sharedGroupKeys = [];
     private readonly List<PathfindingCorridorMember> _sharedMembers = [];
     private readonly Dictionary<int, PathfindingCorridorAssignment> _sharedAssignments = [];
+    private readonly PathfindingWorkspace _pathWorkspace = new();
 
     public PathfindingSystem(float cellSize = 64f)
     {
@@ -240,6 +241,7 @@ public sealed class PathfindingSystem : ISimSystem
         BuildStaticBlockers(world, entity.Id.Value, domain);
 
         var result = PathfindingMath.FindPathWithDebug(
+            _pathWorkspace,
             entity.Transform.Position.X,
             entity.Transform.Position.Y,
             goal.X,
