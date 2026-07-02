@@ -1045,7 +1045,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17692 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17715 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1149,7 +1149,11 @@ Wiring & coverage gaps (found during the sweep):
     Godot headless QA. PerfSmoke still reports 400u alloc/tick at 192620 bytes,
     so the broad item remains open. Remaining allocation debt is mostly
     Construction/Command, immutable queue/path arrays, placement-list construction,
-    and broader profiler-guided GC cleanup.
+    and broader profiler-guided GC cleanup. Follow-up: #63 added a broad
+    `ReviewGate simhot` regression check for the projectile projection presentation
+    path, locking #61/#62 so `CombatEffectsLayer.ActiveEffectCount` uses the count
+    API and `DrawProjectiles()` reuses a caller-owned projection buffer instead of
+    allocating a render-ready list.
 
 Discipline (keep it from regressing):
 [ ] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
