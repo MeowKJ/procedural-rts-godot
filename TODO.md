@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 142 C# source files / 19171 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 997 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 142 C# source files / 19160 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 994 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1090,9 +1090,14 @@ Single responsibility - god-class breakup:
     lifecycle/projection/sync/state, selection/picking, production/rally, commands,
     visibility/combat bridges, EntityWorld system stepping, command bridge/apply,
     runtime sync, and legacy utilities. Current max `UnitBattlefield.*.cs` companion
-    is 359 lines, under the 400-line normal ceiling; `UnitBattlefield.cs` was removed
+    is 375 lines, under the 400-line normal ceiling; `UnitBattlefield.cs` was removed
     from the file-size debt whitelist. The companion family now lives under
     `scripts/core/units/runtime/battlefield/`, keeping the stable entry point in place.
+    Follow-up (2026-07-02, #114/#115/#116): the near-400 command apply/removal,
+    runtime sync, and selection/picking partials were split into focused command,
+    sync, and selection subdirectories. The three source partials are now 87, 163,
+    and 78 lines respectively, and all extracted files stay below 200 lines while
+    `ReviewGate filesize --max-warnings=0` remains clean.
 [x] `CombatSystem` god-file split: the old 1234-line combat system is now a small
     partial system family. `CombatSystem.cs` keeps the `ISimSystem` entry point and
     orchestration; target search, guard resolution, target state/memory, autonomy,

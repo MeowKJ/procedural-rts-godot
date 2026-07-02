@@ -43,9 +43,8 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(projection, ".ToArray()", "Building projection paths must not allocate arrays.", result);
         ForbidText(projection, ".ToList()", "Building projection paths must not allocate result lists.", result);
         ForbidText(projection, "private IEnumerable<EntityId> SelectedBuildingEntityIds", "Selected building entity ids must use caller-owned storage.", result);
-        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
-        ForbidText(picking, ".Select(BuildingHitPulseProjection)", "Building hit-pulse projections must not allocate LINQ result chains.", result);
-        ForbidText(picking, ".Select(buildingId => BuildingMinimapProjection", "Building minimap projections must not allocate LINQ result chains.", result);
+        ForbidText(battlefield, ".Select(BuildingHitPulseProjection)", "Building hit-pulse projections must not allocate LINQ result chains.", result);
+        ForbidText(battlefield, ".Select(buildingId => BuildingMinimapProjection", "Building minimap projections must not allocate LINQ result chains.", result);
     }
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
     {
@@ -99,14 +98,13 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "HashSet<int> _removedUnitIdBuffer", "UnitBattlefield death removal must reuse removed-unit id storage.", result);
         RequireText(battlefield, "HashSet<int> _removedBuildingIdBuffer", "UnitBattlefield death removal must reuse removed-building id storage.", result);
 
-        var removal = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandApplyRemoval.cs");
-        RequireText(removal, "_buildingDeathBuffer.Clear();", "Building death removal must clear reusable death storage.", result);
-        RequireText(removal, "_unitDeathBuffer.Clear();", "Unit death removal must clear reusable death storage.", result);
-        RequireText(removal, "Units.RemoveAll(IsRemovedUnit)", "Unit removal must use the reusable removed-unit id set.", result);
-        ForbidText(removal, ".Select(BuildingDeathInfo)", "Building death removal must not allocate LINQ death projections.", result);
-        ForbidText(removal, ".Select(death => death.Id).ToHashSet()", "Death removal must not allocate removed-id sets.", result);
-        ForbidText(removal, ".Where(unit => unit.Hp <= 0)", "Unit death removal must not allocate LINQ unit filters.", result);
-        ForbidText(removal, "var deadIds = BuildingTargetIds()", "Dead building scan must not allocate BuildingTargetIds snapshots.", result);
+        RequireText(battlefield, "_buildingDeathBuffer.Clear();", "Building death removal must clear reusable death storage.", result);
+        RequireText(battlefield, "_unitDeathBuffer.Clear();", "Unit death removal must clear reusable death storage.", result);
+        RequireText(battlefield, "Units.RemoveAll(IsRemovedUnit)", "Unit removal must use the reusable removed-unit id set.", result);
+        ForbidText(battlefield, ".Select(BuildingDeathInfo)", "Building death removal must not allocate LINQ death projections.", result);
+        ForbidText(battlefield, ".Select(death => death.Id).ToHashSet()", "Death removal must not allocate removed-id sets.", result);
+        ForbidText(battlefield, ".Where(unit => unit.Hp <= 0)", "Unit death removal must not allocate LINQ unit filters.", result);
+        ForbidText(battlefield, "var deadIds = BuildingTargetIds()", "Dead building scan must not allocate BuildingTargetIds snapshots.", result);
     }
 
     private static void RequireProductionSyncBuffers(string root, GateResult result)

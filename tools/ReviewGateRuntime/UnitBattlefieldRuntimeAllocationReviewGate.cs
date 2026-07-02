@@ -64,19 +64,11 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireText(battlefield, "List<int> _resourceCreditOwnerIds", "Resource harvest sync must reuse owner-id storage.", result);
         RequireText(battlefield, "private bool HasHarvesters()", "Harvester update must use an explicit early-exit harvester scan.", result);
 
-        var sync = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.SyncRuntime.cs");
-        RequireText(sync, "CollectResourceCreditsBefore(_resourceCreditsBefore)", "Harvester update must fill the reusable credits-before snapshot.", result);
-        RequireText(sync, "SyncAllCreditsFromEntityWorld(_resourceCreditsBefore)", "Harvester update must reuse the credits-before snapshot for notifications.", result);
-        ForbidText(sync, "ResourceInventories.ToDictionary", "Harvester update must not allocate credits-before dictionaries.", result);
-        ForbidText(sync, "Units.Where(IsHarvester)", "Harvester sync must not allocate harvester filter enumerables.", result);
-        ForbidText(sync, "BuildingTargetIds()\n            .Where(buildingId => BuildingIdentity(buildingId)?.Kind == BuildingDesignIds.Refinery)", "Dock sync must not allocate refinery filter enumerables.", result);
+        RequireText(battlefield, "CollectResourceCreditsBefore(_resourceCreditsBefore)", "Harvester update must fill the reusable credits-before snapshot.", result);
+        RequireText(battlefield, "SyncAllCreditsFromEntityWorld(_resourceCreditsBefore)", "Harvester update must reuse the credits-before snapshot for notifications.", result);
+        ForbidText(battlefield, "ResourceInventories.ToDictionary", "Harvester update must not allocate credits-before dictionaries.", result);
+        ForbidText(battlefield, "Units.Where(IsHarvester)", "Harvester sync must not allocate harvester filter enumerables.", result);
+        ForbidText(battlefield, "BuildingTargetIds()\n            .Where(buildingId => BuildingIdentity(buildingId)?.Kind == BuildingDesignIds.Refinery)", "Dock sync must not allocate refinery filter enumerables.", result);
 
         var legacy = ReviewGateSource.Read(
             root,

@@ -14,13 +14,12 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         RequireText(battlefield, "List<EntityId> _selectionCommandEntityBuffer", "UnitBattlefield selection commands must reuse sorted command subject storage.", result);
         RequireText(battlefield, "List<UnitInstance> _selectionUnitBuffer", "UnitBattlefield selection commands must reuse selected-unit storage.", result);
 
-        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
-        RequireText(picking, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Unit selection paths must prepare the reusable selection buffer.", result);
-        RequireText(picking, "PrepareBuildingSelectionBuffer(playerSlotId, additive)", "Building selection paths must prepare the reusable selection buffer.", result);
-        RequireText(picking, "SubmitSelectionBuffer(playerSlotId)", "Selection paths must submit and clear the reusable selection buffer.", result);
-        RequireText(picking, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
-        ForbidText(picking, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
-        ForbidText(picking, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
+        RequireText(battlefield, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Unit selection paths must prepare the reusable selection buffer.", result);
+        RequireText(battlefield, "PrepareBuildingSelectionBuffer(playerSlotId, additive)", "Building selection paths must prepare the reusable selection buffer.", result);
+        RequireText(battlefield, "SubmitSelectionBuffer(playerSlotId)", "Selection paths must submit and clear the reusable selection buffer.", result);
+        RequireText(battlefield, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
+        ForbidText(battlefield, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
+        ForbidText(battlefield, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
 
         var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
         RequireText(commandBridge, "CollectSelectionCommandEntityIds(selectedEntityIds, _selectionCommandEntityBuffer)", "Selection commands must fill the reusable sorted subject buffer.", result);
