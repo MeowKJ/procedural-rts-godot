@@ -98,13 +98,19 @@ public sealed partial class UnitBattlefield
     {
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingProjection(buildingId) is { IsAlive: true })
-            .OrderBy(buildingId => buildingId)
-            .Select(BuildingHitPulseProjection)
-            .Where(projection => projection is { HitPulse: > 0 })
-            .Select(projection => projection!.Value)
-            .ToList();
+        _buildingHitPulseProjectionBuffer.Clear();
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingProjection(buildingId) is not { IsAlive: true }
+                || BuildingHitPulseProjection(buildingId) is not { HitPulse: > 0 } projection)
+            {
+                continue;
+            }
+
+            _buildingHitPulseProjectionBuffer.Add(projection);
+        }
+
+        return _buildingHitPulseProjectionBuffer;
     }
 
     private BuildingHitPulseProjection? BuildingHitPulseProjection(int buildingId)
@@ -131,13 +137,29 @@ public sealed partial class UnitBattlefield
     {
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingProjection(buildingId) is { IsAlive: true })
-            .OrderBy(buildingId => buildingId)
-            .Select(buildingId => BuildingMinimapProjection(viewer, buildingId, isExplored))
-            .Where(projection => projection is not null)
-            .Select(projection => projection!.Value)
-            .ToList();
+        var result = NextBuildingMinimapProjectionBuffer();
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingProjection(buildingId) is not { IsAlive: true }
+                || BuildingMinimapProjection(viewer, buildingId, isExplored) is not { } projection)
+            {
+                continue;
+            }
+
+            result.Add(projection);
+        }
+
+        return result;
+    }
+
+    private List<BuildingMinimapProjection> NextBuildingMinimapProjectionBuffer()
+    {
+        _useSecondaryBuildingMinimapProjectionBuffer = !_useSecondaryBuildingMinimapProjectionBuffer;
+        var result = _useSecondaryBuildingMinimapProjectionBuffer
+            ? _buildingMinimapProjectionSecondaryBuffer
+            : _buildingMinimapProjectionBuffer;
+        result.Clear();
+        return result;
     }
 
     private BuildingMinimapProjection? BuildingMinimapProjection(
@@ -315,7 +337,8 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        foreach (var entityId in SelectedBuildingEntityIds(playerSlotId))
+        CollectSelectedBuildingEntityIds(playerSlotId, _selectedBuildingEntityIdBuffer);
+        foreach (var entityId in _selectedBuildingEntityIdBuffer)
         {
             _selectionEntityBuffer.Add(entityId);
         }

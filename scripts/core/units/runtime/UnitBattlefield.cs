@@ -47,6 +47,13 @@ public sealed partial class UnitBattlefield
     private readonly List<int> _buildingProjectionTargetIdBuffer = [];
     private readonly List<int> _buildingVisibilityViewerIdBuffer = [];
     private readonly List<int> _buildingVisibilityTargetIdBuffer = [];
+    private readonly List<UnitBattlefieldBuildingSnapshot> _buildingSnapshotBuffer = [];
+    private readonly List<BuildingRallyProjection> _buildingRallyProjectionBuffer = [];
+    private readonly List<BuildingSelectionProjection> _buildingSelectionProjectionBuffer = [];
+    private readonly List<EntityId> _selectedBuildingEntityIdBuffer = [];
+    private readonly List<BuildingHitPulseProjection> _buildingHitPulseProjectionBuffer = [];
+    private readonly List<BuildingMinimapProjection> _buildingMinimapProjectionBuffer = [];
+    private readonly List<BuildingMinimapProjection> _buildingMinimapProjectionSecondaryBuffer = [];
     private readonly List<int> _productionCandidateProducerIds = [];
     private readonly HashSet<int> _unitCommandIdBuffer = [];
     private readonly List<UnitInstance> _unitCommandBuffer = [];
@@ -71,6 +78,7 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitSpec> _productionDesignSpecBuffer = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
+    private bool _useSecondaryBuildingMinimapProjectionBuffer;
 
     public List<UnitInstance> Units { get; } = [];
     public List<ResourceFieldModel> ResourceFields { get; } = [];

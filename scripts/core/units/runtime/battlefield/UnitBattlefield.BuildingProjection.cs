@@ -27,11 +27,16 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<UnitBattlefieldBuildingSnapshot> BuildingSnapshots()
     {
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .ToArray();
+        _buildingSnapshotBuffer.Clear();
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingSnapshot(buildingId) is { } snapshot)
+            {
+                _buildingSnapshotBuffer.Add(snapshot);
+            }
+        }
+
+        return _buildingSnapshotBuffer;
     }
 
     private void CollectBuildingTargetIds(List<int> result)
@@ -84,8 +89,17 @@ public sealed partial class UnitBattlefield
 
     public int LiveBuildingCount(PlayerSlotId? playerSlotId = null)
     {
-        return BuildingSnapshots().Count(building => building.Hp > 0
-            && (playerSlotId is null || building.PlayerSlotId == playerSlotId.Value));
+        var count = 0;
+        foreach (var building in BuildingSnapshots())
+        {
+            if (building.Hp > 0
+                && (playerSlotId is null || building.PlayerSlotId == playerSlotId.Value))
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     public BuildingPresentationProjection? BuildingPresentationProjection(int id)
@@ -122,51 +136,80 @@ public sealed partial class UnitBattlefield
     {
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Select(BuildingPresentationProjection)
-            .Where(projection => projection is { Entity.Selected: true, RallyPoint: not null })
-            .Select(projection => new BuildingRallyProjection(
-                projection!.Value.Entity.Id.Value,
-                projection.Value.Entity.Position,
-                projection.Value.RallyPoint!.Value,
-                projection.Value.RallyPulse))
-            .OrderBy(projection => projection.Id)
-            .ToList();
+        _buildingRallyProjectionBuffer.Clear();
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingIdentity(buildingId)?.PlayerSlotId != playerSlotId
+                || BuildingPresentationProjection(buildingId) is not { Entity.Selected: true, RallyPoint: not null } projection)
+            {
+                continue;
+            }
+
+            _buildingRallyProjectionBuffer.Add(new BuildingRallyProjection(
+                projection.Entity.Id.Value,
+                projection.Entity.Position,
+                projection.RallyPoint.Value,
+                projection.RallyPulse));
+        }
+
+        _buildingRallyProjectionBuffer.Sort(CompareBuildingRallyProjectionIds);
+        return _buildingRallyProjectionBuffer;
     }
 
     public bool HasSelectedBuildings(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Select(BuildingProjection)
-            .Any(projection => projection?.Selected == true);
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId
+                && BuildingProjection(buildingId)?.Selected == true)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public IReadOnlyList<BuildingSelectionProjection> SelectedBuildingSelectionProjections(PlayerSlotId playerSlotId)
     {
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .OrderBy(buildingId => buildingId)
-            .Select(BuildingSelectionProjection)
-            .Where(projection => projection is not null)
-            .Select(projection => projection!.Value)
-            .ToList();
+        _buildingSelectionProjectionBuffer.Clear();
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingIdentity(buildingId)?.PlayerSlotId != playerSlotId
+                || BuildingSelectionProjection(buildingId) is not { } projection)
+            {
+                continue;
+            }
+
+            _buildingSelectionProjectionBuffer.Add(projection);
+        }
+
+        return _buildingSelectionProjectionBuffer;
     }
 
-    private IEnumerable<EntityId> SelectedBuildingEntityIds(PlayerSlotId playerSlotId)
+    private void CollectSelectedBuildingEntityIds(PlayerSlotId playerSlotId, List<EntityId> result)
     {
+        result.Clear();
         SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
-        return _buildingProjectionTargetIdBuffer
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Where(buildingId => BuildingProjection(buildingId)?.Selected == true)
-            .Where(buildingId => _buildingTargetEntityIds.ContainsKey(buildingId))
-            .Select(buildingId => _buildingTargetEntityIds[buildingId]);
+        foreach (var buildingId in _buildingProjectionTargetIdBuffer)
+        {
+            if (BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId
+                && BuildingProjection(buildingId)?.Selected == true
+                && _buildingTargetEntityIds.TryGetValue(buildingId, out var entityId))
+            {
+                result.Add(entityId);
+            }
+        }
+    }
+
+    private static int CompareBuildingRallyProjectionIds(BuildingRallyProjection left, BuildingRallyProjection right)
+    {
+        return left.Id.CompareTo(right.Id);
     }
 
     private BuildingSelectionProjection? BuildingSelectionProjection(int buildingId)

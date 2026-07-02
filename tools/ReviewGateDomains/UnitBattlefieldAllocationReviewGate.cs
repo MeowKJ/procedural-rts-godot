@@ -9,6 +9,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireProductionSyncBuffers(root, result);
         RequireConstructionSubjectBuffers(root, result);
         RequireSelectedBuildingRallyBuffers(root, result);
+        RequireBuildingProjectionBuffers(root, result);
     }
 
     private static void RequireBuildingTargetIdBuffers(string root, GateResult result)
@@ -38,6 +39,20 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(projection, "private IReadOnlyList<int> BuildingTargetIds()", "Building target id scans must not return allocating snapshots.", result);
     }
 
+    private static void RequireBuildingProjectionBuffers(string root, GateResult result) {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<UnitBattlefieldBuildingSnapshot> _buildingSnapshotBuffer", "Building projection paths must reuse snapshot storage.", result);
+        RequireText(battlefield, "List<BuildingRallyProjection> _buildingRallyProjectionBuffer", "Building projection paths must reuse rally storage.", result);
+        RequireText(battlefield, "List<BuildingSelectionProjection> _buildingSelectionProjectionBuffer", "Building projection paths must reuse selection storage.", result);
+        RequireText(battlefield, "List<BuildingMinimapProjection> _buildingMinimapProjectionSecondaryBuffer", "Building minimap projections must preserve adjacent snapshot comparisons with reusable storage.", result);
+        var projection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingProjection.cs");
+        ForbidText(projection, ".ToArray()", "Building projection paths must not allocate arrays.", result);
+        ForbidText(projection, ".ToList()", "Building projection paths must not allocate result lists.", result);
+        ForbidText(projection, "private IEnumerable<EntityId> SelectedBuildingEntityIds", "Selected building entity ids must use caller-owned storage.", result);
+        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
+        ForbidText(picking, ".Select(BuildingHitPulseProjection)", "Building hit-pulse projections must not allocate LINQ result chains.", result);
+        ForbidText(picking, ".Select(buildingId => BuildingMinimapProjection", "Building minimap projections must not allocate LINQ result chains.", result);
+    }
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
     {
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
