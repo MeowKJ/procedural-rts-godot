@@ -77,6 +77,11 @@ public sealed partial class UnitBattlefield
         return left.Value.CompareTo(right.Value);
     }
 
+    private static int CompareBuildingIds(int left, int right)
+    {
+        return left.CompareTo(right);
+    }
+
     private void SubmitAndApplyInputCommand(EntityCommand command)
     {
         SyncUnitEntities();
@@ -153,25 +158,41 @@ public sealed partial class UnitBattlefield
 
     private IReadOnlyList<EntityId> ConstructionSubjectEntities(PlayerSlotId playerSlotId, BuildSpec spec)
     {
+        CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer);
+        return _constructionSubjectEntityBuffer;
+    }
+
+    private void CollectConstructionSubjectEntities(
+        PlayerSlotId playerSlotId,
+        BuildSpec spec,
+        List<int> buildingIds,
+        List<EntityId> result)
+    {
+        buildingIds.Clear();
+        result.Clear();
         if (spec.RequiredProducer is not { } requiredProducer)
         {
-            return [];
+            return;
         }
 
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Kind == requiredProducer)
-            .Where(building => building.Hp > 0 && BuildingBuildProgress(building.Id) >= 1)
-            .OrderBy(building => building.Id)
-            .Select(building =>
+        foreach (var buildingId in BuildingTargetIds())
+        {
+            if (BuildingSnapshot(buildingId) is { } building
+                && building.PlayerSlotId == playerSlotId
+                && building.Kind == requiredProducer
+                && building.Hp > 0
+                && BuildingBuildProgress(building.Id) >= 1)
             {
-                SyncBuildingTargetEntity(building.Id);
-                return _buildingTargetEntityIds[building.Id];
-            })
-            .ToList();
+                buildingIds.Add(building.Id);
+            }
+        }
+
+        buildingIds.Sort(CompareBuildingIds);
+        foreach (var buildingId in buildingIds)
+        {
+            SyncBuildingTargetEntity(buildingId);
+            result.Add(_buildingTargetEntityIds[buildingId]);
+        }
     }
 
     private string? EntityBuildingSpecId(EntityInstance entity)

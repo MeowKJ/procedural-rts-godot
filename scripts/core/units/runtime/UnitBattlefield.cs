@@ -33,6 +33,8 @@ public sealed partial class UnitBattlefield
     private readonly Dictionary<int, int?> _lastDockedHarvesterIds = [];
     private readonly HashSet<int> _constructionEntityIdsBefore = [];
     private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
+    private readonly List<int> _constructionSubjectBuildingIds = [];
+    private readonly List<EntityId> _constructionSubjectEntityBuffer = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];

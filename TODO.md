@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 135 C# source files / 18349 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 815 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 135 C# source files / 18371 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 837 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1231,7 +1231,11 @@ Wiring & coverage gaps (found during the sweep):
     replacing `SubmitSelectionCommand(...)` subject `Where/Distinct/OrderBy/ToList`
     materialization with explicit valid-id collection, duplicate scan, and in-place
     `EntityId` sort. `ReviewGate simhot` locks the no-LINQ selection command
-    subject path.
+    subject path. Follow-up: #89 reused UnitBattlefield construction subject
+    building-id and entity-id buffers, replacing `ConstructionSubjectEntities(...)`
+    snapshot/order `ToList()` materialization with explicit matching, in-place
+    building-id sort, and subject entity fill. `ReviewGate simhot` locks the
+    no-LINQ construction subject bridge path.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

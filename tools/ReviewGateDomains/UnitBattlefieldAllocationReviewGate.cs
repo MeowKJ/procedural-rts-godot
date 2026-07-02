@@ -6,6 +6,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireGroupCommandSubjectBuffers(root, result);
         RequireDeathRemovalBuffers(root, result);
         RequireProductionSyncBuffers(root, result);
+        RequireConstructionSubjectBuffers(root, result);
     }
 
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
@@ -109,5 +110,26 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(production, ".ToHashSet()", "Production sync must not allocate known-entity sets.", result);
         ForbidText(production, "new\n            {", "Production sync must not use anonymous queued-before snapshots.", result);
         ForbidText(production, ".OrderBy(entry => entry.Snapshot.Position", "Production completion matching must not allocate ordered LINQ snapshots.", result);
+    }
+
+    private static void RequireConstructionSubjectBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<int> _constructionSubjectBuildingIds", "Construction command bridge must reuse subject building-id storage.", result);
+        RequireText(battlefield, "List<EntityId> _constructionSubjectEntityBuffer", "Construction command bridge must reuse subject entity-id storage.", result);
+
+        var commandBridge = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.CommandBridge.cs");
+        RequireText(commandBridge, "CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer)", "Construction commands must fill reusable subject buffers.", result);
+        RequireText(commandBridge, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
+        ForbidText(commandBridge, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject bridge must not allocate snapshot LINQ chains.", result);
+        ForbidText(commandBridge, ".OrderBy(building => building.Id)\n            .Select(building =>", "Construction subject bridge must not allocate ordered subject LINQ chains.", result);
     }
 }
