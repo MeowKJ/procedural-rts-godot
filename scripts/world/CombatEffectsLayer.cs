@@ -30,7 +30,7 @@ public partial class CombatEffectsLayer : Node2D
         + _impactFlashes.Count
         + State.Projectiles.Count
         + State.Beams.Count
-        + (UnitBattlefield?.ProjectileProjections().Count ?? 0);
+        + (UnitBattlefield?.ProjectileProjectionCount() ?? 0);
 
     public void AddUnitDeath(UnitDeathInfo death, Color accent)
     {

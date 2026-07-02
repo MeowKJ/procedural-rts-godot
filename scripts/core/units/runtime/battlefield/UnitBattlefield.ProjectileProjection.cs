@@ -11,4 +11,9 @@ public sealed partial class UnitBattlefield
     {
         return ProjectilePresentationProjector.Project(_entityWorld, viewer);
     }
+
+    public int ProjectileProjectionCount()
+    {
+        return ProjectilePresentationProjector.Count(_entityWorld);
+    }
 }

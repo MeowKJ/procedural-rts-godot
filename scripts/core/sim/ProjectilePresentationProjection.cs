@@ -48,6 +48,21 @@ public static class ProjectilePresentationProjector
         return result;
     }
 
+    public static int Count(EntityWorld world)
+    {
+        var count = 0;
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (entity.Components.TryGet<ProjectileComponentState>(out var projectile)
+                && world.TryGetAmmoDefinition(projectile.AmmoId, out _))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public static ProjectilePresentationProjection? ProjectOne(EntityWorld world, EntityInstance entity, OwnerId viewer)
     {
         if (!entity.Components.TryGet<ProjectileComponentState>(out var projectile)
