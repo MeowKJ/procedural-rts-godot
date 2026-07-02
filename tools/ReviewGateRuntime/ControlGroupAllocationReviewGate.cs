@@ -2,7 +2,9 @@ static class ControlGroupAllocationReviewGate
 {
     public static void Check(string root, GateResult result)
     {
-        var controller = ReviewGateSource.Read(root, "scripts", "controllers", "ControlGroupController.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "controllers", "ControlGroupController.Groups.cs");
+        var controller = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "controllers", "ControlGroupController.cs"));
 
         RequireText(controller, "private void CollectSelectedUnitIds(List<int> result)", "ControlGroup save must fill a reusable selected-id list.", result);
         RequireText(controller, "CollectSelectedUnitIds(selectedIds)", "SaveGroup must reuse the stored group list instead of materializing selection ids.", result);

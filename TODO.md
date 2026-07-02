@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 145 C# source files / 19414 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 996 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 145 C# source files / 19416 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 996 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1382,6 +1382,10 @@ Wiring & coverage gaps (found during the sweep):
     recall `ToHashSet()`, and double-tap center position list materialization with
     controller-owned group lists plus explicit id/position scans. `ReviewGate
     controlgrouphudallocations` locks the no-allocation save/recall contract.
+    Follow-up: #142 split those control group save/recall/id-scan helpers into
+    `ControlGroupController.Groups.cs`, leaving both the stable entry file and the
+    new group partial at 175 lines. `ControlGroupAllocationReviewGate` now reads
+    partial-aware evidence and requires the focused partial.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
