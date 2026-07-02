@@ -136,11 +136,9 @@ public sealed partial class UnitBattlefield
             Velocity = Vector2.Zero,
             Hp = spec.Stats.MaxHp,
             Stance = spec.Weapons.Count > 0 ? UnitStance.Aggressive : UnitStance.Ignore,
-            WeaponMounts = spec.Weapons
-                .Select(mount => new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind))
-                .ToList(),
         };
 
+        FillDefaultWeaponMounts(instance.WeaponMounts, spec, facing);
         Units.Add(instance);
         SyncUnitEntity(instance);
         return instance;

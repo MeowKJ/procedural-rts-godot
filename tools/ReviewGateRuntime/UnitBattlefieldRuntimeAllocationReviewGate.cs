@@ -5,7 +5,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireConstructBuildingAdoptionBuffers(root, result);
         RequireOwnerRelationSyncBuffers(root, result);
         RequireResourceHarvestSyncBuffers(root, result);
-        RequireUnitAdoptionMountBuffers(root, result);
+        RequireUnitMountConstructionBuffers(root, result);
         RequireAutoAcquireTargetScan(root, result);
         RequireBuildingTargetCombatEventBuffers(root, result);
         RequireSimEventDrainBuffer(root, result);
@@ -66,20 +66,15 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(legacy, ".Select(mount => mount with { CooldownRemaining = unit.AttackCooldownRemaining })", "Unit sync weapon mount snapshot must not allocate LINQ projection iterators.", result);
     }
 
-    private static void RequireUnitAdoptionMountBuffers(string root, GateResult result)
+    private static void RequireUnitMountConstructionBuffers(string root, GateResult result)
     {
-        var adoption = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "sync",
-            "UnitBattlefield.UnitEntityAdoption.cs");
+        var spawn = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs");
+        var adoption = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "sync", "UnitBattlefield.UnitEntityAdoption.cs");
+        RequireText(spawn, "FillDefaultWeaponMounts(instance.WeaponMounts, spec, facing)", "Unit spawn must fill the UnitInstance mount list through a caller-owned buffer.", result);
         RequireText(adoption, "FillAdoptedWeaponMounts(unit.WeaponMounts, entity, spec)", "Unit adoption must fill the UnitInstance mount list through a caller-owned buffer.", result);
         RequireText(adoption, "for (var index = 0; index < weapon.Mounts.Count; index++)", "Unit adoption must copy component mounts with an explicit indexed loop.", result);
         RequireText(adoption, "for (var index = 0; index < spec.Weapons.Count; index++)", "Unit adoption must copy default spec mounts with an explicit indexed loop.", result);
+        ForbidText(spawn, "WeaponMounts = spec.Weapons", "Unit spawn must not allocate default mount lists through LINQ projections.", result);
         ForbidText(adoption, "weapon.Mounts.ToList()", "Unit adoption must not allocate mount lists from component mounts through LINQ.", result);
         ForbidText(adoption, "spec.Weapons.Select", "Unit adoption must not allocate default mount lists through LINQ projections.", result);
     }
