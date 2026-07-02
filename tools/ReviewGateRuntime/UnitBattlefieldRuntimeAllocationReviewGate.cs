@@ -5,6 +5,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireConstructBuildingAdoptionBuffers(root, result);
         RequireOwnerRelationSyncBuffers(root, result);
         RequireResourceHarvestSyncBuffers(root, result);
+        RequireAutoAcquireTargetScan(root, result);
     }
 
     private static void RequireConstructBuildingAdoptionBuffers(string root, GateResult result)
@@ -85,5 +86,24 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireText(legacy, "AddResourceCreditOwnerId(result, entity.OwnerId.Value)", "Credit sync must scan entity owners explicitly.", result);
         ForbidText(legacy, "_entityWorld.ResourceInventories.Keys\n            .Concat(_entityWorld.OrderedEntities.Select(entity => entity.OwnerId.Value))", "Credit sync must not allocate owner concat chains.", result);
         ForbidText(legacy, ".Distinct()\n            .OrderBy(owner => owner)", "Credit sync must not allocate distinct ordered owner enumerables.", result);
+    }
+
+    private static void RequireAutoAcquireTargetScan(string root, GateResult result)
+    {
+        var visibility = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.VisibilityCombat.cs");
+        RequireText(visibility, "UnitInstance? bestTarget = null;", "Auto-acquire must use an explicit best-target scan.", result);
+        RequireText(visibility, "var bestPriority = 0f;", "Auto-acquire must track target priority without ordered LINQ.", result);
+        RequireText(visibility, "var bestDistanceSquared = float.PositiveInfinity;", "Auto-acquire must track nearest same-priority target without ordered LINQ.", result);
+        ForbidText(visibility, ".Select(target => new", "Auto-acquire must not allocate anonymous target candidates.", result);
+        ForbidText(visibility, ".OrderByDescending(candidate => candidate.Priority)", "Auto-acquire must not allocate ordered target candidate chains.", result);
+        ForbidText(visibility, ".ThenBy(candidate => candidate.Distance)", "Auto-acquire must not allocate secondary ordered target candidate chains.", result);
+        ForbidText(visibility, ".FirstOrDefault();", "Auto-acquire must not materialize candidate queries.", result);
     }
 }

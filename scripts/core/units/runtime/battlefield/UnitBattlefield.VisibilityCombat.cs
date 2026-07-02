@@ -171,28 +171,45 @@ public sealed partial class UnitBattlefield
 
         var weapon = PrimaryWeapon(unit);
         var maxRange = unit.Spec.Stats.SightRange;
-        var candidates = Units
-            .Where(target => target.Id != unit.Id && target.Hp > 0)
-            .Where(target => Relations.CanAttack(unit.PlayerSlotId, target.PlayerSlotId))
-            .Where(target => CanWeaponTarget(weapon, target.Spec))
-            .Where(target => unit.Position.DistanceTo(target.Position) <= maxRange)
-            .Select(target => new
+        UnitInstance? bestTarget = null;
+        var bestPriority = 0f;
+        var bestDistanceSquared = float.PositiveInfinity;
+        var maxRangeSquared = maxRange * maxRange;
+        foreach (var target in Units)
+        {
+            if (target.Id == unit.Id
+                || target.Hp <= 0
+                || !Relations.CanAttack(unit.PlayerSlotId, target.PlayerSlotId)
+                || !CanWeaponTarget(weapon, target.Spec))
             {
-                Target = target,
-                Distance = unit.Position.DistanceTo(target.Position),
-                Priority = WeaponTargetPriority(weapon, target.Spec),
-            })
-            .Where(candidate => candidate.Priority > 0)
-            .OrderByDescending(candidate => candidate.Priority)
-            .ThenBy(candidate => candidate.Distance)
-            .FirstOrDefault();
+                continue;
+            }
 
-        if (candidates is null)
+            var distanceSquared = unit.Position.DistanceSquaredTo(target.Position);
+            if (distanceSquared > maxRangeSquared)
+            {
+                continue;
+            }
+
+            var priority = WeaponTargetPriority(weapon, target.Spec);
+            if (priority <= 0
+                || priority < bestPriority
+                || (priority == bestPriority && distanceSquared >= bestDistanceSquared))
+            {
+                continue;
+            }
+
+            bestTarget = target;
+            bestPriority = priority;
+            bestDistanceSquared = distanceSquared;
+        }
+
+        if (bestTarget is null)
         {
             return;
         }
 
-        unit.AttackTargetId = candidates.Target.Id;
+        unit.AttackTargetId = bestTarget.Id;
         unit.AttackTargetIsManual = false;
     }
 
