@@ -948,6 +948,13 @@ All as data/components on the shared entity language - never new runtime classes
     CommandGateway -> CommandSystem -> Simulation Tick`, and leaves runtime
     implementation to child issues for the controller contract, observation
     snapshot, and gateway validation shell.
+    Progress: #106 added the minimal Godot-free `IPlayerController` /
+    `IPlayerAgent` contract plus controller/agent ids, kind enums,
+    `ObservationView` and `PlayerCommand` placeholders, fixed-tick
+    `PlayerControllerContext`, and `PlayerControllerResult`. `ReviewGate
+    architecture` now requires the contract and rejects presentation or authority
+    mutation references under `scripts/core/players`. Live controller rewiring
+    remains in later child slices.
 [ ] Objective-graph campaign (trigger/condition/action/tone-cue) over entities.
 [ ] Sandbox stronger than missions: spawn any spec, switch owner/faction/team/
     relation/environment, time scale, debug overlays (paths/slots/avoidance/rings/
@@ -1065,7 +1072,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 138 C# source files / 18792 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 970 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 138 C# source files / 18810 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 988 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API

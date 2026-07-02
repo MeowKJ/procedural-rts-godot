@@ -6,6 +6,7 @@ static class ArchitectureReviewGate
         RequireEntityWorldPipeline(root, result);
         ForbidDeletedMigrationTypes(root, result);
         RequireCommandBoundary(root, result);
+        RequirePlayerControlContracts(root, result);
         RequireMovementGridConvergence(root, result);
         ForbidDuplicatedWeaponRangeHelpers(root, result);
     }
@@ -50,6 +51,23 @@ static class ArchitectureReviewGate
         ReviewGateSource.RequireAnyText(root, result, "MoveEntityCommand", "scripts", "tools/SimReplay", "tools/CombatBehavior");
         ReviewGateSource.RequireAnyText(root, result, "GroupAttackEntityCommand", "scripts", "tools/SimReplay", "tools/CounterReadabilityQa");
         ReviewGateSource.RequireAnyText(root, result, "UpgradeResolver", "scripts/core/sim", "tools/SimReplay");
+    }
+
+    private static void RequirePlayerControlContracts(string root, GateResult result)
+    {
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "PlayerControllerContracts.cs");
+        var contracts = ReviewGateSource.Read(root, "scripts", "core", "players", "PlayerControllerContracts.cs");
+        RequireText(contracts, "public interface IPlayerController", "Player control contract must define IPlayerController.", result);
+        RequireText(contracts, "public interface IPlayerAgent", "Player control contract must define IPlayerAgent.", result);
+        RequireText(contracts, "PlayerControllerContext", "Player control contract must pass fixed-tick context.", result);
+        RequireText(contracts, "ObservationView", "Player control contract must read through ObservationView.", result);
+        RequireText(contracts, "PlayerCommand", "Player control contract must output PlayerCommand intent.", result);
+        RequireText(contracts, "PlayerControllerResult", "Player control contract must return structured controller results.", result);
+
+        foreach (var forbidden in new[] { "using Godot", "GameState", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
+        {
+            ReviewGateSource.ForbidTextInSources(root, result, forbidden, "scripts/core/players");
+        }
     }
 
     private static void RequireMovementGridConvergence(string root, GateResult result)
