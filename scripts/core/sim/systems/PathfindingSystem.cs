@@ -144,11 +144,10 @@ public sealed class PathfindingSystem : ISimSystem
                     continue;
                 }
 
-                var waypoints = assignment.Path.Count == 0
-                    ? [new PathPoint(candidate.Slot.X, candidate.Slot.Y)]
-                    : assignment.Path.ToArray();
+                var goal = new PathPoint(candidate.Slot.X, candidate.Slot.Y);
+                var waypoints = PathOrGoal(assignment.Path, goal);
                 var path = new PathfindingComponentState(
-                    new PathPoint(candidate.Slot.X, candidate.Slot.Y),
+                    goal,
                     waypoints,
                     NextWaypointIndex: 0);
                 SetNextWaypoint(candidate.Entity, candidate.Movement, path);
@@ -252,15 +251,19 @@ public sealed class PathfindingSystem : ISimSystem
             domain,
             []);
 
-        var waypoints = result.Path.Count == 0
-            ? [new PathPoint(goal.X, goal.Y)]
-            : result.Path.ToArray();
+        var pathGoal = new PathPoint(goal.X, goal.Y);
+        var waypoints = PathOrGoal(result.Path, pathGoal);
 
         var path = new PathfindingComponentState(
-            new PathPoint(goal.X, goal.Y),
+            pathGoal,
             waypoints,
             NextWaypointIndex: 0);
         SetNextWaypoint(entity, movement, path);
+    }
+
+    private static IReadOnlyList<PathPoint> PathOrGoal(IReadOnlyList<PathPoint> path, PathPoint goal)
+    {
+        return path.Count == 0 ? [goal] : path;
     }
 
     private void SetNextWaypoint(

@@ -61,8 +61,12 @@ static class RegressionReviewGate
         RequireText(pathfinding, "_sharedGroups", "PathfindingSystem must reuse shared-corridor grouping buffers.", result);
         RequireText(pathfinding, "_sharedAssignments", "PathfindingSystem must reuse shared-corridor assignment lookup.", result);
         RequireText(pathfinding, "_seenObstacles", "PathfindingSystem must reuse blocker de-duplication storage.", result);
+        RequireText(pathfinding, "PathOrGoal(assignment.Path, goal)", "PathfindingSystem shared paths must avoid extra array copies.", result);
+        RequireText(pathfinding, "PathOrGoal(result.Path, pathGoal)", "PathfindingSystem single paths must avoid extra array copies.", result);
         ForbidText(pathfinding, "new HashSet<GridObstacle>()", "PathfindingSystem must not allocate blocker HashSets per path build.", result);
         ForbidText(pathfinding, "new Dictionary<SharedMoveKey", "PathfindingSystem must not allocate shared-corridor dictionaries per tick.", result);
+        ForbidText(pathfinding, "assignment.Path.ToArray()", "PathfindingSystem shared path assignment must not copy path lists to arrays.", result);
+        ForbidText(pathfinding, "result.Path.ToArray()", "PathfindingSystem single path assignment must not copy path lists to arrays.", result);
 
         var production = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProductionSystem.cs");
         RequireText(production, "_producerStepBuffer", "ProductionSystem must reuse its producer tick snapshot.", result);
