@@ -83,10 +83,9 @@ public static partial class PathfindingMath
 
         var width = Math.Max(1, (int)MathF.Ceiling(worldWidth / cellSize));
         var height = Math.Max(1, (int)MathF.Ceiling(worldHeight / cellSize));
-        var blocked = TerrainPassability.IgnoresBuildingBlockers(movementDomain)
-            ? new HashSet<GridObstacle>()
-            : obstacles.ToHashSet();
-        var terrainByCell = terrain.ToDictionary(cell => new GridObstacle(cell.X, cell.Y), cell => cell.Layer);
+        var blocked = new HashSet<GridObstacle>();
+        var terrainByCell = new Dictionary<GridObstacle, TerrainLayer>();
+        BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell);
         var allowedLayers = TerrainPassability.AllowedLayers(movementDomain);
         var start = ClampCell(WorldToCell(startX, startY, cellSize), width, height);
         var goal = ClampCell(WorldToCell(goalX, goalY, cellSize), width, height);
@@ -195,10 +194,9 @@ public static partial class PathfindingMath
 
         var width = Math.Max(1, (int)MathF.Ceiling(worldWidth / cellSize));
         var height = Math.Max(1, (int)MathF.Ceiling(worldHeight / cellSize));
-        var blocked = TerrainPassability.IgnoresBuildingBlockers(movementDomain)
-            ? new HashSet<GridObstacle>()
-            : obstacles.ToHashSet();
-        var terrainByCell = terrain.ToDictionary(cell => new GridObstacle(cell.X, cell.Y), cell => cell.Layer);
+        var blocked = new HashSet<GridObstacle>();
+        var terrainByCell = new Dictionary<GridObstacle, TerrainLayer>();
+        BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell);
         var allowedLayers = TerrainPassability.AllowedLayers(movementDomain);
 
         var assignments = new List<PathfindingCorridorAssignment>(members.Count);

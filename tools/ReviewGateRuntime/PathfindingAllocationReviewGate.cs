@@ -7,8 +7,11 @@ static class PathfindingAllocationReviewGate
         RequireText(math, "AppendUnique(points, sharedPath, entryIndex)", "Shared-corridor entry append must use index-based copy.", result);
         RequireText(math, "AppendUnique(points, sharedPath, 1)", "Shared-corridor connector append must use index-based copy.", result);
         RequireText(math, "for (var index = 1; index < cells.Count; index++)", "ReconstructPath must build path points without LINQ Skip/Select.", result);
+        RequireText(math, "BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell)", "Pathfinding passability setup must use explicit fill helpers.", result);
         ForbidText(math, "members.Average(", "FindSharedCorridor must not allocate LINQ Average enumerators.", result);
         ForbidText(math, "shared.Path.ToList()", "FindSharedCorridor must not copy the shared path list.", result);
+        ForbidText(math, "obstacles.ToHashSet()", "Pathfinding passability setup must not allocate blocker sets through LINQ materialization.", result);
+        ForbidText(math, "terrain.ToDictionary(", "Pathfinding passability setup must not allocate terrain lookup dictionaries through LINQ materialization.", result);
         ForbidText(math, ".Skip(", "PathfindingMath hot paths must not allocate Skip iterators.", result);
         ForbidText(math, ".Select(cell => CellCenter", "ReconstructPath must not allocate Select iterators.", result);
 
