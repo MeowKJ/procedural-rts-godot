@@ -7,6 +7,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireResourceHarvestSyncBuffers(root, result);
         RequireAutoAcquireTargetScan(root, result);
         RequireBuildingTargetCombatEventBuffers(root, result);
+        RequireSimEventDrainBuffer(root, result);
         RequirePlacementQueryBuffers(root, result);
     }
 
@@ -133,6 +134,23 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(bridge, "new HashSet<int>()", "Building-target combat events must not allocate local HashSet instances.", result);
         ForbidText(bridge, ".Concat(_combatDestroyedBuildingIds)", "Building-target combat events must not allocate chained dead-id enumerables.", result);
         ForbidText(bridge, ".Distinct()\n            .ToList();", "Building-target combat events must not materialize distinct dead-id lists.", result);
+    }
+
+    private static void RequireSimEventDrainBuffer(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<SimEvent> _simEventDrainBuffer", "UnitBattlefield must reuse a sim-event drain buffer.", result);
+
+        var buildingCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingTargetCombatBridge.cs");
+        var turretCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.TurretCombat.cs");
+        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
+        var bridgeSources = buildingCombat + turretCombat + constructionTickets;
+        RequireText(bridgeSources, "_entityWorld.Events.DrainInto(_simEventDrainBuffer)", "UnitBattlefield bridge paths must drain sim events into reusable storage.", result);
+        RequireText(constructionTickets, "for (var index = _simEventDrainBuffer.Count - 1; index >= 0; index--)", "Construction rejection drain must preserve last-match semantics with an explicit reverse scan.", result);
+        ForbidText(bridgeSources, "_entityWorld.Events.Drain()", "UnitBattlefield bridge paths must not allocate SimEvent snapshot arrays.", result);
+        ForbidText(constructionTickets, ".OfType<ConstructionRejectedEvent>()", "Construction rejection drain must not allocate LINQ event filters.", result);
+        ForbidText(constructionTickets, ".LastOrDefault(", "Construction rejection drain must not use LINQ last-match queries.", result);
     }
 
     private static void RequirePlacementQueryBuffers(string root, GateResult result)

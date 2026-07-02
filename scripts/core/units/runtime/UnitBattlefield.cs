@@ -71,6 +71,7 @@ public sealed partial class UnitBattlefield
     private readonly HashSet<int> _combatDamagedBuildingIds = [];
     private readonly HashSet<int> _combatDestroyedBuildingIds = [];
     private readonly HashSet<int> _combatDeadBuildingIds = [];
+    private readonly List<SimEvent> _simEventDrainBuffer = [];
     private readonly List<PlacementBuildAnchor> _placementBuildAnchors = [];
     private readonly List<PlacementObstacle> _placementObstacles = [];
     private readonly HashSet<int> _removedUnitIdBuffer = [];

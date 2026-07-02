@@ -14,7 +14,9 @@ public sealed partial class UnitBattlefield
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
         StepCombatBridgeWithProjectiles(context, _buildingTargetCombatSystem);
         SyncBuildingTargetCombatStateFromEntities();
-        ApplyBuildingTargetCombatEvents(_entityWorld.Events.Drain());
+        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
+        ApplyBuildingTargetCombatEvents(_simEventDrainBuffer);
+        _simEventDrainBuffer.Clear();
     }
 
     private bool HasBuildingTargetCombatWork()

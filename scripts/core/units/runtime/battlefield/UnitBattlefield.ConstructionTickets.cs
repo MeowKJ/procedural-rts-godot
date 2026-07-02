@@ -207,11 +207,21 @@ public sealed partial class UnitBattlefield
 
     private ConstructionRejectedEvent? DrainConstructionRejection(int tick, OwnerId owner, string kind)
     {
-        return _entityWorld.Events.Drain()
-            .OfType<ConstructionRejectedEvent>()
-            .LastOrDefault(rejection => rejection.Tick == tick
+        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
+        for (var index = _simEventDrainBuffer.Count - 1; index >= 0; index--)
+        {
+            if (_simEventDrainBuffer[index] is ConstructionRejectedEvent rejection
+                && rejection.Tick == tick
                 && rejection.Owner == owner
-                && rejection.BuildingSpecId == kind);
+                && rejection.BuildingSpecId == kind)
+            {
+                _simEventDrainBuffer.Clear();
+                return rejection;
+            }
+        }
+
+        _simEventDrainBuffer.Clear();
+        return null;
     }
 
     private void NotifyCreditsChanged(PlayerSlotId playerSlotId)

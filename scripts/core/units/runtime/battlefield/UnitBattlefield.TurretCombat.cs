@@ -25,7 +25,9 @@ public sealed partial class UnitBattlefield
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
         StepCombatBridgeWithProjectiles(context, _turretCombatSystem);
-        ApplyTurretCombatEvents(_entityWorld.Events.Drain());
+        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
+        ApplyTurretCombatEvents(_simEventDrainBuffer);
+        _simEventDrainBuffer.Clear();
     }
 
     private void ApplyTurretCombatEvents(IReadOnlyList<SimEvent> events)
