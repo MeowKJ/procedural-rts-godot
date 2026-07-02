@@ -7,6 +7,7 @@ static class BattleRootHudAllocationReviewGate
         var process = ReviewGateSource.Read(root, "scripts", "BattleRoot.Process.cs");
         var minimap = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudMinimap.cs");
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
+        var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
 
         RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitBuffer", "BattleRoot minimap units must use reusable storage.", result);
@@ -42,6 +43,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "_alertLineBuffer.Clear();", "RefreshAlerts must clear and reuse the alert line buffer.", result);
         RequireText(alerts, "_alertLineBuffer.Count < 4", "RefreshAlerts must cap HUD alert lines without LINQ Take.", result);
         RequireText(alerts, "_hud.SetAlerts(_alertLineBuffer)", "RefreshAlerts must pass reusable alert lines to HudLayer.", result);
+        RequireText(hudState, "List<ProductionOptionState> _commandCardStates", "HudLayer command-card refresh must reuse visible state storage.", result);
+        RequireText(hudState, "HashSet<string> _commandCardActiveIds", "HudLayer command-card refresh must reuse active id storage.", result);
+        RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);
+        RequireText(hudState, "_commandCardStates.Add(state)", "HudLayer command-card refresh must fill reusable state storage.", result);
+        RequireText(hudState, "_commandCardStaleIds.Add(key)", "HudLayer command-card refresh must collect stale keys before removing buttons.", result);
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);
@@ -68,5 +74,8 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(alerts, ".Take(4)", "RefreshAlerts must not allocate LINQ take queries.", result);
         ForbidText(alerts, ".Select(alert => new HudLayer.AlertLine", "RefreshAlerts must not allocate alert projection chains.", result);
         ForbidText(alerts, ".ToList()", "RefreshAlerts must not allocate materialized alert lists.", result);
+        ForbidText(hudState, "states.Take(12).ToArray()", "HudLayer command-card refresh must not allocate an ordered state array.", result);
+        ForbidText(hudState, "orderedStates.Select(ProductionOptionId).ToHashSet()", "HudLayer command-card refresh must not allocate active id sets.", result);
+        ForbidText(hudState, "_commandButtons.Keys.Where(key => !activeIds.Contains(key)).ToArray()", "HudLayer command-card refresh must not allocate stale key arrays.", result);
     }
 }

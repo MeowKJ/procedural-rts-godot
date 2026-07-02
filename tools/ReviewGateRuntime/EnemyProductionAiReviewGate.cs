@@ -6,6 +6,7 @@ static class EnemyProductionAiReviewGate
         RequireProductionBuffers(root, result);
         RequireConstructionScans(root, result);
         RequireEconomyScans(root, result);
+        RequireLegacyProductionScans(root, result);
     }
 
     private static void RequireFileBudgets(string root, GateResult result)
@@ -82,6 +83,17 @@ static class EnemyProductionAiReviewGate
         ForbidText(source, ".Any(", $"{name} must not allocate LINQ Any queries.", result);
         ForbidText(source, ".Sum(", $"{name} must not allocate LINQ Sum queries.", result);
         ForbidText(source, ".FirstOrDefault()", $"{name} must not use LINQ first queries.", result);
+    }
+
+    private static void RequireLegacyProductionScans(string root, GateResult result)
+    {
+        var legacy = ReviewGateSource.Read(root, "scripts", "core", "ai", "EnemyProductionAi.cs");
+        RequireText(legacy, "TryMinReadyProductionCost(", "Legacy EnemyProductionAi must scan ready production costs without materializing spec arrays.", result);
+        RequireText(legacy, "HasPlayableProducerKind(", "Legacy EnemyProductionAi rally setup must scan producer specs explicitly.", result);
+        RequireText(legacy, "sum += building.Position;", "Legacy EnemyProductionAi base center must use an explicit position sum.", result);
+        ForbidProductionLinq(legacy, "Legacy enemy production AI", result);
+        ForbidText(legacy, "ReadyProductionSpecs(", "Legacy EnemyProductionAi must not expose allocating ready-spec iterators.", result);
+        ForbidText(legacy, "new[] { ProductionKind", "Legacy EnemyProductionAi must not allocate combat preference arrays.", result);
     }
 
     private static string ProductionAiPath(string root, string file)

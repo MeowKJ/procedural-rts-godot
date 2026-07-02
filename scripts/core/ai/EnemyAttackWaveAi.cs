@@ -5,6 +5,7 @@ namespace ProceduralRts.Core;
 public sealed class EnemyAttackWaveAi
 {
     private readonly EnemyDifficultyProfile _profile;
+    private readonly List<UnitModel> _waveUnits = [];
     private float _waveTimer;
 
     public int WavesLaunched { get; private set; }
@@ -29,11 +30,11 @@ public sealed class EnemyAttackWaveAi
             return;
         }
 
-        var waveUnits = AvailableCombatUnits(state, _profile.MaximumWaveUnits).ToList();
-        if (waveUnits.Count < _profile.MinimumWaveUnits)
+        CollectAvailableCombatUnits(state, _profile.MaximumWaveUnits, _waveUnits);
+        if (_waveUnits.Count < _profile.MinimumWaveUnits)
         {
             _waveTimer = 5f;
-            LastStatus = $"Enemy wave waiting ({waveUnits.Count}/{_profile.MinimumWaveUnits})";
+            LastStatus = $"Enemy wave waiting ({_waveUnits.Count}/{_profile.MinimumWaveUnits})";
             return;
         }
 
@@ -44,7 +45,7 @@ public sealed class EnemyAttackWaveAi
             return;
         }
 
-        foreach (var unit in waveUnits)
+        foreach (var unit in _waveUnits)
         {
             unit.AttackTargetId = targetId;
             unit.AttackTargetKind = targetKind;
@@ -64,41 +65,66 @@ public sealed class EnemyAttackWaveAi
 
         WavesLaunched++;
         _waveTimer = _profile.AttackWaveInterval;
-        LastStatus = $"Enemy wave launched ({waveUnits.Count} units)";
+        LastStatus = $"Enemy wave launched ({_waveUnits.Count} units)";
     }
 
-    private static IEnumerable<UnitModel> AvailableCombatUnits(GameState state, int maximumWaveUnits)
+    private static void CollectAvailableCombatUnits(GameState state, int maximumWaveUnits, List<UnitModel> result)
     {
-        return state.Units
-            .Where(unit => unit.Owner == Owner.Enemy)
-            .Where(unit => unit.Hp > 0)
-            .Where(unit => !GameState.IsHarvesterUnit(unit))
-            .Where(unit => unit.AttackTargetId is null || !unit.AttackTargetIsManual)
-            .OrderBy(unit => unit.Position.X)
-            .ThenBy(unit => unit.Id)
-            .Take(maximumWaveUnits);
+        result.Clear();
+        foreach (var unit in state.Units)
+        {
+            if (unit.Owner == Owner.Enemy
+                && unit.Hp > 0
+                && !GameState.IsHarvesterUnit(unit)
+                && (unit.AttackTargetId is null || !unit.AttackTargetIsManual))
+            {
+                result.Add(unit);
+            }
+        }
+
+        result.Sort(CompareWaveUnits);
+        if (result.Count > maximumWaveUnits)
+        {
+            result.RemoveRange(maximumWaveUnits, result.Count - maximumWaveUnits);
+        }
     }
 
     private static bool TryFindTarget(GameState state, float aggressionRadius, out CombatTargetKind targetKind, out int targetId, out Vector2 targetPosition)
     {
         var enemyCenter = EnemyCenter(state);
-        var hq = state.Buildings
-            .Where(building => state.IsTargetableHostile(Owner.Enemy, building))
-            .Where(building => building.Hp > 0)
-            .FirstOrDefault(building => building.Kind == BuildingDesignIds.Headquarters);
-        if (hq is not null && IsInsideAggressionRadius(hq.Position, enemyCenter, aggressionRadius))
+        foreach (var building in state.Buildings)
         {
-            targetKind = CombatTargetKind.Building;
-            targetId = hq.Id;
-            targetPosition = hq.Position;
-            return true;
+            if (building.Kind == BuildingDesignIds.Headquarters
+                && building.Hp > 0
+                && state.IsTargetableHostile(Owner.Enemy, building)
+                && IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
+            {
+                targetKind = CombatTargetKind.Building;
+                targetId = building.Id;
+                targetPosition = building.Position;
+                return true;
+            }
         }
 
-        var buildingTarget = state.Buildings
-            .Where(building => state.IsTargetableHostile(Owner.Enemy, building) && building.Hp > 0)
-            .Where(building => IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
-            .OrderBy(building => building.Position.DistanceSquaredTo(enemyCenter))
-            .FirstOrDefault();
+        BuildingModel? buildingTarget = null;
+        var buildingDistance = float.PositiveInfinity;
+        foreach (var building in state.Buildings)
+        {
+            if (!state.IsTargetableHostile(Owner.Enemy, building)
+                || building.Hp <= 0
+                || !IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
+            {
+                continue;
+            }
+
+            var distance = building.Position.DistanceSquaredTo(enemyCenter);
+            if (distance < buildingDistance)
+            {
+                buildingTarget = building;
+                buildingDistance = distance;
+            }
+        }
+
         if (buildingTarget is not null)
         {
             targetKind = CombatTargetKind.Building;
@@ -107,11 +133,25 @@ public sealed class EnemyAttackWaveAi
             return true;
         }
 
-        var unitTarget = state.Units
-            .Where(unit => state.IsTargetableHostile(Owner.Enemy, unit) && unit.Hp > 0)
-            .Where(unit => IsInsideAggressionRadius(unit.Position, enemyCenter, aggressionRadius))
-            .OrderBy(unit => unit.Position.DistanceSquaredTo(enemyCenter))
-            .FirstOrDefault();
+        UnitModel? unitTarget = null;
+        var unitDistance = float.PositiveInfinity;
+        foreach (var unit in state.Units)
+        {
+            if (!state.IsTargetableHostile(Owner.Enemy, unit)
+                || unit.Hp <= 0
+                || !IsInsideAggressionRadius(unit.Position, enemyCenter, aggressionRadius))
+            {
+                continue;
+            }
+
+            var distance = unit.Position.DistanceSquaredTo(enemyCenter);
+            if (distance < unitDistance)
+            {
+                unitTarget = unit;
+                unitDistance = distance;
+            }
+        }
+
         if (unitTarget is not null)
         {
             targetKind = CombatTargetKind.Unit;
@@ -138,15 +178,23 @@ public sealed class EnemyAttackWaveAi
 
     private static Vector2 EnemyCenter(GameState state)
     {
-        var units = state.Units
-            .Where(unit => unit.Owner == Owner.Enemy && unit.Hp > 0)
-            .Select(unit => unit.Position)
-            .ToList();
-        if (units.Count == 0)
+        var sum = Vector2.Zero;
+        var count = 0;
+        foreach (var unit in state.Units)
         {
-            return new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f);
+            if (unit.Owner == Owner.Enemy && unit.Hp > 0)
+            {
+                sum += unit.Position;
+                count++;
+            }
         }
 
-        return units.Aggregate(Vector2.Zero, (sum, position) => sum + position) / units.Count;
+        return count == 0 ? new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f) : sum / count;
+    }
+
+    private static int CompareWaveUnits(UnitModel left, UnitModel right)
+    {
+        var byX = left.Position.X.CompareTo(right.Position.X);
+        return byX != 0 ? byX : left.Id.CompareTo(right.Id);
     }
 }

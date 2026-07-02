@@ -67,6 +67,9 @@ public partial class HudLayer : CanvasLayer
     private readonly List<MoveModeButton> _moveModeButtons = [];
     private readonly List<StanceModeButton> _stanceModeButtons = [];
     private readonly Dictionary<string, CommandButton> _commandButtons = [];
+    private readonly List<ProductionOptionState> _commandCardStates = [];
+    private readonly HashSet<string> _commandCardActiveIds = [];
+    private readonly List<string> _commandCardStaleIds = [];
     private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
@@ -289,17 +292,34 @@ public partial class HudLayer : CanvasLayer
 
     public void SetCommandCardState(IReadOnlyList<ProductionOptionState> states)
     {
-        var orderedStates = states.Take(12).ToArray();
-        var activeIds = orderedStates.Select(ProductionOptionId).ToHashSet();
-        foreach (var stale in _commandButtons.Keys.Where(key => !activeIds.Contains(key)).ToArray())
+        _commandCardStates.Clear();
+        _commandCardActiveIds.Clear();
+        _commandCardStaleIds.Clear();
+        var visibleCount = Math.Min(states.Count, 12);
+        for (var index = 0; index < visibleCount; index++)
+        {
+            var state = states[index];
+            _commandCardStates.Add(state);
+            _commandCardActiveIds.Add(ProductionOptionId(state));
+        }
+
+        foreach (var key in _commandButtons.Keys)
+        {
+            if (!_commandCardActiveIds.Contains(key))
+            {
+                _commandCardStaleIds.Add(key);
+            }
+        }
+
+        foreach (var stale in _commandCardStaleIds)
         {
             _commandButtons[stale].QueueFree();
             _commandButtons.Remove(stale);
         }
 
-        for (var index = 0; index < orderedStates.Length; index++)
+        for (var index = 0; index < _commandCardStates.Count; index++)
         {
-            var state = orderedStates[index];
+            var state = _commandCardStates[index];
             var optionId = ProductionOptionId(state);
             if (!_commandButtons.TryGetValue(optionId, out var button))
             {
@@ -317,7 +337,7 @@ public partial class HudLayer : CanvasLayer
             button.SetState(state, disabledReason);
         }
 
-        if (orderedStates.Length == 0)
+        if (_commandCardStates.Count == 0)
         {
             foreach (var button in _commandButtons.Values)
             {
