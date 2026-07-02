@@ -21,8 +21,11 @@ public static partial class PathfindingMath
     {
         var memberStart = new PathPoint(member.StartX, member.StartY);
         var memberGoal = new PathPoint(member.GoalX, member.GoalY);
-        var rawCells = new List<GridObstacle>(sharedRawCells);
-        var points = new List<PathPoint>();
+        var rawCells = workspace.SharedCorridorRawCells;
+        rawCells.Clear();
+        rawCells.AddRange(sharedRawCells);
+        var points = workspace.SharedCorridorPoints;
+        points.Clear();
 
         if (sharedPath.Count == 0)
         {
@@ -114,7 +117,10 @@ public static partial class PathfindingMath
             blocked,
             terrainByCell,
             allowedLayers);
-        return new PathfindingCorridorAssignment(member.Id, path, rawCells);
+        return new PathfindingCorridorAssignment(
+            member.Id,
+            DurableSharedCorridorPath(path, points),
+            new List<GridObstacle>(rawCells));
     }
 
     private static void AppendUnique(List<PathPoint> target, IReadOnlyList<PathPoint> points, int startIndex = 0)
@@ -131,5 +137,14 @@ public static partial class PathfindingMath
         {
             target.Add(point);
         }
+    }
+
+    private static IReadOnlyList<PathPoint> DurableSharedCorridorPath(
+        IReadOnlyList<PathPoint> path,
+        List<PathPoint> scratchPoints)
+    {
+        return ReferenceEquals(path, scratchPoints)
+            ? new List<PathPoint>(scratchPoints)
+            : path;
     }
 }

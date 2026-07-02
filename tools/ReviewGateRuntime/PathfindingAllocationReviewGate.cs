@@ -16,8 +16,14 @@ static class PathfindingAllocationReviewGate
         RequireText(math, "FindPathWithDebug(\n            workspace,\n            anchorX", "Shared-corridor root path must reuse the caller-owned workspace.", result);
         RequireText(math, "FindPathWithDebug(\n                workspace,\n                member.StartX", "Shared-corridor fallback/connector paths must reuse the caller-owned workspace.", result);
         RequireText(math, "FindPathWithDebug(\n                    workspace,\n                    last.X", "Shared-corridor exit paths must reuse the caller-owned workspace.", result);
+        RequireText(math, "var rawCells = workspace.SharedCorridorRawCells", "Shared-corridor assignment raw-cell assembly must reuse workspace scratch storage.", result);
+        RequireText(math, "var points = workspace.SharedCorridorPoints", "Shared-corridor assignment point assembly must reuse workspace scratch storage.", result);
+        RequireText(math, "DurableSharedCorridorPath(path, points)", "Shared-corridor assignment paths must not return workspace scratch storage.", result);
+        RequireText(math, "new List<GridObstacle>(rawCells)", "Shared-corridor assignment raw cells must copy only at the durable result boundary.", result);
         ForbidText(math, "members.Average(", "FindSharedCorridor must not allocate LINQ Average enumerators.", result);
         ForbidText(math, "shared.Path.ToList()", "FindSharedCorridor must not copy the shared path list.", result);
+        ForbidText(math, "new List<GridObstacle>(sharedRawCells)", "Shared-corridor assignments must not allocate per-member raw-cell scratch lists.", result);
+        ForbidText(math, "var points = new List<PathPoint>()", "Shared-corridor assignments must not allocate per-member point scratch lists.", result);
         ForbidText(math, "var shared = FindPathWithDebug(\n            anchorX", "Shared-corridor root path must not use the allocating compatibility workspace.", result);
         ForbidText(math, "var fallback = FindPathWithDebug(\n                member.StartX", "Shared-corridor fallback path must not use the allocating compatibility workspace.", result);
         ForbidText(math, "var connector = FindPathWithDebug(\n                member.StartX", "Shared-corridor connector path must not use the allocating compatibility workspace.", result);
@@ -40,5 +46,9 @@ static class PathfindingAllocationReviewGate
         RequireText(pathfindingSystem, "PathfindingMath.FindSharedCorridor(\n                _pathWorkspace,", "PathfindingSystem shared-corridor planning must use the workspace overload.", result);
         RequireText(pathfindingSystem, "_sharedAssignmentResults);", "PathfindingSystem shared-corridor planning must use the assignment buffer overload.", result);
         ForbidText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            entity.Transform.Position.X", "PathfindingSystem single-path planning must not use the allocating compatibility overload.", result);
+
+        var workspace = ReviewGateSource.Read(root, "scripts", "core", "pathing", "PathfindingWorkspace.cs");
+        RequireText(workspace, "internal List<PathPoint> SharedCorridorPoints { get; } = [];", "PathfindingWorkspace must own shared-corridor point scratch storage.", result);
+        RequireText(workspace, "internal List<GridObstacle> SharedCorridorRawCells { get; } = [];", "PathfindingWorkspace must own shared-corridor raw-cell scratch storage.", result);
     }
 }
