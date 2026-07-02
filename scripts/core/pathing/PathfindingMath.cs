@@ -53,6 +53,33 @@ public static partial class PathfindingMath
         IReadOnlyCollection<GridTerrain> terrain,
         List<PathfindingCorridorAssignment> assignments)
     {
+        return FindSharedCorridor(
+            new PathfindingWorkspace(),
+            members,
+            intentX,
+            intentY,
+            worldWidth,
+            worldHeight,
+            cellSize,
+            obstacles,
+            movementDomain,
+            terrain,
+            assignments);
+    }
+
+    public static PathfindingSharedCorridorResult FindSharedCorridor(
+        PathfindingWorkspace workspace,
+        IReadOnlyList<PathfindingCorridorMember> members,
+        float intentX,
+        float intentY,
+        float worldWidth,
+        float worldHeight,
+        float cellSize,
+        IReadOnlyCollection<GridObstacle> obstacles,
+        MovementDomain movementDomain,
+        IReadOnlyCollection<GridTerrain> terrain,
+        List<PathfindingCorridorAssignment> assignments)
+    {
         assignments.Clear();
         if (members.Count == 0)
         {
@@ -70,6 +97,7 @@ public static partial class PathfindingMath
         anchorX /= members.Count;
         anchorY /= members.Count;
         var shared = FindPathWithDebug(
+            workspace,
             anchorX,
             anchorY,
             intentX,
@@ -94,6 +122,7 @@ public static partial class PathfindingMath
         foreach (var member in members)
         {
             assignments.Add(BuildSharedCorridorAssignment(
+                workspace,
                 member,
                 sharedPath,
                 shared.RawCells,

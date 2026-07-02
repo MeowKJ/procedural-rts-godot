@@ -3,6 +3,7 @@ namespace ProceduralRts.Core;
 public static partial class PathfindingMath
 {
     private static PathfindingCorridorAssignment BuildSharedCorridorAssignment(
+        PathfindingWorkspace workspace,
         PathfindingCorridorMember member,
         IReadOnlyList<PathPoint> sharedPath,
         IReadOnlyList<GridObstacle> sharedRawCells,
@@ -26,6 +27,7 @@ public static partial class PathfindingMath
         if (sharedPath.Count == 0)
         {
             var fallback = FindPathWithDebug(
+                workspace,
                 member.StartX,
                 member.StartY,
                 member.GoalX,
@@ -56,6 +58,7 @@ public static partial class PathfindingMath
         else
         {
             var connector = FindPathWithDebug(
+                workspace,
                 member.StartX,
                 member.StartY,
                 sharedPath[0].X,
@@ -86,6 +89,7 @@ public static partial class PathfindingMath
             else
             {
                 var exit = FindPathWithDebug(
+                    workspace,
                     last.X,
                     last.Y,
                     member.GoalX,

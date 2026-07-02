@@ -124,6 +124,7 @@ public sealed class PathfindingSystem : ISimSystem
             }
 
             var corridor = PathfindingMath.FindSharedCorridor(
+                _pathWorkspace,
                 _sharedMembers,
                 group[0].Intent.X,
                 group[0].Intent.Y,
