@@ -39,7 +39,8 @@ public partial class BattleRoot
 
     private void RefreshSelectionInfo()
     {
-        var selectedUnitInstances = _unitBattlefield.SelectedUnits(PlayerSlotId.One).ToList();
+        CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
+        var selectedUnitInstances = _selectedUnitInstanceBuffer;
         if (selectedUnitInstances.Count > 0)
         {
             _hud.SetHudContext(true, false, _buildPlacement.IsActive);
@@ -120,6 +121,18 @@ public partial class BattleRoot
         SetBuildingSelectionInfo(selectedBuildings[0]);
     }
 
+    private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)
+    {
+        result.Clear();
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Selected)
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
     private void SetUnitInstanceSelectionInfo(UnitInstance unit)
     {
         var spec = unit.Spec;
@@ -145,10 +158,26 @@ public partial class BattleRoot
 
     private void SetUnitInstanceGroupSelectionInfo(IReadOnlyList<UnitInstance> units)
     {
-        var combatUnits = units.Count(unit => !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy));
-        var economyUnits = units.Count(unit => unit.Spec.RoleTags.Contains(UnitRoleTag.Economy));
-        var cargo = units.Sum(unit => unit.Cargo);
-        var avgHealth = units.Average(unit => unit.Hp / unit.Spec.Stats.MaxHp);
+        var combatUnits = 0;
+        var economyUnits = 0;
+        var cargo = 0;
+        var healthRatioTotal = 0f;
+        foreach (var unit in units)
+        {
+            if (unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
+            {
+                economyUnits++;
+            }
+            else
+            {
+                combatUnits++;
+            }
+
+            cargo += unit.Cargo;
+            healthRatioTotal += unit.Spec.Stats.MaxHp > 0 ? unit.Hp / unit.Spec.Stats.MaxHp : 0;
+        }
+
+        var avgHealth = units.Count == 0 ? 0 : healthRatioTotal / units.Count;
 
         _hud.SetSelectionInfo(
             GameText.Format("ui.multi.title", units.Count),
