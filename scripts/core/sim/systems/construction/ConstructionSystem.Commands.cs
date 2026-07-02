@@ -70,7 +70,7 @@ public sealed partial class ConstructionSystem
         world.Remove(ticket.Id);
     }
 
-    private static void ApplyQueueConstruction(EntityWorld world, QueueConstructionEntityCommand command)
+    private void ApplyQueueConstruction(EntityWorld world, QueueConstructionEntityCommand command)
     {
         var legality = ValidateConstructionQueueStart(world, command);
         if (!legality.IsValid)
@@ -105,9 +105,10 @@ public sealed partial class ConstructionSystem
             QueuedConstructionComponents(spec));
     }
 
-    private static void ApplyCancelConstruction(EntityWorld world, CancelConstructionEntityCommand command)
+    private void ApplyCancelConstruction(EntityWorld world, CancelConstructionEntityCommand command)
     {
-        foreach (var entityId in command.Subjects.OrderBy(id => id.Value))
+        CollectOrderedSubjects(command.Subjects, _constructionSubjectOrder);
+        foreach (var entityId in _constructionSubjectOrder)
         {
             if (!world.TryGet(entityId, out var entity)
                 || entity.OwnerId.Value != command.Issuer.Value

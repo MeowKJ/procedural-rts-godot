@@ -20,9 +20,10 @@ public sealed partial class ConstructionSystem
         };
     }
 
-    private static Vector2 QueueTicketPosition(EntityWorld world, QueueConstructionEntityCommand command)
+    private Vector2 QueueTicketPosition(EntityWorld world, QueueConstructionEntityCommand command)
     {
-        foreach (var subject in command.Subjects.OrderBy(id => id.Value))
+        CollectOrderedSubjects(command.Subjects, _constructionSubjectOrder);
+        foreach (var subject in _constructionSubjectOrder)
         {
             if (world.TryGet(subject, out var entity))
             {

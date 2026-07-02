@@ -37,7 +37,7 @@ public sealed partial class ConstructionSystem
             : prerequisites;
     }
 
-    private static PlacementResult ValidateConstructionQueueStart(EntityWorld world, QueueConstructionEntityCommand command)
+    private PlacementResult ValidateConstructionQueueStart(EntityWorld world, QueueConstructionEntityCommand command)
     {
         if (!command.Issuer.IsValid)
         {
@@ -49,7 +49,8 @@ public sealed partial class ConstructionSystem
             return new PlacementResult(0, 0, false, "placement.unknownBuilding");
         }
 
-        foreach (var required in spec.RequiredBuildings.OrderBy(kind => kind))
+        CollectRequiredBuildings(spec, _requiredBuildingOrder);
+        foreach (var required in _requiredBuildingOrder)
         {
             if (!HasCompletedBuilding(world, command.Issuer, required))
             {
@@ -79,14 +80,15 @@ public sealed partial class ConstructionSystem
         return ValidatePlacementArea(world, command.Issuer, command.Position, spec, requiresBuildAuthority: true);
     }
 
-    private static PlacementResult ValidateConstructionPrerequisites(
+    private PlacementResult ValidateConstructionPrerequisites(
         EntityWorld world,
         OwnerId issuer,
         IReadOnlyList<EntityId> subjects,
         BuildSpec spec,
         Vector2 position)
     {
-        foreach (var required in spec.RequiredBuildings.OrderBy(kind => kind))
+        CollectRequiredBuildings(spec, _requiredBuildingOrder);
+        foreach (var required in _requiredBuildingOrder)
         {
             if (!HasCompletedBuilding(world, issuer, required))
             {
@@ -179,13 +181,14 @@ public sealed partial class ConstructionSystem
         return true;
     }
 
-    private static bool HasCompletedProducer(
+    private bool HasCompletedProducer(
         EntityWorld world,
         OwnerId ownerId,
         IReadOnlyList<EntityId> subjects,
         string requiredProducer)
     {
-        foreach (var subject in subjects.OrderBy(id => id.Value))
+        CollectOrderedSubjects(subjects, _constructionSubjectOrder);
+        foreach (var subject in _constructionSubjectOrder)
         {
             if (world.TryGet(subject, out var entity)
                 && IsCompletedBuilding(world, entity, ownerId, requiredProducer))

@@ -133,15 +133,24 @@ static class RegressionReviewGate
         RequireText(constructionSystem, "List<PlacementBuildAnchor> _placementBuildAnchors", "ConstructionSystem must reuse placement build-anchor storage.", result);
         RequireText(constructionSystem, "List<PlacementObstacle> _placementObstacles", "ConstructionSystem must reuse placement obstacle storage.", result);
         RequireText(constructionSystem, "List<PlacementBuildVisibility> _placementVisibility", "ConstructionSystem must reuse placement visibility storage.", result);
+        RequireText(constructionSystem, "List<string> _requiredBuildingOrder", "ConstructionSystem must reuse required-building ordering storage.", result);
+        RequireText(constructionSystem, "List<EntityId> _constructionSubjectOrder", "ConstructionSystem must reuse construction subject ordering storage.", result);
         RequireText(constructionSystem, "BuildAnchors(world, issuer, _placementBuildAnchors)", "Construction placement validation must fill the reusable build-anchor buffer.", result);
         RequireText(constructionSystem, "FootprintObstacles(world, _placementObstacles)", "Construction placement validation must fill the reusable obstacle buffer.", result);
         RequireText(constructionSystem, "BuildVisibilitySources(world, issuer, _placementVisibility)", "Construction placement validation must fill the reusable visibility buffer.", result);
+        RequireText(constructionSystem, "CollectRequiredBuildings(spec, _requiredBuildingOrder)", "Construction prerequisites must fill the reusable required-building order buffer.", result);
+        RequireText(constructionSystem, "CollectOrderedSubjects(command.Subjects, _constructionSubjectOrder)", "Construction commands must fill the reusable subject order buffer.", result);
         RequireText(constructionSystem, "BuildAnchors(EntityWorld world, OwnerId ownerId, List<PlacementBuildAnchor> result)", "Construction build-anchor collection must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "FootprintObstacles(EntityWorld world, List<PlacementObstacle> result)", "Construction obstacle collection must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "BuildVisibilitySources(EntityWorld world, OwnerId ownerId, List<PlacementBuildVisibility> result)", "Construction visibility collection must use a caller-owned buffer.", result);
+        RequireText(constructionSystem, "CollectRequiredBuildings(BuildSpec spec, List<string> result)", "Construction required-building ordering must use a caller-owned buffer.", result);
+        RequireText(constructionSystem, "CollectOrderedSubjects(IReadOnlyList<EntityId> subjects, List<EntityId> result)", "Construction subject ordering must use a caller-owned buffer.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildAnchor> BuildAnchors", "Construction build-anchor collection must not allocate a list per placement validation.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementObstacle> FootprintObstacles", "Construction obstacle collection must not allocate a list per placement validation.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildVisibility> BuildVisibilitySources", "Construction visibility collection must not allocate a list per placement validation.", result);
+        ForbidText(constructionSystem, "RequiredBuildings.OrderBy(kind => kind)", "Construction prerequisites must not allocate ordered required-building enumerables.", result);
+        ForbidText(constructionSystem, "Subjects.OrderBy(id => id.Value)", "Construction commands must not allocate ordered subject enumerables.", result);
+        ForbidText(constructionSystem, "subjects.OrderBy(id => id.Value)", "Construction producer lookup must not allocate ordered subject enumerables.", result);
         ForbidText(constructionSystem, ".ToList()", "ConstructionSystem must not allocate LINQ lists in construction placement validation paths.", result);
     }
 }

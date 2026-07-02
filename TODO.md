@@ -1048,7 +1048,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17784 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17793 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1172,7 +1172,11 @@ Wiring & coverage gaps (found during the sweep):
     placement-list allocation paydown. Follow-up: #70 reused ConstructionSystem
     placement validation buffers for build anchors, footprint obstacles, and build
     visibility sources, replacing the placement helper LINQ `ToList()` paths and
-    locking the no-list-construction contract in `ReviewGate simhot`.
+    locking the no-list-construction contract in `ReviewGate simhot`. Follow-up:
+    #71 reused ConstructionSystem required-building and construction-subject
+    ordering buffers, replacing the remaining construction command
+    `RequiredBuildings.OrderBy(...)` / `Subjects.OrderBy(...)` paths and locking
+    them in `ReviewGate simhot`.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
