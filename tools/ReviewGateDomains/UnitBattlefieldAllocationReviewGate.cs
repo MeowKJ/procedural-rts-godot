@@ -8,7 +8,6 @@ static class UnitBattlefieldAllocationReviewGate
         RequireProductionSyncBuffers(root, result);
         RequireConstructionSubjectBuffers(root, result);
         RequireSelectedBuildingRallyBuffers(root, result);
-        RequireProductionEnqueueProducerBuffers(root, result);
     }
 
     private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
@@ -155,25 +154,4 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(rally, "var producers = selected\n            .Where(HasAnyProductionForCore)\n            .OrderBy(buildingId => buildingId)\n            .ToList();", "Selected building rally commands must not allocate producer lists.", result);
     }
 
-    private static void RequireProductionEnqueueProducerBuffers(string root, GateResult result)
-    {
-        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
-            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(battlefield, "List<int> _productionCandidateProducerIds", "Production enqueue paths must reuse producer candidate storage.", result);
-
-        var rally = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionRally.cs");
-        RequireText(rally, "CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds)", "Legacy production enqueue must fill reusable producer candidate storage.", result);
-        RequireText(rally, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production enqueue must fill reusable producer candidate storage.", result);
-        RequireText(rally, "LeastQueuedProducerId(_productionCandidateProducerIds)", "Production enqueue must choose the least-queued producer without ordered LINQ.", result);
-        ForbidText(rally, "CandidateProducerIds(productionKind, playerSlotId)\n            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)", "Legacy production enqueue must not allocate ordered producer candidate chains.", result);
-        ForbidText(rally, "CandidateProducerIds(spec, playerSlotId)\n            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)", "UnitDesign production enqueue must not allocate ordered producer candidate chains.", result);
-        ForbidText(rally, ".ThenBy(buildingId => buildingId)\n            .Select(buildingId => (int?)buildingId)\n            .FirstOrDefault();", "Production enqueue must not allocate ordered producer candidate chains.", result);
-    }
 }

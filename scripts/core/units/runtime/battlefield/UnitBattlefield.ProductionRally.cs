@@ -242,34 +242,6 @@ public sealed partial class UnitBattlefield
         return bestProducerId;
     }
 
-    public bool CancelFirstProduction(PlayerSlotId playerSlotId, out string status)
-    {
-        var producerId = BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Where(buildingId => BuildingProductionQueue(buildingId).Count > 0)
-            .OrderBy(buildingId => BuildingProductionQueue(buildingId)[0].Id)
-            .Select(buildingId => (int?)buildingId)
-            .FirstOrDefault();
-        if (producerId is null)
-        {
-            status = GameText.T("production.noneQueued");
-            return false;
-        }
-
-        var item = BuildingProductionQueue(producerId.Value)[0];
-        var spec = UnitDesignCatalog.Spec(item.DesignId);
-        var refund = Mathf.RoundToInt(spec.Stats.Cost * 0.5f);
-        SyncBuildingTargetEntity(producerId.Value);
-        SubmitProductionCommand(new CancelProductionEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            [_buildingTargetEntityIds[producerId.Value]],
-            NextInputCommandTick()));
-        SyncCreditsFromEntityWorld(playerSlotId);
-        ResourceInventoryChanged?.Invoke(playerSlotId, ResourceInventory(playerSlotId));
-        status = GameText.Format("production.cancelled", spec.Label, refund);
-        return true;
-    }
-
     public IReadOnlyList<ProductionOptionState> ProductionOptionStates(PlayerSlotId playerSlotId)
     {
         var credits = Credits(playerSlotId);
@@ -360,36 +332,6 @@ public sealed partial class UnitBattlefield
             .ThenBy(state => UnitDesignCatalog.Spec(state.UnitDesignId!).Production!.LaneIndex)
             .ThenBy(state => state.UnitDesignId)
             .ToList();
-    }
-
-    public bool HasQueuedProduction(PlayerSlotId playerSlotId)
-    {
-        return BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .Any(buildingId => BuildingProductionQueue(buildingId).Count > 0);
-    }
-
-    public string ProductionQueueSummary(PlayerSlotId playerSlotId)
-    {
-        var queued = BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)
-            .SelectMany(buildingId => BuildingProductionQueue(buildingId).Select(item => new
-            {
-                BuildingId = buildingId,
-                Item = item,
-            }))
-            .OrderBy(entry => entry.Item.Id)
-            .ToList();
-        if (queued.Count == 0)
-        {
-            return GameText.T("ui.queue.empty");
-        }
-
-        var first = queued[0];
-        var spec = UnitDesignCatalog.Spec(first.Item.DesignId);
-        var progress = spec.Production is null ? 0 : Mathf.RoundToInt(Mathf.Clamp(first.Item.Progress / spec.Production.Duration, 0, 1) * 100);
-        var refund = Mathf.RoundToInt(spec.Stats.Cost * 0.5f);
-        return GameText.Format("ui.queue.summary", spec.Label.ToUpperInvariant(), progress, queued.Count, refund);
     }
 
 }

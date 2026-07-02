@@ -11,6 +11,7 @@ static class RegressionReviewGate
         CommandSystemAllocationReviewGate.Check(root, result);
         UnitBattlefieldSelectionAllocationReviewGate.Check(root, result);
         UnitBattlefieldAllocationReviewGate.Check(root, result);
+        UnitBattlefieldProductionAllocationReviewGate.Check(root, result);
         RequireConstructionPlacementBufferEvidence(root, result);
         RequireAbilitySystemCooldownBufferEvidence(root, result);
     }
