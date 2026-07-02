@@ -77,8 +77,10 @@ public partial class BattleRoot
             }
         }
 
-        var selectedUnits = _state.SelectedUnits().ToList();
-        var selectedBuildings = _state.SelectedBuildings().ToList();
+        CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer);
+        CollectSelectedLegacyBuildings(_selectedLegacyBuildingBuffer);
+        var selectedUnits = _selectedLegacyUnitBuffer;
+        var selectedBuildings = _selectedLegacyBuildingBuffer;
         var total = selectedUnits.Count + selectedBuildings.Count;
 
         if (total == 0)
@@ -94,12 +96,35 @@ public partial class BattleRoot
 
         if (total > 1)
         {
-            var combatUnits = selectedUnits.Count(unit => !IsEconomyUnit(unit));
-            var economyUnits = selectedUnits.Count(IsEconomyUnit);
-            var cargo = selectedUnits.Sum(unit => unit.Cargo);
+            var combatUnits = 0;
+            var economyUnits = 0;
+            var cargo = 0;
+            var unitHealthTotal = 0f;
+            foreach (var unit in selectedUnits)
+            {
+                if (IsEconomyUnit(unit))
+                {
+                    economyUnits++;
+                }
+                else
+                {
+                    combatUnits++;
+                }
+
+                cargo += unit.Cargo;
+                unitHealthTotal += UnitHealthRatioForSelection(unit);
+            }
+
+            var buildingHealthTotal = 0f;
+            foreach (var building in selectedBuildings)
+            {
+                var spec = BuildSpecCatalog.For(building.Kind);
+                buildingHealthTotal += spec.MaxHp > 0 ? building.Hp / spec.MaxHp : 0;
+            }
+
             var avgHealth = selectedUnits.Count == 0
-                ? selectedBuildings.Average(building => building.Hp / BuildSpecCatalog.For(building.Kind).MaxHp)
-                : selectedUnits.Average(UnitHealthRatioForSelection);
+                ? buildingHealthTotal / selectedBuildings.Count
+                : unitHealthTotal / selectedUnits.Count;
             _hud.SetSelectionInfo(
                 GameText.Format("ui.multi.title", total),
                 GameText.Format("ui.multi.meta", combatUnits, economyUnits, selectedBuildings.Count),
@@ -119,6 +144,30 @@ public partial class BattleRoot
         }
 
         SetBuildingSelectionInfo(selectedBuildings[0]);
+    }
+
+    private void CollectSelectedLegacyUnits(List<UnitModel> result)
+    {
+        result.Clear();
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
+    private void CollectSelectedLegacyBuildings(List<BuildingModel> result)
+    {
+        result.Clear();
+        foreach (var building in _state.Buildings)
+        {
+            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
+            {
+                result.Add(building);
+            }
+        }
     }
 
     private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)
