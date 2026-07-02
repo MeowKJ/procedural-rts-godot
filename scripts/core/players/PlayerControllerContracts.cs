@@ -61,14 +61,6 @@ public enum PlayerCommandKind
     DebugSandbox
 }
 
-public readonly record struct ObservationView(
-    PlayerSlotId ViewerSlotId,
-    OwnerId ViewerOwnerId,
-    int Tick)
-{
-    public bool IsValid => ViewerSlotId.Value > 0 && ViewerOwnerId.IsValid && Tick >= 0;
-}
-
 public readonly record struct PlayerCommand(
     PlayerSlotId IssuerSlotId,
     int ClientSequence,

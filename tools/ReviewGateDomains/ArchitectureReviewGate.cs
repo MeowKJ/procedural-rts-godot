@@ -56,13 +56,20 @@ static class ArchitectureReviewGate
     private static void RequirePlayerControlContracts(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "PlayerControllerContracts.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "ObservationView.cs");
         var contracts = ReviewGateSource.Read(root, "scripts", "core", "players", "PlayerControllerContracts.cs");
+        var observation = ReviewGateSource.Read(root, "scripts", "core", "players", "ObservationView.cs");
         RequireText(contracts, "public interface IPlayerController", "Player control contract must define IPlayerController.", result);
         RequireText(contracts, "public interface IPlayerAgent", "Player control contract must define IPlayerAgent.", result);
         RequireText(contracts, "PlayerControllerContext", "Player control contract must pass fixed-tick context.", result);
         RequireText(contracts, "ObservationView", "Player control contract must read through ObservationView.", result);
         RequireText(contracts, "PlayerCommand", "Player control contract must output PlayerCommand intent.", result);
         RequireText(contracts, "PlayerControllerResult", "Player control contract must return structured controller results.", result);
+        RequireText(observation, "public readonly record struct ObservedEntity", "ObservationView must expose visible entity summaries.", result);
+        RequireText(observation, "public readonly record struct ObservedPlayerState", "ObservationView must expose player-state summaries.", result);
+        RequireText(observation, "public readonly record struct ObservedCommandAffordance", "ObservationView must expose command affordances.", result);
+        RequireText(observation, "IReadOnlyList<ObservedEntity> VisibleEntities", "ObservationView visible entities must be read-only.", result);
+        RequireText(observation, "IReadOnlyList<ObservedCommandAffordance> CommandAffordances", "ObservationView command affordances must be read-only.", result);
 
         foreach (var forbidden in new[] { "using Godot", "GameState", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
         {
