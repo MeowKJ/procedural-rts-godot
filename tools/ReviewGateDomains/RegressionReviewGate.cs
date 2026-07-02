@@ -9,6 +9,7 @@ static class RegressionReviewGate
         RequireProjectileProjectionBufferEvidence(root, result);
         RequireCommandSystemGroupOrderBufferEvidence(root, result);
         CommandSystemAllocationReviewGate.Check(root, result);
+        UnitBattlefieldAllocationReviewGate.Check(root, result);
         RequireConstructionPlacementBufferEvidence(root, result);
         RequireAbilitySystemCooldownBufferEvidence(root, result);
     }

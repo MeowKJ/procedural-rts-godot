@@ -144,16 +144,29 @@ public sealed partial class UnitBattlefield
 
     private int? FindBestRefineryIdForHarvester(PlayerSlotId playerSlotId, Vector2 position)
     {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Kind == BuildingDesignIds.Refinery)
-            .Where(building => building.Hp > 0 && BuildingBuildProgress(building.Id) >= 1)
-            .OrderBy(building => building.Position.DistanceTo(position))
-            .Select(building => (int?)building.Id)
-            .FirstOrDefault();
+        int? bestId = null;
+        var bestDistance = 0f;
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
+                || identity.PlayerSlotId != playerSlotId
+                || identity.Kind != BuildingDesignIds.Refinery
+                || BuildingSnapshot(identity.LegacyBuildingId) is not { } building
+                || building.Hp <= 0
+                || BuildingBuildProgress(building.Id) < 1)
+            {
+                continue;
+            }
+
+            var distance = building.Position.DistanceTo(position);
+            if (bestId is null || distance < bestDistance)
+            {
+                bestId = building.Id;
+                bestDistance = distance;
+            }
+        }
+
+        return bestId;
     }
 
     private void ClearRefineryDockClaim(int harvesterId)
@@ -164,10 +177,10 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        foreach (var refineryId in BuildingTargetIds()
-            .Where(buildingId => BuildingIdentity(buildingId)?.Kind == BuildingDesignIds.Refinery))
+        foreach (var entity in _entityWorld.OrderedEntities)
         {
-            if (BuildingEntityByTargetId(refineryId) is not { } entity
+            if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
+                || identity.Kind != BuildingDesignIds.Refinery
                 || !entity.Components.TryGet<DockComponentState>(out var dock))
             {
                 continue;
@@ -221,41 +234,62 @@ public sealed partial class UnitBattlefield
 
     private void RemoveDeadBuildingTargets(IReadOnlyList<int> deadBuildingIds)
     {
-        var deaths = deadBuildingIds
-            .Select(BuildingDeathInfo)
-            .Where(death => death is not null)
-            .Select(death => death!.Value)
-            .ToList();
-        if (deaths.Count == 0)
+        _buildingDeathBuffer.Clear();
+        _removedBuildingIdBuffer.Clear();
+        foreach (var buildingId in deadBuildingIds)
+        {
+            if (BuildingDeathInfo(buildingId) is not { } death)
+            {
+                continue;
+            }
+
+            _buildingDeathBuffer.Add(death);
+            _removedBuildingIdBuffer.Add(death.Id);
+        }
+
+        if (_buildingDeathBuffer.Count == 0)
         {
             return;
         }
 
-        var removedIds = deaths.Select(death => death.Id).ToHashSet();
-        foreach (var removedId in removedIds)
+        foreach (var removedId in _removedBuildingIdBuffer)
         {
             RemoveBuildingEntity(removedId);
         }
 
-        foreach (var unit in Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building && unit.AttackTargetId is not null && removedIds.Contains(unit.AttackTargetId.Value)))
+        foreach (var unit in Units)
         {
-            ClearAttackTarget(unit);
+            if (unit.AttackTargetKind == CombatTargetKind.Building
+                && unit.AttackTargetId is not null
+                && _removedBuildingIdBuffer.Contains(unit.AttackTargetId.Value))
+            {
+                ClearAttackTarget(unit);
+            }
         }
 
-        BuildingsRemoved?.Invoke(deaths);
-        UpdateOutcomeAfterRemovedBuildings(deaths);
+        BuildingsRemoved?.Invoke(_buildingDeathBuffer);
+        UpdateOutcomeAfterRemovedBuildings(_buildingDeathBuffer);
     }
 
     private void RemoveDeadBuildingTargetsFromEntities()
     {
-        var deadIds = BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is { Hp: <= 0 })
-            .Select(snapshot => snapshot!.Value.Id)
-            .ToList();
-        if (deadIds.Count > 0)
+        _deadBuildingIdBuffer.Clear();
+        _removedBuildingIdBuffer.Clear();
+        foreach (var entity in _entityWorld.OrderedEntities)
         {
-            RemoveDeadBuildingTargets(deadIds);
+            if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
+                || !_removedBuildingIdBuffer.Add(identity.LegacyBuildingId)
+                || BuildingSnapshot(identity.LegacyBuildingId) is not { Hp: <= 0 } snapshot)
+            {
+                continue;
+            }
+
+            _deadBuildingIdBuffer.Add(snapshot.Id);
+        }
+
+        if (_deadBuildingIdBuffer.Count > 0)
+        {
+            RemoveDeadBuildingTargets(_deadBuildingIdBuffer);
         }
     }
 
@@ -266,25 +300,39 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        if (removedBuildings.Any(building => building.Kind == BuildingDesignIds.Headquarters && Relations.CanAttack(OutcomeViewer, building.PlayerSlotId)))
+        foreach (var building in removedBuildings)
         {
-            Outcome = GameOutcome.Victory;
-            OutcomeChanged?.Invoke(Outcome);
-            return;
+            if (building.Kind == BuildingDesignIds.Headquarters && Relations.CanAttack(OutcomeViewer, building.PlayerSlotId))
+            {
+                Outcome = GameOutcome.Victory;
+                OutcomeChanged?.Invoke(Outcome);
+                return;
+            }
         }
 
-        if (removedBuildings.Any(building => building.Kind == BuildingDesignIds.Headquarters && building.PlayerSlotId == OutcomeViewer))
+        foreach (var building in removedBuildings)
         {
-            Outcome = GameOutcome.Defeat;
-            OutcomeChanged?.Invoke(Outcome);
+            if (building.Kind == BuildingDesignIds.Headquarters && building.PlayerSlotId == OutcomeViewer)
+            {
+                Outcome = GameOutcome.Defeat;
+                OutcomeChanged?.Invoke(Outcome);
+                return;
+            }
         }
     }
 
     private void RemoveDeadUnits()
     {
-        var deaths = Units
-            .Where(unit => unit.Hp <= 0)
-            .Select(unit => new UnitInstanceDeathInfo(
+        _unitDeathBuffer.Clear();
+        _removedUnitIdBuffer.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Hp > 0)
+            {
+                continue;
+            }
+
+            _unitDeathBuffer.Add(new UnitInstanceDeathInfo(
                 unit.Id,
                 unit.Spec.Id,
                 unit.PlayerSlotId,
@@ -294,23 +342,27 @@ public sealed partial class UnitBattlefield
                 unit.Spec.Stats.WeightClass,
                 unit.Spec.Movement.Domain,
                 unit.LastDamageAmmoKind,
-                unit.DeathOverkillDamage))
-            .ToList();
-        if (deaths.Count == 0)
+                unit.DeathOverkillDamage));
+            _removedUnitIdBuffer.Add(unit.Id);
+        }
+
+        if (_unitDeathBuffer.Count == 0)
         {
             return;
         }
 
-        var removedIds = deaths.Select(death => death.Id).ToHashSet();
-        foreach (var unit in Units.Where(unit => removedIds.Contains(unit.Id)))
-        {
-            _entityWorld.Remove(unit.EntityId);
-        }
-
-        Units.RemoveAll(unit => removedIds.Contains(unit.Id));
         foreach (var unit in Units)
         {
-            if (unit.AttackTargetId is not null && removedIds.Contains(unit.AttackTargetId.Value))
+            if (_removedUnitIdBuffer.Contains(unit.Id))
+            {
+                _entityWorld.Remove(unit.EntityId);
+            }
+        }
+
+        Units.RemoveAll(IsRemovedUnit);
+        foreach (var unit in Units)
+        {
+            if (unit.AttackTargetId is not null && _removedUnitIdBuffer.Contains(unit.AttackTargetId.Value))
             {
                 ClearAttackTarget(unit);
             }
@@ -320,13 +372,18 @@ public sealed partial class UnitBattlefield
         {
             if (BuildingAttackTargetKindCore(buildingId) == CombatTargetKind.Unit
                 && BuildingAttackTargetIdCore(buildingId) is { } targetId
-                && removedIds.Contains(targetId))
+                && _removedUnitIdBuffer.Contains(targetId))
             {
                 ClearBuildingAttackTargetCore(buildingId);
             }
         }
 
-        UnitsRemoved?.Invoke(deaths);
+        UnitsRemoved?.Invoke(_unitDeathBuffer);
+    }
+
+    private bool IsRemovedUnit(UnitInstance unit)
+    {
+        return _removedUnitIdBuffer.Contains(unit.Id);
     }
 
 }

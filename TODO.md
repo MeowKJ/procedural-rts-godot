@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17995 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 662 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 131 C# source files / 18083 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 750 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1220,7 +1220,13 @@ Wiring & coverage gaps (found during the sweep):
     selection `ToHashSet()` / `new HashSet<EntityId>()` paths while preserving
     `SubmitSelectionCommand` ordering semantics. `ReviewGate simhot` locks the
     selection bridge evidence. Verified with build, SelectionStress,
-    ReviewGate simhot, full ReviewGate, and full VerifyAll 23/23.
+    ReviewGate simhot, full ReviewGate, and full VerifyAll 23/23. Follow-up:
+    #82 reused UnitBattlefield harvest/repair command buffers and removed refinery
+    validation snapshot allocations; #83 reused unit/building death-removal buffers;
+    #84 reused UnitBattlefield production sync buffers with an explicit queued-before
+    snapshot type. `ReviewGate simhot`/`regression` lock the bridge evidence.
+    Verified with build, CombatBehavior, PlayerLoopQa, ReviewGate simhot/regression,
+    full ReviewGate, review-record gate, and full VerifyAll 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

@@ -32,65 +32,6 @@ public sealed partial class UnitBattlefield
         AdoptUnmappedConstructedBuildings();
     }
 
-    private void UpdateProductionQueues(float dt)
-    {
-        SyncBuildingTargetEntities();
-        var activeProducerIds = BuildingTargetIds()
-            .Where(buildingId => BuildingProductionQueue(buildingId).Count > 0)
-            .ToList();
-        if (activeProducerIds.Count == 0)
-        {
-            return;
-        }
-
-        SyncUnitEntities();
-        var knownEntityIds = _entityWorld.OrderedEntities
-            .Select(entity => entity.Id.Value)
-            .ToHashSet();
-        var queuedBefore = activeProducerIds
-            .Select(buildingId => new
-            {
-                BuildingId = buildingId,
-                Snapshot = BuildingSnapshot(buildingId),
-                Item = BuildingProductionQueue(buildingId)[0],
-            })
-            .Where(entry => entry.Snapshot is not null)
-            .Select(entry => new
-            {
-                entry.BuildingId,
-                Snapshot = entry.Snapshot!.Value,
-                entry.Item,
-            })
-            .ToList();
-
-        _productionSystem.Step(new SimContext(
-            _entityWorld,
-            NextInputCommandTick(),
-            dt,
-            Array.Empty<SequencedCommandEnvelope>()));
-
-        var newUnitEntities = _entityWorld.OrderedEntities
-            .Where(entity => !knownEntityIds.Contains(entity.Id.Value))
-            .Where(entity => _entityWorld.TryGetSpec(entity.SpecId, out var spec) && spec.Kind == EntityKind.Unit)
-            .ToList();
-        foreach (var entity in newUnitEntities)
-        {
-            var completed = queuedBefore
-                .Where(entry => entry.Snapshot.PlayerSlotId == entity.OwnerId.ToPlayerSlot())
-                .Where(entry => entry.Item.DesignId == entity.SpecId)
-                .OrderBy(entry => entry.Snapshot.Position.DistanceSquaredTo(entity.Transform.Position))
-                .FirstOrDefault();
-            if (completed is null)
-            {
-                continue;
-            }
-
-            var unit = AdoptUnitEntity(entity);
-            unit.CommandPulse = 1;
-            ProductionCompleted?.Invoke(completed.Snapshot, completed.Item, unit);
-        }
-    }
-
     private IEnumerable<int> CandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId)
     {
         return BuildingTargetIds()

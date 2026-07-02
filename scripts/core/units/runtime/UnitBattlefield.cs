@@ -34,6 +34,19 @@ public sealed partial class UnitBattlefield
     private readonly HashSet<int> _constructionEntityIdsBefore = [];
     private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
+    private readonly HashSet<int> _unitCommandIdBuffer = [];
+    private readonly List<UnitInstance> _unitCommandBuffer = [];
+    private readonly List<EntityId> _unitCommandEntityBuffer = [];
+    private readonly List<UnitInstanceDeathInfo> _unitDeathBuffer = [];
+    private readonly List<UnitBattlefieldBuildingDeathInfo> _buildingDeathBuffer = [];
+    private readonly List<int> _deadBuildingIdBuffer = [];
+    private readonly HashSet<int> _removedUnitIdBuffer = [];
+    private readonly HashSet<int> _removedBuildingIdBuffer = [];
+    private readonly List<int> _productionActiveProducerIds = [];
+    private readonly HashSet<int> _productionBuildingIdSeen = [];
+    private readonly HashSet<int> _productionKnownEntityIds = [];
+    private readonly List<UnitBattlefieldProductionQueueSnapshot> _productionQueuedBefore = [];
+    private readonly List<EntityInstance> _productionNewUnitEntities = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
 

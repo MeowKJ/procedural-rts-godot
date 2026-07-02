@@ -6,10 +6,8 @@ public sealed partial class UnitBattlefield
 {
     public bool CommandHarvestSelected(PlayerSlotId playerSlotId, ResourceFieldModel field, out string status)
     {
-        var harvesters = SelectedUnits(playerSlotId)
-            .Where(IsHarvester)
-            .ToList();
-        if (harvesters.Count == 0)
+        CollectSelectedCommandUnits(playerSlotId, IsHarvester, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             status = GameText.T("harvest.selectHarvester");
             return false;
@@ -21,36 +19,28 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var validHarvesters = harvesters
-            .OrderBy(unit => unit.Id)
-            .Where(harvester => FindBestRefineryIdForHarvester(harvester.PlayerSlotId, field.Position) is int)
-            .ToList();
-        if (validHarvesters.Count > 0)
+        KeepUnitsWithRefinery(_unitCommandBuffer, field.Position);
+        if (_unitCommandBuffer.Count > 0)
         {
             SyncResourceFieldEntity(field);
+            CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
             SubmitAndApplyInputCommand(new HarvestEntityCommand(
                 OwnerId.FromPlayerSlot(playerSlotId),
-                validHarvesters.Select(unit => unit.EntityId).ToList(),
+                _unitCommandEntityBuffer,
                 NextInputCommandTick(),
                 _resourceFieldEntityIds[field.Id]));
         }
 
-        status = validHarvesters.Count == 0
+        status = _unitCommandBuffer.Count == 0
             ? GameText.T("harvest.needRefinery")
-            : GameText.Format("harvest.assigned", validHarvesters.Count, validHarvesters.Count == 1 ? "" : "s", field.Id);
-        return validHarvesters.Count > 0;
+            : GameText.Format("harvest.assigned", _unitCommandBuffer.Count, _unitCommandBuffer.Count == 1 ? "" : "s", field.Id);
+        return _unitCommandBuffer.Count > 0;
     }
 
     public bool CommandHarvestUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, ResourceFieldModel field, out string status)
     {
-        var requested = unitIds.ToHashSet();
-        var harvesters = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && requested.Contains(unit.Id))
-            .Where(unit => unit.Hp > 0)
-            .Where(IsHarvester)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (harvesters.Count == 0)
+        CollectRequestedCommandUnits(playerSlotId, unitIds, IsHarvester, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             status = GameText.T("harvest.selectHarvester");
             return false;
@@ -62,33 +52,32 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var validHarvesters = harvesters
-            .Where(harvester => FindBestRefineryIdForHarvester(harvester.PlayerSlotId, field.Position) is int)
-            .ToList();
-        if (validHarvesters.Count == 0)
+        KeepUnitsWithRefinery(_unitCommandBuffer, field.Position);
+        if (_unitCommandBuffer.Count == 0)
         {
             status = GameText.T("harvest.needRefinery");
             return false;
         }
 
         SyncResourceFieldEntity(field);
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new HarvestEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            validHarvesters.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             _resourceFieldEntityIds[field.Id]));
-        status = GameText.Format("harvest.assigned", validHarvesters.Count, validHarvesters.Count == 1 ? "" : "s", field.Id);
+        status = GameText.Format("harvest.assigned", _unitCommandBuffer.Count, _unitCommandBuffer.Count == 1 ? "" : "s", field.Id);
         return true;
     }
 
     public bool CanRepairSelected(PlayerSlotId playerSlotId, UnitInstance target)
     {
-        return IsRepairableTarget(playerSlotId, target) && SelectedUnits(playerSlotId).Any(IsRepairer);
+        return IsRepairableTarget(playerSlotId, target) && HasSelectedCommandUnit(playerSlotId, IsRepairer);
     }
 
     public bool CanRepairSelectedBuilding(PlayerSlotId playerSlotId, int buildingId)
     {
-        return IsRepairableBuildingTargetCore(playerSlotId, buildingId) && SelectedUnits(playerSlotId).Any(IsRepairer);
+        return IsRepairableBuildingTargetCore(playerSlotId, buildingId) && HasSelectedCommandUnit(playerSlotId, IsRepairer);
     }
 
     public bool CommandRepairSelected(PlayerSlotId playerSlotId, UnitInstance target, out string status)
@@ -99,19 +88,17 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var repairers = SelectedUnits(playerSlotId)
-            .Where(IsRepairer)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (repairers.Count == 0)
+        CollectSelectedCommandUnits(playerSlotId, IsRepairer, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return false;
         }
 
         SyncUnitEntity(target);
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new RepairEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            repairers.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             target.EntityId));
         return true;
@@ -131,22 +118,116 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var repairers = SelectedUnits(playerSlotId)
-            .Where(IsRepairer)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (repairers.Count == 0)
+        CollectSelectedCommandUnits(playerSlotId, IsRepairer, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return false;
         }
 
         SyncBuildingTargetEntity(buildingId);
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new RepairEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            repairers.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             targetEntity.Id));
         return true;
+    }
+
+    private void CollectSelectedCommandUnits(
+        PlayerSlotId playerSlotId,
+        Predicate<UnitInstance> predicate,
+        List<UnitInstance> result)
+    {
+        result.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Selected && predicate(unit))
+            {
+                result.Add(unit);
+            }
+        }
+
+        result.Sort(CompareUnitInstanceIds);
+    }
+
+    private void CollectRequestedCommandUnits(
+        PlayerSlotId playerSlotId,
+        IEnumerable<int> unitIds,
+        Predicate<UnitInstance> predicate,
+        List<UnitInstance> result)
+    {
+        _unitCommandIdBuffer.Clear();
+        foreach (var unitId in unitIds)
+        {
+            _unitCommandIdBuffer.Add(unitId);
+        }
+
+        result.Clear();
+        if (_unitCommandIdBuffer.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Hp > 0
+                && _unitCommandIdBuffer.Contains(unit.Id)
+                && predicate(unit))
+            {
+                result.Add(unit);
+            }
+        }
+
+        result.Sort(CompareUnitInstanceIds);
+    }
+
+    private bool HasSelectedCommandUnit(PlayerSlotId playerSlotId, Predicate<UnitInstance> predicate)
+    {
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Selected && predicate(unit))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void KeepUnitsWithRefinery(List<UnitInstance> units, Vector2 resourcePosition)
+    {
+        var write = 0;
+        for (var read = 0; read < units.Count; read++)
+        {
+            var unit = units[read];
+            if (FindBestRefineryIdForHarvester(unit.PlayerSlotId, resourcePosition) is not int)
+            {
+                continue;
+            }
+
+            units[write++] = unit;
+        }
+
+        if (write < units.Count)
+        {
+            units.RemoveRange(write, units.Count - write);
+        }
+    }
+
+    private static void CollectCommandEntityIds(IReadOnlyList<UnitInstance> units, List<EntityId> result)
+    {
+        result.Clear();
+        foreach (var unit in units)
+        {
+            result.Add(unit.EntityId);
+        }
+    }
+
+    private static int CompareUnitInstanceIds(UnitInstance left, UnitInstance right)
+    {
+        return left.Id.CompareTo(right.Id);
     }
 
 }
