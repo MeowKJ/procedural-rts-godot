@@ -11,7 +11,16 @@ public sealed partial class UnitBattlefield
 
     public int SelectedCount(PlayerSlotId playerSlotId)
     {
-        return SelectedUnits(playerSlotId).Count();
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Selected)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     public void ClearSelection(PlayerSlotId playerSlotId)

@@ -52,6 +52,7 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         var selectionPicking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
         ForbidText(selectionPicking, ".OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))", "Unit pick methods must not allocate sorting chains.", result);
         ForbidText(selectionPicking, ".Select(BuildingSnapshot)", "Building pick methods must not allocate snapshot projection chains.", result);
+        ForbidText(selectionPicking, "SelectedUnits(playerSlotId).Count()", "Runtime selected-count queries must scan units explicitly.", result);
 
         var coreQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CoreQueries.cs");
         ForbidText(coreQueries, ".OrderBy(field => field.Position.DistanceSquaredTo(worldPoint))", "Resource pick must not allocate sorting chains.", result);
