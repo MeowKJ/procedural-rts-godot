@@ -2,20 +2,6 @@ namespace ProceduralRts.Core;
 
 public sealed partial class CommandSystem
 {
-    private static IEnumerable<EntityInstance> OwnedSubjects(
-        EntityWorld world,
-        OwnerId issuer,
-        IReadOnlyList<EntityId> subjects)
-    {
-        foreach (var entityId in subjects)
-        {
-            if (world.TryGet(entityId, out var entity) && entity.OwnerId.Value == issuer.Value)
-            {
-                yield return entity;
-            }
-        }
-    }
-
     private static void CollectOwnedSubjects(
         EntityWorld world,
         OwnerId issuer,

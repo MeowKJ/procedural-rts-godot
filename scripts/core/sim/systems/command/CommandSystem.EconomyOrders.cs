@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class CommandSystem
 {
-    private static void ApplyHarvest(EntityWorld world, HarvestEntityCommand command)
+    private void ApplyHarvest(EntityWorld world, HarvestEntityCommand command)
     {
         if (!world.TryGet(command.ResourceTarget, out var resource)
             || !resource.Components.TryGet<ResourceNodeComponentState>(out var node)
@@ -13,7 +13,8 @@ public sealed partial class CommandSystem
             return;
         }
 
-        foreach (var entity in OwnedSubjects(world, command.Issuer, command.Subjects))
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (!entity.Components.Has<HarvesterComponentState>()
                 || !entity.Components.Has<ResourceCargoComponentState>())
@@ -21,46 +22,16 @@ public sealed partial class CommandSystem
                 continue;
             }
 
-            entity.Components.Set(new HarvesterComponentState(
-                HarvesterMode.MovingToField,
-                FieldId: command.ResourceTarget.Value));
-            entity.Components.Remove<PatrolOrderComponentState>();
-            entity.Components.Remove<GuardOrderComponentState>();
-
-            var movement = entity.Components.TryGet<MovementComponentState>(out var existingMovement)
-                ? existingMovement
-                : new MovementComponentState(Vector2.Zero);
-            entity.Components.Set(movement with
-            {
-                MoveTarget = resource.Transform.Position,
-                FormationSlot = null,
-            });
-
-            var commandable = entity.Components.TryGet<CommandableComponentState>(out var existingCommandable)
-                ? existingCommandable
-                : new CommandableComponentState();
-            entity.Components.Set(commandable with
-            {
-                PlayerIntentTarget = resource.Transform.Position,
-                CommandVisualTarget = resource.Transform.Position,
-                MoveMode = MoveCommandMode.Direct,
-            });
-
-            if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
-            {
-                entity.Components.Set(weapon with
-                {
-                    AttackTarget = default,
-                    AttackTargetIsManual = false,
-                    AutoReacquireCooldownRemaining = 0,
-                });
-            }
+            ApplyHarvestIntent(entity, resource);
         }
+
+        _scalarOrderMembers.Clear();
     }
 
-    private static void ApplyAutoHarvest(EntityWorld world, AutoHarvestEntityCommand command)
+    private void ApplyAutoHarvest(EntityWorld world, AutoHarvestEntityCommand command)
     {
-        foreach (var entity in OwnedSubjects(world, command.Issuer, command.Subjects))
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (!entity.Components.Has<HarvesterComponentState>()
                 || !entity.Components.Has<ResourceCargoComponentState>()
@@ -73,15 +44,13 @@ public sealed partial class CommandSystem
                 continue;
             }
 
-            ApplyHarvest(world, new HarvestEntityCommand(
-                command.Issuer,
-                [entity.Id],
-                command.Tick,
-                resource.Id));
+            ApplyHarvestIntent(entity, resource);
         }
+
+        _scalarOrderMembers.Clear();
     }
 
-    private static void ApplyRepair(EntityWorld world, RepairEntityCommand command)
+    private void ApplyRepair(EntityWorld world, RepairEntityCommand command)
     {
         if (!world.TryGet(command.Target, out var target)
             || !target.Components.TryGet<HealthComponentState>(out var targetHealth)
@@ -96,7 +65,8 @@ public sealed partial class CommandSystem
             return;
         }
 
-        foreach (var entity in OwnedSubjects(world, command.Issuer, command.Subjects))
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (entity.OwnerId.Value != command.Issuer.Value
                 || !TryGetRepairAbility(world, entity, out var repairAbility))
@@ -137,6 +107,46 @@ public sealed partial class CommandSystem
                 PlayerIntentTarget = target.Transform.Position,
                 CommandVisualTarget = target.Transform.Position,
                 MoveMode = MoveCommandMode.Direct,
+            });
+        }
+
+        _scalarOrderMembers.Clear();
+    }
+
+    private static void ApplyHarvestIntent(EntityInstance entity, EntityInstance resource)
+    {
+        entity.Components.Set(new HarvesterComponentState(
+            HarvesterMode.MovingToField,
+            FieldId: resource.Id.Value));
+        entity.Components.Remove<PatrolOrderComponentState>();
+        entity.Components.Remove<GuardOrderComponentState>();
+
+        var movement = entity.Components.TryGet<MovementComponentState>(out var existingMovement)
+            ? existingMovement
+            : new MovementComponentState(Vector2.Zero);
+        entity.Components.Set(movement with
+        {
+            MoveTarget = resource.Transform.Position,
+            FormationSlot = null,
+        });
+
+        var commandable = entity.Components.TryGet<CommandableComponentState>(out var existingCommandable)
+            ? existingCommandable
+            : new CommandableComponentState();
+        entity.Components.Set(commandable with
+        {
+            PlayerIntentTarget = resource.Transform.Position,
+            CommandVisualTarget = resource.Transform.Position,
+            MoveMode = MoveCommandMode.Direct,
+        });
+
+        if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
+        {
+            entity.Components.Set(weapon with
+            {
+                AttackTarget = default,
+                AttackTargetIsManual = false,
+                AutoReacquireCooldownRemaining = 0,
             });
         }
     }

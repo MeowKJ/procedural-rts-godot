@@ -4,6 +4,7 @@ static class CommandSystemAllocationReviewGate
     {
         RequireScalarOrderSubjectBuffer(root, result);
         RequireSelectionSubjectSet(root, result);
+        RequireEconomyOrderSubjectBuffer(root, result);
     }
 
     private static void RequireScalarOrderSubjectBuffer(string root, GateResult result)
@@ -60,5 +61,26 @@ static class CommandSystemAllocationReviewGate
         RequireText(selection, "_selectionSubjectIds.Contains(entity.Id.Value)", "Selection commands must read membership from the reusable subject id set.", result);
         ForbidText(selection, ".ToHashSet()", "Selection commands must not allocate a subject HashSet per command.", result);
         ForbidText(selection, ".Select(id => id.Value)", "Selection commands must not allocate a LINQ projection before set construction.", result);
+    }
+
+    private static void RequireEconomyOrderSubjectBuffer(string root, GateResult result)
+    {
+        var commandSystem = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "sim", "systems", "CommandSystem.cs"));
+        ForbidText(commandSystem, "IEnumerable<EntityInstance> OwnedSubjects", "CommandSystem must not keep the allocating OwnedSubjects iterator helper.", result);
+
+        var economy = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "sim",
+            "systems",
+            "command",
+            "CommandSystem.EconomyOrders.cs");
+        RequireText(economy, "CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers)", "Economy orders must fill the reusable scalar subject buffer.", result);
+        RequireText(economy, "ApplyHarvestIntent(entity, resource)", "AutoHarvest must apply harvest intent directly without nested command allocation.", result);
+        ForbidText(economy, "OwnedSubjects(world, command.Issuer, command.Subjects)", "Economy orders must not allocate the OwnedSubjects iterator.", result);
+        ForbidText(economy, "new HarvestEntityCommand(", "AutoHarvest must not allocate a nested harvest command.", result);
+        ForbidText(economy, "[entity.Id]", "AutoHarvest must not allocate a single-entity subject array.", result);
     }
 }

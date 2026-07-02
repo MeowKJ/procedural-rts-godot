@@ -43,6 +43,9 @@ Automated gates:
 - Command: `dotnet run --project tools/ReviewGate/ReviewGate.csproj --no-restore -- review --require-record=m9-command-selection-subject-set`
   Result: pass
   Evidence: ReviewGate found this durable review record.
+- Command: `dotnet run --project tools/VerifyAll/VerifyAll.csproj --no-restore`
+  Result: pass
+  Evidence: Concentrated VerifyAll passed for #73/#74/#75 before final closeout.
 
 Manual/visual gates:
 - Check: Visual QA
@@ -52,7 +55,7 @@ Manual/visual gates:
 Reviewer result:
 - Status: pass
 - Required fixes: none
-- Residual risks: Harvest/AutoHarvest/Repair cleanup remains #75; broad #10 remains open.
+- Residual risks: Follow-up #75 economy order cleanup is complete; broad #10 remains open for profiler-guided allocation cleanup beyond CommandSystem.
 
 TODO update:
 - Items marked done: none; #10 remains open.

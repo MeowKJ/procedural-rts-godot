@@ -1048,7 +1048,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17862 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 130 C# source files / 17884 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1187,7 +1187,12 @@ Wiring & coverage gaps (found during the sweep):
     command allocation evidence through `CommandSystemAllocationReviewGate`.
     Follow-up: #74 reused a `CommandSystem` selection subject id set, replacing
     the `SetSelectionEntityCommand` `Select(...).ToHashSet()` path and locking the
-    no-`ToHashSet()` selection contract in `ReviewGate simhot`.
+    no-`ToHashSet()` selection contract in `ReviewGate simhot`. Follow-up: #75
+    routed Harvest, AutoHarvest, and Repair commands through the reusable scalar
+    subject buffer, removed the old `OwnedSubjects(...)` yield helper, and replaced
+    AutoHarvest's nested `HarvestEntityCommand` / one-entity array allocation with
+    direct `ApplyHarvestIntent(...)` reuse. `ReviewGate simhot` locks the no-iterator
+    and no-nested-harvest-command contracts.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
