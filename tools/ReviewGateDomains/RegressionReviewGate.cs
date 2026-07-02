@@ -36,7 +36,6 @@ static class RegressionReviewGate
             ReviewGateSource.RequireFile(root, result, project.Split('/'));
         }
     }
-
     private static void RequireVerifyAllCoverage(string root, GateResult result)
     {
         var verifyAll = ReviewGateSource.Read(root, "tools", "VerifyAll", "Program.cs");
@@ -53,7 +52,6 @@ static class RegressionReviewGate
             RequireText(verifyAll, token, $"VerifyAll must run {token}.", result);
         }
     }
-
     private static void RequireDeterministicEvidence(string root, GateResult result)
     {
         ReviewGateSource.RequireAnyText(root, result, "AssertDeterministic", "tools/SimReplay");
@@ -61,7 +59,6 @@ static class RegressionReviewGate
         ReviewGateSource.RequireAnyText(root, result, "DeterministicStateHash", "scripts/core/entities", "tools/SimReplay", "tools/CombatBehavior");
         ReviewGateSource.RequireAnyText(root, result, "CommandAttackUnits", "tools/AiOpponentLoopQa", "tools/CombatBehavior", "scripts");
     }
-
     private static void RequireSimHotAllocationEvidence(string root, GateResult result)
     {
         var pathfinding = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
@@ -79,9 +76,12 @@ static class RegressionReviewGate
         var production = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProductionSystem.cs");
         RequireText(production, "_producerStepBuffer", "ProductionSystem must reuse its producer tick snapshot.", result);
         RequireText(production, "_spawnObstacles", "ProductionSystem must reuse spawn obstacle storage.", result);
+        RequireText(production, "MutableQueueItems(queue)", "ProductionSystem must route queue mutations through reusable storage.", result);
+        RequireText(production, "items.RemoveAt(0)", "ProductionSystem queue removal must mutate reusable storage in place.", result);
+        RequireText(production, "items.Add(new UnitProductionQueueItem", "ProductionSystem queue enqueue must append to reusable storage.", result);
+        ForbidText(production, "new UnitProductionQueueItem[", "ProductionSystem queue mutation must not allocate copied item arrays.", result);
         ForbidText(production, "OrderedEntities.ToList()", "ProductionSystem must not snapshot all entities with ToList each tick.", result);
         ForbidText(production, ".Where(entity => entity.Id.Value != producer.Id.Value)", "ProductionSystem spawn obstacles must not be built with LINQ chains.", result);
-
         var spawnMath = ReviewGateSource.Read(root, "scripts", "core", "production", "ProductionSpawnMath.cs");
         RequireText(spawnMath, "DirectionOffsets", "ProductionSpawnMath must keep candidate directions as static data.", result);
         RequireText(spawnMath, "RingScales", "ProductionSpawnMath must keep ring scales as static data.", result);

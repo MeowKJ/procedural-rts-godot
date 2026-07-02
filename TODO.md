@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 143 C# source files / 19233 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 143 C# source files / 19237 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 995 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1338,6 +1338,13 @@ Wiring & coverage gaps (found during the sweep):
     buffer, replacing the frame-facing LINQ `Select` iterator with an explicit
     fill before `GameState.UpdateWorldOnly`. `ReviewGate presentation` locks the
     no-LINQ process bridge contract.
+    Follow-up: #123 changed `ProductionSystem` queue enqueue/remove to convert
+    producer queue storage to a reusable `List<UnitProductionQueueItem>` once and
+    then mutate it in place, removing the copied `new UnitProductionQueueItem[...]`
+    array paths while preserving production timing, repeat, rally, refunds, and
+    replay hashes. `SimReplay` now asserts completed/cancelled/repeat queues keep
+    reusable storage, and `ReviewGate regression` locks the no-array-copy mutation
+    contract.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

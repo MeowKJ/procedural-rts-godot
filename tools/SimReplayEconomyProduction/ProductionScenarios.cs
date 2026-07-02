@@ -105,9 +105,12 @@ static partial class Program
             .Components.Require<ProductionQueueComponentState>();
 
         Assert(unpoweredQueue.Items.Count == 1, "unpowered producer should keep its queued item");
+        Assert(unpoweredQueue.Items is List<UnitProductionQueueItem>, "unpowered producer queue should use reusable queue storage after enqueue");
+        Assert(poweredProducerQueues.All(queue => queue.Items is List<UnitProductionQueueItem>), "completed producer queues should keep reusable queue storage");
         Assert(Math.Abs(unpoweredQueue.Items[0].Progress) < 0.0001f, "unpowered producer queue should not advance");
         Assert(unpoweredQueue.PauseReason == ProductionPauseReason.Unpowered, $"unpowered producer should report pause reason, got {unpoweredQueue.PauseReason}");
         Assert(cancelledQueue.Items.Count == 0, "cancelled producer queue should be empty after refund");
+        Assert(cancelledQueue.Items is List<UnitProductionQueueItem>, "cancelled producer queue should keep reusable queue storage after removal");
         Assert(cancelledQueue.PauseReason == ProductionPauseReason.None, "cancelled empty queue should clear pause reason");
         Assert(credits == 200, $"four queued infantry minus one half refund should leave 200 credits, got {credits}");
         Assert(producedUnits.All(unit =>
@@ -278,6 +281,7 @@ static partial class Program
         Assert(producedUnits.Count == 2, $"repeat production should spend 240 credits on exactly two infantry, got {producedUnits.Count}");
         Assert(queue.RepeatOutputSpecId == "dog.infantry", $"repeat output should remain armed, got {queue.RepeatOutputSpecId}");
         Assert(queue.Items.Count == 0, $"repeat producer should wait empty when credits are exhausted, got {queue.Items.Count} queued items");
+        Assert(queue.Items is List<UnitProductionQueueItem>, "repeat producer should keep reusable queue storage after dequeue");
         Assert(credits == 0, $"repeat production should spend all available credits, got {credits}");
         Assert(producedUnits.All(unit =>
         {

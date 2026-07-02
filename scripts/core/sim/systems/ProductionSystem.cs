@@ -261,16 +261,16 @@ public sealed partial class ProductionSystem : ISimSystem
 
     private static void RemoveFirstQueueItem(EntityInstance producer, ProductionQueueComponentState queue)
     {
-        var items = new UnitProductionQueueItem[Math.Max(0, queue.Items.Count - 1)];
-        for (var index = 1; index < queue.Items.Count; index++)
+        var items = MutableQueueItems(queue);
+        if (items.Count > 0)
         {
-            items[index - 1] = queue.Items[index];
+            items.RemoveAt(0);
         }
 
         producer.Components.Set(queue with
         {
             Items = items,
-            PauseReason = items.Length == 0 ? ProductionPauseReason.None : queue.PauseReason,
+            PauseReason = items.Count == 0 ? ProductionPauseReason.None : queue.PauseReason,
         });
     }
 
@@ -280,21 +280,23 @@ public sealed partial class ProductionSystem : ISimSystem
         ProductionQueueComponentState queue,
         UnitSpec unitSpec)
     {
-        var items = new UnitProductionQueueItem[queue.Items.Count + 1];
-        for (var index = 0; index < queue.Items.Count; index++)
-        {
-            items[index] = queue.Items[index];
-        }
+        var items = MutableQueueItems(queue);
 
-        items[^1] = new UnitProductionQueueItem
+        items.Add(new UnitProductionQueueItem
         {
             Id = world.AllocateProductionItemId(),
             Kind = ProductionKindDesignBridge.ProductionKindFor(unitSpec),
             DesignId = unitSpec.Id,
             Faction = unitSpec.Faction,
             Progress = 0,
-        };
+        });
         producer.Components.Set(queue with { Items = items });
+    }
+
+    private static List<UnitProductionQueueItem> MutableQueueItems(ProductionQueueComponentState queue)
+    {
+        return queue.Items as List<UnitProductionQueueItem>
+            ?? new List<UnitProductionQueueItem>(queue.Items);
     }
 
     private static bool TryGetUnitSpec(string designId, out UnitSpec unitSpec)
