@@ -53,76 +53,9 @@ public partial class ControlGroupController : Node
         GetViewport().SetInputAsHandled();
     }
 
-    public IReadOnlyList<ControlGroupSnapshot> Snapshots()
-    {
-        if (UseUnitBattlefieldGroups())
-        {
-            return UnitBattlefieldSnapshots();
-        }
-
-        var selectedIds = State.SelectedUnitIds().ToHashSet();
-        var snapshots = new List<ControlGroupSnapshot>(9);
-
-        for (var groupNumber = 1; groupNumber <= 9; groupNumber++)
-        {
-            _groups.TryGetValue(groupNumber, out var storedIds);
-            var liveUnits = (storedIds ?? [])
-                .Select(State.UnitById)
-                .Where(unit => unit is not null && unit.Owner == ProceduralRts.Core.Owner.Player && unit.Hp > 0)
-                .Select(unit => unit!)
-                .ToList();
-            var liveIds = liveUnits.Select(unit => unit.Id).ToHashSet();
-            var active = liveIds.Count > 0 && liveIds.SetEquals(selectedIds);
-
-            snapshots.Add(new ControlGroupSnapshot(
-                groupNumber,
-                liveUnits.Count(IsCombatInfantryUnit),
-                liveUnits.Count(IsCombatVehicleUnit),
-                liveUnits.Count(IsHarvestEconomyUnit),
-                active,
-                _feedbackPulses[groupNumber]));
-        }
-
-        return snapshots;
-    }
-
     private bool UseUnitBattlefieldGroups()
     {
         return UnitBattlefield is not null && UnitBattlefield.Units.Count > 0;
-    }
-
-    private IReadOnlyList<ControlGroupSnapshot> UnitBattlefieldSnapshots()
-    {
-        var selectedIds = UnitBattlefield!.SelectedUnits(LocalPlayerSlotId)
-            .Select(unit => unit.Id)
-            .ToHashSet();
-        var snapshots = new List<ControlGroupSnapshot>(9);
-
-        for (var groupNumber = 1; groupNumber <= 9; groupNumber++)
-        {
-            _groups.TryGetValue(groupNumber, out var storedIds);
-            var requestedIds = (storedIds ?? []).ToHashSet();
-            var liveUnits = UnitBattlefield.Units
-                .Where(unit => unit.PlayerSlotId == LocalPlayerSlotId
-                    && unit.Hp > 0
-                    && requestedIds.Contains(unit.Id))
-                .ToList();
-            var liveIds = liveUnits.Select(unit => unit.Id).ToHashSet();
-            var active = liveIds.Count > 0 && liveIds.SetEquals(selectedIds);
-            var economyCount = liveUnits.Count(IsHarvestEconomyUnit);
-
-            snapshots.Add(new ControlGroupSnapshot(
-                groupNumber,
-                liveUnits.Count(unit => unit.Spec.RoleTags.Contains(UnitRoleTag.Infantry)
-                    && !IsHarvestEconomyUnit(unit)),
-                liveUnits.Count(unit => unit.Spec.RoleTags.Contains(UnitRoleTag.Vehicle)
-                    && !IsHarvestEconomyUnit(unit)),
-                economyCount,
-                active,
-                _feedbackPulses[groupNumber]));
-        }
-
-        return snapshots;
     }
 
     private static int? NumberFromKey(Key key)
@@ -142,34 +75,4 @@ public partial class ControlGroupController : Node
         };
     }
 
-    private static bool IsHarvestEconomyUnit(UnitInstance unit)
-    {
-        return IsHarvestEconomySpec(unit.Spec);
-    }
-
-    private static bool IsHarvestEconomyUnit(UnitModel unit)
-    {
-        return IsHarvestEconomySpec(unit.Spec);
-    }
-
-    private static bool IsCombatInfantryUnit(UnitModel unit)
-    {
-        var spec = unit.Spec;
-        return spec.RoleTags.Contains(UnitRoleTag.Infantry)
-            && !IsHarvestEconomySpec(spec);
-    }
-
-    private static bool IsCombatVehicleUnit(UnitModel unit)
-    {
-        var spec = unit.Spec;
-        return spec.RoleTags.Contains(UnitRoleTag.Vehicle)
-            && !IsHarvestEconomySpec(spec);
-    }
-
-    private static bool IsHarvestEconomySpec(UnitSpec spec)
-    {
-        return spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest)
-            && (spec.RoleTags.Contains(UnitRoleTag.Economy)
-                || spec.RoleTags.Contains(UnitRoleTag.Worker));
-    }
 }
