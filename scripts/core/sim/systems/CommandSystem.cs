@@ -15,6 +15,11 @@ public sealed partial class CommandSystem : ISimSystem
     private readonly List<FormationUnit> _groupMoveFormationUnits = [];
     private readonly Dictionary<int, FormationDestination> _groupMoveDestinations = [];
     private readonly List<AttackSlotUnit> _groupAttackSlotUnits = [];
+    private readonly List<AttackSlotAssignment> _groupAttackAssignmentResults = [];
+    private readonly List<AttackSlotUnit> _groupAttackOrderedUnits = [];
+    private readonly List<AttackSlotUnit> _groupAttackAnchors = [];
+    private readonly List<AttackSlotUnit> _groupAttackMovers = [];
+    private readonly List<Vector2> _groupAttackFreeSlots = [];
     private readonly Dictionary<int, AttackSlotAssignment> _groupAttackAssignments = [];
 
     public void Step(SimContext context)

@@ -35,11 +35,18 @@ public sealed partial class CommandSystem
             _groupAttackSlotUnits.Add(new AttackSlotUnit(entity.Id.Value, entity.Transform.Position, WeaponRange(world, entity)));
         }
 
-        _groupAttackAssignments.Clear();
-        foreach (var assignment in AttackSlotMath.AssignAttackSlots(
+        AttackSlotMath.AssignAttackSlotsInto(
             _groupAttackSlotUnits,
             target.Transform.Position,
-            targetRadius))
+            targetRadius,
+            _groupAttackAssignmentResults,
+            _groupAttackOrderedUnits,
+            _groupAttackAnchors,
+            _groupAttackMovers,
+            _groupAttackFreeSlots);
+
+        _groupAttackAssignments.Clear();
+        foreach (var assignment in _groupAttackAssignmentResults)
         {
             _groupAttackAssignments[assignment.Id] = assignment;
         }
@@ -73,6 +80,7 @@ public sealed partial class CommandSystem
 
         _groupOrderMembers.Clear();
         _groupAttackSlotUnits.Clear();
+        _groupAttackAssignmentResults.Clear();
         _groupAttackAssignments.Clear();
     }
 

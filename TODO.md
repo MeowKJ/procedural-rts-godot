@@ -1045,7 +1045,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17728 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 129 C# source files / 17735 total lines across 53 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/SimReplayCombatAbilities has 589 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1156,7 +1156,10 @@ Wiring & coverage gaps (found during the sweep):
     allocating a render-ready list. Follow-up: #64 reused `CommandSystem` group
     move / group attack scratch buffers for owned-subject lists and slot lookup
     dictionaries, removing the command-layer `ToList()` / `ToDictionary()` allocations
-    while preserving SimReplay group-move and group-attack hashes.
+    while preserving SimReplay group-move and group-attack hashes. Follow-up: #65
+    added `AttackSlotMath.AssignAttackSlotsInto(...)` and routed `CommandSystem`
+    group attack through caller-owned assignment, ordered-unit, anchor, mover, and
+    free-slot buffers; SimReplay group-attack hashes stayed unchanged.
 
 Discipline (keep it from regressing):
 [ ] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

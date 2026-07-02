@@ -23,16 +23,48 @@ public static class AttackSlotMath
         float targetRadius)
     {
         var assignments = new List<AttackSlotAssignment>(units.Count);
+        AssignAttackSlotsInto(
+            units,
+            targetCenter,
+            targetRadius,
+            assignments,
+            new List<AttackSlotUnit>(units.Count),
+            new List<AttackSlotUnit>(units.Count),
+            new List<AttackSlotUnit>(units.Count),
+            new List<Vector2>(units.Count));
+        return assignments;
+    }
+
+    public static void AssignAttackSlotsInto(
+        IReadOnlyList<AttackSlotUnit> units,
+        Vector2 targetCenter,
+        float targetRadius,
+        List<AttackSlotAssignment> assignments,
+        List<AttackSlotUnit> orderedUnits,
+        List<AttackSlotUnit> anchors,
+        List<AttackSlotUnit> movers,
+        List<Vector2> freeSlots)
+    {
+        assignments.Clear();
+        orderedUnits.Clear();
+        anchors.Clear();
+        movers.Clear();
+        freeSlots.Clear();
         if (units.Count == 0)
         {
-            return assignments;
+            return;
         }
+
+        for (var index = 0; index < units.Count; index++)
+        {
+            orderedUnits.Add(units[index]);
+        }
+
+        orderedUnits.Sort(static (left, right) => left.Id.CompareTo(right.Id));
 
         // Anchors: already within firing range - keep them put so rear units do
         // not shove a firing unit forward.
-        var anchors = new List<AttackSlotUnit>();
-        var movers = new List<AttackSlotUnit>();
-        foreach (var unit in units.OrderBy(unit => unit.Id))
+        foreach (var unit in orderedUnits)
         {
             var firingRange = unit.WeaponRange;
             if (unit.Position.DistanceTo(targetCenter) <= firingRange)
@@ -48,33 +80,42 @@ public static class AttackSlotMath
 
         if (movers.Count == 0)
         {
-            return assignments;
+            orderedUnits.Clear();
+            anchors.Clear();
+            return;
         }
 
         // Ring radius from the average mover weapon range so a mixed group still
         // forms one readable ring; each mover keeps its own firing range in mind.
-        var avgRange = movers.Average(unit => unit.WeaponRange);
+        var rangeSum = 0f;
+        for (var index = 0; index < movers.Count; index++)
+        {
+            rangeSum += movers[index].WeaponRange;
+        }
+
+        var avgRange = rangeSum / movers.Count;
         var ringRadius = StandoffRadius(avgRange, targetRadius);
 
         // Reserve anchor bearings, then assign each mover to the remaining ring
         // angle nearest its current bearing.
         var slotCount = movers.Count + anchors.Count;
-        var freeSlots = new List<Vector2>(slotCount);
         for (var i = 0; i < slotCount; i++)
         {
             var angle = MathF.Tau * i / slotCount;
             freeSlots.Add(targetCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * ringRadius);
         }
 
-        foreach (var anchor in anchors.OrderBy(unit => unit.Id))
+        foreach (var anchor in anchors)
         {
             ReserveNearestSlot(freeSlots, AnchorSlotPoint(anchor, targetCenter, ringRadius));
         }
 
-        foreach (var unit in movers
-            .OrderByDescending(unit => unit.Position.DistanceTo(targetCenter))
-            .ThenBy(unit => unit.Id))
+        while (movers.Count > 0)
         {
+            var bestMoverIndex = IndexOfFarthestMover(movers, targetCenter);
+            var unit = movers[bestMoverIndex];
+            movers.RemoveAt(bestMoverIndex);
+
             var bestIndex = 0;
             var bestDistSq = float.MaxValue;
             for (var i = 0; i < freeSlots.Count; i++)
@@ -92,7 +133,11 @@ public static class AttackSlotMath
         }
 
         // Stable output order by Id for deterministic downstream consumption.
-        return assignments.OrderBy(a => a.Id).ToList();
+        assignments.Sort(static (left, right) => left.Id.CompareTo(right.Id));
+        orderedUnits.Clear();
+        anchors.Clear();
+        movers.Clear();
+        freeSlots.Clear();
     }
 
     public static float StandoffRadius(float weaponRange, float targetRadius)
@@ -135,5 +180,25 @@ public static class AttackSlotMath
         }
 
         freeSlots.RemoveAt(bestIndex);
+    }
+
+    private static int IndexOfFarthestMover(List<AttackSlotUnit> movers, Vector2 targetCenter)
+    {
+        var bestIndex = 0;
+        var bestDistSq = float.MinValue;
+        var bestId = int.MaxValue;
+        for (var index = 0; index < movers.Count; index++)
+        {
+            var unit = movers[index];
+            var distSq = unit.Position.DistanceSquaredTo(targetCenter);
+            if (distSq > bestDistSq || (distSq == bestDistSq && unit.Id < bestId))
+            {
+                bestDistSq = distSq;
+                bestId = unit.Id;
+                bestIndex = index;
+            }
+        }
+
+        return bestIndex;
     }
 }
