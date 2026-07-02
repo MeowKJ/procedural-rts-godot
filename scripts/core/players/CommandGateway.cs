@@ -128,7 +128,15 @@ public sealed partial class CommandGateway
 
     private static bool ControlsSlot(IReadOnlyList<PlayerSlotId> slots, PlayerSlotId slot)
     {
-        return slots.Any(candidate => candidate == slot);
+        for (var index = 0; index < slots.Count; index++)
+        {
+            if (slots[index] == slot)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool Accept(out CommandGatewayValidationError error, out string message)

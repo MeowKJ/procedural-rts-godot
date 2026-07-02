@@ -40,6 +40,22 @@ public sealed record PlayerCommandResult(
 
 public sealed record CommandGatewayResult(IReadOnlyList<PlayerCommandResult> Commands)
 {
-    public int AcceptedCount => Commands.Count(command => command.Accepted);
+    private readonly int _acceptedCount = CountAccepted(Commands);
+
+    public int AcceptedCount => _acceptedCount;
     public int RejectedCount => Commands.Count - AcceptedCount;
+
+    private static int CountAccepted(IReadOnlyList<PlayerCommandResult> commands)
+    {
+        var accepted = 0;
+        for (var index = 0; index < commands.Count; index++)
+        {
+            if (commands[index].Accepted)
+            {
+                accepted++;
+            }
+        }
+
+        return accepted;
+    }
 }

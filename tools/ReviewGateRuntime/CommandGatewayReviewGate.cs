@@ -17,9 +17,18 @@ static class CommandGatewayReviewGate
         RequireText(gateway, "SandboxCommandsEnabled", "CommandGateway must gate sandbox-only commands.", result);
         RequireText(gateway, "_lastSequenceByController", "CommandGateway must track per-controller client sequence.", result);
         RequireText(gateway, "ControllerDoesNotOwnSlot", "CommandGateway must validate controller slot rights.", result);
+        RequireText(gateway, "private static bool ControlsSlot(IReadOnlyList<PlayerSlotId> slots, PlayerSlotId slot)", "CommandGateway slot ownership must keep the explicit scan helper.", result);
         RequireText(results, "public sealed record PlayerCommandResult", "Gateway must return structured per-command results.", result);
         RequireText(results, "CommandGatewayValidationError", "Gateway must expose structured validation errors.", result);
+        RequireText(results, "private readonly int _acceptedCount = CountAccepted(Commands);", "CommandGatewayResult must cache accepted counts once.", result);
+        RequireText(results, "private static int CountAccepted(IReadOnlyList<PlayerCommandResult> commands)", "CommandGatewayResult accepted counts must scan explicitly.", result);
         RequireText(payload, "PlayerCommandPoint", "Gateway payload must use Godot-free point data.", result);
         RequireText(payload, "IReadOnlyList<EntityId>?", "Gateway payload subjects must be read-only entity ids.", result);
+        var payloadValidation = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.PayloadValidation.cs");
+        RequireText(payloadValidation, "ContainsInvalidSubject(subjects)", "CommandGateway payload validation must use an explicit subject scan.", result);
+        RequireText(payloadValidation, "private static bool ContainsInvalidSubject(IReadOnlyList<EntityId> subjects)", "CommandGateway invalid-subject scan must be reusable and allocation-free.", result);
+        ForbidText(payloadValidation, "subjects.Any(subject => !subject.IsValid)", "CommandGateway payload validation must not allocate invalid-subject LINQ predicates.", result);
+        ForbidText(gateway, "slots.Any(candidate => candidate == slot)", "CommandGateway slot ownership must not allocate LINQ predicates.", result);
+        ForbidText(results, "Commands.Count(command => command.Accepted)", "CommandGatewayResult must not allocate predicate Count iterators.", result);
     }
 }

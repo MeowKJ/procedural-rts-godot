@@ -14,7 +14,7 @@ public sealed partial class CommandGateway
             return Reject(CommandGatewayValidationError.TooManySubjects, "Command has too many subject ids.", out error, out message);
         }
 
-        if (subjects.Any(subject => !subject.IsValid))
+        if (ContainsInvalidSubject(subjects))
         {
             return Reject(CommandGatewayValidationError.InvalidSubject, "Subject ids must be valid entity ids.", out error, out message);
         }
@@ -39,6 +39,19 @@ public sealed partial class CommandGateway
         return payload.SubjectIds.Count > 0
             ? Accept(out error, out message)
             : Reject(CommandGatewayValidationError.InvalidPayloadShape, "Command requires at least one subject.", out error, out message);
+    }
+
+    private static bool ContainsInvalidSubject(IReadOnlyList<EntityId> subjects)
+    {
+        for (var index = 0; index < subjects.Count; index++)
+        {
+            if (!subjects[index].IsValid)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool RequireSubjectsAndPoint(PlayerCommandPayload payload, out CommandGatewayValidationError error, out string message)
