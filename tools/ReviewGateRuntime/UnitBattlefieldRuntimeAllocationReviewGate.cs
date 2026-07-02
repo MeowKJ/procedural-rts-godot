@@ -8,6 +8,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireAutoAcquireTargetScan(root, result);
         RequireBuildingTargetCombatEventBuffers(root, result);
         RequireSimEventDrainBuffer(root, result);
+        RequireExplicitUnitBridgeFilters(root, result);
         RequirePlacementQueryBuffers(root, result);
     }
 
@@ -151,6 +152,14 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(bridgeSources, "_entityWorld.Events.Drain()", "UnitBattlefield bridge paths must not allocate SimEvent snapshot arrays.", result);
         ForbidText(constructionTickets, ".OfType<ConstructionRejectedEvent>()", "Construction rejection drain must not allocate LINQ event filters.", result);
         ForbidText(constructionTickets, ".LastOrDefault(", "Construction rejection drain must not use LINQ last-match queries.", result);
+    }
+
+    private static void RequireExplicitUnitBridgeFilters(string root, GateResult result)
+    {
+        var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingLifecycle.cs");
+        var removal = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandApplyRemoval.cs");
+        ForbidText(lifecycle, "Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building && unit.AttackTargetId == id)", "Building removal must scan units explicitly.", result);
+        ForbidText(removal, "Units.Where(unit => unit.PlayerSlotId == command.Issuer.ToPlayerSlot())", "Selection command state sync must scan units explicitly.", result);
     }
 
     private static void RequirePlacementQueryBuffers(string root, GateResult result)

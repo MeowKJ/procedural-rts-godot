@@ -117,8 +117,13 @@ public sealed partial class UnitBattlefield
             _entityWorld.Remove(entityId);
         }
 
-        foreach (var unit in Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building && unit.AttackTargetId == id))
+        foreach (var unit in Units)
         {
+            if (unit.AttackTargetKind != CombatTargetKind.Building || unit.AttackTargetId != id)
+            {
+                continue;
+            }
+
             ClearAttackTarget(unit);
         }
     }

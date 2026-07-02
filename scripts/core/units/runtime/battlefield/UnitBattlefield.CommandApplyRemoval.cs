@@ -6,8 +6,14 @@ public sealed partial class UnitBattlefield
 {
     private void ApplySelectionCommandStateToUnits(SetSelectionEntityCommand command)
     {
-        foreach (var unit in Units.Where(unit => unit.PlayerSlotId == command.Issuer.ToPlayerSlot()))
+        var issuerSlot = command.Issuer.ToPlayerSlot();
+        foreach (var unit in Units)
         {
+            if (unit.PlayerSlotId != issuerSlot)
+            {
+                continue;
+            }
+
             if (!_entityWorld.TryGet(unit.EntityId, out var entity)
                 || !entity.Components.TryGet<SelectableComponentState>(out var selectable))
             {
