@@ -37,15 +37,44 @@ public sealed partial class UnitBattlefield
 
     private int SubmitSelectionCommand(PlayerSlotId playerSlotId, IEnumerable<EntityId> selectedEntityIds)
     {
+        CollectSelectionCommandEntityIds(selectedEntityIds, _selectionCommandEntityBuffer);
         SubmitAndApplyInputCommand(new SetSelectionEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            selectedEntityIds
-                .Where(id => id.IsValid)
-                .Distinct()
-                .OrderBy(id => id.Value)
-                .ToList(),
+            _selectionCommandEntityBuffer,
             NextInputCommandTick()));
         return SelectedCount(playerSlotId);
+    }
+
+    private static void CollectSelectionCommandEntityIds(IEnumerable<EntityId> selectedEntityIds, List<EntityId> result)
+    {
+        result.Clear();
+        foreach (var entityId in selectedEntityIds)
+        {
+            if (entityId.IsValid && !ContainsEntityId(result, entityId))
+            {
+                result.Add(entityId);
+            }
+        }
+
+        result.Sort(CompareEntityIds);
+    }
+
+    private static bool ContainsEntityId(IReadOnlyList<EntityId> entityIds, EntityId candidate)
+    {
+        foreach (var entityId in entityIds)
+        {
+            if (entityId == candidate)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static int CompareEntityIds(EntityId left, EntityId right)
+    {
+        return left.Value.CompareTo(right.Value);
     }
 
     private void SubmitAndApplyInputCommand(EntityCommand command)

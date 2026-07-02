@@ -11,6 +11,7 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "HashSet<EntityId> _selectionEntityBuffer", "UnitBattlefield selection commands must reuse the selection entity buffer.", result);
+        RequireText(battlefield, "List<EntityId> _selectionCommandEntityBuffer", "UnitBattlefield selection commands must reuse sorted command subject storage.", result);
         RequireText(battlefield, "List<UnitInstance> _selectionUnitBuffer", "UnitBattlefield selection commands must reuse selected-unit storage.", result);
 
         var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
@@ -20,6 +21,12 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         RequireText(picking, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
         ForbidText(picking, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
         ForbidText(picking, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
+
+        var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
+        RequireText(commandBridge, "CollectSelectionCommandEntityIds(selectedEntityIds, _selectionCommandEntityBuffer)", "Selection commands must fill the reusable sorted subject buffer.", result);
+        RequireText(commandBridge, "result.Sort(CompareEntityIds)", "Selection command subjects must sort the reusable buffer in place.", result);
+        ForbidText(commandBridge, "selectedEntityIds\n                .Where(id => id.IsValid)", "Selection commands must not allocate LINQ-filtered subject lists.", result);
+        ForbidText(commandBridge, ".Distinct()\n                .OrderBy(id => id.Value)", "Selection commands must not allocate distinct ordered LINQ subject lists.", result);
 
         var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
         RequireText(commands, "ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect)", "Rect selection must compute economy intent without temporary unit lists.", result);
