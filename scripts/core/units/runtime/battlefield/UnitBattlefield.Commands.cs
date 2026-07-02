@@ -42,10 +42,8 @@ public sealed partial class UnitBattlefield
 
     public void CommandMoveSelected(PlayerSlotId playerSlotId, Vector2 target, Vector2 worldSize, MoveCommandMode mode = MoveCommandMode.Direct)
     {
-        var selected = SelectedUnits(playerSlotId)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (selected.Count == 0)
+        CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return;
         }
@@ -53,9 +51,10 @@ public sealed partial class UnitBattlefield
         WorldSize = worldSize;
         _entityWorld.WorldWidth = worldSize.X;
         _entityWorld.WorldHeight = worldSize.Y;
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupMoveEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            selected.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             target,
             mode));
@@ -68,12 +67,8 @@ public sealed partial class UnitBattlefield
         Vector2 worldSize,
         MoveCommandMode mode = MoveCommandMode.Direct)
     {
-        var requestedIds = unitIds.ToHashSet();
-        var orderedUnits = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && requestedIds.Contains(unit.Id))
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (orderedUnits.Count == 0)
+        CollectRequestedCommandUnits(playerSlotId, unitIds, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return 0;
         }
@@ -81,13 +76,14 @@ public sealed partial class UnitBattlefield
         WorldSize = worldSize;
         _entityWorld.WorldWidth = worldSize.X;
         _entityWorld.WorldHeight = worldSize.Y;
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupMoveEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            orderedUnits.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             target,
             mode));
-        return orderedUnits.Count;
+        return _unitCommandBuffer.Count;
     }
 
     public void CommandAttackSelected(PlayerSlotId playerSlotId, UnitInstance target)
@@ -97,19 +93,17 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        var attackers = SelectedUnits(playerSlotId)
-            .Where(unit => CanUnitTarget(unit, target))
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (attackers.Count == 0)
+        CollectSelectedCommandUnitsTargeting(playerSlotId, target, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return;
         }
 
         SyncUnitEntity(target);
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            attackers.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             target.EntityId,
             CombatTargetKind.Unit));
@@ -129,18 +123,16 @@ public sealed partial class UnitBattlefield
         }
 
         var targetSpec = BuildSpecCatalog.For(target.Kind);
-        var attackers = SelectedUnits(playerSlotId)
-            .Where(unit => CanUnitTarget(unit, targetSpec))
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (attackers.Count == 0)
+        CollectSelectedCommandUnitsTargeting(playerSlotId, targetSpec, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return false;
         }
 
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            attackers.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             targetEntity.Id,
             CombatTargetKind.Building));
@@ -149,37 +141,34 @@ public sealed partial class UnitBattlefield
 
     public void CommandStopSelected(PlayerSlotId playerSlotId)
     {
-        var selected = SelectedUnits(playerSlotId)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (selected.Count == 0)
+        CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return;
         }
 
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new StopEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            selected.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick()));
     }
 
     public int CommandSetSelectedStance(PlayerSlotId playerSlotId, UnitStance stance)
     {
-        var selected = SelectedUnits(playerSlotId)
-            .Where(unit => unit.WeaponMounts.Count > 0)
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (selected.Count == 0)
+        CollectSelectedArmedCommandUnits(playerSlotId, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return 0;
         }
 
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new SetStanceEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            selected.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             stance));
-        return selected.Count;
+        return _unitCommandBuffer.Count;
     }
 
     public int CommandAttackUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, UnitInstance target)
@@ -189,25 +178,21 @@ public sealed partial class UnitBattlefield
             return 0;
         }
 
-        var requestedIds = unitIds.ToHashSet();
-        var orderedUnits = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && requestedIds.Contains(unit.Id))
-            .Where(unit => CanUnitTarget(unit, target))
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (orderedUnits.Count == 0)
+        CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, target, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return 0;
         }
 
         SyncUnitEntity(target);
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            orderedUnits.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             target.EntityId,
             CombatTargetKind.Unit));
-        return orderedUnits.Count;
+        return _unitCommandBuffer.Count;
     }
 
     public int CommandAttackUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, int buildingId)
@@ -224,24 +209,20 @@ public sealed partial class UnitBattlefield
         }
 
         var targetSpec = BuildSpecCatalog.For(target.Kind);
-        var requestedIds = unitIds.ToHashSet();
-        var orderedUnits = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && requestedIds.Contains(unit.Id))
-            .Where(unit => CanUnitTarget(unit, targetSpec))
-            .OrderBy(unit => unit.Id)
-            .ToList();
-        if (orderedUnits.Count == 0)
+        CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, targetSpec, _unitCommandBuffer);
+        if (_unitCommandBuffer.Count == 0)
         {
             return 0;
         }
 
+        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
-            orderedUnits.Select(unit => unit.EntityId).ToList(),
+            _unitCommandEntityBuffer,
             NextInputCommandTick(),
             targetEntity.Id,
             CombatTargetKind.Building));
-        return orderedUnits.Count;
+        return _unitCommandBuffer.Count;
     }
 
     private void CollectRequestedSelectionUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, List<UnitInstance> result)

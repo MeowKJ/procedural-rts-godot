@@ -3,6 +3,7 @@ static class UnitBattlefieldAllocationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireHarvestRepairCommandBuffers(root, result);
+        RequireGroupCommandSubjectBuffers(root, result);
         RequireDeathRemovalBuffers(root, result);
         RequireProductionSyncBuffers(root, result);
     }
@@ -30,6 +31,31 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(harvestRepair, ".ToList()", "Harvest/repair commands must not allocate unit or subject lists.", result);
         ForbidText(harvestRepair, ".OrderBy(unit => unit.Id)", "Harvest/repair commands must sort reusable buffers in place.", result);
         ForbidText(harvestRepair, ".Select(unit => unit.EntityId)", "Harvest/repair commands must fill entity subjects with an explicit loop.", result);
+    }
+
+    private static void RequireGroupCommandSubjectBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "List<UnitInstance> _unitCommandBuffer", "UnitBattlefield group commands must reuse unit subject storage.", result);
+        RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield group commands must reuse entity subject storage.", result);
+
+        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
+        var buffers = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandSubjectBuffers.cs");
+        RequireText(commands, "CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer)", "Selected move/stop commands must fill the reusable unit buffer.", result);
+        RequireText(commands, "CollectSelectedArmedCommandUnits(playerSlotId, _unitCommandBuffer)", "Selected stance commands must fill the reusable armed-unit buffer.", result);
+        RequireText(commands, "CollectSelectedCommandUnitsTargeting(playerSlotId, target, _unitCommandBuffer)", "Selected unit attacks must fill the reusable target-filtered buffer.", result);
+        RequireText(commands, "CollectSelectedCommandUnitsTargeting(playerSlotId, targetSpec, _unitCommandBuffer)", "Selected building attacks must fill the reusable target-filtered buffer.", result);
+        RequireText(commands, "CollectRequestedCommandUnits(playerSlotId, unitIds, _unitCommandBuffer)", "Explicit move commands must fill the reusable unit buffer.", result);
+        RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, target, _unitCommandBuffer)", "Explicit unit attacks must fill the reusable target-filtered buffer.", result);
+        RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, targetSpec, _unitCommandBuffer)", "Explicit building attacks must fill the reusable target-filtered buffer.", result);
+        RequireText(commands, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Group commands must fill reusable entity subject storage.", result);
+        RequireText(buffers, "CollectRequestedCommandIds(unitIds)", "Explicit group commands must reuse requested-id storage.", result);
+        ForbidText(commands, "var requestedIds = unitIds.ToHashSet();", "Group commands must not allocate requested-id sets.", result);
+        ForbidText(commands, ".Select(unit => unit.EntityId).ToList()", "Group commands must not allocate entity subject lists.", result);
+        ForbidText(commands, ".OrderBy(unit => unit.Id)", "Group commands must sort reusable buffers in place.", result);
+        ForbidText(commands, ".Where(unit => CanUnitTarget(unit, target))", "Group attack commands must not allocate LINQ targeting filters.", result);
+        ForbidText(commands, ".Where(unit => CanUnitTarget(unit, targetSpec))", "Group attack commands must not allocate LINQ targeting filters.", result);
     }
 
     private static void RequireDeathRemovalBuffers(string root, GateResult result)
