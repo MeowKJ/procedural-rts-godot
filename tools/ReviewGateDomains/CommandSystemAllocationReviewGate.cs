@@ -1,0 +1,42 @@
+static class CommandSystemAllocationReviewGate
+{
+    public static void Check(string root, GateResult result)
+    {
+        RequireScalarOrderSubjectBuffer(root, result);
+    }
+
+    private static void RequireScalarOrderSubjectBuffer(string root, GateResult result)
+    {
+        var commandSystem = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "sim", "systems", "CommandSystem.cs"));
+        RequireText(commandSystem, "List<EntityInstance> _scalarOrderMembers", "CommandSystem must reuse a scalar-order subject buffer.", result);
+
+        var movementOrders = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "sim",
+            "systems",
+            "command",
+            "CommandSystem.MovementOrders.cs");
+        RequireText(movementOrders, "CollectOwnedSubjects(world, issuer, subjects, _scalarOrderMembers)", "Move/Stop commands must fill the reusable scalar subject buffer.", result);
+        RequireText(movementOrders, "CollectOwnedSubjects(world, patrol.Issuer, patrol.Subjects, _scalarOrderMembers)", "Patrol commands must fill the reusable scalar subject buffer.", result);
+        RequireText(movementOrders, "CollectOwnedSubjects(world, guard.Issuer, guard.Subjects, _scalarOrderMembers)", "Guard commands must fill the reusable scalar subject buffer.", result);
+        RequireText(movementOrders, "CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers)", "Stance commands must fill the reusable scalar subject buffer.", result);
+        ForbidText(movementOrders, "OwnedSubjects(world, issuer, subjects)", "Move/Stop commands must not allocate the OwnedSubjects iterator.", result);
+        ForbidText(movementOrders, "OwnedSubjects(world, patrol.Issuer, patrol.Subjects)", "Patrol commands must not allocate the OwnedSubjects iterator.", result);
+        ForbidText(movementOrders, "OwnedSubjects(world, guard.Issuer, guard.Subjects)", "Guard commands must not allocate the OwnedSubjects iterator.", result);
+        ForbidText(movementOrders, "OwnedSubjects(world, command.Issuer, command.Subjects)", "Stance commands must not allocate the OwnedSubjects iterator.", result);
+
+        var combatOrders = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "sim",
+            "systems",
+            "command",
+            "CommandSystem.CombatOrders.cs");
+        RequireText(combatOrders, "CollectOwnedSubjects(world, attack.Issuer, attack.Subjects, _scalarOrderMembers)", "Attack commands must fill the reusable scalar subject buffer.", result);
+        ForbidText(combatOrders, "OwnedSubjects(world, attack.Issuer, attack.Subjects)", "Attack commands must not allocate the OwnedSubjects iterator.", result);
+    }
+}

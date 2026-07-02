@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class CommandSystem
 {
-    private static void ApplyMove(
+    private void ApplyMove(
         EntityWorld world,
         OwnerId issuer,
         IReadOnlyList<EntityId> subjects,
@@ -12,7 +12,8 @@ public sealed partial class CommandSystem
         MoveCommandMode mode,
         bool manualAttack)
     {
-        foreach (var entity in OwnedSubjects(world, issuer, subjects))
+        CollectOwnedSubjects(world, issuer, subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             var movement = entity.Components.TryGet<MovementComponentState>(out var existing)
                 ? existing
@@ -42,16 +43,19 @@ public sealed partial class CommandSystem
                 });
             }
         }
+
+        _scalarOrderMembers.Clear();
     }
 
-    private static void ApplyPatrol(EntityWorld world, PatrolEntityCommand patrol)
+    private void ApplyPatrol(EntityWorld world, PatrolEntityCommand patrol)
     {
         if (patrol.PointA.DistanceSquaredTo(patrol.PointB) <= 1f)
         {
             return;
         }
 
-        foreach (var entity in OwnedSubjects(world, patrol.Issuer, patrol.Subjects))
+        CollectOwnedSubjects(world, patrol.Issuer, patrol.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (!entity.Components.Has<MovementProfileComponentState>())
             {
@@ -94,9 +98,11 @@ public sealed partial class CommandSystem
                 });
             }
         }
+
+        _scalarOrderMembers.Clear();
     }
 
-    private static void ApplyGuard(EntityWorld world, GuardEntityCommand guard)
+    private void ApplyGuard(EntityWorld world, GuardEntityCommand guard)
     {
         if (float.IsNaN(guard.Radius) || float.IsInfinity(guard.Radius) || guard.Radius <= 0)
         {
@@ -116,7 +122,8 @@ public sealed partial class CommandSystem
 
         var anchor = guardedEntity?.Transform.Position ?? guard.GuardPoint;
         var radiusSq = guard.Radius * guard.Radius;
-        foreach (var entity in OwnedSubjects(world, guard.Issuer, guard.Subjects))
+        CollectOwnedSubjects(world, guard.Issuer, guard.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (!entity.Components.Has<MovementProfileComponentState>()
                 && !entity.Components.Has<WeaponUserComponentState>())
@@ -161,6 +168,8 @@ public sealed partial class CommandSystem
                 });
             }
         }
+
+        _scalarOrderMembers.Clear();
     }
 
     private void ApplyGroupMove(EntityWorld world, GroupMoveEntityCommand command)
@@ -232,9 +241,10 @@ public sealed partial class CommandSystem
         _groupMoveDestinations.Clear();
     }
 
-    private static void ApplyStop(EntityWorld world, OwnerId issuer, IReadOnlyList<EntityId> subjects, bool hold)
+    private void ApplyStop(EntityWorld world, OwnerId issuer, IReadOnlyList<EntityId> subjects, bool hold)
     {
-        foreach (var entity in OwnedSubjects(world, issuer, subjects))
+        CollectOwnedSubjects(world, issuer, subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             if (entity.Components.TryGet<MovementComponentState>(out var movement))
             {
@@ -264,11 +274,14 @@ public sealed partial class CommandSystem
                 entity.Components.Set(autonomy with { AnchorPosition = entity.Transform.Position });
             }
         }
+
+        _scalarOrderMembers.Clear();
     }
 
-    private static void ApplyStance(EntityWorld world, SetStanceEntityCommand command)
+    private void ApplyStance(EntityWorld world, SetStanceEntityCommand command)
     {
-        foreach (var entity in OwnedSubjects(world, command.Issuer, command.Subjects))
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             var stance = entity.Components.TryGet<StanceComponentState>(out var existing)
                 ? existing
@@ -284,5 +297,7 @@ public sealed partial class CommandSystem
                 entity.Components.Set(autonomy with { AnchorPosition = entity.Transform.Position });
             }
         }
+
+        _scalarOrderMembers.Clear();
     }
 }

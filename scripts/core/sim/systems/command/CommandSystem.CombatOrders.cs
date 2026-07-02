@@ -4,14 +4,17 @@ namespace ProceduralRts.Core;
 
 public sealed partial class CommandSystem
 {
-    private static void ApplyAttack(EntityWorld world, AttackEntityCommand attack)
+    private void ApplyAttack(EntityWorld world, AttackEntityCommand attack)
     {
-        foreach (var entity in OwnedSubjects(world, attack.Issuer, attack.Subjects))
+        CollectOwnedSubjects(world, attack.Issuer, attack.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
         {
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
             SetManualTarget(entity, attack.Target, attack.TargetKind);
         }
+
+        _scalarOrderMembers.Clear();
     }
 
     private void ApplyGroupAttack(EntityWorld world, GroupAttackEntityCommand command)

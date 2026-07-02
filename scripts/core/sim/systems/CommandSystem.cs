@@ -11,6 +11,7 @@ namespace ProceduralRts.Core;
 /// </summary>
 public sealed partial class CommandSystem : ISimSystem
 {
+    private readonly List<EntityInstance> _scalarOrderMembers = [];
     private readonly List<EntityInstance> _groupOrderMembers = [];
     private readonly List<FormationUnit> _groupMoveFormationUnits = [];
     private readonly List<FormationDestination> _groupMoveDestinationResults = [];
