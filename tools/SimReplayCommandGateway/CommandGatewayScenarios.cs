@@ -62,7 +62,70 @@ static partial class Program
         var sandboxResult = sandboxGateway.Submit(submission, new[] { sandbox }, sink);
         Assert(sandboxResult.AcceptedCount == 1, "gateway should accept sandbox commands when sandbox authority is enabled");
 
-        Console.WriteLine("OK [command-gateway]: slot rights, sequence monotonicity, payload shape, sandbox gate, and sink forwarding validated.");
+        AssertCommandGatewayPayloadVariants(submission, subjects);
+
+        Console.WriteLine("OK [command-gateway]: slot rights, sequence monotonicity, payload shape variants, sandbox gate, and sink forwarding validated.");
+    }
+
+    private static void AssertCommandGatewayPayloadVariants(
+        CommandGatewaySubmission submission,
+        IReadOnlyList<EntityId> subjects)
+    {
+        var gateway = new CommandGateway();
+        var sink = new RecordingGatewaySink();
+        var build = new PlayerCommand(
+            PlayerSlotId.One,
+            1,
+            12,
+            PlayerCommandKind.Build,
+            PlayerCommandPayload.ForSpec("building.powerplant") with
+            {
+                HasTargetPoint = true,
+                TargetPoint = new PlayerCommandPoint(64, 96),
+            });
+        AssertAccepted(gateway.Submit(submission, new[] { build }, sink), "gateway should accept build payloads with spec and point");
+
+        var produceMissingSpec = new PlayerCommand(
+            PlayerSlotId.One,
+            2,
+            12,
+            PlayerCommandKind.Produce,
+            PlayerCommandPayload.ForSubjects(subjects));
+        AssertRejected(
+            gateway.Submit(submission, new[] { produceMissingSpec }, sink),
+            CommandGatewayValidationError.InvalidSpecId,
+            "gateway should reject produce payloads without a spec id");
+
+        var rallyPoint = new PlayerCommand(
+            PlayerSlotId.One,
+            3,
+            12,
+            PlayerCommandKind.Rally,
+            PlayerCommandPayload.ForPoint(subjects, 512, 448));
+        AssertAccepted(gateway.Submit(submission, new[] { rallyPoint }, sink), "gateway should accept rally payloads with a point target");
+
+        var invalidSubject = new PlayerCommand(
+            PlayerSlotId.One,
+            4,
+            12,
+            PlayerCommandKind.Stop,
+            PlayerCommandPayload.ForSubjects(new[] { default(EntityId) }));
+        AssertRejected(
+            gateway.Submit(submission, new[] { invalidSubject }, sink),
+            CommandGatewayValidationError.InvalidSubject,
+            "gateway should reject payloads with invalid subject ids");
+
+        var rejectingSink = new RecordingGatewaySink(reject: true);
+        var sinkRejected = new PlayerCommand(
+            PlayerSlotId.One,
+            5,
+            12,
+            PlayerCommandKind.Stop,
+            PlayerCommandPayload.ForSubjects(subjects));
+        AssertRejected(
+            gateway.Submit(submission, new[] { sinkRejected }, rejectingSink),
+            CommandGatewayValidationError.EntityCommandSinkRejected,
+            "gateway should return structured errors from a rejecting sink");
     }
 
     private static void AssertRejected(
@@ -75,8 +138,20 @@ static partial class Program
         Assert(!string.IsNullOrWhiteSpace(result.Commands[0].Message), $"{message}: rejection should include feedback text");
     }
 
+    private static void AssertAccepted(CommandGatewayResult result, string message)
+    {
+        Assert(result.AcceptedCount == 1 && result.RejectedCount == 0, message);
+    }
+
     private sealed class RecordingGatewaySink : ICommandGatewayEntityCommandSink
     {
+        private readonly bool _reject;
+
+        public RecordingGatewaySink(bool reject = false)
+        {
+            _reject = reject;
+        }
+
         public List<PlayerCommand> Accepted { get; } = [];
 
         public bool TryEnqueue(
@@ -85,6 +160,14 @@ static partial class Program
             out CommandGatewayValidationError error,
             out string message)
         {
+            if (_reject)
+            {
+                envelope = null;
+                error = CommandGatewayValidationError.None;
+                message = "test sink rejected command";
+                return false;
+            }
+
             Accepted.Add(command);
             envelope = null;
             error = CommandGatewayValidationError.None;
