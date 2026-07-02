@@ -1163,6 +1163,10 @@ Wiring & coverage gaps (found during the sweep):
     #66 added `FormationMath.CreateMoveDestinationsInto(...)` and routed
     `CommandSystem` group move through caller-owned destination, ordered-unit, slot,
     and remaining-slot buffers; SimReplay group-move hashes stayed unchanged.
+    Follow-up: #67 split `ConstructionSystem` placement query helpers into
+    `ConstructionSystem.PlacementQueries.cs`, keeping placement behavior unchanged
+    while reducing `ConstructionSystem.Queries.cs` file pressure before any later
+    placement-list allocation paydown.
 
 Discipline (keep it from regressing):
 [ ] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
