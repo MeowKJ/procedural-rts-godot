@@ -65,14 +65,20 @@ public sealed partial class UnitBattlefield
 
     private static IReadOnlyList<WeaponMountRuntimeState> WeaponMountsForEntity(UnitInstance unit)
     {
-        if (unit.WeaponMounts.Count == 0)
+        var count = unit.WeaponMounts.Count;
+        if (count == 0)
         {
             return [];
         }
 
-        return unit.WeaponMounts
-            .Select(mount => mount with { CooldownRemaining = unit.AttackCooldownRemaining })
-            .ToArray();
+        var copy = new WeaponMountRuntimeState[count];
+        for (var index = 0; index < count; index++)
+        {
+            var mount = unit.WeaponMounts[index];
+            copy[index] = mount with { CooldownRemaining = unit.AttackCooldownRemaining };
+        }
+
+        return copy;
     }
 
     private static void SyncBodyFixedMountFacings(UnitInstance unit)
