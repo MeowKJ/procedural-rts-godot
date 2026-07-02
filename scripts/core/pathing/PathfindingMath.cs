@@ -168,8 +168,16 @@ public static partial class PathfindingMath
             return new PathfindingSharedCorridorResult([], []);
         }
 
-        var anchorX = members.Average(member => member.StartX);
-        var anchorY = members.Average(member => member.StartY);
+        var anchorX = 0f;
+        var anchorY = 0f;
+        for (var index = 0; index < members.Count; index++)
+        {
+            anchorX += members[index].StartX;
+            anchorY += members[index].StartY;
+        }
+
+        anchorX /= members.Count;
+        anchorY /= members.Count;
         var shared = FindPathWithDebug(
             anchorX,
             anchorY,
@@ -181,9 +189,9 @@ public static partial class PathfindingMath
             obstacles,
             movementDomain,
             terrain);
-        var sharedPath = shared.Path.Count == 0
-            ? new List<PathPoint> { new(intentX, intentY) }
-            : shared.Path.ToList();
+        IReadOnlyList<PathPoint> sharedPath = shared.Path.Count == 0
+            ? [new PathPoint(intentX, intentY)]
+            : shared.Path;
 
         var width = Math.Max(1, (int)MathF.Ceiling(worldWidth / cellSize));
         var height = Math.Max(1, (int)MathF.Ceiling(worldHeight / cellSize));
@@ -316,10 +324,11 @@ public static partial class PathfindingMath
         }
 
         cells.Reverse();
-        var points = cells
-            .Skip(1)
-            .Select(cell => CellCenter(cell, cellSize))
-            .ToList();
+        var points = new List<PathPoint>(Math.Max(0, cells.Count - 1));
+        for (var index = 1; index < cells.Count; index++)
+        {
+            points.Add(CellCenter(cells[index], cellSize));
+        }
 
         if (points.Count == 0 || DistanceSquared(points[^1], goalX, goalY) > cellSize * cellSize * 0.16f)
         {

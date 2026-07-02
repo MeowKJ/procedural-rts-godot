@@ -59,9 +59,9 @@ public sealed partial class GameState
         }
 
         unit.MoveTarget = unit.GlobalCorridor[0];
-        foreach (var point in unit.GlobalCorridor.Skip(1))
+        for (var index = 1; index < unit.GlobalCorridor.Count; index++)
         {
-            unit.Path.Enqueue(point);
+            unit.Path.Enqueue(unit.GlobalCorridor[index]);
         }
     }
 

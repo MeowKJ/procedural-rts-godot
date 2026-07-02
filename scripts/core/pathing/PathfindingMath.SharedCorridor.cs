@@ -51,7 +51,7 @@ public static partial class PathfindingMath
 
         if (entryIndex >= 0)
         {
-            AppendUnique(points, sharedPath.Skip(entryIndex));
+            AppendUnique(points, sharedPath, entryIndex);
         }
         else
         {
@@ -68,7 +68,7 @@ public static partial class PathfindingMath
                 terrain);
             rawCells.AddRange(connector.RawCells);
             AppendUnique(points, connector.Path);
-            AppendUnique(points, sharedPath.Skip(1));
+            AppendUnique(points, sharedPath, 1);
         }
 
         if (points.Count == 0)
@@ -81,7 +81,7 @@ public static partial class PathfindingMath
         {
             if (SegmentIsClear(last, memberGoal, width, height, cellSize, blocked, terrainByCell, allowedLayers))
             {
-                AppendUnique(points, [memberGoal]);
+                AppendUnique(points, memberGoal);
             }
             else
             {
@@ -113,14 +113,19 @@ public static partial class PathfindingMath
         return new PathfindingCorridorAssignment(member.Id, path, rawCells);
     }
 
-    private static void AppendUnique(List<PathPoint> target, IEnumerable<PathPoint> points)
+    private static void AppendUnique(List<PathPoint> target, IReadOnlyList<PathPoint> points, int startIndex = 0)
     {
-        foreach (var point in points)
+        for (var index = Math.Max(0, startIndex); index < points.Count; index++)
         {
-            if (target.Count == 0 || DistanceSquared(target[^1], point.X, point.Y) > 0.25f)
-            {
-                target.Add(point);
-            }
+            AppendUnique(target, points[index]);
+        }
+    }
+
+    private static void AppendUnique(List<PathPoint> target, PathPoint point)
+    {
+        if (target.Count == 0 || DistanceSquared(target[^1], point.X, point.Y) > 0.25f)
+        {
+            target.Add(point);
         }
     }
 }
