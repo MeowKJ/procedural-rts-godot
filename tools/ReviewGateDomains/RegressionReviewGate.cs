@@ -172,9 +172,11 @@ static class RegressionReviewGate
         RequireText(constructionSystem, "BuildVisibilitySources(EntityWorld world, OwnerId ownerId, List<PlacementBuildVisibility> result)", "Construction visibility collection must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "CollectRequiredBuildings(BuildSpec spec, List<string> result)", "Construction required-building ordering must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "CollectOrderedSubjects(IReadOnlyList<EntityId> subjects, List<EntityId> result)", "Construction subject ordering must use a caller-owned buffer.", result);
+        RequireText(constructionSystem, "foreach (var entity in world.OrderedEntities)", "Construction completed-building prerequisite checks must use an explicit scan.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildAnchor> BuildAnchors", "Construction build-anchor collection must not allocate a list per placement validation.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementObstacle> FootprintObstacles", "Construction obstacle collection must not allocate a list per placement validation.", result);
         ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildVisibility> BuildVisibilitySources", "Construction visibility collection must not allocate a list per placement validation.", result);
+        ForbidText(constructionSystem, "world.OrderedEntities.Any(entity => IsCompletedBuilding", "Construction completed-building prerequisite checks must not allocate LINQ Any iterators.", result);
         ForbidText(constructionSystem, "RequiredBuildings.OrderBy(kind => kind)", "Construction prerequisites must not allocate ordered required-building enumerables.", result);
         ForbidText(constructionSystem, "Subjects.OrderBy(id => id.Value)", "Construction commands must not allocate ordered subject enumerables.", result);
         ForbidText(constructionSystem, "subjects.OrderBy(id => id.Value)", "Construction producer lookup must not allocate ordered subject enumerables.", result);

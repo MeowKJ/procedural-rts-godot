@@ -202,7 +202,15 @@ public sealed partial class ConstructionSystem
 
     private static bool HasCompletedBuilding(EntityWorld world, OwnerId ownerId, string kind)
     {
-        return world.OrderedEntities.Any(entity => IsCompletedBuilding(world, entity, ownerId, kind));
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (IsCompletedBuilding(world, entity, ownerId, kind))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsCompletedBuilding(EntityWorld world, EntityInstance entity, OwnerId ownerId, string kind)
