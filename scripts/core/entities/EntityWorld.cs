@@ -11,6 +11,10 @@ public sealed partial class EntityWorld
     private readonly SortedSet<int> _pendingRemovals = [];
     private readonly List<EntityComponentState> _stateHashComponentValues = [];
     private readonly List<AbilityCooldownState> _stateHashAbilityCooldownValues = [];
+    private readonly List<WeaponMountRuntimeState> _stateHashWeaponMountValues = [];
+    private readonly List<UnitProductionQueueItem> _stateHashProductionQueueItems = [];
+    private readonly List<EntityCommand> _stateHashCommandQueueItems = [];
+    private readonly List<EntityId> _stateHashCommandSubjectIds = [];
     private readonly Stopwatch _systemStopwatch = new();
     private int _nextEntityId = 1;
     private int _nextProductionItemId = 1;
@@ -323,12 +327,23 @@ public sealed partial class EntityWorld
             foreach (var component in _stateHashComponentValues)
             {
                 hash = EntityStateHash.Add(hash, component.GetType().Name);
-                hash = EntityStateHash.Add(hash, component, _stateHashAbilityCooldownValues);
+                hash = EntityStateHash.Add(
+                    hash,
+                    component,
+                    _stateHashAbilityCooldownValues,
+                    _stateHashWeaponMountValues,
+                    _stateHashProductionQueueItems,
+                    _stateHashCommandQueueItems,
+                    _stateHashCommandSubjectIds);
             }
         }
 
         _stateHashComponentValues.Clear();
         _stateHashAbilityCooldownValues.Clear();
+        _stateHashWeaponMountValues.Clear();
+        _stateHashProductionQueueItems.Clear();
+        _stateHashCommandQueueItems.Clear();
+        _stateHashCommandSubjectIds.Clear();
         return hash;
     }
 

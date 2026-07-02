@@ -3,7 +3,7 @@ using Godot;
 
 namespace ProceduralRts.Core;
 
-public static class EntityStateHash
+public static partial class EntityStateHash
 {
     private const ulong Offset = 14695981039346656037UL;
     private const ulong Prime = 1099511628211UL;
@@ -74,7 +74,11 @@ public static class EntityStateHash
     public static ulong Add(
         ulong hash,
         EntityComponentState state,
-        List<AbilityCooldownState>? abilityCooldownOrder = null)
+        List<AbilityCooldownState>? abilityCooldownOrder = null,
+        List<WeaponMountRuntimeState>? weaponMountOrder = null,
+        List<UnitProductionQueueItem>? productionQueueOrder = null,
+        List<EntityCommand>? commandQueueOrder = null,
+        List<EntityId>? commandSubjectOrder = null)
     {
         return state switch
         {
@@ -89,7 +93,7 @@ public static class EntityStateHash
             VisionComponentState vision => Add(hash, vision.SightRange),
             AutonomyComponentState autonomy => AddAutonomy(hash, autonomy),
             RetaliationComponentState retaliation => AddRetaliation(hash, retaliation),
-            WeaponUserComponentState weaponUser => AddWeaponUser(hash, weaponUser),
+            WeaponUserComponentState weaponUser => AddWeaponUser(hash, weaponUser, weaponMountOrder),
             ProjectileComponentState projectile => AddProjectile(hash, projectile),
             VeterancyComponentState veterancy => AddVeterancy(hash, veterancy),
             RegenerationComponentState regen => AddRegeneration(hash, regen),
@@ -98,13 +102,13 @@ public static class EntityStateHash
             ResourceNodeComponentState node => AddResourceNode(hash, node),
             ResourceRegenerationAuraComponentState aura => AddResourceRegenerationAura(hash, aura),
             SignalNetworkComponentState signal => AddSignalNetwork(hash, signal),
-            ProductionQueueComponentState production => AddProduction(hash, production),
+            ProductionQueueComponentState production => AddProduction(hash, production, productionQueueOrder),
             AbilityRuntimeComponentState ability => AddAbilityRuntime(hash, ability, abilityCooldownOrder),
             ShieldComponentState shield => Add(Add(hash, shield.AbsorbRemaining), shield.DurationRemaining),
             ScanRevealComponentState scan => Add(Add(hash, scan.Radius), scan.DurationRemaining),
             DeployComponentState deploy => Add(Add(Add(hash, deploy.IsDeployed ? 1 : 0), deploy.SetupRemaining), deploy.RangeMultiplier),
             RepairOrderComponentState repair => AddRepairOrder(hash, repair),
-            CommandQueueComponentState commandQueue => AddCommandQueue(hash, commandQueue),
+            CommandQueueComponentState commandQueue => AddCommandQueue(hash, commandQueue, commandQueueOrder, commandSubjectOrder),
             FootprintComponentState footprint => Add(Add(hash, footprint.Size), (int)footprint.PlacementDomain),
             BuildingIdentityComponentState buildingIdentity => AddBuildingIdentity(hash, buildingIdentity),
             ConstructionIdentityComponentState constructionIdentity => Add(hash, constructionIdentity.Kind),
@@ -201,25 +205,6 @@ public static class EntityStateHash
         return Add(hash, state.LastThreatTick);
     }
 
-    private static ulong AddWeaponUser(ulong hash, WeaponUserComponentState state)
-    {
-        hash = Add(hash, state.Mounts.Count);
-        foreach (var mount in state.Mounts.OrderBy(mount => mount.MountId, StringComparer.Ordinal))
-        {
-            hash = Add(hash, mount.MountId);
-            hash = Add(hash, mount.WeaponId);
-            hash = Add(hash, mount.Facing);
-            hash = Add(hash, mount.CooldownRemaining);
-        }
-
-        hash = Add(hash, state.AttackTarget.Value);
-        hash = Add(hash, (int)state.AttackTargetKind);
-        hash = Add(hash, state.AttackTargetIsManual ? 1 : 0);
-        hash = Add(hash, state.AutoReacquireCooldownRemaining);
-        hash = AddNullableVector(hash, state.LastKnownTargetPosition);
-        return Add(hash, state.LastKnownTargetRemaining);
-    }
-
     private static ulong AddProjectile(ulong hash, ProjectileComponentState state)
     {
         hash = Add(hash, state.Source.Value);
@@ -279,81 +264,6 @@ public static class EntityStateHash
         hash = Add(hash, state.DayControlRadius);
         hash = Add(hash, state.NightVisionRadius);
         return Add(hash, state.SafetyAuraMultiplier);
-    }
-
-    private static ulong AddProduction(ulong hash, ProductionQueueComponentState state)
-    {
-        hash = Add(hash, state.Items.Count);
-        hash = Add(hash, (int)state.PauseReason);
-        hash = AddNullableString(hash, state.RepeatOutputSpecId);
-        foreach (var item in state.Items.OrderBy(item => item.Id))
-        {
-            hash = Add(hash, item.Id);
-            hash = Add(hash, (int)item.Kind);
-            hash = Add(hash, item.DesignId);
-            hash = Add(hash, item.Progress);
-            hash = Add(hash, (int)item.Faction);
-        }
-
-        return hash;
-    }
-
-    private static ulong AddAbilityRuntime(
-        ulong hash,
-        AbilityRuntimeComponentState state,
-        List<AbilityCooldownState>? abilityCooldownOrder)
-    {
-        hash = Add(hash, state.Cooldowns.Count);
-        var ordered = abilityCooldownOrder ?? new List<AbilityCooldownState>(state.Cooldowns.Count);
-        ordered.Clear();
-        foreach (var cooldown in state.Cooldowns)
-        {
-            ordered.Add(cooldown);
-        }
-
-        SortAbilityCooldownsByKind(ordered);
-        foreach (var cooldown in ordered)
-        {
-            hash = Add(hash, (int)cooldown.Kind);
-            hash = Add(hash, cooldown.CooldownRemaining);
-        }
-
-        ordered.Clear();
-        return hash;
-    }
-
-    private static void SortAbilityCooldownsByKind(List<AbilityCooldownState> values)
-    {
-        for (var index = 1; index < values.Count; index++)
-        {
-            var current = values[index];
-            var previous = index - 1;
-            while (previous >= 0 && values[previous].Kind > current.Kind)
-            {
-                values[previous + 1] = values[previous];
-                previous--;
-            }
-
-            values[previous + 1] = current;
-        }
-    }
-
-    private static ulong AddCommandQueue(ulong hash, CommandQueueComponentState state)
-    {
-        hash = Add(hash, state.Items.Count);
-        foreach (var item in state.Items.OrderBy(item => item.Tick).ThenBy(item => item.Kind))
-        {
-            hash = Add(hash, (int)item.Kind);
-            hash = Add(hash, item.Issuer.Value);
-            hash = Add(hash, item.Tick);
-            hash = Add(hash, item.Subjects.Count);
-            foreach (var subject in item.Subjects.OrderBy(subject => subject.Value))
-            {
-                hash = Add(hash, subject.Value);
-            }
-        }
-
-        return hash;
     }
 
     private static ulong AddRepairOrder(ulong hash, RepairOrderComponentState state)
