@@ -266,9 +266,7 @@ public sealed partial class UnitBattlefield
         SyncBuildingTargetEntities();
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
-        _buildingTargetCombatSystem.Step(context);
-        _entityWorld.FlushQueuedSpawns();
-        _projectileSystem.Step(context);
+        StepCombatBridgeWithProjectiles(context, _buildingTargetCombatSystem);
         SyncBuildingTargetCombatStateFromEntities();
         ApplyBuildingTargetCombatEvents(_entityWorld.Events.Drain());
     }

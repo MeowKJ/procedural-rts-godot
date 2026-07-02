@@ -14,9 +14,7 @@ public sealed partial class UnitBattlefield
         SyncBuildingTargetEntities();
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
-        _turretCombatSystem.Step(context);
-        _entityWorld.FlushQueuedSpawns();
-        _projectileSystem.Step(context);
+        StepCombatBridgeWithProjectiles(context, _turretCombatSystem);
         ApplyTurretCombatEvents(_entityWorld.Events.Drain());
     }
 

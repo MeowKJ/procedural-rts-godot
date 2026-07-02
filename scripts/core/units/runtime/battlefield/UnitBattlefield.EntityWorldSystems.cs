@@ -4,6 +4,13 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
+    private void StepCombatBridgeWithProjectiles(SimContext context, ISimSystem combatSystem)
+    {
+        combatSystem.Step(context);
+        _entityWorld.FlushQueuedSpawns();
+        _projectileSystem.Step(context);
+    }
+
     private void UpdateConstructionFromEntityWorld(float dt)
     {
         if (!_entityWorld.OrderedEntities.Any(entity =>
