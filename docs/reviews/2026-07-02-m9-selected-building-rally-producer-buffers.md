@@ -42,8 +42,8 @@ Automated gates:
   Result: pass
   Evidence: Full ReviewGate passed with 0 errors and 0 warnings after syncing validation-tool source budget evidence.
 - Command: `dotnet run --project tools/VerifyAll/VerifyAll.csproj --no-restore`
-  Result: pending
-  Evidence: pending batch-level verification before issue closeout.
+  Result: pass
+  Evidence: VerifyAll passed 23/23, including build, SimReplay, CombatBehavior, PlayerLoopQa, ReviewGate, PerfSmoke, and Godot headless QA.
 
 Manual/visual gates:
 - Check: Visual QA

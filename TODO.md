@@ -1241,7 +1241,9 @@ Wiring & coverage gaps (found during the sweep):
     explicit selected-building scan and in-place producer sort. The helper lives in
     `UnitBattlefield.ProductionRallySelection.cs` to keep `ProductionRally.cs`
     below the yellow file-size threshold, and `ReviewGate simhot` locks the
-    no-LINQ selected-building rally bridge path.
+    no-LINQ selected-building rally bridge path. Verified #88-#90 together with
+    build, SelectionStress, CombatBehavior, PlayerLoopQa, ReviewGate simhot, full
+    ReviewGate, review-record gates, and full VerifyAll 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling
