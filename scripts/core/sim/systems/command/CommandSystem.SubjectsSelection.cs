@@ -16,6 +16,22 @@ public sealed partial class CommandSystem
         }
     }
 
+    private static void CollectOwnedSubjects(
+        EntityWorld world,
+        OwnerId issuer,
+        IReadOnlyList<EntityId> subjects,
+        List<EntityInstance> result)
+    {
+        result.Clear();
+        foreach (var entityId in subjects)
+        {
+            if (world.TryGet(entityId, out var entity) && entity.OwnerId.Value == issuer.Value)
+            {
+                result.Add(entity);
+            }
+        }
+    }
+
     private static void ApplySelection(EntityWorld world, SetSelectionEntityCommand command)
     {
         var selected = command.Subjects

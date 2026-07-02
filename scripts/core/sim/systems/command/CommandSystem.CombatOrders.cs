@@ -14,37 +14,44 @@ public sealed partial class CommandSystem
         }
     }
 
-    private static void ApplyGroupAttack(EntityWorld world, GroupAttackEntityCommand command)
+    private void ApplyGroupAttack(EntityWorld world, GroupAttackEntityCommand command)
     {
         if (!world.TryGet(command.Target, out var target))
         {
             return;
         }
 
-        var members = OwnedSubjects(world, command.Issuer, command.Subjects).ToList();
-        if (members.Count == 0)
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _groupOrderMembers);
+        if (_groupOrderMembers.Count == 0)
         {
             return;
         }
 
         var targetRadius = target.Components.TryGet<CollisionComponentState>(out var tc) ? tc.Radius : 0f;
 
-        var slotUnits = members
-            .Select(entity => new AttackSlotUnit(entity.Id.Value, entity.Transform.Position, WeaponRange(world, entity)))
-            .ToList();
+        _groupAttackSlotUnits.Clear();
+        foreach (var entity in _groupOrderMembers)
+        {
+            _groupAttackSlotUnits.Add(new AttackSlotUnit(entity.Id.Value, entity.Transform.Position, WeaponRange(world, entity)));
+        }
 
-        var assignments = AttackSlotMath
-            .AssignAttackSlots(slotUnits, target.Transform.Position, targetRadius)
-            .ToDictionary(a => a.Id);
+        _groupAttackAssignments.Clear();
+        foreach (var assignment in AttackSlotMath.AssignAttackSlots(
+            _groupAttackSlotUnits,
+            target.Transform.Position,
+            targetRadius))
+        {
+            _groupAttackAssignments[assignment.Id] = assignment;
+        }
 
-        foreach (var entity in members)
+        foreach (var entity in _groupOrderMembers)
         {
             // Every attacker focuses the target; CombatSystem fires when in range.
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
             SetManualTarget(entity, command.Target, command.TargetKind);
 
-            if (!assignments.TryGetValue(entity.Id.Value, out var assignment))
+            if (!_groupAttackAssignments.TryGetValue(entity.Id.Value, out var assignment))
             {
                 continue;
             }
@@ -63,6 +70,10 @@ public sealed partial class CommandSystem
                 CommandVisualTarget = target.Transform.Position,
             });
         }
+
+        _groupOrderMembers.Clear();
+        _groupAttackSlotUnits.Clear();
+        _groupAttackAssignments.Clear();
     }
 
     private static void SetManualTarget(EntityInstance entity, EntityId target, CombatTargetKind targetKind)

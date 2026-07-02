@@ -163,29 +163,35 @@ public sealed partial class CommandSystem
         }
     }
 
-    private static void ApplyGroupMove(EntityWorld world, GroupMoveEntityCommand command)
+    private void ApplyGroupMove(EntityWorld world, GroupMoveEntityCommand command)
     {
-        var members = OwnedSubjects(world, command.Issuer, command.Subjects).ToList();
-        if (members.Count == 0)
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _groupOrderMembers);
+        if (_groupOrderMembers.Count == 0)
         {
             return;
         }
 
-        var formationUnits = members
-            .Select(entity =>
-            {
-                var radius = entity.Components.TryGet<CollisionComponentState>(out var c) ? c.Radius : 12f;
-                return new FormationUnit(entity.Id.Value, entity.Transform.Position.X, entity.Transform.Position.Y, radius);
-            })
-            .ToList();
-
-        var destinations = FormationMath
-            .CreateMoveDestinations(formationUnits, command.Target.X, command.Target.Y, world.WorldWidth, world.WorldHeight)
-            .ToDictionary(d => d.Id);
-
-        foreach (var entity in members)
+        _groupMoveFormationUnits.Clear();
+        foreach (var entity in _groupOrderMembers)
         {
-            if (!destinations.TryGetValue(entity.Id.Value, out var slot))
+            var radius = entity.Components.TryGet<CollisionComponentState>(out var c) ? c.Radius : 12f;
+            _groupMoveFormationUnits.Add(new FormationUnit(entity.Id.Value, entity.Transform.Position.X, entity.Transform.Position.Y, radius));
+        }
+
+        _groupMoveDestinations.Clear();
+        foreach (var destination in FormationMath.CreateMoveDestinations(
+            _groupMoveFormationUnits,
+            command.Target.X,
+            command.Target.Y,
+            world.WorldWidth,
+            world.WorldHeight))
+        {
+            _groupMoveDestinations[destination.Id] = destination;
+        }
+
+        foreach (var entity in _groupOrderMembers)
+        {
+            if (!_groupMoveDestinations.TryGetValue(entity.Id.Value, out var slot))
             {
                 continue;
             }
@@ -213,6 +219,10 @@ public sealed partial class CommandSystem
                 entity.Components.Set(weapon with { AttackTarget = default, AttackTargetIsManual = false, AutoReacquireCooldownRemaining = 0 });
             }
         }
+
+        _groupOrderMembers.Clear();
+        _groupMoveFormationUnits.Clear();
+        _groupMoveDestinations.Clear();
     }
 
     private static void ApplyStop(EntityWorld world, OwnerId issuer, IReadOnlyList<EntityId> subjects, bool hold)
