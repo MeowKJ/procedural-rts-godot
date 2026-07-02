@@ -8,6 +8,8 @@ namespace ProceduralRts;
 
 public partial class BattleRoot
 {
+    private readonly List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer = [];
+
     public override void _Process(double delta)
     {
         _processStopwatch.Restart();
@@ -196,10 +198,15 @@ public partial class BattleRoot
         }
     }
 
-    private IEnumerable<(Vector2 Position, float SightRange)> UnitBattlefieldVisionSources()
+    private IReadOnlyList<(Vector2 Position, float SightRange)> UnitBattlefieldVisionSources()
     {
-        return _unitBattlefield.VisionSources(PlayerSlotId.One)
-            .Select(source => (source.Position, source.SightRange));
+        _unitBattlefieldVisionSourceBuffer.Clear();
+        foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))
+        {
+            _unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));
+        }
+
+        return _unitBattlefieldVisionSourceBuffer;
     }
 
     public override void _UnhandledInput(InputEvent @event)
