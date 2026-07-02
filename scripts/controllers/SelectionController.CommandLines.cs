@@ -9,15 +9,15 @@ public partial class SelectionController
     {
         DrawUnitBattlefieldCommandLines();
 
-        var selectedUnits = State.SelectedUnits()
-            .Where(unit => unit.CommandVisualTarget is not null || unit.FormationSlot is not null)
-            .ToList();
+        CollectLegacyCommandLineUnits(_legacyCommandLineUnitBuffer);
+        var selectedUnits = _legacyCommandLineUnitBuffer;
         if (selectedUnits.Count > 0)
         {
             var lineWidth = SelectionMath.ScreenPixelsToWorld(1.2f, Camera.Zoom.X);
             var markerRadius = SelectionMath.ScreenPixelsToWorld(8.5f, Camera.Zoom.X);
             var cross = SelectionMath.ScreenPixelsToWorld(7f, Camera.Zoom.X);
-            var targetMarkers = new Dictionary<string, (Vector2 Position, Color Accent, float Pulse)>();
+            var targetMarkers = _commandLineTargetMarkers;
+            targetMarkers.Clear();
 
             foreach (var unit in selectedUnits)
             {
@@ -37,7 +37,7 @@ public partial class SelectionController
                         SelectionMath.ScreenPixelsToWorld(6, Camera.Zoom.X));
                 }
 
-                var key = $"{Mathf.RoundToInt(visualTarget.X / 4f)},{Mathf.RoundToInt(visualTarget.Y / 4f)}";
+                var key = CommandLineTargetKey(visualTarget);
                 if (!targetMarkers.TryGetValue(key, out var marker) || marker.Pulse < unit.CommandPulse)
                 {
                     targetMarkers[key] = (visualTarget, accent, unit.CommandPulse);
@@ -107,9 +107,8 @@ public partial class SelectionController
             return;
         }
 
-        var selectedUnits = UnitBattlefield!.SelectedUnits(LocalPlayerSlotId)
-            .Where(unit => unit.CommandVisualTarget is not null || unit.FormationSlot is not null)
-            .ToList();
+        CollectRuntimeCommandLineUnits(_runtimeCommandLineUnitBuffer);
+        var selectedUnits = _runtimeCommandLineUnitBuffer;
         if (selectedUnits.Count == 0)
         {
             return;
@@ -118,12 +117,14 @@ public partial class SelectionController
         var lineWidth = SelectionMath.ScreenPixelsToWorld(1.2f, Camera.Zoom.X);
         var markerRadius = SelectionMath.ScreenPixelsToWorld(8.5f, Camera.Zoom.X);
         var cross = SelectionMath.ScreenPixelsToWorld(7f, Camera.Zoom.X);
-        var targetMarkers = new Dictionary<string, (Vector2 Position, Color Accent, float Pulse)>();
+        var targetMarkers = _commandLineTargetMarkers;
+        var battlefield = UnitBattlefield!;
+        targetMarkers.Clear();
 
         foreach (var unit in selectedUnits)
         {
             var visualTarget = unit.CommandVisualTarget ?? unit.FormationSlot!.Value;
-            var accent = UnitRelationAccent(UnitBattlefield.Relations.Relation(LocalPlayerSlotId, unit.PlayerSlotId));
+            var accent = UnitRelationAccent(battlefield.Relations.Relation(LocalPlayerSlotId, unit.PlayerSlotId));
             if (unit.Position.DistanceTo(visualTarget) > markerRadius * 1.4f)
             {
                 DrawDashedWorldLine(
@@ -135,7 +136,7 @@ public partial class SelectionController
                     SelectionMath.ScreenPixelsToWorld(6, Camera.Zoom.X));
             }
 
-            var key = $"{Mathf.RoundToInt(visualTarget.X / 4f)},{Mathf.RoundToInt(visualTarget.Y / 4f)}";
+            var key = CommandLineTargetKey(visualTarget);
             if (!targetMarkers.TryGetValue(key, out var marker) || marker.Pulse < unit.CommandPulse)
             {
                 targetMarkers[key] = (visualTarget, accent, unit.CommandPulse);

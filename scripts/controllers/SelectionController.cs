@@ -34,6 +34,9 @@ public partial class SelectionController : Node2D
     private BuildingModel? _hoveredBuilding;
     private ResourceFieldModel? _hoveredResourceField;
     private readonly List<UnitModel> _legacySelectedUnitCommandBuffer = [];
+    private readonly List<UnitModel> _legacyCommandLineUnitBuffer = [];
+    private readonly List<UnitInstance> _runtimeCommandLineUnitBuffer = [];
+    private readonly Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers = [];
     private float _redrawTimer;
 
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
