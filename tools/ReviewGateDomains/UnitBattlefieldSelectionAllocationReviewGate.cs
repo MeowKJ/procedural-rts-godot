@@ -1,0 +1,53 @@
+static class UnitBattlefieldSelectionAllocationReviewGate
+{
+    public static void Check(string root, GateResult result)
+    {
+        RequireUnitBattlefieldSelectionBuffers(root, result);
+        RequireUnitBattlefieldCursorPickLoops(root, result);
+    }
+
+    private static void RequireUnitBattlefieldSelectionBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "HashSet<EntityId> _selectionEntityBuffer", "UnitBattlefield selection commands must reuse the selection entity buffer.", result);
+        RequireText(battlefield, "List<UnitInstance> _selectionUnitBuffer", "UnitBattlefield selection commands must reuse selected-unit storage.", result);
+
+        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
+        RequireText(picking, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Unit selection paths must prepare the reusable selection buffer.", result);
+        RequireText(picking, "PrepareBuildingSelectionBuffer(playerSlotId, additive)", "Building selection paths must prepare the reusable selection buffer.", result);
+        RequireText(picking, "SubmitSelectionBuffer(playerSlotId)", "Selection paths must submit and clear the reusable selection buffer.", result);
+        RequireText(picking, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
+        ForbidText(picking, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
+        ForbidText(picking, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
+
+        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
+        RequireText(commands, "ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect)", "Rect selection must compute economy intent without temporary unit lists.", result);
+        RequireText(commands, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Rect selection must reuse the existing selection entity buffer.", result);
+        RequireText(commands, "CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer)", "Id selection must fill the reusable selected-unit buffer.", result);
+        RequireText(commands, "return _selectionUnitBuffer;", "Id selection must return the reusable selected-unit buffer used by current callers.", result);
+        ForbidText(commands, "var unitsInRect = Units", "Rect selection must not allocate a units-in-rect list.", result);
+        ForbidText(commands, "var economyUnits = unitsInRect", "Rect selection must not allocate an economy-unit list.", result);
+        ForbidText(commands, "var nonEconomyUnits = unitsInRect", "Rect selection must not allocate a combat-unit list.", result);
+        ForbidText(commands, "SelectedUnits(playerSlotId).Select(unit => unit.EntityId).ToHashSet()", "Rect selection must not allocate additive selected-id sets.", result);
+        ForbidText(commands, "return SelectedUnits(playerSlotId).ToList();", "Id selection must not allocate a selected-unit return list.", result);
+    }
+
+    private static void RequireUnitBattlefieldCursorPickLoops(string root, GateResult result)
+    {
+        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PickingQueries.cs");
+        RequireText(picking, "NearestOwnedUnit", "UnitBattlefield cursor pick queries must use explicit nearest-unit scans.", result);
+        RequireText(picking, "NearestBuildingTargetId", "UnitBattlefield cursor pick queries must use an explicit nearest-building scan.", result);
+        RequireText(picking, "NearestResourceField", "UnitBattlefield resource pick queries must use an explicit nearest-field scan.", result);
+        ForbidText(picking, ".OrderBy(", "UnitBattlefield cursor pick helpers must not allocate ordered LINQ queries.", result);
+        ForbidText(picking, ".Where(", "UnitBattlefield cursor pick helpers must not allocate LINQ filters.", result);
+        ForbidText(picking, "Mathf.Pow", "UnitBattlefield cursor pick helpers must square radii directly.", result);
+
+        var selectionPicking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SelectionPicking.cs");
+        ForbidText(selectionPicking, ".OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))", "Unit pick methods must not allocate sorting chains.", result);
+        ForbidText(selectionPicking, ".Select(BuildingSnapshot)", "Building pick methods must not allocate snapshot projection chains.", result);
+
+        var coreQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CoreQueries.cs");
+        ForbidText(coreQueries, ".OrderBy(field => field.Position.DistanceSquaredTo(worldPoint))", "Resource pick must not allocate sorting chains.", result);
+    }
+}

@@ -34,6 +34,7 @@ public sealed partial class UnitBattlefield
     private readonly HashSet<int> _constructionEntityIdsBefore = [];
     private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
+    private readonly List<UnitInstance> _selectionUnitBuffer = [];
     private readonly HashSet<int> _unitCommandIdBuffer = [];
     private readonly List<UnitInstance> _unitCommandBuffer = [];
     private readonly List<EntityId> _unitCommandEntityBuffer = [];

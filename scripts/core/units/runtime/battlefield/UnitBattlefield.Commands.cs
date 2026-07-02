@@ -7,43 +7,37 @@ public sealed partial class UnitBattlefield
     public int SelectRect(PlayerSlotId playerSlotId, Rect2 worldRect, bool additive)
     {
         var normalizedRect = worldRect.Abs();
-        var unitsInRect = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && UnitOverlapsSelectionRect(normalizedRect, unit))
-            .ToList();
-        var economyUnits = unitsInRect
-            .Where(unit => unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
-            .ToList();
-        var nonEconomyUnits = unitsInRect
-            .Where(unit => !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
-            .ToList();
-        var includeEconomy = ShouldIncludeEconomyInSelectionRect(normalizedRect, economyUnits, nonEconomyUnits);
-
-        var selected = additive
-            ? SelectedUnits(playerSlotId).Select(unit => unit.EntityId).ToHashSet()
-            : new HashSet<EntityId>();
-        foreach (var unit in Units.Where(unit => unit.PlayerSlotId == playerSlotId))
+        var includeEconomy = ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect);
+        PrepareUnitSelectionBuffer(playerSlotId, additive);
+        foreach (var unit in Units)
         {
+            if (unit.PlayerSlotId != playerSlotId)
+            {
+                continue;
+            }
+
             var selectableByBox = UnitOverlapsSelectionRect(normalizedRect, unit)
                 && (!unit.Spec.RoleTags.Contains(UnitRoleTag.Economy) || includeEconomy);
             if (selectableByBox)
             {
-                selected.Add(unit.EntityId);
+                _selectionEntityBuffer.Add(unit.EntityId);
             }
         }
 
-        return SubmitSelectionCommand(playerSlotId, selected);
+        return SubmitSelectionBuffer(playerSlotId);
     }
 
     public IReadOnlyList<UnitInstance> SelectUnitsByIds(PlayerSlotId playerSlotId, IEnumerable<int> unitIds)
     {
-        var requestedIds = unitIds.ToHashSet();
-        var selectedEntityIds = Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && requestedIds.Contains(unit.Id))
-            .OrderBy(unit => unit.Id)
-            .Select(unit => unit.EntityId)
-            .ToList();
-        SubmitSelectionCommand(playerSlotId, selectedEntityIds);
-        return SelectedUnits(playerSlotId).ToList();
+        CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer);
+        _selectionEntityBuffer.Clear();
+        foreach (var unit in _selectionUnitBuffer)
+        {
+            _selectionEntityBuffer.Add(unit.EntityId);
+        }
+
+        SubmitSelectionBuffer(playerSlotId);
+        return _selectionUnitBuffer;
     }
 
     public void CommandMoveSelected(PlayerSlotId playerSlotId, Vector2 target, Vector2 worldSize, MoveCommandMode mode = MoveCommandMode.Direct)
@@ -248,6 +242,79 @@ public sealed partial class UnitBattlefield
             targetEntity.Id,
             CombatTargetKind.Building));
         return orderedUnits.Count;
+    }
+
+    private void CollectRequestedSelectionUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, List<UnitInstance> result)
+    {
+        _unitCommandIdBuffer.Clear();
+        foreach (var unitId in unitIds)
+        {
+            _unitCommandIdBuffer.Add(unitId);
+        }
+
+        result.Clear();
+        if (_unitCommandIdBuffer.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && _unitCommandIdBuffer.Contains(unit.Id))
+            {
+                result.Add(unit);
+            }
+        }
+
+        result.Sort(CompareUnitInstanceIds);
+    }
+
+    private bool ShouldIncludeEconomyInSelectionRect(PlayerSlotId playerSlotId, Rect2 worldRect)
+    {
+        var economyCount = 0;
+        var nonEconomyCount = 0;
+        var nearestEconomy = float.PositiveInfinity;
+        var nearestNonEconomy = float.PositiveInfinity;
+        var center = worldRect.Position + worldRect.Size / 2f;
+
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId != playerSlotId || !UnitOverlapsSelectionRect(worldRect, unit))
+            {
+                continue;
+            }
+
+            var distanceToCenter = unit.Position.DistanceTo(center);
+            if (unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
+            {
+                economyCount++;
+                nearestEconomy = MathF.Min(nearestEconomy, distanceToCenter);
+            }
+            else
+            {
+                nonEconomyCount++;
+                nearestNonEconomy = MathF.Min(nearestNonEconomy, distanceToCenter);
+            }
+        }
+
+        if (economyCount == 0)
+        {
+            return false;
+        }
+
+        if (nonEconomyCount == 0 || economyCount > nonEconomyCount)
+        {
+            return true;
+        }
+
+        var rectSize = worldRect.Size;
+        var maxSide = Mathf.Max(Mathf.Abs(rectSize.X), Mathf.Abs(rectSize.Y));
+        if (maxSide > SelectionHarvesterIntentMaxSize)
+        {
+            return false;
+        }
+
+        return nearestEconomy <= nearestNonEconomy + SelectionEconomyIntentCenterMargin;
     }
 
 }
