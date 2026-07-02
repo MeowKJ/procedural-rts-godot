@@ -5,6 +5,9 @@ public sealed record SequencedCommandEnvelope(long Sequence, EntityCommand Comma
 public sealed class EntityCommandBuffer
 {
     private readonly List<SequencedCommandEnvelope> _commands = [];
+    private readonly List<SequencedCommandEnvelope> _snapshotBuffer = [];
+    private readonly List<SequencedCommandEnvelope> _readyBuffer = [];
+    private readonly HashSet<long> _readySequences = [];
     private long _nextSequence = 1;
 
     public int Count => _commands.Count;
@@ -18,26 +21,54 @@ public sealed class EntityCommandBuffer
 
     public IReadOnlyList<SequencedCommandEnvelope> Snapshot()
     {
-        return _commands
-            .OrderBy(item => item.Command.Tick)
-            .ThenBy(item => item.Command.Issuer.Value)
-            .ThenBy(item => item.Sequence)
-            .ToList();
+        CopyOrderedCommandsInto(_snapshotBuffer);
+        return _snapshotBuffer.ToArray();
     }
 
     public IReadOnlyList<SequencedCommandEnvelope> DrainUpToTick(int tick)
     {
-        var ready = Snapshot()
-            .Where(item => item.Command.Tick <= tick)
-            .ToList();
-
-        if (ready.Count == 0)
+        CopyOrderedCommandsInto(_snapshotBuffer);
+        _readyBuffer.Clear();
+        _readySequences.Clear();
+        foreach (var item in _snapshotBuffer)
         {
-            return ready;
+            if (item.Command.Tick <= tick)
+            {
+                _readyBuffer.Add(item);
+                _readySequences.Add(item.Sequence);
+            }
         }
 
-        var readySequences = ready.Select(item => item.Sequence).ToHashSet();
-        _commands.RemoveAll(item => readySequences.Contains(item.Sequence));
-        return ready;
+        if (_readyBuffer.Count == 0)
+        {
+            return _readyBuffer;
+        }
+
+        _commands.RemoveAll(IsReadySequence);
+        return _readyBuffer;
+    }
+
+    private void CopyOrderedCommandsInto(List<SequencedCommandEnvelope> result)
+    {
+        result.Clear();
+        result.AddRange(_commands);
+        result.Sort(CompareCommands);
+    }
+
+    private bool IsReadySequence(SequencedCommandEnvelope item)
+    {
+        return _readySequences.Contains(item.Sequence);
+    }
+
+    private static int CompareCommands(SequencedCommandEnvelope left, SequencedCommandEnvelope right)
+    {
+        var tick = left.Command.Tick.CompareTo(right.Command.Tick);
+        if (tick != 0)
+        {
+            return tick;
+        }
+
+        var issuer = left.Command.Issuer.Value.CompareTo(right.Command.Issuer.Value);
+        return issuer != 0 ? issuer : left.Sequence.CompareTo(right.Sequence);
     }
 }
