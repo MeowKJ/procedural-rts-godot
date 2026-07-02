@@ -101,11 +101,8 @@ public sealed partial class UnitBattlefield
 
     public bool EnqueueProduction(ProductionKind productionKind, PlayerSlotId playerSlotId, out string status)
     {
-        var producerId = CandidateProducerIds(productionKind, playerSlotId)
-            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)
-            .ThenBy(buildingId => buildingId)
-            .Select(buildingId => (int?)buildingId)
-            .FirstOrDefault();
+        CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds);
+        var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
         var designId = producerId is null ? FirstDesignIdFor(productionKind, playerSlotId) : ProductionDesignIdCore(producerId.Value, productionKind);
         var spec = designId is null ? null : UnitDesignCatalog.Spec(designId);
         if (producerId is null || spec is null)
@@ -175,11 +172,8 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var producerId = CandidateProducerIds(spec, playerSlotId)
-            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)
-            .ThenBy(buildingId => buildingId)
-            .Select(buildingId => (int?)buildingId)
-            .FirstOrDefault();
+        CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds);
+        var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
         if (producerId is null)
         {
             status = GameText.Format("production.needProducer", BuildSpecCatalog.For(spec.Production.ProducerKind).Label, spec.Label);
@@ -226,6 +220,26 @@ public sealed partial class UnitBattlefield
         ProductionQueued?.Invoke(producerSnapshot.Value, item);
         status = GameText.Format("production.queued", spec.Label, BuildSpecCatalog.For(producerSnapshot.Value.Kind).Label, cost, Credits(playerSlotId));
         return true;
+    }
+
+    private int? LeastQueuedProducerId(IReadOnlyList<int> producerIds)
+    {
+        int? bestProducerId = null;
+        var bestQueueCount = 0;
+        foreach (var producerId in producerIds)
+        {
+            var queueCount = BuildingProductionQueue(producerId).Count;
+            if (bestProducerId is not null
+                && (queueCount > bestQueueCount || (queueCount == bestQueueCount && producerId >= bestProducerId.Value)))
+            {
+                continue;
+            }
+
+            bestProducerId = producerId;
+            bestQueueCount = queueCount;
+        }
+
+        return bestProducerId;
     }
 
     public bool CancelFirstProduction(PlayerSlotId playerSlotId, out string status)

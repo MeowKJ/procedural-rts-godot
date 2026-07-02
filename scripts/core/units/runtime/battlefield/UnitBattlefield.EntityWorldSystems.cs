@@ -45,6 +45,26 @@ public sealed partial class UnitBattlefield
             .Select(building => building.Id);
     }
 
+    private void CollectCandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId, List<int> result)
+    {
+        result.Clear();
+        foreach (var buildingId in BuildingTargetIds())
+        {
+            if (BuildingSnapshot(buildingId) is not { } building
+                || building.PlayerSlotId != playerSlotId
+                || building.Hp <= 0
+                || !BuildingPowered(building.Id)
+                || BuildingBuildProgress(building.Id) < 1
+                || ProductionDesignIdCore(building.Id, productionKind) is not { } designId
+                || UnitDesignCatalog.Spec(designId).Production?.ProducerKind != building.Kind)
+            {
+                continue;
+            }
+
+            result.Add(building.Id);
+        }
+    }
+
     private IEnumerable<int> CandidateProducerIds(UnitSpec spec, PlayerSlotId playerSlotId)
     {
         if (spec.Production is null)
@@ -62,6 +82,32 @@ public sealed partial class UnitBattlefield
             .Where(building => building.Kind == spec.Production.ProducerKind)
             .Where(building => ProducerTechTier(building.Kind) >= spec.Stats.TechTier)
             .Select(building => building.Id);
+    }
+
+    private void CollectCandidateProducerIds(UnitSpec spec, PlayerSlotId playerSlotId, List<int> result)
+    {
+        result.Clear();
+        if (spec.Production is null)
+        {
+            return;
+        }
+
+        foreach (var buildingId in BuildingTargetIds())
+        {
+            if (BuildingSnapshot(buildingId) is not { } building
+                || building.PlayerSlotId != playerSlotId
+                || building.Faction != spec.Faction
+                || building.Hp <= 0
+                || !BuildingPowered(building.Id)
+                || BuildingBuildProgress(building.Id) < 1
+                || building.Kind != spec.Production.ProducerKind
+                || ProducerTechTier(building.Kind) < spec.Stats.TechTier)
+            {
+                continue;
+            }
+
+            result.Add(building.Id);
+        }
     }
 
     private string? ProductionDesignIdCore(int buildingId, ProductionKind productionKind)
