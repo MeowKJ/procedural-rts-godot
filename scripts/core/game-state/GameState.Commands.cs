@@ -177,7 +177,8 @@ public sealed partial class GameState
 
     public void SetSelectedStance(UnitStance stance)
     {
-        foreach (var unit in SelectedUnits())
+        CollectSelectedCommandUnits(_legacySelectedCommandUnits);
+        foreach (var unit in _legacySelectedCommandUnits)
         {
             unit.Stance = stance;
             unit.MoveMode = stance == UnitStance.Ignore ? MoveCommandMode.Ignore : MoveCommandMode.Direct;

@@ -148,6 +148,7 @@ static class GameStateAllocationReviewGate
         RequireText(commands, "CollectSelectedCommandUnits(_legacySelectedCommandUnits)", "Legacy move command must fill reusable selected-unit storage.", result);
         RequireText(commands, "PrepareLegacyMoveCommandBuffers(_legacySelectedCommandUnits, target)", "Legacy move command must prepare reusable formation and corridor buffers.", result);
         RequireText(commands, "CollectSelectedAttackCommandUnits(targetKind, targetId, _legacySelectedCommandUnits)", "Legacy attack command must fill reusable selected-attacker storage.", result);
+        RequireText(commands, "CollectSelectedCommandUnits(_legacySelectedCommandUnits);\n        foreach (var unit in _legacySelectedCommandUnits)", "Legacy stance command must reuse selected-unit command storage.", result);
         var commandBuffers = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.CommandBuffers.cs");
         RequireText(commandBuffers, "FormationMath.CreateMoveDestinationsInto(", "Legacy move command must use caller-owned formation buffers.", result);
         RequireText(commandBuffers, "CollectLegacyMoveDomainAssignments(selected, target, MovementDomain.Land", "Legacy move command must scan movement domains without GroupBy.", result);
@@ -159,7 +160,7 @@ static class GameStateAllocationReviewGate
         ForbidText(commands, "SelectedUnits()\n            .Where(IsHarvesterUnit)\n            .ToList()", "Legacy harvest command must not materialize selected harvester lists.", result);
         ForbidText(commands, "SelectedBuildings().ToList()", "Legacy rally command must not materialize selected building lists.", result);
         ForbidText(commands, ".Where(IsProductionBuilding)\n            .ToList()", "Legacy rally command must not materialize selected producer lists.", result);
-        ForbidText(commands, "SelectedUnits().ToList()", "Legacy move command must not materialize selected unit lists.", result);
+        ForbidText(commands, "SelectedUnits().ToList()", "Legacy move command must not materialize selected unit lists.", result); ForbidText(commands, "foreach (var unit in SelectedUnits())", "Legacy stance command must not allocate selected-unit iterators.", result);
         ForbidText(commands, ".Select(unit => new FormationUnit", "Legacy move command must not allocate formation projection chains.", result);
         ForbidText(commands, ".ToDictionary(destination => destination.Id)", "Legacy move command must not allocate destination dictionaries per command.", result);
         ForbidText(commandBuffers, ".GroupBy(unit => unit.RuntimeDescriptor.MovementDomain)", "Legacy move command must not allocate movement-domain groupings.", result);
