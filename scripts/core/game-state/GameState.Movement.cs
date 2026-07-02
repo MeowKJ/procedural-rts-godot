@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class GameState
 {
-    private void UpdateMovement(UnitModel unit, float dt, IReadOnlyDictionary<GridObstacle, IReadOnlyList<LocalAvoidanceBody>> localAvoidance)
+    private void UpdateMovement(UnitModel unit, float dt, IReadOnlyDictionary<GridObstacle, List<LocalAvoidanceBody>> localAvoidance)
     {
         if (unit.AttackTargetId is not null)
         {

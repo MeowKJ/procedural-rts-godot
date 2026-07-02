@@ -93,27 +93,31 @@ public sealed partial class GameState
         unit.MovementState = UnitMovementState.Idle;
     }
 
-    private IReadOnlyDictionary<GridObstacle, IReadOnlyList<LocalAvoidanceBody>> BuildLocalAvoidanceHash()
+    private IReadOnlyDictionary<GridObstacle, List<LocalAvoidanceBody>> BuildLocalAvoidanceHash()
     {
-        return LocalAvoidanceMath.BuildHash(
-            Units
-                .Where(unit => unit.Hp > 0)
-                .Select(unit =>
-                {
-                    var descriptor = unit.RuntimeDescriptor;
-                    return new LocalAvoidanceBody(
-                        unit.Id,
-                        unit.Position.X,
-                        unit.Position.Y,
-                        descriptor.Radius,
-                        unit.AnchorPriority,
-                        unit.CanBeDisplaced);
-                })
-                .ToList(),
-            LocalAvoidanceCellSize);
+        _legacyLocalAvoidanceBodies.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Hp <= 0)
+            {
+                continue;
+            }
+
+            var descriptor = unit.RuntimeDescriptor;
+            _legacyLocalAvoidanceBodies.Add(new LocalAvoidanceBody(
+                unit.Id,
+                unit.Position.X,
+                unit.Position.Y,
+                descriptor.Radius,
+                unit.AnchorPriority,
+                unit.CanBeDisplaced));
+        }
+
+        LocalAvoidanceMath.BuildHashInto(_legacyLocalAvoidanceBodies, LocalAvoidanceCellSize, _legacyLocalAvoidanceHash);
+        return _legacyLocalAvoidanceHash;
     }
 
-    private Vector2 LocalAvoidanceVector(UnitModel unit, IReadOnlyDictionary<GridObstacle, IReadOnlyList<LocalAvoidanceBody>> localAvoidance)
+    private Vector2 LocalAvoidanceVector(UnitModel unit, IReadOnlyDictionary<GridObstacle, List<LocalAvoidanceBody>> localAvoidance)
     {
         var descriptor = unit.RuntimeDescriptor;
         var avoidance = LocalAvoidanceMath.ResolveVector(

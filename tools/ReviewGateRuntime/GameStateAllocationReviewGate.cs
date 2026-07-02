@@ -18,6 +18,8 @@ static class GameStateAllocationReviewGate
         RequireText(gameState, "HashSet<GridObstacle> _legacyPathObstacleSet", "Legacy GameState path obstacles must reuse de-duplication storage.", result);
         RequireText(gameState, "Dictionary<GridObstacle, DynamicBlobObstacleBounds> _legacyDenseBlobObstacles", "Legacy GameState dense-blob path obstacles must reuse aggregation storage.", result);
         RequireText(gameState, "List<(Vector2 Position, float SightRange)> _legacyFogVisionSources", "Legacy GameState fog updates must reuse vision source storage.", result);
+        RequireText(gameState, "List<LocalAvoidanceBody> _legacyLocalAvoidanceBodies", "Legacy GameState local avoidance must reuse body storage.", result);
+        RequireText(gameState, "Dictionary<GridObstacle, List<LocalAvoidanceBody>> _legacyLocalAvoidanceHash", "Legacy GameState local avoidance must reuse hash bucket storage.", result);
 
         var economy = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.EconomyBuild.cs");
         RequireText(economy, "CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer)", "Legacy GameState production option states must fill reusable spec storage.", result);
@@ -68,6 +70,12 @@ static class GameStateAllocationReviewGate
         RequireText(fogMap, "visionSources as IReadOnlyList<(Vector2 Position, float SightRange)>", "FogOfWarMap.Update must not copy caller-owned source lists.", result);
         ForbidText(fogMap, "visionSources as (Vector2 Position, float SightRange)[] ?? visionSources.ToArray()", "FogOfWarMap.Update must not only recognize arrays as no-copy inputs.", result);
         ForbidText(fogMap, "sources.Length", "FogOfWarMap.Update must use IReadOnlyList.Count for source buffers.", result);
+
+        var pathingAvoidance = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathingAvoidance.cs");
+        RequireText(pathingAvoidance, "LocalAvoidanceMath.BuildHashInto(_legacyLocalAvoidanceBodies, LocalAvoidanceCellSize, _legacyLocalAvoidanceHash)", "Legacy GameState local avoidance must fill the reusable hash bucket dictionary.", result);
+        ForbidText(pathingAvoidance, "LocalAvoidanceMath.BuildHash(", "Legacy GameState local avoidance must not use the allocating hash copy path.", result);
+        ForbidText(pathingAvoidance, ".Where(unit => unit.Hp > 0)", "Legacy GameState local avoidance must not allocate alive-unit filter queries.", result);
+        ForbidText(pathingAvoidance, ".Select(unit =>", "Legacy GameState local avoidance must not allocate body projection queries.", result);
 
         var targeting = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.TargetingThreat.cs");
         var targetScans = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.TargetScans.cs");
