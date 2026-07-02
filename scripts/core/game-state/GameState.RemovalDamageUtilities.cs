@@ -13,38 +13,44 @@ public sealed partial class GameState
 
     private void RemoveDeadUnits()
     {
-        var removedUnits = Units.Where(unit => unit.Hp <= 0).ToList();
-        var removedIds = removedUnits.Select(unit => unit.Id).ToList();
-        if (removedIds.Count == 0)
+        _legacyUnitDeathBuffer.Clear();
+        _legacyRemovedUnitIds.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.Hp > 0)
+            {
+                continue;
+            }
+
+            var descriptor = unit.RuntimeDescriptor;
+            _legacyUnitDeathBuffer.Add(new UnitDeathInfo(
+                unit.Id,
+                unit.DesignId,
+                unit.Owner,
+                unit.FactionId,
+                unit.Position,
+                descriptor.Radius,
+                descriptor.WeightClass,
+                descriptor.MovementDomain,
+                unit.LastDamageAmmoKind,
+                unit.DeathOverkillDamage));
+            _legacyRemovedUnitIds.Add(unit.Id);
+        }
+
+        if (_legacyUnitDeathBuffer.Count == 0)
         {
             return;
         }
 
-        var deaths = removedUnits
-            .Select(unit =>
-            {
-                var descriptor = unit.RuntimeDescriptor;
-                return new UnitDeathInfo(
-                    unit.Id,
-                    unit.DesignId,
-                    unit.Owner,
-                    unit.FactionId,
-                    unit.Position,
-                    descriptor.Radius,
-                    descriptor.WeightClass,
-                    descriptor.MovementDomain,
-                    unit.LastDamageAmmoKind,
-                    unit.DeathOverkillDamage);
-            })
-            .ToList();
-
-        Units.RemoveAll(unit => removedIds.Contains(unit.Id));
-        Projectiles.RemoveAll(projectile => (projectile.SourceKind == CombatSourceKind.Unit && removedIds.Contains(projectile.SourceId)) || (projectile.TargetKind == CombatTargetKind.Unit && removedIds.Contains(projectile.TargetId)));
-        Beams.RemoveAll(beam => (beam.SourceKind == CombatSourceKind.Unit && removedIds.Contains(beam.SourceId)) || (beam.TargetKind == CombatTargetKind.Unit && removedIds.Contains(beam.TargetId)));
+        Units.RemoveAll(IsLegacyRemovedUnit);
+        Projectiles.RemoveAll(IsLegacyProjectileLinkedToRemovedUnit);
+        Beams.RemoveAll(IsLegacyBeamLinkedToRemovedUnit);
 
         foreach (var unit in Units)
         {
-            if (unit.AttackTargetId is not null && unit.AttackTargetKind == CombatTargetKind.Unit && removedIds.Contains(unit.AttackTargetId.Value))
+            if (unit.AttackTargetId is not null
+                && unit.AttackTargetKind == CombatTargetKind.Unit
+                && _legacyRemovedUnitIds.Contains(unit.AttackTargetId.Value))
             {
                 ClearAttackTarget(unit);
                 ClearMoveTarget(unit);
@@ -53,39 +59,56 @@ public sealed partial class GameState
 
         foreach (var building in Buildings)
         {
-            if (building.AttackTargetId is not null && building.AttackTargetKind == CombatTargetKind.Unit && removedIds.Contains(building.AttackTargetId.Value))
+            if (building.AttackTargetId is not null
+                && building.AttackTargetKind == CombatTargetKind.Unit
+                && _legacyRemovedUnitIds.Contains(building.AttackTargetId.Value))
             {
                 ClearBuildingAttackTarget(building);
             }
         }
 
-        UnitsRemoved?.Invoke(deaths);
+        UnitsRemoved?.Invoke(_legacyUnitDeathBuffer);
     }
 
     private void RemoveDeadBuildings()
     {
-        var removedIds = Buildings.Where(building => building.Hp <= 0).Select(building => building.Id).ToList();
-        if (removedIds.Count == 0)
+        _legacyRemovedBuildingIds.Clear();
+        _legacyRemovedBuildingIdSet.Clear();
+        _legacyRemovedBuildings.Clear();
+        foreach (var building in Buildings)
+        {
+            if (building.Hp > 0)
+            {
+                continue;
+            }
+
+            _legacyRemovedBuildingIds.Add(building.Id);
+            _legacyRemovedBuildingIdSet.Add(building.Id);
+            _legacyRemovedBuildings.Add(building);
+        }
+
+        if (_legacyRemovedBuildingIds.Count == 0)
         {
             return;
         }
 
-        var removedBuildings = Buildings.Where(building => removedIds.Contains(building.Id)).ToList();
-        Buildings.RemoveAll(building => removedIds.Contains(building.Id));
-        Projectiles.RemoveAll(projectile => (projectile.SourceKind == CombatSourceKind.Building && removedIds.Contains(projectile.SourceId)) || (projectile.TargetKind == CombatTargetKind.Building && removedIds.Contains(projectile.TargetId)));
-        Beams.RemoveAll(beam => (beam.SourceKind == CombatSourceKind.Building && removedIds.Contains(beam.SourceId)) || (beam.TargetKind == CombatTargetKind.Building && removedIds.Contains(beam.TargetId)));
+        Buildings.RemoveAll(IsLegacyRemovedBuilding);
+        Projectiles.RemoveAll(IsLegacyProjectileLinkedToRemovedBuilding);
+        Beams.RemoveAll(IsLegacyBeamLinkedToRemovedBuilding);
 
         foreach (var unit in Units)
         {
-            if (unit.AttackTargetId is not null && unit.AttackTargetKind == CombatTargetKind.Building && removedIds.Contains(unit.AttackTargetId.Value))
+            if (unit.AttackTargetId is not null
+                && unit.AttackTargetKind == CombatTargetKind.Building
+                && _legacyRemovedBuildingIdSet.Contains(unit.AttackTargetId.Value))
             {
                 ClearAttackTarget(unit);
                 ClearMoveTarget(unit);
             }
         }
 
-        BuildingsRemoved?.Invoke(removedIds);
-        UpdateOutcomeAfterRemovedBuildings(removedBuildings);
+        BuildingsRemoved?.Invoke(_legacyRemovedBuildingIds);
+        UpdateOutcomeAfterRemovedBuildings(_legacyRemovedBuildings);
     }
 
     private void UpdateOutcomeAfterRemovedBuildings(IReadOnlyList<BuildingModel> removedBuildings)
@@ -95,18 +118,59 @@ public sealed partial class GameState
             return;
         }
 
-        if (removedBuildings.Any(building => building.Kind == BuildingDesignIds.Headquarters && IsHostileToPlayer(building)))
+        foreach (var building in removedBuildings)
         {
-            Outcome = GameOutcome.Victory;
-            OutcomeChanged?.Invoke(Outcome);
-            return;
+            if (building.Kind == BuildingDesignIds.Headquarters && IsHostileToPlayer(building))
+            {
+                Outcome = GameOutcome.Victory;
+                OutcomeChanged?.Invoke(Outcome);
+                return;
+            }
         }
 
-        if (removedBuildings.Any(building => building.Kind == BuildingDesignIds.Headquarters && IsAlliedWithPlayer(building)))
+        foreach (var building in removedBuildings)
         {
-            Outcome = GameOutcome.Defeat;
-            OutcomeChanged?.Invoke(Outcome);
+            if (building.Kind == BuildingDesignIds.Headquarters && IsAlliedWithPlayer(building))
+            {
+                Outcome = GameOutcome.Defeat;
+                OutcomeChanged?.Invoke(Outcome);
+                return;
+            }
         }
+    }
+
+    private bool IsLegacyRemovedUnit(UnitModel unit)
+    {
+        return _legacyRemovedUnitIds.Contains(unit.Id);
+    }
+
+    private bool IsLegacyProjectileLinkedToRemovedUnit(ProjectileModel projectile)
+    {
+        return (projectile.SourceKind == CombatSourceKind.Unit && _legacyRemovedUnitIds.Contains(projectile.SourceId))
+            || (projectile.TargetKind == CombatTargetKind.Unit && _legacyRemovedUnitIds.Contains(projectile.TargetId));
+    }
+
+    private bool IsLegacyBeamLinkedToRemovedUnit(BeamModel beam)
+    {
+        return (beam.SourceKind == CombatSourceKind.Unit && _legacyRemovedUnitIds.Contains(beam.SourceId))
+            || (beam.TargetKind == CombatTargetKind.Unit && _legacyRemovedUnitIds.Contains(beam.TargetId));
+    }
+
+    private bool IsLegacyRemovedBuilding(BuildingModel building)
+    {
+        return _legacyRemovedBuildingIdSet.Contains(building.Id);
+    }
+
+    private bool IsLegacyProjectileLinkedToRemovedBuilding(ProjectileModel projectile)
+    {
+        return (projectile.SourceKind == CombatSourceKind.Building && _legacyRemovedBuildingIdSet.Contains(projectile.SourceId))
+            || (projectile.TargetKind == CombatTargetKind.Building && _legacyRemovedBuildingIdSet.Contains(projectile.TargetId));
+    }
+
+    private bool IsLegacyBeamLinkedToRemovedBuilding(BeamModel beam)
+    {
+        return (beam.SourceKind == CombatSourceKind.Building && _legacyRemovedBuildingIdSet.Contains(beam.SourceId))
+            || (beam.TargetKind == CombatTargetKind.Building && _legacyRemovedBuildingIdSet.Contains(beam.TargetId));
     }
 
     private Owner? CombatTargetOwner(CombatTargetKind targetKind, int targetId)

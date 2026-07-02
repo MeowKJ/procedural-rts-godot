@@ -251,13 +251,30 @@ public sealed partial class GameState
 
     private BuildingModel? FindBestRefineryForHarvester(Owner owner, Vector2 position, int harvesterId)
     {
-        return Buildings
-            .Where(building => building.Owner == owner)
-            .Where(building => building.Kind == BuildingDesignIds.Refinery)
-            .Where(building => building.Hp > 0 && building.BuildProgress >= 1)
-            .OrderBy(building => RefineryDockLoad(building, harvesterId))
-            .ThenBy(building => building.Position.DistanceTo(position))
-            .FirstOrDefault();
+        BuildingModel? best = null;
+        var bestLoad = int.MaxValue;
+        var bestDistance = float.PositiveInfinity;
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner
+                || building.Kind != BuildingDesignIds.Refinery
+                || building.Hp <= 0
+                || building.BuildProgress < 1)
+            {
+                continue;
+            }
+
+            var load = RefineryDockLoad(building, harvesterId);
+            var distance = building.Position.DistanceTo(position);
+            if (load < bestLoad || (load == bestLoad && distance < bestDistance))
+            {
+                best = building;
+                bestLoad = load;
+                bestDistance = distance;
+            }
+        }
+
+        return best;
     }
 
     private static int RefineryDockLoad(BuildingModel refinery, int harvesterId)
@@ -294,8 +311,13 @@ public sealed partial class GameState
 
     private void ClearRefineryDockClaim(int harvesterId)
     {
-        foreach (var refinery in Buildings.Where(building => building.Kind == BuildingDesignIds.Refinery))
+        foreach (var refinery in Buildings)
         {
+            if (refinery.Kind != BuildingDesignIds.Refinery)
+            {
+                continue;
+            }
+
             if (refinery.DockReservedByHarvesterId == harvesterId)
             {
                 refinery.DockReservedByHarvesterId = null;

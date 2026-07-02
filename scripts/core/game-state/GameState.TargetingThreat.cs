@@ -94,12 +94,7 @@ public sealed partial class GameState
             ClearBuildingAttackTarget(building);
         }
 
-        var target = Units
-            .Where(unit => IsTargetableHostile(building.Owner, unit) && unit.Hp > 0)
-            .Where(unit => WeaponCanTarget(weapon, unit.RuntimeDescriptor))
-            .Where(unit => unit.Position.DistanceTo(building.Position) <= weapon.Range)
-            .OrderByDescending(unit => TargetScore(weapon, building.Position, CombatTargetKind.Unit, unit.Id, weapon.Range))
-            .FirstOrDefault();
+        var target = BestUnitTargetForWeapon(building.Owner, weapon, building.Position, weapon.Range, requirePositiveHp: true);
         if (target is null)
         {
             return;
@@ -112,12 +107,7 @@ public sealed partial class GameState
     private UnitModel? FindBestEnemyForWeapon(UnitModel unit, float range)
     {
         var weapon = Weapon(unit);
-        return Units
-            .Where(candidate => IsTargetableHostile(unit.Owner, candidate))
-            .Where(candidate => WeaponCanTarget(weapon, candidate.RuntimeDescriptor))
-            .Where(candidate => candidate.Position.DistanceTo(unit.Position) <= range)
-            .OrderByDescending(candidate => TargetScore(weapon, unit.Position, CombatTargetKind.Unit, candidate.Id, range))
-            .FirstOrDefault();
+        return BestUnitTargetForWeapon(unit.Owner, weapon, unit.Position, range, requirePositiveHp: false);
     }
 
     private bool CanUnitTarget(UnitModel unit, CombatTargetKind targetKind, int targetId)
