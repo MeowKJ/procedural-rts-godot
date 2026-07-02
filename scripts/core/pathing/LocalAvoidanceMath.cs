@@ -2,15 +2,6 @@ namespace ProceduralRts.Core;
 
 public static class LocalAvoidanceMath
 {
-    public static IReadOnlyDictionary<GridObstacle, IReadOnlyList<LocalAvoidanceBody>> BuildHash(
-        IReadOnlyList<LocalAvoidanceBody> bodies,
-        float cellSize)
-    {
-        var cells = new Dictionary<GridObstacle, List<LocalAvoidanceBody>>();
-        BuildHashInto(bodies, cellSize, cells);
-        return cells.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<LocalAvoidanceBody>)pair.Value);
-    }
-
     public static void BuildHashInto(
         IReadOnlyList<LocalAvoidanceBody> bodies,
         float cellSize,

@@ -80,7 +80,9 @@ static class GameStateAllocationReviewGate
         ForbidText(fogMap, "sources.Length", "FogOfWarMap.Update must use IReadOnlyList.Count for source buffers.", result);
 
         var pathingAvoidance = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathingAvoidance.cs");
+        var localAvoidance = ReviewGateSource.Read(root, "scripts", "core", "pathing", "LocalAvoidanceMath.cs");
         RequireText(pathingAvoidance, "LocalAvoidanceMath.BuildHashInto(_legacyLocalAvoidanceBodies, LocalAvoidanceCellSize, _legacyLocalAvoidanceHash)", "Legacy GameState local avoidance must fill the reusable hash bucket dictionary.", result);
+        ForbidText(localAvoidance, "public static IReadOnlyDictionary<GridObstacle, IReadOnlyList<LocalAvoidanceBody>> BuildHash", "LocalAvoidanceMath must not expose the retired allocating hash copy wrapper.", result);
         ForbidText(pathingAvoidance, "LocalAvoidanceMath.BuildHash(", "Legacy GameState local avoidance must not use the allocating hash copy path.", result);
         ForbidText(pathingAvoidance, ".Where(unit => unit.Hp > 0)", "Legacy GameState local avoidance must not allocate alive-unit filter queries.", result);
         ForbidText(pathingAvoidance, ".Select(unit =>", "Legacy GameState local avoidance must not allocate body projection queries.", result);
