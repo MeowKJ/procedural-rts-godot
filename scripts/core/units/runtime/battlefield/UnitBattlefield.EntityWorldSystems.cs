@@ -32,19 +32,6 @@ public sealed partial class UnitBattlefield
         AdoptUnmappedConstructedBuildings();
     }
 
-    private IEnumerable<int> CandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId)
-    {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Hp > 0 && BuildingPowered(building.Id) && BuildingBuildProgress(building.Id) >= 1)
-            .Where(building => ProductionDesignIdCore(building.Id, productionKind) is { } designId
-                && UnitDesignCatalog.Spec(designId).Production?.ProducerKind == building.Kind)
-            .Select(building => building.Id);
-    }
-
     private void CollectCandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId, List<int> result)
     {
         result.Clear();
@@ -63,25 +50,6 @@ public sealed partial class UnitBattlefield
 
             result.Add(building.Id);
         }
-    }
-
-    private IEnumerable<int> CandidateProducerIds(UnitSpec spec, PlayerSlotId playerSlotId)
-    {
-        if (spec.Production is null)
-        {
-            return [];
-        }
-
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Faction == spec.Faction)
-            .Where(building => building.Hp > 0 && BuildingPowered(building.Id) && BuildingBuildProgress(building.Id) >= 1)
-            .Where(building => building.Kind == spec.Production.ProducerKind)
-            .Where(building => ProducerTechTier(building.Kind) >= spec.Stats.TechTier)
-            .Select(building => building.Id);
     }
 
     private void CollectCandidateProducerIds(UnitSpec spec, PlayerSlotId playerSlotId, List<int> result)
@@ -136,14 +104,6 @@ public sealed partial class UnitBattlefield
             .Select(UnitDesignCatalog.Spec)
             .Any(spec => spec.Production?.ProducerKind == identity.Kind
                 && ProducerTechTier(identity.Kind) >= spec.Stats.TechTier);
-    }
-
-    private IEnumerable<UnitSpec> ProductionDesignSpecs(PlayerSlotId playerSlotId)
-    {
-        return UnitDesignFactionRosterCatalog.For(FactionForSlot(playerSlotId))
-            .PlayableDesignIds
-            .Select(UnitDesignCatalog.Spec)
-            .Where(spec => spec.Production is not null);
     }
 
     private static int ProducerTechTier(string kind)

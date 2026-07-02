@@ -38,8 +38,8 @@ Automated gates:
   Result: pass
   Evidence: ReviewGate simhot passed with 0 errors and 0 warnings.
 - Command: `dotnet run --project tools/ReviewGate/ReviewGate.csproj`
-  Result: pass pending final rerun
-  Evidence: Initial run only failed the expected validation-tool source budget lock before TODO/review evidence sync; final rerun is required before close.
+  Result: pass
+  Evidence: Full ReviewGate passed with 0 errors and 0 warnings after syncing validation-tool source budget evidence.
 
 Manual/visual gates:
 - Check: Visual QA
@@ -47,7 +47,7 @@ Manual/visual gates:
   Evidence: Queue summary allocation refactor only; no rendering or UI layout changed.
 
 Reviewer result:
-- Status: pass pending final full-gate rerun
+- Status: pass
 - Required fixes: none identified in queue summary/cancel paths.
 - Residual risks: production option state scans still contain producer-list materialization and remain tracked by #93.
 
