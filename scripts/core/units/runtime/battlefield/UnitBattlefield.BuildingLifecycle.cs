@@ -29,6 +29,8 @@ public sealed partial class UnitBattlefield
     {
         var spec = BuildSpecCatalog.For(kind);
         var requiresBuildAuthority = spec.RequiredProducer is not null || spec.RequiredBuildings.Count > 0;
+        CollectBuildingBuildAnchors(playerSlotId, _placementBuildAnchors);
+        CollectBuildingPlacementObstacles(_placementObstacles);
         return PlacementMath.ValidateBuildableArea(
             desiredPosition.X,
             desiredPosition.Y,
@@ -37,8 +39,8 @@ public sealed partial class UnitBattlefield
             WorldSize.X,
             WorldSize.Y,
             spec.PlacementDomain,
-            BuildingBuildAnchors(playerSlotId),
-            BuildingPlacementObstacles(),
+            _placementBuildAnchors,
+            _placementObstacles,
             terrainAt: TerrainLayerAt,
             requiresBuildAuthority: requiresBuildAuthority,
             padding: 12);

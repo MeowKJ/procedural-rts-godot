@@ -122,60 +122,51 @@ public sealed partial class UnitBattlefield
         return ProductionKindDesignBridge.ProductionKindFor(spec);
     }
 
-    private IReadOnlyList<SpawnObstacle> SpawnObstacles()
+    private void CollectBuildingBuildAnchors(PlayerSlotId playerSlotId, List<PlacementBuildAnchor> result)
     {
-        return Units
-            .Select(unit => new SpawnObstacle(unit.Position.X, unit.Position.Y, unit.Spec.Collision.Radius))
-            .Concat(BuildingTargetIds()
-                .Select(BuildingSnapshot)
-                .Where(snapshot => snapshot is not null)
-                .Select(snapshot => snapshot!.Value)
-                .Select(building => new SpawnObstacle(
-                    building.Position.X,
-                    building.Position.Y,
-                    BuildingTargetRadiusCore(building.Id, building.Kind))))
-            .ToList();
+        result.Clear();
+        foreach (var buildingId in BuildingTargetIds())
+        {
+            if (BuildingSnapshot(buildingId) is not { } building
+                || building.PlayerSlotId != playerSlotId
+                || building.Hp <= 0
+                || BuildingBuildProgress(building.Id) < 1)
+            {
+                continue;
+            }
+
+            var spec = BuildSpecCatalog.For(building.Kind);
+            if (spec.BuildRadius <= 0)
+            {
+                continue;
+            }
+
+            result.Add(new PlacementBuildAnchor(
+                building.Position.X,
+                building.Position.Y,
+                spec.BuildRadius,
+                BuildingPowered(building.Id)));
+        }
     }
 
-    private IReadOnlyList<PlacementBuildAnchor> BuildingBuildAnchors(PlayerSlotId playerSlotId)
+    private void CollectBuildingPlacementObstacles(List<PlacementObstacle> result)
     {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.PlayerSlotId == playerSlotId)
-            .Where(building => building.Hp > 0 && BuildingBuildProgress(building.Id) >= 1)
-            .Select(building =>
+        result.Clear();
+        foreach (var buildingId in BuildingTargetIds())
+        {
+            if (BuildingSnapshot(buildingId) is not { } building || building.Hp <= 0)
             {
-                var spec = BuildSpecCatalog.For(building.Kind);
-                return new PlacementBuildAnchor(
-                    building.Position.X,
-                    building.Position.Y,
-                    spec.BuildRadius,
-                    BuildingPowered(building.Id));
-            })
-            .Where(anchor => anchor.Radius > 0)
-            .ToList();
-    }
+                continue;
+            }
 
-    private IReadOnlyList<PlacementObstacle> BuildingPlacementObstacles()
-    {
-        return BuildingTargetIds()
-            .Select(BuildingSnapshot)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!.Value)
-            .Where(building => building.Hp > 0)
-            .Select(building =>
-            {
-                var footprint = BuildSpecCatalog.For(building.Kind).Footprint;
-                var rect = PlacementMath.RectFromCenter(
-                    building.Position.X,
-                    building.Position.Y,
-                    footprint.X,
-                    footprint.Y);
-                return new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height);
-            })
-            .ToList();
+            var footprint = BuildSpecCatalog.For(building.Kind).Footprint;
+            var rect = PlacementMath.RectFromCenter(
+                building.Position.X,
+                building.Position.Y,
+                footprint.X,
+                footprint.Y);
+            result.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height));
+        }
     }
 
     private TerrainLayer TerrainLayerAt(float x, float y)
