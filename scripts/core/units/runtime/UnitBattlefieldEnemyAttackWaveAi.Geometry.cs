@@ -6,9 +6,18 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 {
     private static bool IsNearOwnedBuilding(UnitBattlefield battlefield, PlayerSlotId playerSlotId, Vector2 position, float radius)
     {
-        return battlefield.BuildingSnapshots()
-            .Where(building => building.PlayerSlotId == playerSlotId && building.Hp > 0)
-            .Any(building => building.Position.DistanceSquaredTo(position) <= radius * radius);
+        var radiusSquared = radius * radius;
+        foreach (var building in battlefield.BuildingSnapshots())
+        {
+            if (building.PlayerSlotId == playerSlotId
+                && building.Hp > 0
+                && building.Position.DistanceSquaredTo(position) <= radiusSquared)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static Vector2 ScoutPoint(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
@@ -31,13 +40,22 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 
     private static Vector2 EnemyBaseCenter(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
     {
-        var buildings = battlefield.BuildingSnapshots()
-            .Where(building => building.PlayerSlotId == enemyPlayerSlotId && building.Hp > 0)
-            .Select(building => building.Position)
-            .ToList();
-        if (buildings.Count > 0)
+        var sum = Vector2.Zero;
+        var count = 0;
+        foreach (var building in battlefield.BuildingSnapshots())
         {
-            return buildings.Aggregate(Vector2.Zero, (sum, position) => sum + position) / buildings.Count;
+            if (building.PlayerSlotId != enemyPlayerSlotId || building.Hp <= 0)
+            {
+                continue;
+            }
+
+            sum += building.Position;
+            count++;
+        }
+
+        if (count > 0)
+        {
+            return sum / count;
         }
 
         return EnemyCenter(battlefield, enemyPlayerSlotId);
@@ -45,15 +63,24 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 
     private static Vector2 EnemyCenter(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
     {
-        var units = battlefield.Units
-            .Where(unit => unit.PlayerSlotId == enemyPlayerSlotId && unit.Hp > 0)
-            .Select(unit => unit.Position)
-            .ToList();
-        if (units.Count == 0)
+        var sum = Vector2.Zero;
+        var count = 0;
+        foreach (var unit in battlefield.Units)
+        {
+            if (unit.PlayerSlotId != enemyPlayerSlotId || unit.Hp <= 0)
+            {
+                continue;
+            }
+
+            sum += unit.Position;
+            count++;
+        }
+
+        if (count == 0)
         {
             return new Vector2(battlefield.WorldSize.X * 0.78f, battlefield.WorldSize.Y * 0.62f);
         }
 
-        return units.Aggregate(Vector2.Zero, (sum, position) => sum + position) / units.Count;
+        return sum / count;
     }
 }

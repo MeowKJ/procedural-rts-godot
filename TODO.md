@@ -1055,7 +1055,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 567 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 138 C# source files / 18742 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 954 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 138 C# source files / 18776 total lines across 54 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 954 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1274,6 +1274,12 @@ Wiring & coverage gaps (found during the sweep):
     id-list materialization with explicit fill, in-place sort, and trim helpers.
     The enemy AI allocation gate moved to `tools/ReviewGateRuntime` so
     `tools/ReviewGateDomains` stays below its 1000-line suite budget.
+    Follow-up: #102 replaced enemy attack-wave target/defense target and center
+    calculations with explicit scans, preserving HQ-first / nearest target /
+    distance+id defense tie-break semantics while removing target
+    `Where/OrderBy/FirstOrDefault` chains and center `Select/ToList/Aggregate`
+    materialization. `TargetScans.cs` keeps the added helpers under 200 lines,
+    and `ReviewGate simhot` locks the no-LINQ target/center scan contract.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

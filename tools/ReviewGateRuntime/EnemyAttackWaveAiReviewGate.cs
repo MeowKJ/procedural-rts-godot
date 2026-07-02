@@ -4,6 +4,7 @@ static class EnemyAttackWaveAiReviewGate
     {
         RequirePartialSplit(root, result);
         RequireUnitSelectionBuffers(root, result);
+        RequireTargetScanLoops(root, result);
     }
 
     private static void RequirePartialSplit(string root, GateResult result)
@@ -13,6 +14,7 @@ static class EnemyAttackWaveAiReviewGate
             Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs"),
             Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.UnitSelection.cs"),
             Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs"),
+            Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.TargetScans.cs"),
             Path.Combine("scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Geometry.cs"),
         };
 
@@ -61,6 +63,38 @@ static class EnemyAttackWaveAiReviewGate
         var targeting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs");
         RequireText(targeting, "CollectUnitIds(waveUnits, unitIds)", "Enemy scout waves must fill the reusable id buffer.", result);
         ForbidText(targeting, "waveUnits.Select(unit => unit.Id)", "Enemy scout waves must not allocate id enumerables.", result);
+    }
+
+    private static void RequireTargetScanLoops(string root, GateResult result)
+    {
+        var targeting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs");
+        var targetScans = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.TargetScans.cs");
+        RequireText(targeting, "NearestVisibleAttackableBuilding(", "Enemy attack target building selection must use an explicit nearest scan.", result);
+        RequireText(targeting, "NearestVisibleAttackableUnit(", "Enemy attack target unit selection must use an explicit nearest scan.", result);
+        RequireText(targeting, "NearestVisibleDefenseThreatUnit(", "Enemy defense target unit selection must use an explicit nearest scan.", result);
+        RequireText(targeting, "NearestVisibleDefenseThreatBuilding(", "Enemy defense target building selection must use an explicit nearest scan.", result);
+        RequireText(targetScans, "IsVisibleAttackableBuilding(", "Enemy target scans must share the visible attackable building predicate.", result);
+        RequireText(targetScans, "IsVisibleAttackableUnit(", "Enemy target scans must share the visible attackable unit predicate.", result);
+        ForbidText(targeting, ".Where(", "Enemy target scans must not allocate LINQ filter chains.", result);
+        ForbidText(targeting, ".OrderBy(", "Enemy target scans must not allocate ordered LINQ chains.", result);
+        ForbidText(targeting, ".ThenBy(", "Enemy target scans must not allocate secondary ordered LINQ chains.", result);
+        ForbidText(targeting, ".FirstOrDefault()", "Enemy target scans must not allocate LINQ first queries.", result);
+        ForbidText(targeting, ".Select(building => (UnitBattlefieldBuildingSnapshot?)building)", "Enemy target scans must not allocate nullable building projections.", result);
+        ForbidText(targetScans, ".Where(", "Enemy target scan helpers must not allocate LINQ filter chains.", result);
+        ForbidText(targetScans, ".OrderBy(", "Enemy target scan helpers must not allocate ordered LINQ chains.", result);
+        ForbidText(targetScans, ".ThenBy(", "Enemy target scan helpers must not allocate secondary ordered LINQ chains.", result);
+        ForbidText(targetScans, ".FirstOrDefault()", "Enemy target scan helpers must not allocate LINQ first queries.", result);
+        ForbidText(targetScans, ".Select(building => (UnitBattlefieldBuildingSnapshot?)building)", "Enemy target scan helpers must not allocate nullable building projections.", result);
+
+        var geometry = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Geometry.cs");
+        RequireText(geometry, "foreach (var building in battlefield.BuildingSnapshots())", "Enemy base center and owned-building checks must scan buildings explicitly.", result);
+        RequireText(geometry, "foreach (var unit in battlefield.Units)", "Enemy army center must scan units explicitly.", result);
+        RequireText(geometry, "return sum / count;", "Enemy center calculations must average explicit scan sums.", result);
+        ForbidText(geometry, ".Where(", "Enemy geometry helpers must not allocate LINQ filter chains.", result);
+        ForbidText(geometry, ".Any(", "Enemy near-owned-building checks must not allocate LINQ Any queries.", result);
+        ForbidText(geometry, ".Select(", "Enemy center calculations must not allocate LINQ projection chains.", result);
+        ForbidText(geometry, ".ToList()", "Enemy center calculations must not materialize temporary lists.", result);
+        ForbidText(geometry, ".Aggregate(", "Enemy center calculations must not allocate aggregate delegates.", result);
     }
 
     private static void RequireFileUnderLineBudget(string root, GateResult result, string relativeFile)
