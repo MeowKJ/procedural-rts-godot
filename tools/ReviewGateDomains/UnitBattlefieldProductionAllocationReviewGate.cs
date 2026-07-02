@@ -13,14 +13,7 @@ static class UnitBattlefieldProductionAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<int> _productionCandidateProducerIds", "Production enqueue paths must reuse producer candidate storage.", result);
 
-        var rally = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionRally.cs");
+        var rally = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionRally.cs");
         RequireText(rally, "CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds)", "Legacy production enqueue must fill reusable producer candidate storage.", result);
         RequireText(rally, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production enqueue must fill reusable producer candidate storage.", result);
         RequireText(rally, "LeastQueuedProducerId(_productionCandidateProducerIds)", "Production enqueue must choose the least-queued producer without ordered LINQ.", result);
@@ -36,14 +29,7 @@ static class UnitBattlefieldProductionAllocationReviewGate
         RequireText(battlefield, "List<ProductionQueueSummaryEntry> _productionQueueSummaryBuffer", "Production queue summary must reuse queue entry storage.", result);
         RequireText(battlefield, "HashSet<int> _productionQueueSummarySeenIds", "Production queue summary must reuse building de-duplication storage.", result);
 
-        var summary = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionQueueSummary.cs");
+        var summary = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionQueueSummary.cs");
         RequireText(summary, "CollectQueuedProductionSummary(playerSlotId, _productionQueueSummaryBuffer)", "Production queue summary and cancel paths must fill reusable queue storage.", result);
         RequireText(summary, "_productionQueueSummaryBuffer.Sort(CompareProductionQueueSummaryEntries)", "Production queue summary must sort reusable queue storage in place.", result);
         ForbidText(summary, ".SelectMany(buildingId => BuildingProductionQueue(buildingId).Select(item => new", "Production queue summary must not allocate anonymous queue entries.", result);
@@ -57,34 +43,25 @@ static class UnitBattlefieldProductionAllocationReviewGate
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<UnitSpec> _productionDesignSpecBuffer", "Production option states must reuse design spec storage.", result);
+        RequireText(battlefield, "List<ProductionOptionState> _legacyProductionOptionStateBuffer", "Legacy production option states must reuse result storage.", result);
+        RequireText(battlefield, "List<ProductionOptionState> _designProductionOptionStateBuffer", "UnitDesign production option states must reuse result storage.", result);
 
-        var options = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ProductionOptions.cs");
+        var options = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs");
         RequireText(options, "CollectCandidateProducerIds(kind, playerSlotId, _productionCandidateProducerIds)", "Legacy production option states must reuse producer candidate storage.", result);
         RequireText(options, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production option states must reuse producer candidate storage.", result);
         RequireText(options, "CollectProductionDesignSpecs(playerSlotId, _productionDesignSpecBuffer)", "UnitDesign production option states must reuse design spec storage.", result);
+        RequireText(options, "_legacyProductionOptionStateBuffer.Clear()", "Legacy production option states must clear reusable result storage.", result);
+        RequireText(options, "_designProductionOptionStateBuffer.Clear()", "UnitDesign production option states must clear reusable result storage.", result);
         RequireText(options, "ProductionKindQueueMetrics(kind, spec)", "Legacy production option states must compute queue metrics with explicit loops.", result);
         RequireText(options, "ProductionDesignQueueMetrics(spec)", "UnitDesign production option states must compute queue metrics with explicit loops.", result);
+        ForbidText(options, "new List<ProductionOptionState>", "Production option states must not allocate result lists per refresh.", result);
         ForbidText(options, "CandidateProducerIds(kind, playerSlotId).ToList()", "Production option states must not materialize producer candidates.", result);
         ForbidText(options, "CandidateProducerIds(spec, playerSlotId).ToList()", "Production option states must not materialize producer candidates.", result);
         ForbidText(options, ".Sum(buildingId => BuildingProductionQueue(buildingId).Count", "Production option states must not allocate LINQ queue counts.", result);
         ForbidText(options, ".Select(buildingId => BuildingProductionQueue(buildingId).FirstOrDefault())", "Production option states must not allocate LINQ first-item scans.", result);
         ForbidText(options, ".DefaultIfEmpty(0)\n                    .Max();", "Production option states must compute max progress in explicit loops.", result);
 
-        var systems = ReviewGateSource.Read(
-            root,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.EntityWorldSystems.cs");
+        var systems = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.EntityWorldSystems.cs");
         ForbidText(systems, "private IEnumerable<int> CandidateProducerIds", "UnitBattlefield production candidates must use caller-owned buffers, not allocating enumerable helpers.", result);
         ForbidText(systems, "private IEnumerable<UnitSpec> ProductionDesignSpecs", "Production design option states must use caller-owned spec buffers, not allocating enumerable helpers.", result);
         RequireText(systems, "foreach (var designId in UnitDesignFactionRosterCatalog.For(identity.Faction).PlayableDesignIds)", "UnitBattlefield production availability must scan playable design ids explicitly.", result);

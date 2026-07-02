@@ -243,7 +243,10 @@ Definition of Done (the slice is "playable" when all pass):
     passed 22/22. Rendering changes: movement no longer triggers unit redraws, static
     buildings use dirty signatures, hot vector arcs/strokes were reduced, dense
     grid-floor marks were removed, and project defaults now disable VSync, 2D MSAA,
-    and 2D HDR for crisp 2D line art.
+    and 2D HDR for crisp 2D line art. Follow-up: #174 stabilized the headless CI
+    fog budget after #172 VerifyAll failed on a single 11.96ms fog update spike;
+    interactive runs keep the 8ms fog target while headless CI allows 16ms
+    single-sample jitter.
 [x] Reads as Soft Old City: clear silhouettes, owner color separate from faction, HUD
     edge-docked and low-obstruction, fog/day/night legible.
     Progress: Dog/Cat unit recipes now have heavier Dog silhouettes, slimmer crescent
@@ -1078,7 +1081,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19644 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 998 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19621 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 975 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1251,6 +1254,11 @@ Wiring & coverage gaps (found during the sweep):
     `new List<ProductionOptionState>` allocation in `ProductionOptionStates(...)`
     while preserving option ordering, disabled reasons, queue counts, and active
     progress; `ReviewGate regression` locks the reusable-buffer contract.
+    Follow-up: #173 reused runtime `UnitBattlefield` production option result
+    buffers for both legacy-kind and UnitDesign option refreshes, replacing the
+    two `new List<ProductionOptionState>` paths while preserving option ordering,
+    disabled reasons, queue counts, and active progress; `ReviewGate simhot`
+    locks the reusable-buffer contract.
     Follow-up: #73 reused `CommandSystem` scalar movement/combat/stance subject
     buffers for Move, Patrol, Guard, Attack, Stop, and Stance commands, replacing
     those `OwnedSubjects(...)` yield-iterator paths while leaving harvest/repair

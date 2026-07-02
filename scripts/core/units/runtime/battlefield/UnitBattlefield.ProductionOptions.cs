@@ -9,7 +9,7 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<ProductionOptionState> ProductionOptionStates(PlayerSlotId playerSlotId)
     {
         var credits = Credits(playerSlotId);
-        var states = new List<ProductionOptionState>(ProductionOptionKinds.Length);
+        _legacyProductionOptionStateBuffer.Clear();
         foreach (var kind in ProductionOptionKinds)
         {
             var designId = FirstDesignIdFor(kind, playerSlotId);
@@ -24,7 +24,7 @@ public sealed partial class UnitBattlefield
             var disabledReason = hasProducer
                 ? enoughCredits ? "" : "ui.needCredits"
                 : "ui.producerUnavailable";
-            states.Add(new ProductionOptionState(
+            _legacyProductionOptionStateBuffer.Add(new ProductionOptionState(
                 kind,
                 production?.Category ?? ProductionCategory.Infantry,
                 production?.ProducerKind ?? BuildingDesignIds.Barracks,
@@ -42,15 +42,15 @@ public sealed partial class UnitBattlefield
                 disabledReason));
         }
 
-        states.Sort(CompareLegacyProductionOptionStates);
-        return states;
+        _legacyProductionOptionStateBuffer.Sort(CompareLegacyProductionOptionStates);
+        return _legacyProductionOptionStateBuffer;
     }
 
     public IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(PlayerSlotId playerSlotId)
     {
         var credits = Credits(playerSlotId);
         CollectProductionDesignSpecs(playerSlotId, _productionDesignSpecBuffer);
-        var states = new List<ProductionOptionState>(_productionDesignSpecBuffer.Count);
+        _designProductionOptionStateBuffer.Clear();
         foreach (var spec in _productionDesignSpecBuffer)
         {
             var production = spec.Production!;
@@ -62,7 +62,7 @@ public sealed partial class UnitBattlefield
             var disabledReason = hasProducer
                 ? enoughCredits ? "" : "ui.needCredits"
                 : "ui.producerUnavailable";
-            states.Add(new ProductionOptionState(
+            _designProductionOptionStateBuffer.Add(new ProductionOptionState(
                 ProductionKindFor(spec),
                 production.Category,
                 production.ProducerKind,
@@ -80,8 +80,8 @@ public sealed partial class UnitBattlefield
                 disabledReason));
         }
 
-        states.Sort(CompareDesignProductionOptionStates);
-        return states;
+        _designProductionOptionStateBuffer.Sort(CompareDesignProductionOptionStates);
+        return _designProductionOptionStateBuffer;
     }
 
     private void CollectProductionDesignSpecs(PlayerSlotId playerSlotId, List<UnitSpec> result)
