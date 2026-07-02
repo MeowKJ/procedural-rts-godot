@@ -6,6 +6,7 @@ static class RegressionReviewGate
         RequireVerifyAllCoverage(root, result);
         RequireDeterministicEvidence(root, result);
         EntityStateHashAllocationReviewGate.Check(root, result);
+        UnitSpecAbilityAllocationReviewGate.Check(root, result);
         RequireSimHotAllocationEvidence(root, result);
         PathfindingAllocationReviewGate.Check(root, result);
         TurretCombatAllocationReviewGate.Check(root, result);

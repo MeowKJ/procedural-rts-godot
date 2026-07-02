@@ -172,7 +172,7 @@ public partial class SelectionController
     private static bool IsHarvesterSpec(UnitSpec spec)
     {
         return (spec.RoleTags.Contains(UnitRoleTag.Economy) || spec.RoleTags.Contains(UnitRoleTag.Worker))
-            && spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest);
+            && spec.HasAbility(AbilityKind.Harvest);
     }
 
     private (float Radius, Color Accent) UnitSpecFeedbackStyleFor(UnitModel unit)

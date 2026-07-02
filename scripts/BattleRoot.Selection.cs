@@ -186,7 +186,7 @@ public partial class BattleRoot
     {
         var spec = unit.Spec;
         return (spec.RoleTags.Contains(UnitRoleTag.Economy) || spec.RoleTags.Contains(UnitRoleTag.Worker))
-            && spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest);
+            && spec.HasAbility(AbilityKind.Harvest);
     }
 
     private static float UnitHealthRatioForSelection(UnitModel unit)

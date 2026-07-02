@@ -129,7 +129,7 @@ public sealed partial class GameState
     private static bool IsHarvesterSpec(UnitSpec spec)
     {
         return spec.RoleTags.Contains(UnitRoleTag.Economy)
-            && spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest);
+            && spec.HasAbility(AbilityKind.Harvest);
     }
 
     public GameState()

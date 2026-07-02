@@ -78,4 +78,32 @@ public sealed record UnitSpec(
     UnitArtRecipe Art)
 {
     public WeaponMountSpec PrimaryWeapon => Weapons[0];
+
+    public bool HasAbility(AbilityKind kind)
+    {
+        for (var index = 0; index < Abilities.Count; index++)
+        {
+            if (Abilities[index].Kind == kind)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool TryGetAbility(AbilityKind kind, out AbilitySpec ability)
+    {
+        for (var index = 0; index < Abilities.Count; index++)
+        {
+            if (Abilities[index].Kind == kind)
+            {
+                ability = Abilities[index];
+                return true;
+            }
+        }
+
+        ability = null!;
+        return false;
+    }
 }

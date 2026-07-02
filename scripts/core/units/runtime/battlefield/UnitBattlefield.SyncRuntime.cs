@@ -149,7 +149,7 @@ public sealed partial class UnitBattlefield
             unit.AlertPulse,
             unit.HitPulse));
 
-        if (unit.Spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest))
+        if (unit.Spec.HasAbility(AbilityKind.Harvest))
         {
             entity.Components.Set(new HarvesterComponentState(
                 unit.HarvesterMode,

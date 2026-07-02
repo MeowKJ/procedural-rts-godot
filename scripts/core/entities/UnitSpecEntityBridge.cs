@@ -86,25 +86,51 @@ public static class UnitSpecEntityBridge
 
         yield return new PresentationPulseComponentState();
 
-        if (unitSpec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest))
+        if (unitSpec.HasAbility(AbilityKind.Harvest))
         {
             yield return new HarvesterComponentState();
             yield return new ResourceCargoComponentState(0, DefaultHarvesterCargoCapacity);
         }
 
-        if (unitSpec.Abilities.FirstOrDefault(ability => ability.Kind == AbilityKind.Build) is { Radius: > 0 } build)
+        if (unitSpec.TryGetAbility(AbilityKind.Build, out var build) && build.Radius > 0)
         {
             yield return new BuildRadiusComponentState(build.Radius);
         }
 
-        var activeAbilities = unitSpec.Abilities
-            .Where(ability => ability.Kind is not AbilityKind.Harvest and not AbilityKind.Build)
-            .Select(ability => new AbilityCooldownState(ability.Kind, 0))
-            .ToArray();
-        if (activeAbilities.Length > 0)
+        var activeAbilityCount = ActiveAbilityCount(unitSpec);
+        if (activeAbilityCount > 0)
         {
+            var activeAbilities = new AbilityCooldownState[activeAbilityCount];
+            var activeAbilityIndex = 0;
+            foreach (var ability in unitSpec.Abilities)
+            {
+                if (IsRuntimeActiveAbility(ability))
+                {
+                    activeAbilities[activeAbilityIndex++] = new AbilityCooldownState(ability.Kind, 0);
+                }
+            }
+
             yield return new AbilityRuntimeComponentState(activeAbilities);
         }
+    }
+
+    private static int ActiveAbilityCount(UnitSpec unitSpec)
+    {
+        var count = 0;
+        foreach (var ability in unitSpec.Abilities)
+        {
+            if (IsRuntimeActiveAbility(ability))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static bool IsRuntimeActiveAbility(AbilitySpec ability)
+    {
+        return ability.Kind is not AbilityKind.Harvest and not AbilityKind.Build;
     }
 
     private static float WeaponRange(EntityWorld world, UnitSpec unitSpec)

@@ -7,12 +7,12 @@ public sealed partial class UnitBattlefield
     private static bool IsHarvester(UnitInstance unit)
     {
         return unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
-            && unit.Spec.Abilities.Any(ability => ability.Kind == AbilityKind.Harvest);
+            && unit.Spec.HasAbility(AbilityKind.Harvest);
     }
 
     private static bool IsRepairer(UnitInstance unit)
     {
-        return unit.Spec.Abilities.Any(ability => ability.Kind == AbilityKind.RepairField);
+        return unit.Spec.HasAbility(AbilityKind.RepairField);
     }
 
     private bool IsRepairableTarget(PlayerSlotId playerSlotId, UnitInstance target)
