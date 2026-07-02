@@ -10,6 +10,8 @@ public sealed class PathfindingWorkspace
     internal List<(GridObstacle Cell, float Cost)> ValidNeighbors { get; } = new(8);
     internal List<PathPoint> SharedCorridorPoints { get; } = [];
     internal List<GridObstacle> SharedCorridorRawCells { get; } = [];
+    internal HashSet<GridObstacle> SharedCorridorBlocked { get; } = [];
+    internal Dictionary<GridObstacle, TerrainLayer> SharedCorridorTerrainByCell { get; } = [];
 
     internal void ClearSearch(GridObstacle start)
     {

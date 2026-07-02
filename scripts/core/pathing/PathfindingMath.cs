@@ -114,8 +114,8 @@ public static partial class PathfindingMath
 
         var width = Math.Max(1, (int)MathF.Ceiling(worldWidth / cellSize));
         var height = Math.Max(1, (int)MathF.Ceiling(worldHeight / cellSize));
-        var blocked = new HashSet<GridObstacle>();
-        var terrainByCell = new Dictionary<GridObstacle, TerrainLayer>();
+        var blocked = workspace.SharedCorridorBlocked;
+        var terrainByCell = workspace.SharedCorridorTerrainByCell;
         BuildPassabilityLookups(obstacles, movementDomain, terrain, blocked, terrainByCell);
         var allowedLayers = TerrainPassability.AllowedLayers(movementDomain);
 
