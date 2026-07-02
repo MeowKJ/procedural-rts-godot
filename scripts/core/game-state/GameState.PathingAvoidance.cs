@@ -23,6 +23,7 @@ public sealed partial class GameState
         if (plannedPath is null)
         {
             var pathResult = PathfindingMath.FindPathWithDebug(
+                _legacyPathWorkspace,
                 unit.Position.X,
                 unit.Position.Y,
                 destination.X,

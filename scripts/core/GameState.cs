@@ -68,6 +68,8 @@ public sealed partial class GameState
     private readonly List<UnitModel> _legacyMoveDomainUnits = [];
     private readonly HashSet<int> _legacyMovingUnitIds = [];
     private readonly List<PathfindingCorridorMember> _legacyPathCorridorMembers = [];
+    private readonly PathfindingWorkspace _legacyPathWorkspace = new();
+    private readonly List<PathfindingCorridorAssignment> _legacyPathCorridorAssignments = [];
     private readonly Dictionary<int, PathfindingCorridorAssignment> _legacySharedMoveAssignments = [];
     private readonly List<(Vector2 Position, float Radius)> _legacyAttackOccupiedSlots = [];
     private readonly Dictionary<int, Vector2> _legacyAttackSlots = [];

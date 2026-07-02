@@ -104,6 +104,7 @@ public sealed partial class GameState
         }
 
         var corridor = PathfindingMath.FindSharedCorridor(
+            _legacyPathWorkspace,
             _legacyPathCorridorMembers,
             target.X,
             target.Y,
@@ -112,7 +113,8 @@ public sealed partial class GameState
             PathCellSize,
             PathObstacles(domain, movingUnitIds: _legacyMovingUnitIds),
             domain,
-            terrainCells);
+            terrainCells,
+            _legacyPathCorridorAssignments);
 
         foreach (var assignment in corridor.Assignments)
         {
