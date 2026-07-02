@@ -94,13 +94,7 @@ public partial class BattleRoot
             return;
         }
 
-        var idleHarvesters = _state.Units.Count(unit =>
-            unit.Owner == ProceduralRts.Core.Owner.Player
-            && IsHarvestWorker(unit)
-            && unit.Hp > 0
-            && unit.HarvesterMode == HarvesterMode.Idle
-            && unit.MoveTarget is null);
-
+        var idleHarvesters = IdleLegacyHarvesterCount();
         if (idleHarvesters == 0 || _elapsed - _idleHarvesterAlertAt < IdleHarvesterAlertCooldown)
         {
             return;
@@ -108,6 +102,24 @@ public partial class BattleRoot
 
         _idleHarvesterAlertAt = _elapsed;
         AddAlert(AlertKind.Harvester, idleHarvesters == 1 ? GameText.T("ui.alert.idleHarvester.one") : GameText.Format("ui.alert.idleHarvester.many", idleHarvesters));
+    }
+
+    private int IdleLegacyHarvesterCount()
+    {
+        var count = 0;
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player
+                && IsHarvestWorker(unit)
+                && unit.Hp > 0
+                && unit.HarvesterMode == HarvesterMode.Idle
+                && unit.MoveTarget is null)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private void UpdatePowerAlert(bool force)

@@ -38,8 +38,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "for (var index = 1; index < selectedUnits.Count; index++)", "SelectedUniformStance must scan selected units without LINQ All.", result);
         RequireText(alerts, "HasSelectedLegacyBuildings()", "Command preview must use the explicit legacy building selection scan.", result);
         RequireText(alerts, "HasLegacyPlayerPowerPlant()", "Power alert must use the explicit legacy power-building scan.", result);
+        RequireText(alerts, "IdleLegacyHarvesterCount()", "Idle harvester alert must use an explicit legacy harvester count scan.", result);
         RequireText(alerts, "private bool HasSelectedLegacyBuildings()", "BattleRoot alerts must expose the legacy selected-building scan helper.", result);
         RequireText(alerts, "private bool HasLegacyPlayerPowerPlant()", "BattleRoot alerts must expose the legacy power scan helper.", result);
+        RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
         RequireText(iconSummary, "List<SelectionIconSummaryEntry> _selectionIconSummaryEntries", "Selection icon summaries must reuse aggregation storage.", result);
         RequireText(iconSummary, "List<HudLayer.SelectionIconItem> _selectionIconSummarySecondaryBuffer", "Selection icon summaries must double-buffer HUD-owned item storage.", result);
         RequireText(iconSummary, "NextSelectionIconSummaryBuffer()", "Selection icon summaries must acquire reusable HUD item storage.", result);
@@ -93,6 +95,7 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(alerts, "_state.SelectedBuildings().Any()", "Command preview must not allocate legacy selected-building iterators.", result);
         ForbidText(alerts, ".Where(building => building.Owner == ProceduralRts.Core.Owner.Player && building.Hp > 0)", "Power alert must not allocate legacy building filter iterators.", result);
         ForbidText(alerts, ".Any(building => building.Kind == BuildingDesignIds.PowerPlant)", "Power alert must not allocate legacy building Any iterators.", result);
+        ForbidText(alerts, "_state.Units.Count(unit =>", "Idle harvester alert must not allocate legacy unit count iterators.", result);
         ForbidText(alerts, ".ToList()", "RefreshAlerts must not allocate materialized alert lists.", result);
         ForbidText(hudState, "states.Take(12).ToArray()", "HudLayer command-card refresh must not allocate an ordered state array.", result);
         ForbidText(hudState, "orderedStates.Select(ProductionOptionId).ToHashSet()", "HudLayer command-card refresh must not allocate active id sets.", result);
