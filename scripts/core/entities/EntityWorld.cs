@@ -9,6 +9,7 @@ public sealed partial class EntityWorld
     private readonly List<ISimSystem> _systems = [];
     private readonly List<PendingSpawn> _pendingSpawns = [];
     private readonly SortedSet<int> _pendingRemovals = [];
+    private readonly List<EntityComponentState> _stateHashComponentValues = [];
     private readonly Stopwatch _systemStopwatch = new();
     private int _nextEntityId = 1;
     private int _nextProductionItemId = 1;
@@ -317,13 +318,15 @@ public sealed partial class EntityWorld
             hash = EntityStateHash.Add(hash, entity.Transform.Position);
             hash = EntityStateHash.Add(hash, entity.Transform.Facing);
 
-            foreach (var component in entity.Components.StableValues)
+            entity.Components.StableValuesInto(_stateHashComponentValues);
+            foreach (var component in _stateHashComponentValues)
             {
                 hash = EntityStateHash.Add(hash, component.GetType().Name);
                 hash = EntityStateHash.Add(hash, component);
             }
         }
 
+        _stateHashComponentValues.Clear();
         return hash;
     }
 

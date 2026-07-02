@@ -1345,6 +1345,11 @@ Wiring & coverage gaps (found during the sweep):
     replay hashes. `SimReplay` now asserts completed/cancelled/repeat queues keep
     reusable storage, and `ReviewGate regression` locks the no-array-copy mutation
     contract.
+    Follow-up: #124 added `EntityComponentSet.StableValuesInto(...)` and routed
+    `EntityWorld.DeterministicStateHash()` through a reusable component ordering
+    buffer, replacing the hash-path `StableValues` sorted-list allocation while
+    preserving component type-name ordering and replay hashes. `ReviewGate
+    regression` locks the hash path against reintroducing `entity.Components.StableValues`.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

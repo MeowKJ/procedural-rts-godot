@@ -11,6 +11,17 @@ public sealed class EntityComponentSet
         .Select(pair => pair.Value)
         .ToList();
 
+    public void StableValuesInto(List<EntityComponentState> result)
+    {
+        result.Clear();
+        foreach (var state in _states.Values)
+        {
+            result.Add(state);
+        }
+
+        result.Sort(CompareComponentTypes);
+    }
+
     public void Set(EntityComponentState state)
     {
         _states[state.GetType()] = state;
@@ -58,5 +69,10 @@ public sealed class EntityComponentSet
     public void Clear()
     {
         _states.Clear();
+    }
+
+    private static int CompareComponentTypes(EntityComponentState left, EntityComponentState right)
+    {
+        return string.Compare(left.GetType().FullName, right.GetType().FullName, StringComparison.Ordinal);
     }
 }

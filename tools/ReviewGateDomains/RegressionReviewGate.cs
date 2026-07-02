@@ -58,6 +58,9 @@ static class RegressionReviewGate
         ReviewGateSource.RequireAnyText(root, result, "upgrade-progression", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "DeterministicStateHash", "scripts/core/entities", "tools/SimReplay", "tools/CombatBehavior");
         ReviewGateSource.RequireAnyText(root, result, "CommandAttackUnits", "tools/AiOpponentLoopQa", "tools/CombatBehavior", "scripts");
+        var entityWorld = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityWorld.cs");
+        RequireText(entityWorld, "StableValuesInto(_stateHashComponentValues)", "DeterministicStateHash must reuse a component ordering buffer.", result);
+        ForbidText(entityWorld, "foreach (var component in entity.Components.StableValues)", "DeterministicStateHash must not allocate StableValues lists per entity.", result);
     }
     private static void RequireSimHotAllocationEvidence(string root, GateResult result)
     {
@@ -72,7 +75,6 @@ static class RegressionReviewGate
         ForbidText(pathfinding, "new Dictionary<SharedMoveKey", "PathfindingSystem must not allocate shared-corridor dictionaries per tick.", result);
         ForbidText(pathfinding, "assignment.Path.ToArray()", "PathfindingSystem shared path assignment must not copy path lists to arrays.", result);
         ForbidText(pathfinding, "result.Path.ToArray()", "PathfindingSystem single path assignment must not copy path lists to arrays.", result);
-
         var production = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProductionSystem.cs");
         RequireText(production, "_producerStepBuffer", "ProductionSystem must reuse its producer tick snapshot.", result);
         RequireText(production, "_spawnObstacles", "ProductionSystem must reuse spawn obstacle storage.", result);
@@ -86,7 +88,6 @@ static class RegressionReviewGate
         RequireText(spawnMath, "DirectionOffsets", "ProductionSpawnMath must keep candidate directions as static data.", result);
         RequireText(spawnMath, "RingScales", "ProductionSpawnMath must keep ring scales as static data.", result);
         ForbidText(spawnMath, "CandidateDirections(", "ProductionSpawnMath must not allocate a candidate-direction list per spawn.", result);
-
         var projectiles = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProjectileSystem.cs");
         ForbidText(projectiles, "OrderedEntities.ToArray()", "ProjectileSystem must not snapshot all entities every tick.", result);
     }
@@ -97,7 +98,6 @@ static class RegressionReviewGate
         RequireText(effects, "List<ProjectilePresentationProjection> _projectileProjections", "CombatEffectsLayer must keep a reusable projectile projection buffer.", result);
         RequireText(effects, "ProjectileProjectionCount()", "CombatEffectsLayer.ActiveEffectCount must count ECS projectiles without constructing projections.", result);
         ForbidText(effects, "ProjectileProjections().Count", "CombatEffectsLayer.ActiveEffectCount must not allocate projectile projections just to count them.", result);
-
         var draw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
         RequireText(draw, "ProjectileProjections(_projectileProjections)", "CombatEffectsLayer.DrawProjectiles must fill the reusable projectile projection buffer.", result);
         RequireText(draw, "ProjectileVfxMath.StyleFor(projectile.AmmoKind)", "Legacy projectiles must use the shared projectile readability style.", result);
