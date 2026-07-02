@@ -60,7 +60,7 @@ public partial class SelectionController
             return;
         }
 
-        var selectedCount = State.SelectedUnits().Count();
+        var selectedCount = State.SelectedUnitCount();
         if (selectedCount == 0)
         {
             return;

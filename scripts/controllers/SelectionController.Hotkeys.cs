@@ -45,7 +45,7 @@ public partial class SelectionController
 
         var selectedCount = UseUnitBattlefieldInput()
             ? UnitBattlefield!.SelectedCount(LocalPlayerSlotId)
-            : State.SelectedUnits().Count();
+            : State.SelectedUnitCount();
         if (selectedCount == 0)
         {
             StatusChanged?.Invoke(GameText.T("stance.selectRequired"));

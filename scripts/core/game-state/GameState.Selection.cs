@@ -188,7 +188,7 @@ public sealed partial class GameState
         return SelectedUnitCount();
     }
 
-    private int SelectedUnitCount()
+    public int SelectedUnitCount()
     {
         var count = 0;
         foreach (var unit in Units)

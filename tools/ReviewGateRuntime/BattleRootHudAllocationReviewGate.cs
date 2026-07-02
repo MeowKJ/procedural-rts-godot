@@ -69,6 +69,7 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(process, "_state.Buildings.Count(building => building.Hp > 0)", "PerfHudCounts must not allocate legacy live-building count iterators.", result);
         ForbidText(process, "_unitInstanceViews.Values.Count(view => view.Visible)", "PerfHudCounts must not allocate runtime visible-view count iterators.", result);
         ForbidText(process, "_unitViews.Values.Count(view => view.Visible)", "PerfHudCounts must not allocate legacy visible-view count iterators.", result);
+        ForbidText(battleRoot, "_state.SelectedUnits().Count()", "BattleRoot selected-unit readouts must use explicit selected-unit count scans.", result);
         ForbidText(hudSync, "_unitBattlefield.SelectedUnits(PlayerSlotId.One).ToList()", "Runtime selection HUD sync must not materialize selected UnitBattlefield units.", result);
         ForbidText(hudSync, "_state.SelectedUnits().ToList()", "Legacy selection HUD sync must not materialize selected GameState units.", result);
         ForbidText(hudSync, "_state.SelectedBuildings().ToList()", "Legacy selection HUD sync must not materialize selected GameState buildings.", result);

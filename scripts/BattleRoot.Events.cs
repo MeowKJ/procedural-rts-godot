@@ -290,7 +290,7 @@ public partial class BattleRoot
             return;
         }
 
-        var selectedCount = _state.SelectedUnits().Count();
+        var selectedCount = _state.SelectedUnitCount();
         if (selectedCount == 0)
         {
             _hud.SetStatus(GameText.T("stance.selectRequired"));
