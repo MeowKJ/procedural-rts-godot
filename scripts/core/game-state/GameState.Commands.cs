@@ -6,72 +6,20 @@ public sealed partial class GameState
 {
     public void CommandMoveSelected(Vector2 target, MoveCommandMode mode = MoveCommandMode.Direct)
     {
-        var selected = SelectedUnits().ToList();
-        if (selected.Count == 0)
+        CollectSelectedCommandUnits(_legacySelectedCommandUnits);
+        if (_legacySelectedCommandUnits.Count == 0)
         {
             return;
         }
 
-        var formationUnits = selected
-            .Select(unit => new FormationUnit(unit.Id, unit.Position.X, unit.Position.Y, unit.RuntimeDescriptor.Radius))
-            .ToList();
-        var destinations = FormationMath.CreateMoveDestinations(
-            formationUnits,
-            target.X,
-            target.Y,
-            WorldSize.X,
-            WorldSize.Y)
-            .ToDictionary(destination => destination.Id);
+        PrepareLegacyMoveCommandBuffers(_legacySelectedCommandUnits, target);
 
-        var sharedAssignments = new Dictionary<int, PathfindingCorridorAssignment>();
-        if (selected.Count > 1)
+        foreach (var unit in _legacySelectedCommandUnits)
         {
-            var terrainCells = TerrainCells();
-            foreach (var group in selected.GroupBy(unit => unit.RuntimeDescriptor.MovementDomain))
-            {
-                var groupUnits = group.ToList();
-                if (groupUnits.Count <= 1)
-                {
-                    continue;
-                }
-
-                var movingIds = groupUnits.Select(unit => unit.Id).ToHashSet();
-                var members = groupUnits
-                    .Select(unit =>
-                    {
-                        var destination = destinations[unit.Id];
-                        return new PathfindingCorridorMember(
-                            unit.Id,
-                            unit.Position.X,
-                            unit.Position.Y,
-                            destination.X,
-                            destination.Y);
-                    })
-                    .ToList();
-                var corridor = PathfindingMath.FindSharedCorridor(
-                    members,
-                    target.X,
-                    target.Y,
-                    WorldSize.X,
-                    WorldSize.Y,
-                    PathCellSize,
-                    PathObstacles(group.Key, movingUnitIds: movingIds),
-                    group.Key,
-                    terrainCells);
-
-                foreach (var assignment in corridor.Assignments)
-                {
-                    sharedAssignments[assignment.Id] = assignment;
-                }
-            }
-        }
-
-        foreach (var unit in selected)
-        {
-            var formationDestination = destinations[unit.Id];
+            var formationDestination = _legacyMoveDestinations[unit.Id];
             var destination = new Vector2(formationDestination.X, formationDestination.Y);
 
-            if (sharedAssignments.TryGetValue(unit.Id, out var sharedPath))
+            if (_legacySharedMoveAssignments.TryGetValue(unit.Id, out var sharedPath))
             {
                 AssignPath(unit, destination, target, sharedPath.Path, sharedPath.RawCells);
             }
@@ -188,18 +136,15 @@ public sealed partial class GameState
 
     private void CommandAttackSelected(CombatTargetKind targetKind, int targetId)
     {
-        var selected = SelectedUnits()
-            .Where(unit => IsCombatTargetHostile(unit.Owner, targetKind, targetId))
-            .Where(unit => CanUnitTarget(unit, targetKind, targetId))
-            .ToList();
+        CollectSelectedAttackCommandUnits(targetKind, targetId, _legacySelectedCommandUnits);
         var targetPosition = CombatTargetPosition(targetKind, targetId);
-        if (selected.Count == 0 || targetPosition is null)
+        if (_legacySelectedCommandUnits.Count == 0 || targetPosition is null)
         {
             return;
         }
 
-        var attackSlots = CreateAttackSlots(selected, targetKind, targetId, targetPosition.Value);
-        foreach (var unit in selected)
+        var attackSlots = CreateAttackSlots(_legacySelectedCommandUnits, targetKind, targetId, targetPosition.Value);
+        foreach (var unit in _legacySelectedCommandUnits)
         {
             unit.AttackTargetId = targetId;
             unit.AttackTargetKind = targetKind;
@@ -249,87 +194,6 @@ public sealed partial class GameState
             unit.ThreatShareCooldownRemaining = SharedThreatMemorySeconds;
             unit.CommandPulse = 1;
         }
-    }
-
-    private IReadOnlyDictionary<int, Vector2> CreateAttackSlots(
-        IReadOnlyList<UnitModel> units,
-        CombatTargetKind targetKind,
-        int targetId,
-        Vector2 targetPosition)
-    {
-        var occupiedSlots = Units
-            .Where(unit => unit.Hp > 0 && unit.MovementState == UnitMovementState.CombatAnchor)
-            .Where(unit => unit.AttackTargetId == targetId && unit.AttackTargetKind == targetKind)
-            .Select(unit => (Position: unit.Position, Radius: unit.RuntimeDescriptor.Radius))
-            .ToList();
-        var slots = new Dictionary<int, Vector2>();
-
-        foreach (var unit in units.Where(unit => IsUnitAtEngagementRange(unit, targetKind, targetId, targetPosition)))
-        {
-            slots[unit.Id] = unit.Position;
-            occupiedSlots.Add((unit.Position, unit.RuntimeDescriptor.Radius));
-        }
-
-        foreach (var unit in units
-            .Where(unit => !slots.ContainsKey(unit.Id))
-            .OrderBy(unit => unit.Position.DistanceTo(targetPosition))
-            .ThenBy(unit => unit.Id))
-        {
-            var slot = CreateAttackSlot(unit, targetKind, targetId, targetPosition, occupiedSlots);
-            occupiedSlots.Add((slot, unit.RuntimeDescriptor.Radius));
-            slots[unit.Id] = slot;
-        }
-
-        return slots;
-    }
-
-    private Vector2 CreateAttackSlot(
-        UnitModel unit,
-        CombatTargetKind targetKind,
-        int targetId,
-        Vector2 targetPosition,
-        IReadOnlyList<(Vector2 Position, float Radius)> occupiedSlots)
-    {
-        var unitDescriptor = unit.RuntimeDescriptor;
-        var targetRadius = CombatTargetRadius(targetKind, targetId);
-        var rangeLimit = EngagementRange(unit, targetKind, targetId);
-        var minimumDistance = targetRadius + unitDescriptor.Radius + 18;
-        var preferredDistance = Mathf.Clamp(
-            rangeLimit * 0.88f + targetRadius * 0.12f,
-            Math.Min(minimumDistance, rangeLimit - 8),
-            Math.Max(minimumDistance, rangeLimit - 8));
-        var preferredAngle = (unit.Position - targetPosition).Angle();
-        var bestSlot = ClampInsideWorld(targetPosition + Vector2.FromAngle(preferredAngle) * preferredDistance, unitDescriptor.Radius + 28);
-        var bestScore = float.MaxValue;
-
-        for (var ring = 0; ring < 3; ring++)
-        {
-            var ringDistance = Mathf.Clamp(preferredDistance - ring * unitDescriptor.Radius * 0.55f, minimumDistance, rangeLimit - 6);
-            for (var step = 0; step < 24; step++)
-            {
-                var signedStep = step == 0 ? 0 : (step % 2 == 1 ? (step + 1) / 2 : -step / 2);
-                var angle = preferredAngle + signedStep * Mathf.Pi / 12f;
-                var candidate = ClampInsideWorld(targetPosition + Vector2.FromAngle(angle) * ringDistance, unitDescriptor.Radius + 28);
-                var score = unit.Position.DistanceTo(candidate) + Math.Abs(signedStep) * 7 + ring * 18;
-                foreach (var occupied in occupiedSlots)
-                {
-                    var desiredSpacing = occupied.Radius + unitDescriptor.Radius + 14;
-                    var distance = candidate.DistanceTo(occupied.Position);
-                    if (distance < desiredSpacing)
-                    {
-                        score += (desiredSpacing - distance) * 35;
-                    }
-                }
-
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    bestSlot = candidate;
-                }
-            }
-        }
-
-        return bestSlot;
     }
 
     private void CollectSelectedHarvesters(List<UnitModel> result)

@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 147 C# source files / 19522 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 994 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 147 C# source files / 19550 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 994 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1407,6 +1407,16 @@ Wiring & coverage gaps (found during the sweep):
     legacy `GameState.Selection` count/id/rect buffers. `ReviewGate presentation`
     now locks the controller no-selected-LINQ path, and `ReviewGate regression`
     locks the legacy GameState command/selection buffer contracts.
+    Follow-up: #153/#154/#155 reused legacy `GameState` move/attack command
+    buffers: selected command units, formation destinations, shared-corridor
+    assignments, moving-id/corridor-member storage, attack slots, and manual
+    attack occupied-slot refresh now use caller-owned buffers instead of
+    `ToList`/`ToDictionary`/`GroupBy`/`ToHashSet`/`OrderBy` materialization.
+    `GameState.CommandBuffers.cs` keeps the command entry file under governance
+    thresholds, and `ReviewGate regression` locks the no-LINQ command contracts.
+    Verified with build, CombatBehavior, PlayerLoopQa, SelectionStress,
+    SimReplay, PerfSmoke, ReviewGate regression/filesize/review/full, and full
+    VerifyAll 23/23.
 
 Discipline (keep it from regressing):
 [x] Analyzer/gate for residual debt: ReviewGate now FORBIDS re-rolling

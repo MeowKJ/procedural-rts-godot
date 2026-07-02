@@ -311,12 +311,12 @@ public sealed partial class GameState
             return;
         }
 
-        var occupiedSlots = Units
-            .Where(other => other.Id != unit.Id && other.Hp > 0 && other.MovementState == UnitMovementState.CombatAnchor)
-            .Where(other => other.AttackTargetId == unit.AttackTargetId && other.AttackTargetKind == unit.AttackTargetKind)
-            .Select(other => (Position: other.Position, Radius: other.RuntimeDescriptor.Radius))
-            .ToList();
-        var destination = CreateAttackSlot(unit, unit.AttackTargetKind, unit.AttackTargetId.Value, targetPosition, occupiedSlots);
+        CollectOccupiedAttackSlots(
+            unit.AttackTargetKind,
+            unit.AttackTargetId.Value,
+            unit.Id,
+            _legacyAttackOccupiedSlots);
+        var destination = CreateAttackSlot(unit, unit.AttackTargetKind, unit.AttackTargetId.Value, targetPosition, _legacyAttackOccupiedSlots);
         if (unit.FormationSlot is { } slot
             && slot.DistanceTo(destination) <= AttackSlotRepathDistance
             && unit.MoveTarget is not null
