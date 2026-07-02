@@ -257,27 +257,29 @@ public sealed partial class UnitBattlefield
     public int SelectSingleAt(PlayerSlotId playerSlotId, Vector2 worldPoint, bool additive, float pickPadding = 8)
     {
         var hit = PickUnit(worldPoint, playerSlotId, pickPadding);
-        var selected = additive
-            ? SelectedUnits(playerSlotId).Select(unit => unit.EntityId).ToHashSet()
-            : new HashSet<EntityId>();
+        PrepareUnitSelectionBuffer(playerSlotId, additive);
 
         if (hit is not null)
         {
-            if (additive && selected.Contains(hit.EntityId))
+            if (additive && _selectionEntityBuffer.Contains(hit.EntityId))
             {
-                selected.Remove(hit.EntityId);
+                _selectionEntityBuffer.Remove(hit.EntityId);
             }
             else
             {
-                selected.Add(hit.EntityId);
+                _selectionEntityBuffer.Add(hit.EntityId);
             }
 
-            return SubmitSelectionCommand(playerSlotId, selected);
+            return SubmitSelectionBuffer(playerSlotId);
         }
 
-        return additive
-            ? SelectedCount(playerSlotId)
-            : SubmitSelectionCommand(playerSlotId, selected);
+        if (additive)
+        {
+            _selectionEntityBuffer.Clear();
+            return SelectedCount(playerSlotId);
+        }
+
+        return SubmitSelectionBuffer(playerSlotId);
     }
 
     public int SelectSameUnitsAt(PlayerSlotId playerSlotId, Vector2 worldPoint, Rect2 visibleWorldRect, bool additive, float pickPadding = 8)
@@ -288,38 +290,77 @@ public sealed partial class UnitBattlefield
             return SelectSingleAt(playerSlotId, worldPoint, additive, pickPadding);
         }
 
-        var selected = additive
-            ? SelectedUnits(playerSlotId).Select(unit => unit.EntityId).ToHashSet()
-            : new HashSet<EntityId>();
-        foreach (var unit in Units.Where(unit => unit.PlayerSlotId == playerSlotId && unit.Spec.Id == hit.Spec.Id && visibleWorldRect.HasPoint(unit.Position)))
+        PrepareUnitSelectionBuffer(playerSlotId, additive);
+        foreach (var unit in Units)
         {
-            selected.Add(unit.EntityId);
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Spec.Id == hit.Spec.Id
+                && visibleWorldRect.HasPoint(unit.Position))
+            {
+                _selectionEntityBuffer.Add(unit.EntityId);
+            }
         }
 
-        return SubmitSelectionCommand(playerSlotId, selected);
+        return SubmitSelectionBuffer(playerSlotId);
     }
 
     public int SelectBuildingTargetAt(PlayerSlotId playerSlotId, Vector2 worldPoint, bool additive, float pickPadding = 8)
     {
         var hitId = PickBuildingTargetId(worldPoint, playerSlotId, pickPadding);
-        var selected = additive
-            ? SelectedBuildingEntityIds(playerSlotId).ToHashSet()
-            : new HashSet<EntityId>();
+        PrepareBuildingSelectionBuffer(playerSlotId, additive);
 
         if (hitId is not null && _buildingTargetEntityIds.TryGetValue(hitId.Value, out var entityId))
         {
-            if (additive && selected.Contains(entityId))
+            if (additive && _selectionEntityBuffer.Contains(entityId))
             {
-                selected.Remove(entityId);
+                _selectionEntityBuffer.Remove(entityId);
             }
             else
             {
-                selected.Add(entityId);
+                _selectionEntityBuffer.Add(entityId);
             }
         }
 
-        SubmitSelectionCommand(playerSlotId, selected);
+        SubmitSelectionBuffer(playerSlotId);
         return SelectedBuildingSelectionProjections(playerSlotId).Count;
+    }
+
+    private void PrepareUnitSelectionBuffer(PlayerSlotId playerSlotId, bool additive)
+    {
+        _selectionEntityBuffer.Clear();
+        if (!additive)
+        {
+            return;
+        }
+
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Selected)
+            {
+                _selectionEntityBuffer.Add(unit.EntityId);
+            }
+        }
+    }
+
+    private void PrepareBuildingSelectionBuffer(PlayerSlotId playerSlotId, bool additive)
+    {
+        _selectionEntityBuffer.Clear();
+        if (!additive)
+        {
+            return;
+        }
+
+        foreach (var entityId in SelectedBuildingEntityIds(playerSlotId))
+        {
+            _selectionEntityBuffer.Add(entityId);
+        }
+    }
+
+    private int SubmitSelectionBuffer(PlayerSlotId playerSlotId)
+    {
+        var count = SubmitSelectionCommand(playerSlotId, _selectionEntityBuffer);
+        _selectionEntityBuffer.Clear();
+        return count;
     }
 
 }

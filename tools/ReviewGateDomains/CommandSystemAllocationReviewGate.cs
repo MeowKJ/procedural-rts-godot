@@ -7,6 +7,7 @@ static class CommandSystemAllocationReviewGate
         RequireSelectionSubjectSet(root, result);
         RequireEconomyOrderSubjectBuffer(root, result);
         RequireUnitBattlefieldConstructionTicketBuffers(root, result);
+        RequireUnitBattlefieldSelectionBuffers(root, result);
     }
 
     private static void RequireEntityCommandBufferDrainBuffers(string root, GateResult result)
@@ -121,5 +122,27 @@ static class CommandSystemAllocationReviewGate
         ForbidText(tickets, ".ToHashSet()", "Construction ticket bridge must not allocate before-entity HashSets.", result);
         ForbidText(tickets, ".Where(ticket", "Construction ticket bridge must not allocate LINQ ticket filters.", result);
         ForbidText(tickets, ".Where(entity", "Construction ticket bridge must not allocate LINQ entity filters.", result);
+    }
+
+    private static void RequireUnitBattlefieldSelectionBuffers(string root, GateResult result)
+    {
+        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        RequireText(battlefield, "HashSet<EntityId> _selectionEntityBuffer", "UnitBattlefield selection commands must reuse the selection entity buffer.", result);
+
+        var picking = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.SelectionPicking.cs");
+        RequireText(picking, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Unit selection paths must prepare the reusable selection buffer.", result);
+        RequireText(picking, "PrepareBuildingSelectionBuffer(playerSlotId, additive)", "Building selection paths must prepare the reusable selection buffer.", result);
+        RequireText(picking, "SubmitSelectionBuffer(playerSlotId)", "Selection paths must submit and clear the reusable selection buffer.", result);
+        RequireText(picking, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
+        ForbidText(picking, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
+        ForbidText(picking, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
     }
 }
