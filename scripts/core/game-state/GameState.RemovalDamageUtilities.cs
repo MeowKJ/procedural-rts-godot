@@ -190,7 +190,15 @@ public sealed partial class GameState
 
     private static bool IsProductionBuilding(BuildingModel building)
     {
-        return ProductionSpecsFor(building.FactionId).Any(option => option.Production.ProducerKind == building.Kind);
+        foreach (var spec in ProductionKindDesignBridge.PlayableProductionSpecs(ProductionKindDesignBridge.UnitFactionFor(building.FactionId)))
+        {
+            if (spec.Production?.ProducerKind == building.Kind)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static float RotateToward(float current, float target, float maxDelta)

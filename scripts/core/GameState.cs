@@ -35,6 +35,8 @@ public sealed partial class GameState
     private const float ProductionRefundRatio = 0.5f;
     private readonly Stopwatch _fogUpdateStopwatch = new();
     private readonly List<PlacementObstacle> _mapObstacles = [];
+    private readonly List<PlacementBuildAnchor> _legacyPlacementBuildAnchors = [];
+    private readonly List<(ProductionKind Kind, UnitSpec Spec, ProductionSpec Production)> _legacyProductionSpecBuffer = [];
 
     public Vector2 WorldSize { get; }
     public List<UnitModel> Units { get; } = [];

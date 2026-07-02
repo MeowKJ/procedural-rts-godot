@@ -17,58 +17,109 @@ public sealed partial class GameState
     public IReadOnlyList<ProductionOptionState> ProductionOptionStates(Owner owner)
     {
         var credits = Credits(owner);
-        return ProductionSpecsFor(MatchConfig.FactionForOwner(owner))
-            .OrderBy(option => option.Production.Category)
-            .ThenBy(option => option.Production.LaneIndex)
-            .ThenBy(option => option.Kind)
-            .Select(option =>
-            {
-                var kind = option.Kind;
-                var spec = option.Spec;
-                var production = option.Production;
-                var producers = Buildings
-                    .Where(building => building.Owner == owner)
-                    .Where(building => building.Kind == production.ProducerKind)
-                    .Where(building => building.Hp > 0 && building.Powered && building.BuildProgress >= 1)
-                    .ToList();
-                var presentation = UnitPresentationCatalog.ForProductionSpec(kind, spec);
-                var queued = producers.Sum(building => building.ProductionQueue.Count(item => item.DesignId == spec.Id));
-                var progress = producers
-                    .Select(building => building.ProductionQueue.FirstOrDefault())
-                    .Where(item => item is not null && item.DesignId == spec.Id)
-                    .Select(item => Mathf.Clamp(item!.Progress / production.Duration, 0, 1))
-                    .DefaultIfEmpty(0)
-                    .Max();
-                var hasProducer = producers.Count > 0;
-                var enoughCredits = credits >= spec.Stats.Cost;
-                var disabledReason = hasProducer
-                    ? enoughCredits ? "" : "ui.needCredits"
-                    : "ui.producerUnavailable";
-                return new ProductionOptionState(
-                    kind,
-                    production.Category,
-                    production.ProducerKind,
-                    spec.Id,
-                    presentation.ShortCode,
-                    presentation.Icon,
-                    presentation.RoleGlyph,
-                    presentation.Accent,
-                    spec.Stats.Cost,
-                    production.Duration,
-                    hasProducer,
-                    enoughCredits,
-                    queued,
-                    progress,
-                    disabledReason);
-            })
-            .ToList();
+        CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer);
+        var states = new List<ProductionOptionState>(_legacyProductionSpecBuffer.Count);
+        foreach (var option in _legacyProductionSpecBuffer)
+        {
+            var kind = option.Kind;
+            var spec = option.Spec;
+            var production = option.Production;
+            var presentation = UnitPresentationCatalog.ForProductionSpec(kind, spec);
+            var metrics = ProductionOptionMetrics(owner, spec.Id, production);
+            var hasProducer = metrics.ProducerCount > 0;
+            var enoughCredits = credits >= spec.Stats.Cost;
+            var disabledReason = hasProducer
+                ? enoughCredits ? "" : "ui.needCredits"
+                : "ui.producerUnavailable";
+            states.Add(new ProductionOptionState(
+                kind,
+                production.Category,
+                production.ProducerKind,
+                spec.Id,
+                presentation.ShortCode,
+                presentation.Icon,
+                presentation.RoleGlyph,
+                presentation.Accent,
+                spec.Stats.Cost,
+                production.Duration,
+                hasProducer,
+                enoughCredits,
+                metrics.QueuedCount,
+                metrics.ActiveProgress,
+                disabledReason));
+        }
+
+        return states;
     }
 
-    private static IEnumerable<(ProductionKind Kind, UnitSpec Spec, ProductionSpec Production)> ProductionSpecsFor(FactionId faction)
+    private static void CollectProductionSpecsFor(
+        FactionId faction,
+        List<(ProductionKind Kind, UnitSpec Spec, ProductionSpec Production)> result)
     {
-        return ProductionKindDesignBridge.PlayableProductionSpecs(ProductionKindDesignBridge.UnitFactionFor(faction))
-            .Where(spec => spec.Production is not null)
-            .Select(spec => (ProductionKindDesignBridge.ProductionKindFor(spec), spec, spec.Production!));
+        result.Clear();
+        foreach (var spec in ProductionKindDesignBridge.PlayableProductionSpecs(ProductionKindDesignBridge.UnitFactionFor(faction)))
+        {
+            if (spec.Production is null)
+            {
+                continue;
+            }
+
+            result.Add((ProductionKindDesignBridge.ProductionKindFor(spec), spec, spec.Production));
+        }
+
+        result.Sort(CompareLegacyProductionSpecs);
+    }
+
+    private (int ProducerCount, int QueuedCount, float ActiveProgress) ProductionOptionMetrics(
+        Owner owner,
+        string designId,
+        ProductionSpec production)
+    {
+        var producers = 0;
+        var queued = 0;
+        var progress = 0f;
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner
+                || building.Kind != production.ProducerKind
+                || building.Hp <= 0
+                || !building.Powered
+                || building.BuildProgress < 1)
+            {
+                continue;
+            }
+
+            producers++;
+            for (var index = 0; index < building.ProductionQueue.Count; index++)
+            {
+                if (building.ProductionQueue[index].DesignId == designId)
+                {
+                    queued++;
+                }
+            }
+
+            if (building.ProductionQueue.Count > 0
+                && building.ProductionQueue[0].DesignId == designId)
+            {
+                progress = Mathf.Max(progress, Mathf.Clamp(building.ProductionQueue[0].Progress / production.Duration, 0, 1));
+            }
+        }
+
+        return (producers, queued, progress);
+    }
+
+    private static int CompareLegacyProductionSpecs(
+        (ProductionKind Kind, UnitSpec Spec, ProductionSpec Production) left,
+        (ProductionKind Kind, UnitSpec Spec, ProductionSpec Production) right)
+    {
+        var categoryOrder = left.Production.Category.CompareTo(right.Production.Category);
+        if (categoryOrder != 0)
+        {
+            return categoryOrder;
+        }
+
+        var laneOrder = left.Production.LaneIndex.CompareTo(right.Production.LaneIndex);
+        return laneOrder != 0 ? laneOrder : left.Kind.CompareTo(right.Kind);
     }
 
     private IEnumerable<(BuildingModel Producer, UnitSpec Spec, ProductionSpec Production)> CandidateProductionProducers(Owner owner, ProductionKind productionKind)
@@ -196,10 +247,16 @@ public sealed partial class GameState
             WorldSize.X,
             WorldSize.Y,
             spec.PlacementDomain,
-            BuildingBuildAnchors(owner),
+            BuildPlacementAnchors(owner),
             BuildingObstacles(),
             requiresBuildAuthority: requiresBuildAuthority,
             padding: 12);
+    }
+
+    private List<PlacementBuildAnchor> BuildPlacementAnchors(Owner owner)
+    {
+        CollectBuildingBuildAnchors(owner, _legacyPlacementBuildAnchors);
+        return _legacyPlacementBuildAnchors;
     }
 
     public BuildingModel? PlaceBuilding(string kind, Owner owner, Vector2 desiredPosition, float facing = 0)

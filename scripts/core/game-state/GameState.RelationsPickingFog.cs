@@ -54,19 +54,26 @@ public sealed partial class GameState
         return OwnerRelation(viewerOwner, subjectOwner) is PlayerRelation.Self or PlayerRelation.Allied;
     }
 
-    private IReadOnlyList<PlacementBuildAnchor> BuildingBuildAnchors(Owner owner)
+    private void CollectBuildingBuildAnchors(Owner owner, List<PlacementBuildAnchor> result)
     {
-        return Buildings
-            .Where(building => building.Owner == owner
-                && building.Hp > 0
-                && building.BuildProgress >= 1
-                && BuildSpecCatalog.For(building.Kind).BuildRadius > 0)
-            .Select(building =>
+        result.Clear();
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner
+                || building.Hp <= 0
+                || building.BuildProgress < 1)
             {
-                var spec = BuildSpecCatalog.For(building.Kind);
-                return new PlacementBuildAnchor(building.Position.X, building.Position.Y, spec.BuildRadius, building.Powered);
-            })
-            .ToList();
+                continue;
+            }
+
+            var spec = BuildSpecCatalog.For(building.Kind);
+            if (spec.BuildRadius <= 0)
+            {
+                continue;
+            }
+
+            result.Add(new PlacementBuildAnchor(building.Position.X, building.Position.Y, spec.BuildRadius, building.Powered));
+        }
     }
 
     private static OwnerId OwnerToRelationId(Owner owner)
@@ -116,18 +123,31 @@ public sealed partial class GameState
 
     public ResourceFieldModel? PickResourceField(Vector2 worldPoint, float pickPadding = 8)
     {
-        return ResourceFields
-            .Where(field => field.Amount > 0)
-            .Select(field => new
+        ResourceFieldModel? best = null;
+        var bestScore = float.PositiveInfinity;
+        foreach (var field in ResourceFields)
+        {
+            if (field.Amount <= 0)
             {
-                Field = field,
-                Distance = field.Position.DistanceTo(worldPoint),
-                Radius = field.Radius + pickPadding,
-            })
-            .Where(candidate => candidate.Distance <= candidate.Radius)
-            .OrderBy(candidate => candidate.Distance / Mathf.Max(candidate.Radius, 1))
-            .Select(candidate => candidate.Field)
-            .FirstOrDefault();
+                continue;
+            }
+
+            var radius = field.Radius + pickPadding;
+            var distance = field.Position.DistanceTo(worldPoint);
+            if (distance > radius)
+            {
+                continue;
+            }
+
+            var score = PickScore(distance, radius);
+            if (score < bestScore)
+            {
+                best = field;
+                bestScore = score;
+            }
+        }
+
+        return best;
     }
 
     public UnitModel? PickAnyUnit(Vector2 worldPoint, float pickPadding = 8)
@@ -241,18 +261,31 @@ public sealed partial class GameState
 
     private UnitModel? PickUnit(Vector2 worldPoint, Func<UnitModel, bool> predicate, float pickPadding)
     {
-        return Units
-            .Where(predicate)
-            .Select(unit => new
+        UnitModel? best = null;
+        var bestScore = float.PositiveInfinity;
+        foreach (var unit in Units)
+        {
+            if (!predicate(unit))
             {
-                Unit = unit,
-                Distance = unit.Position.DistanceTo(worldPoint),
-                Radius = unit.RuntimeDescriptor.Radius + pickPadding,
-            })
-            .Where(candidate => candidate.Distance <= candidate.Radius)
-            .OrderBy(candidate => candidate.Distance / Mathf.Max(candidate.Radius, 1))
-            .Select(candidate => candidate.Unit)
-            .FirstOrDefault();
+                continue;
+            }
+
+            var radius = unit.RuntimeDescriptor.Radius + pickPadding;
+            var distance = unit.Position.DistanceTo(worldPoint);
+            if (distance > radius)
+            {
+                continue;
+            }
+
+            var score = PickScore(distance, radius);
+            if (score < bestScore)
+            {
+                best = unit;
+                bestScore = score;
+            }
+        }
+
+        return best;
     }
 
     private BuildingModel? PickBuilding(Vector2 worldPoint, Func<Owner, bool> ownerPredicate, float pickPadding)
@@ -262,17 +295,35 @@ public sealed partial class GameState
 
     private BuildingModel? PickBuilding(Vector2 worldPoint, Func<BuildingModel, bool> predicate, float pickPadding)
     {
-        return Buildings
-            .Where(predicate)
-            .Select(building => new
+        BuildingModel? best = null;
+        var bestScore = float.PositiveInfinity;
+        foreach (var building in Buildings)
+        {
+            if (!predicate(building))
             {
-                Building = building,
-                Distance = building.Position.DistanceTo(worldPoint),
-                Radius = BuildingRadius(building) + pickPadding,
-            })
-            .Where(candidate => candidate.Distance <= candidate.Radius)
-            .OrderBy(candidate => candidate.Distance / Mathf.Max(candidate.Radius, 1))
-            .Select(candidate => candidate.Building)
-            .FirstOrDefault();
+                continue;
+            }
+
+            var radius = BuildingRadius(building) + pickPadding;
+            var distance = building.Position.DistanceTo(worldPoint);
+            if (distance > radius)
+            {
+                continue;
+            }
+
+            var score = PickScore(distance, radius);
+            if (score < bestScore)
+            {
+                best = building;
+                bestScore = score;
+            }
+        }
+
+        return best;
+    }
+
+    private static float PickScore(float distance, float radius)
+    {
+        return distance / Mathf.Max(radius, 1);
     }
 }

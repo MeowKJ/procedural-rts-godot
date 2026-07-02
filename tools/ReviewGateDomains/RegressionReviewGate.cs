@@ -18,6 +18,7 @@ static class RegressionReviewGate
         RequireAbilitySystemCooldownBufferEvidence(root, result);
         EnemyAttackWaveAiReviewGate.Check(root, result);
         EnemyProductionAiReviewGate.Check(root, result);
+        GameStateAllocationReviewGate.Check(root, result);
     }
     private static void RequireToolProjects(string root, GateResult result)
     {
@@ -196,5 +197,4 @@ static class RegressionReviewGate
         ForbidText(abilitySystem, "Append(new AbilityCooldownState", "AbilitySystem cooldown writes must not use LINQ Append.", result);
         ForbidText(abilitySystem, "runtime.Cooldowns.Any(", "AbilitySystem cooldown checks must not use LINQ Any.", result);
     }
-
 }
