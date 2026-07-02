@@ -11,9 +11,11 @@ static class SelectionControllerAllocationReviewGate
         RequireText(controller, "private bool HasSelectedLegacyBuildings()", "SelectionController building preview must scan selected legacy buildings explicitly.", result);
         RequireText(controller, "State.SelectedUnitCount()", "SelectionController legacy selected-unit readouts must use explicit selected-unit counts.", result);
         RequireText(controller, "List<UnitModel> _legacyCommandLineUnitBuffer", "SelectionController command-line preview must reuse legacy selected-unit storage.", result);
+        RequireText(controller, "List<BuildingModel> _legacyCommandLineBuildingBuffer", "SelectionController legacy rally-line preview must reuse selected-building storage.", result);
         RequireText(controller, "List<UnitInstance> _runtimeCommandLineUnitBuffer", "SelectionController command-line preview must reuse runtime selected-unit storage.", result);
         RequireText(controller, "Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers", "SelectionController command-line target markers must reuse dictionary storage.", result);
         RequireText(controller, "CollectLegacyCommandLineUnits(_legacyCommandLineUnitBuffer)", "SelectionController legacy command lines must fill reusable unit storage.", result);
+        RequireText(controller, "CollectLegacyCommandLineBuildings(_legacyCommandLineBuildingBuffer)", "SelectionController legacy rally lines must fill reusable building storage.", result);
         RequireText(controller, "CollectRuntimeCommandLineUnits(_runtimeCommandLineUnitBuffer)", "SelectionController runtime command lines must fill reusable unit storage.", result);
 
         ForbidText(controller, "State.SelectedUnits().ToList()", "SelectionController must not materialize selected legacy units for right-click commands.", result);
@@ -22,6 +24,7 @@ static class SelectionControllerAllocationReviewGate
         ForbidText(controller, "State.SelectedUnits()\n            .Where(unit => unit.CommandVisualTarget is not null || unit.FormationSlot is not null)\n            .ToList()", "SelectionController legacy command-line preview must not materialize selected-unit lists.", result);
         ForbidText(controller, "UnitBattlefield!.SelectedUnits(LocalPlayerSlotId)\n            .Where(unit => unit.CommandVisualTarget is not null || unit.FormationSlot is not null)\n            .ToList()", "SelectionController runtime command-line preview must not materialize selected-unit lists.", result);
         ForbidText(controller, "new Dictionary<string, (Vector2 Position, Color Accent, float Pulse)>()", "SelectionController command-line preview must not allocate marker dictionaries per draw.", result);
+        ForbidText(controller, "foreach (var building in State.SelectedBuildings())", "SelectionController legacy rally lines must not allocate selected-building enumerables per draw.", result);
         ForbidText(controller, "State.SelectedBuildings().Any()", "SelectionController preview must not allocate selected-building LINQ queries.", result);
         ForbidText(controller, "UnitBattlefield!.SelectedUnits(LocalPlayerSlotId).Any(IsHarvester)", "SelectionController runtime harvester check must use an explicit scan.", result);
     }

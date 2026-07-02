@@ -33,6 +33,20 @@ public partial class SelectionController
         }
     }
 
+    private void CollectLegacyCommandLineBuildings(List<BuildingModel> result)
+    {
+        result.Clear();
+        foreach (var building in State.Buildings)
+        {
+            if (building.Owner == ProceduralRts.Core.Owner.Player
+                && building.Selected
+                && building.RallyPoint is not null)
+            {
+                result.Add(building);
+            }
+        }
+    }
+
     private static (int X, int Y) CommandLineTargetKey(Vector2 visualTarget)
     {
         return (Mathf.RoundToInt(visualTarget.X / 4f), Mathf.RoundToInt(visualTarget.Y / 4f));

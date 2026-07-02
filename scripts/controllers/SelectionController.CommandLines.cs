@@ -64,9 +64,10 @@ public partial class SelectionController
             return;
         }
 
-        foreach (var building in State.SelectedBuildings())
+        CollectLegacyCommandLineBuildings(_legacyCommandLineBuildingBuffer);
+        foreach (var building in _legacyCommandLineBuildingBuffer)
         {
-            if (building.RallyPoint is null)
+            if (building.RallyPoint is not { } rallyPoint)
             {
                 continue;
             }
@@ -74,10 +75,10 @@ public partial class SelectionController
             var spec = BuildSpecCatalog.For(building.Kind);
             var accent = State.VisualAccent(building.Owner, building.FactionId, spec.Accent);
             var pulse = 0.45f + building.RallyPulse * 0.55f;
-            DrawLine(building.Position, building.RallyPoint.Value, new Color(accent, 0.16f + pulse * 0.26f), 1.4f, true);
-            DrawArc(building.RallyPoint.Value, 18 + building.RallyPulse * 18, 0, Mathf.Tau, 72, new Color("#d8f7ff", 0.32f + pulse * 0.42f), 2.2f, true);
-            DrawLine(building.RallyPoint.Value + new Vector2(-13, 0), building.RallyPoint.Value + new Vector2(13, 0), new Color(accent, 0.72f), 2.2f, true);
-            DrawLine(building.RallyPoint.Value + new Vector2(0, -13), building.RallyPoint.Value + new Vector2(0, 13), new Color(accent, 0.72f), 2.2f, true);
+            DrawLine(building.Position, rallyPoint, new Color(accent, 0.16f + pulse * 0.26f), 1.4f, true);
+            DrawArc(rallyPoint, 18 + building.RallyPulse * 18, 0, Mathf.Tau, 72, new Color("#d8f7ff", 0.32f + pulse * 0.42f), 2.2f, true);
+            DrawLine(rallyPoint + new Vector2(-13, 0), rallyPoint + new Vector2(13, 0), new Color(accent, 0.72f), 2.2f, true);
+            DrawLine(rallyPoint + new Vector2(0, -13), rallyPoint + new Vector2(0, 13), new Color(accent, 0.72f), 2.2f, true);
         }
     }
 
