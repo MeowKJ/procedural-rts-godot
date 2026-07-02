@@ -32,11 +32,13 @@ public sealed partial class CommandSystem
         }
     }
 
-    private static void ApplySelection(EntityWorld world, SetSelectionEntityCommand command)
+    private void ApplySelection(EntityWorld world, SetSelectionEntityCommand command)
     {
-        var selected = command.Subjects
-            .Select(id => id.Value)
-            .ToHashSet();
+        _selectionSubjectIds.Clear();
+        foreach (var id in command.Subjects)
+        {
+            _selectionSubjectIds.Add(id.Value);
+        }
 
         foreach (var entity in world.OrderedEntities)
         {
@@ -46,7 +48,9 @@ public sealed partial class CommandSystem
                 continue;
             }
 
-            entity.Components.Set(selectable with { Selected = selected.Contains(entity.Id.Value) });
+            entity.Components.Set(selectable with { Selected = _selectionSubjectIds.Contains(entity.Id.Value) });
         }
+
+        _selectionSubjectIds.Clear();
     }
 }
