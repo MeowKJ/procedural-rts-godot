@@ -127,9 +127,9 @@ public partial class SelectionController
 
     private bool HasSelectedRuntimeHarvester()
     {
-        foreach (var unit in UnitBattlefield!.SelectedUnits(LocalPlayerSlotId))
+        foreach (var unit in UnitBattlefield!.Units)
         {
-            if (IsHarvester(unit))
+            if (unit.PlayerSlotId == LocalPlayerSlotId && unit.Selected && IsHarvester(unit))
             {
                 return true;
             }
