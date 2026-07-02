@@ -9,7 +9,7 @@ public sealed partial class ConstructionSystem
         return BuildSpecCatalog.Definitions.TryGetValue(kind, out spec!);
     }
 
-    private static PlacementResult ValidateConstructionStart(EntityWorld world, StartConstructionEntityCommand command)
+    private PlacementResult ValidateConstructionStart(EntityWorld world, StartConstructionEntityCommand command)
     {
         if (!command.Issuer.IsValid)
         {
@@ -66,7 +66,7 @@ public sealed partial class ConstructionSystem
         return new PlacementResult(0, 0, true, string.Empty);
     }
 
-    private static PlacementResult ValidateReadyTicketPlacement(
+    private PlacementResult ValidateReadyTicketPlacement(
         EntityWorld world,
         StartConstructionEntityCommand command,
         BuildSpec spec)
@@ -103,13 +103,17 @@ public sealed partial class ConstructionSystem
         return new PlacementResult(position.X, position.Y, true, string.Empty);
     }
 
-    private static PlacementResult ValidatePlacementArea(
+    private PlacementResult ValidatePlacementArea(
         EntityWorld world,
         OwnerId issuer,
         Vector2 position,
         BuildSpec spec,
         bool requiresBuildAuthority)
     {
+        BuildAnchors(world, issuer, _placementBuildAnchors);
+        FootprintObstacles(world, _placementObstacles);
+        BuildVisibilitySources(world, issuer, _placementVisibility);
+
         return PlacementMath.ValidateBuildableArea(
             position.X,
             position.Y,
@@ -118,11 +122,11 @@ public sealed partial class ConstructionSystem
             world.WorldWidth,
             world.WorldHeight,
             spec.PlacementDomain,
-            BuildAnchors(world, issuer),
-            FootprintObstacles(world),
+            _placementBuildAnchors,
+            _placementObstacles,
             terrainAt: (x, y) => TerrainLayerAt(world, x, y),
             requiresBuildAuthority: requiresBuildAuthority,
-            buildVisibility: BuildVisibilitySources(world, issuer),
+            buildVisibility: _placementVisibility,
             requiresBuildVisibility: true);
     }
 

@@ -8,6 +8,7 @@ static class RegressionReviewGate
         RequireSimHotAllocationEvidence(root, result);
         RequireProjectileProjectionBufferEvidence(root, result);
         RequireCommandSystemGroupOrderBufferEvidence(root, result);
+        RequireConstructionPlacementBufferEvidence(root, result);
     }
 
     private static void RequireToolProjects(string root, GateResult result)
@@ -124,5 +125,23 @@ static class RegressionReviewGate
 
         var formations = ReviewGateSource.Read(root, "scripts", "core", "commands", "FormationMath.cs");
         RequireText(formations, "CreateMoveDestinationsInto", "FormationMath must expose a caller-owned buffer API.", result);
+    }
+
+    private static void RequireConstructionPlacementBufferEvidence(string root, GateResult result)
+    {
+        var constructionSystem = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "ConstructionSystem.cs"));
+        RequireText(constructionSystem, "List<PlacementBuildAnchor> _placementBuildAnchors", "ConstructionSystem must reuse placement build-anchor storage.", result);
+        RequireText(constructionSystem, "List<PlacementObstacle> _placementObstacles", "ConstructionSystem must reuse placement obstacle storage.", result);
+        RequireText(constructionSystem, "List<PlacementBuildVisibility> _placementVisibility", "ConstructionSystem must reuse placement visibility storage.", result);
+        RequireText(constructionSystem, "BuildAnchors(world, issuer, _placementBuildAnchors)", "Construction placement validation must fill the reusable build-anchor buffer.", result);
+        RequireText(constructionSystem, "FootprintObstacles(world, _placementObstacles)", "Construction placement validation must fill the reusable obstacle buffer.", result);
+        RequireText(constructionSystem, "BuildVisibilitySources(world, issuer, _placementVisibility)", "Construction placement validation must fill the reusable visibility buffer.", result);
+        RequireText(constructionSystem, "BuildAnchors(EntityWorld world, OwnerId ownerId, List<PlacementBuildAnchor> result)", "Construction build-anchor collection must use a caller-owned buffer.", result);
+        RequireText(constructionSystem, "FootprintObstacles(EntityWorld world, List<PlacementObstacle> result)", "Construction obstacle collection must use a caller-owned buffer.", result);
+        RequireText(constructionSystem, "BuildVisibilitySources(EntityWorld world, OwnerId ownerId, List<PlacementBuildVisibility> result)", "Construction visibility collection must use a caller-owned buffer.", result);
+        ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildAnchor> BuildAnchors", "Construction build-anchor collection must not allocate a list per placement validation.", result);
+        ForbidText(constructionSystem, "private static IReadOnlyList<PlacementObstacle> FootprintObstacles", "Construction obstacle collection must not allocate a list per placement validation.", result);
+        ForbidText(constructionSystem, "private static IReadOnlyList<PlacementBuildVisibility> BuildVisibilitySources", "Construction visibility collection must not allocate a list per placement validation.", result);
+        ForbidText(constructionSystem, ".ToList()", "ConstructionSystem must not allocate LINQ lists in construction placement validation paths.", result);
     }
 }

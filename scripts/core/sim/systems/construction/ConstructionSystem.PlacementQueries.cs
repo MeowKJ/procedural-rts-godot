@@ -4,20 +4,22 @@ namespace ProceduralRts.Core;
 
 public sealed partial class ConstructionSystem
 {
-    private static IReadOnlyList<PlacementBuildAnchor> BuildAnchors(EntityWorld world, OwnerId ownerId)
+    private static void BuildAnchors(EntityWorld world, OwnerId ownerId, List<PlacementBuildAnchor> result)
     {
-        return world.OrderedEntities
-            .Where(entity => entity.OwnerId.Value == ownerId.Value
-                && entity.Components.TryGet<BuildRadiusComponentState>(out var radius)
-                && radius.Radius > 0
-                && IsActiveBuildAuthority(world, entity))
-            .Select(entity =>
+        result.Clear();
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (entity.OwnerId.Value != ownerId.Value
+                || !entity.Components.TryGet<BuildRadiusComponentState>(out var radius)
+                || radius.Radius <= 0
+                || !IsActiveBuildAuthority(world, entity))
             {
-                var radius = entity.Components.Require<BuildRadiusComponentState>();
-                var powered = !entity.Components.TryGet<PowerComponentState>(out var power) || power.Powered;
-                return new PlacementBuildAnchor(entity.Transform.Position.X, entity.Transform.Position.Y, radius.Radius, powered);
-            })
-            .ToList();
+                continue;
+            }
+
+            var powered = !entity.Components.TryGet<PowerComponentState>(out var power) || power.Powered;
+            result.Add(new PlacementBuildAnchor(entity.Transform.Position.X, entity.Transform.Position.Y, radius.Radius, powered));
+        }
     }
 
     private static bool IsActiveBuildAuthority(EntityWorld world, EntityInstance entity)
@@ -50,21 +52,36 @@ public sealed partial class ConstructionSystem
 
     private static bool IsDeployGatedBuildAuthority(EntityWorld world, EntityInstance entity)
     {
-        return world.TryGetSpec(entity.SpecId, out var spec)
-            && spec.Abilities.Any(ability => ability.Kind == AbilityKind.Deploy);
+        if (!world.TryGetSpec(entity.SpecId, out var spec))
+        {
+            return false;
+        }
+
+        foreach (var ability in spec.Abilities)
+        {
+            if (ability.Kind == AbilityKind.Deploy)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static IReadOnlyList<PlacementBuildVisibility> BuildVisibilitySources(EntityWorld world, OwnerId ownerId)
+    private static void BuildVisibilitySources(EntityWorld world, OwnerId ownerId, List<PlacementBuildVisibility> result)
     {
-        return world.OrderedEntities
-            .Where(entity => world.Relations.Relation(ownerId, entity.OwnerId) is PlayerRelation.Self or PlayerRelation.Allied
-                && IsLiveBuildVisibilitySource(entity))
-            .Select(entity =>
+        result.Clear();
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (world.Relations.Relation(ownerId, entity.OwnerId) is not (PlayerRelation.Self or PlayerRelation.Allied)
+                || !IsLiveBuildVisibilitySource(entity))
             {
-                var vision = entity.Components.Require<VisionComponentState>();
-                return new PlacementBuildVisibility(entity.Transform.Position.X, entity.Transform.Position.Y, vision.SightRange);
-            })
-            .ToList();
+                continue;
+            }
+
+            var vision = entity.Components.Require<VisionComponentState>();
+            result.Add(new PlacementBuildVisibility(entity.Transform.Position.X, entity.Transform.Position.Y, vision.SightRange));
+        }
     }
 
     private static bool IsLiveBuildVisibilitySource(EntityInstance entity)
@@ -88,22 +105,24 @@ public sealed partial class ConstructionSystem
         return true;
     }
 
-    private static IReadOnlyList<PlacementObstacle> FootprintObstacles(EntityWorld world)
+    private static void FootprintObstacles(EntityWorld world, List<PlacementObstacle> result)
     {
-        return world.OrderedEntities
-            .Where(entity => entity.Components.TryGet<FootprintComponentState>(out _)
-                && (!entity.Components.TryGet<HealthComponentState>(out var health) || health.Hp > 0))
-            .Select(entity =>
+        result.Clear();
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (!entity.Components.TryGet<FootprintComponentState>(out var footprint)
+                || (entity.Components.TryGet<HealthComponentState>(out var health) && health.Hp <= 0))
             {
-                var footprint = entity.Components.Require<FootprintComponentState>();
-                var rect = PlacementMath.RectFromCenter(
-                    entity.Transform.Position.X,
-                    entity.Transform.Position.Y,
-                    footprint.Size.X,
-                    footprint.Size.Y);
-                return new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height);
-            })
-            .ToList();
+                continue;
+            }
+
+            var rect = PlacementMath.RectFromCenter(
+                entity.Transform.Position.X,
+                entity.Transform.Position.Y,
+                footprint.Size.X,
+                footprint.Size.Y);
+            result.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height));
+        }
     }
 
     private static TerrainLayer TerrainLayerAt(EntityWorld world, float x, float y)

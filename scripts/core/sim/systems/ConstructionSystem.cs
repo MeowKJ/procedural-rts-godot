@@ -8,6 +8,10 @@ namespace ProceduralRts.Core;
 /// </summary>
 public sealed partial class ConstructionSystem : ISimSystem
 {
+    private readonly List<PlacementBuildAnchor> _placementBuildAnchors = new();
+    private readonly List<PlacementObstacle> _placementObstacles = new();
+    private readonly List<PlacementBuildVisibility> _placementVisibility = new();
+
     public void Step(SimContext context)
     {
         foreach (var sequenced in context.Commands)

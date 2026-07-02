@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class ConstructionSystem
 {
-    private static void ApplyStartConstruction(EntityWorld world, StartConstructionEntityCommand command)
+    private void ApplyStartConstruction(EntityWorld world, StartConstructionEntityCommand command)
     {
         var legality = ValidateConstructionStart(world, command);
         if (!legality.IsValid)
