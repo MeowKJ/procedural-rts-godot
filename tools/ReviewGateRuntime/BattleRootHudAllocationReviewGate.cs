@@ -21,6 +21,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "_unitBattlefieldVisionSourceBuffer.Clear();", "UnitBattlefieldVisionSources must clear and reuse the vision-source buffer.", result);
         RequireText(process, "foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))", "UnitBattlefieldVisionSources must copy vision sources explicitly.", result);
         RequireText(process, "_unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));", "UnitBattlefieldVisionSources must fill the reusable vision-source buffer.", result);
+        RequireText(process, "LiveUnitBattlefieldUnitCount()", "PerfHudCounts must use explicit runtime unit counting.", result);
+        RequireText(process, "LiveLegacyUnitCount()", "PerfHudCounts must use explicit legacy unit counting.", result);
+        RequireText(process, "LiveLegacyBuildingCount()", "PerfHudCounts must use explicit legacy building counting.", result);
+        RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
@@ -58,6 +62,11 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);
         ForbidText(process, ".Select(source => (source.Position, source.SightRange))", "BattleRoot vision source bridge must not allocate LINQ projection iterators.", result);
+        ForbidText(process, "_unitBattlefield.Units.Count(unit => unit.Hp > 0)", "PerfHudCounts must not allocate runtime live-unit count iterators.", result);
+        ForbidText(process, "_state.Units.Count(unit => unit.Hp > 0)", "PerfHudCounts must not allocate legacy live-unit count iterators.", result);
+        ForbidText(process, "_state.Buildings.Count(building => building.Hp > 0)", "PerfHudCounts must not allocate legacy live-building count iterators.", result);
+        ForbidText(process, "_unitInstanceViews.Values.Count(view => view.Visible)", "PerfHudCounts must not allocate runtime visible-view count iterators.", result);
+        ForbidText(process, "_unitViews.Values.Count(view => view.Visible)", "PerfHudCounts must not allocate legacy visible-view count iterators.", result);
         ForbidText(hudSync, "_unitBattlefield.SelectedUnits(PlayerSlotId.One).ToList()", "Runtime selection HUD sync must not materialize selected UnitBattlefield units.", result);
         ForbidText(hudSync, "_state.SelectedUnits().ToList()", "Legacy selection HUD sync must not materialize selected GameState units.", result);
         ForbidText(hudSync, "_state.SelectedBuildings().ToList()", "Legacy selection HUD sync must not materialize selected GameState buildings.", result);

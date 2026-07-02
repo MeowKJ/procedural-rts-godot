@@ -1078,7 +1078,7 @@ Single responsibility - god-class breakup:
     `tools/ReviewGate/obj` returns. The main Godot csproj also excludes `.godot`,
     `artifacts`, and `tools` C# generated/tool sources from gameplay compilation.
     ReviewGate runner current source budget: 9 C# source files / 568 total lines; largest C# file tools/ReviewGate/ReviewGateEvidence.cs has 148 lines. `ReviewGate filesize` now also fails if this exact source-budget
-    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19603 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 998 lines. Full `ReviewGate`, historical narrow mode
+    evidence drifts from TODO or the review record. Validation tool suites current source budget: 148 C# source files / 19612 total lines across 55 suites; largest C# file tools/CombatBehaviorSkirmish/SkirmishAi.cs has 393 lines; largest suite tools/ReviewGateDomains has 998 lines. Full `ReviewGate`, historical narrow mode
     samples, and `presentation --max-warnings=0` pass with 0 errors / 0 warnings;
     full `VerifyAll` passes 23/23.
 [x] `GameText` red-line split: the old 695-line localization file is now a tiny API
@@ -1241,7 +1241,9 @@ Wiring & coverage gaps (found during the sweep):
     enumerable API. Follow-up: #164 replaced `ConstructionSystem`
     prerequisite completed-building `world.OrderedEntities.Any(...)` with an
     explicit scan and locked the no-LINQ prerequisite contract in
-    `ReviewGate regression`.
+    `ReviewGate regression`. Follow-up: #165 replaced `BattleRoot.Process`
+    perf HUD live/visible `Count(...)` calls with explicit scans and locked the
+    no-LINQ perf HUD count contract in `ReviewGate presentation`.
     Follow-up: #73 reused `CommandSystem` scalar movement/combat/stance subject
     buffers for Move, Patrol, Guard, Attack, Stop, and Stance commands, replacing
     those `OwnedSubjects(...)` yield-iterator paths while leaving harvest/repair

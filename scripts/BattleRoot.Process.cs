@@ -134,13 +134,12 @@ public partial class BattleRoot
     private PerfHudCounts PerfHudCounts()
     {
         var liveUnitCount = UseUnitDesignRuntime
-            ? _unitBattlefield.Units.Count(unit => unit.Hp > 0)
-            : _state.Units.Count(unit => unit.Hp > 0);
+            ? LiveUnitBattlefieldUnitCount()
+            : LiveLegacyUnitCount();
         var liveBuildingCount = UseUnitDesignRuntime
             ? _unitBattlefield.LiveBuildingCount()
-            : _state.Buildings.Count(building => building.Hp > 0);
-        var visibleUnitCount = _unitInstanceViews.Values.Count(view => view.Visible)
-            + _unitViews.Values.Count(view => view.Visible);
+            : LiveLegacyBuildingCount();
+        var visibleUnitCount = VisibleUnitViewCount();
         var projectileCount = _state.Projectiles.Count + _state.Beams.Count;
         var effectCount = (_combatEffects?.ActiveEffectCount ?? 0)
             + (_commandAcknowledgements?.ActiveRingCount ?? 0)
@@ -154,6 +153,70 @@ public partial class BattleRoot
             effectCount,
             _state.FogOfWar.MaskTextureUploadCount,
             _state.LastFogUpdateMs);
+    }
+
+    private int LiveUnitBattlefieldUnitCount()
+    {
+        var count = 0;
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int LiveLegacyUnitCount()
+    {
+        var count = 0;
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int LiveLegacyBuildingCount()
+    {
+        var count = 0;
+        foreach (var building in _state.Buildings)
+        {
+            if (building.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int VisibleUnitViewCount()
+    {
+        var count = 0;
+        foreach (var (_, view) in _unitInstanceViews)
+        {
+            if (view.Visible)
+            {
+                count++;
+            }
+        }
+
+        foreach (var (_, view) in _unitViews)
+        {
+            if (view.Visible)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private static void SetPresentationViewActive(Node2D view, bool active)
