@@ -1,0 +1,43 @@
+name: Preflight
+
+on:
+  pull_request: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_ROLL_FORWARD: Major
+
+jobs:
+  preflight:
+    name: Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore main project
+        shell: bash
+        run: dotnet restore ProceduralRts.csproj
+
+      - name: Build main project
+        shell: bash
+        run: dotnet build ProceduralRts.csproj --no-restore
+
+      - name: Diff whitespace check
+        shell: bash
+        run: git diff --check "origin/${{ github.base_ref }}...HEAD"
