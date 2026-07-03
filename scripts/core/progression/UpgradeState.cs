@@ -4,7 +4,7 @@ public sealed class UpgradeState
 {
     private readonly SortedSet<string> _completed = new(StringComparer.Ordinal);
 
-    public IReadOnlyList<string> CompletedIds => _completed.ToArray();
+    public CompletedUpgradeIds CompletedIds => new(_completed);
 
     public bool Complete(string id)
     {
@@ -19,5 +19,20 @@ public sealed class UpgradeState
     public bool Has(string id)
     {
         return _completed.Contains(id);
+    }
+
+    public readonly struct CompletedUpgradeIds
+    {
+        private readonly SortedSet<string> _completed;
+
+        internal CompletedUpgradeIds(SortedSet<string> completed)
+        {
+            _completed = completed;
+        }
+
+        public SortedSet<string>.Enumerator GetEnumerator()
+        {
+            return _completed.GetEnumerator();
+        }
     }
 }
