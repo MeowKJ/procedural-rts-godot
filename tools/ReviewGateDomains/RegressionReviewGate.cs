@@ -5,7 +5,7 @@ static class RegressionReviewGate
         RequireToolProjects(root, result);
         RequireVerifyAllCoverage(root, result);
         RequireDeterministicEvidence(root, result);
-        EntityStateHashAllocationReviewGate.Check(root, result);
+        EntityStateHashAllocationReviewGate.Check(root, result); EntityWorldStableReadoutReviewGate.Check(root, result);
         UnitSpecAbilityAllocationReviewGate.Check(root, result); UpgradeStateAllocationReviewGate.Check(root, result);
         BuildingEntityAllocationReviewGate.Check(root, result);
         RequireSimHotAllocationEvidence(root, result);

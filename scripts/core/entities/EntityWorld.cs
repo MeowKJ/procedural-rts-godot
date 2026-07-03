@@ -71,8 +71,8 @@ public sealed partial class EntityWorld
     /// </summary>
     public bool SimInvariantsEnabled { get; set; } = System.Environment.GetEnvironmentVariable(SimInvariants.EnvironmentToggle) == "1";
 
-    public IReadOnlyList<EntityInstance> StableEntities => _entities.Values.ToList();
-    public IReadOnlyList<EntitySpec> StableSpecs => _specs.Values.ToList();
+    public IReadOnlyCollection<EntityInstance> StableEntities => _entities.Values;
+    public IReadOnlyCollection<EntitySpec> StableSpecs => _specs.Values;
     public int Count => _entities.Count;
 
     /// <summary>
