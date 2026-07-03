@@ -67,6 +67,7 @@ public sealed record ProjectileComponentState(
     float TrackingStrength,
     float HitRadius,
     float LifetimeRemaining,
+    bool Interceptable = false,
     WeaponKind? LegacyWeaponKind = null,
     AmmoKind? LegacyAmmoKind = null) : EntityComponentState
 {
@@ -80,7 +81,8 @@ public sealed record ProjectileComponentState(
         float Speed,
         float TrackingStrength,
         float HitRadius,
-        float LifetimeRemaining)
+        float LifetimeRemaining,
+        bool Interceptable = false)
         : this(
             Source,
             Target,
@@ -92,6 +94,7 @@ public sealed record ProjectileComponentState(
             TrackingStrength,
             HitRadius,
             LifetimeRemaining,
+            Interceptable,
             WeaponKind,
             AmmoKind)
     {

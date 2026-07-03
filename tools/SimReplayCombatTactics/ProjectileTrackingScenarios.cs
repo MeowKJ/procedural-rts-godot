@@ -41,6 +41,36 @@ static partial class Program
         Console.WriteLine($"OK [projectile-tracking]: tracking ammo spawned, survived source removal, impacted, and cleaned up; target hp {targetHp:0.0}.");
     }
 
+    static void RunProjectileInterceptScenario()
+    {
+        const int Ticks = 8;
+        AssertDeterministic("projectile-intercept", BuildProjectileInterceptWorld, Ticks, 2);
+
+        var world = BuildProjectileInterceptWorld();
+        var clock = new SimClock();
+        var fired = false;
+        var intercepted = false;
+        for (var tick = 1; tick <= Ticks; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            var events = world.Events.Drain();
+            fired |= events.Any(simEvent => simEvent is WeaponFiredEvent);
+            if (fired && !world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>()))
+            {
+                intercepted = true;
+            }
+        }
+
+        var targetHp = HealthOf(world, "replay.intercept.target");
+        var interceptor = world.OrderedEntities.Single(entity => entity.SpecId == "replay.intercept.interceptor");
+        var interceptorWeapon = interceptor.Components.Require<WeaponUserComponentState>();
+        Assert(fired, "projectile intercept scenario should fire at least one weapon.");
+        Assert(intercepted, "interceptor should remove the seeker projectile entity before impact.");
+        Assert(MathF.Abs(targetHp - 160) <= 0.001f, $"intercepted projectile should not damage the defended target, got {targetHp:0.0} hp.");
+        Assert(interceptorWeapon.Mounts[0].CooldownRemaining > 0, "interceptor should consume mount cooldown when it removes a projectile.");
+        Console.WriteLine($"OK [projectile-intercept]: interceptor cooldown {interceptorWeapon.Mounts[0].CooldownRemaining:0.00}, target hp {targetHp:0.0}.");
+    }
+
     static void RunProjectileSplashScenario()
     {
         const int Ticks = 4;
@@ -75,6 +105,22 @@ static partial class Program
         var shooterSpec = ProjectileUnitSpec("replay.projectile.shooter", WeaponKind.RocketPod, 160);
         var targetSpec = ProjectileUnitSpec("replay.projectile.target", null, 160);
         var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(360, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.RocketPod));
+        return world;
+    }
+
+    private static EntityWorld BuildProjectileInterceptWorld()
+    {
+        var world = new EntityWorld(seed: 7070) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.intercept.shooter", WeaponKind.RocketPod, 160);
+        var targetSpec = ProjectileUnitSpec("replay.intercept.target", null, 160);
+        var interceptorSpec = ProjectileUnitSpec("replay.intercept.interceptor", WeaponKind.SkySpear, 160);
+        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(360, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(interceptorSpec, new OwnerId(2), EntityTransform.At(new Vector2(180, 220)), ProjectileUnitState(interceptorSpec, EntityId.None, WeaponKind.SkySpear));
         world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.RocketPod));
         return world;
     }
@@ -128,13 +174,13 @@ static partial class Program
             new CollisionComponentState(spec.Collision!.Radius, spec.Collision.Mass, spec.Collision.PushPriority, spec.Collision.BlocksMovement),
         };
 
-        if (target.IsValid)
+        if (spec.Weapons.Count > 0)
         {
             states.Add(new WeaponUserComponentState(
                 new[] { new WeaponMountRuntimeState("main", weapon, 0, 0) },
                 target,
                 CombatTargetKind.Unit,
-                AttackTargetIsManual: true));
+                AttackTargetIsManual: target.IsValid));
         }
 
         return states.ToArray();

@@ -216,7 +216,8 @@ public static partial class EntityStateHash
         hash = Add(hash, state.Speed);
         hash = Add(hash, state.TrackingStrength);
         hash = Add(hash, state.HitRadius);
-        return Add(hash, state.LifetimeRemaining);
+        hash = Add(hash, state.LifetimeRemaining);
+        return Add(hash, state.Interceptable ? 1 : 0);
     }
 
     private static ulong AddVeterancy(ulong hash, VeterancyComponentState state)

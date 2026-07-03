@@ -21,6 +21,7 @@ public sealed class SkySpearWeapon : WeaponDesign
                 weights: new() { [UnitWeightClass.Light] = 1.25f, [UnitWeightClass.Medium] = 1.1f, [UnitWeightClass.Heavy] = 0.95f },
                 domainPriority: new() { [MovementDomain.Air] = 1.45f },
                 armorPriority: new() { [ArmorTag.Aircraft] = 1.6f }),
-            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact);
+            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact,
+            CanInterceptProjectiles: true);
     }
 }
