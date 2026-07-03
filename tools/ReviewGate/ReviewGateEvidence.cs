@@ -21,26 +21,6 @@ static class ReviewGateEvidence
             .FirstOrDefault() ?? rootPath;
     }
 
-    public static string ReadTodoEvidence(string root, string todoPath)
-    {
-        var parts = new List<string>();
-        if (File.Exists(todoPath))
-        {
-            parts.Add(File.ReadAllText(todoPath));
-        }
-
-        var docsPath = Path.Combine(root, "docs");
-        if (Directory.Exists(docsPath))
-        {
-            foreach (var archivePath in Directory.EnumerateFiles(docsPath, "TODO-Archive-*.md", SearchOption.TopDirectoryOnly).OrderBy(path => path))
-            {
-                parts.Add(File.ReadAllText(archivePath));
-            }
-        }
-
-        return string.Join("\n\n", parts);
-    }
-
     public static string ReadSourceWithPartials(string sourcePath)
     {
         var parts = new List<string>();

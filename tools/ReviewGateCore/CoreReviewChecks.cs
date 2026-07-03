@@ -4,47 +4,65 @@ static class CoreReviewChecks
 {
     public static void CheckReviewTemplate(string root, GateResult result, string? requiredRecord)
     {
-        var templatePath = Path.Combine(root, "docs", "reviews", "README.md");
-        if (!File.Exists(templatePath))
+        CheckGitHubReviewSurface(root, result);
+
+        if (requiredRecord is null)
         {
-            result.Error("docs/reviews/README.md review template is missing.");
             return;
         }
 
-        var template = File.ReadAllText(templatePath);
-        RequireText(template, "Automated gates", "Review template must require automated gate evidence.", result);
-        RequireText(template, "Reviewer result", "Review template must require reviewer result.", result);
-        RequireText(template, "Residual risks", "Review template must track residual risks.", result);
-        RequireText(template, "TODO update", "Review template must connect review evidence to TODO changes.", result);
+        var reviewsPath = Path.Combine(root, "docs", "reviews");
+        if (!Directory.Exists(reviewsPath))
+        {
+            result.Error($"Legacy review record '{requiredRecord}' was requested, but docs/reviews is missing.");
+            return;
+        }
 
         var records = Directory
-            .EnumerateFiles(Path.Combine(root, "docs", "reviews"), "*.md", SearchOption.TopDirectoryOnly)
+            .EnumerateFiles(reviewsPath, "*.md", SearchOption.TopDirectoryOnly)
             .Where(path => !Path.GetFileName(path).Equals("README.md", StringComparison.OrdinalIgnoreCase))
+            .Where(path => Path.GetFileName(path).Contains(requiredRecord, StringComparison.OrdinalIgnoreCase)
+                || Path.GetRelativePath(root, path).Replace('\\', '/').Contains(requiredRecord, StringComparison.OrdinalIgnoreCase))
             .ToArray();
         if (records.Length == 0)
         {
-            result.Error("No concrete review records found in docs/reviews/*.md.");
+            result.Error($"Required legacy review record '{requiredRecord}' was not found in docs/reviews/*.md.");
             return;
         }
 
-        var recordsToCheck = records;
-        if (requiredRecord is not null)
-        {
-            recordsToCheck = records
-                .Where(path => Path.GetFileName(path).Contains(requiredRecord, StringComparison.OrdinalIgnoreCase)
-                    || Path.GetRelativePath(root, path).Replace('\\', '/').Contains(requiredRecord, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            if (recordsToCheck.Length == 0)
-            {
-                result.Error($"Required review record '{requiredRecord}' was not found in docs/reviews/*.md.");
-            }
-        }
-
-        foreach (var recordPath in recordsToCheck)
+        foreach (var recordPath in records)
         {
             CheckReviewRecord(root, recordPath, result);
         }
+    }
+
+    private static void CheckGitHubReviewSurface(string root, GateResult result)
+    {
+        var issueTemplatePath = Path.Combine(root, ".github", "ISSUE_TEMPLATE", "codex-slice.md");
+        var prTemplatePath = Path.Combine(root, ".github", "pull_request_template.md");
+        if (!File.Exists(issueTemplatePath))
+        {
+            result.Error(".github/ISSUE_TEMPLATE/codex-slice.md is missing.");
+            return;
+        }
+
+        if (!File.Exists(prTemplatePath))
+        {
+            result.Error(".github/pull_request_template.md is missing.");
+            return;
+        }
+
+        var issueTemplate = File.ReadAllText(issueTemplatePath);
+        var prTemplate = File.ReadAllText(prTemplatePath);
+        RequireText(issueTemplate, "Goal", "Issue template must capture the slice goal.", result);
+        RequireText(issueTemplate, "Context pack", "Issue template must provide compact context.", result);
+        RequireText(issueTemplate, "Required gates", "Issue template must name required gates.", result);
+        RequireText(issueTemplate, "Evidence destination", "Issue template must route evidence to GitHub/CI.", result);
+        RequireText(prTemplate, "Issue", "PR template must link the issue.", result);
+        RequireText(prTemplate, "Scope", "PR template must name scope.", result);
+        RequireText(prTemplate, "Verification", "PR template must capture verification.", result);
+        RequireText(prTemplate, "Async CI", "PR template must capture async CI state.", result);
+        RequireText(prTemplate, "Risk", "PR template must capture risk.", result);
     }
 
     public static void CheckReviewRecord(string root, string recordPath, GateResult result)
@@ -63,7 +81,6 @@ static class CoreReviewChecks
             "Reviewer result:",
             "Status:",
             "Residual risks:",
-            "TODO update:",
         };
 
         foreach (var field in requiredFields)
@@ -72,6 +89,12 @@ static class CoreReviewChecks
             {
                 result.Error($"{relative} is missing required review field '{field}'.");
             }
+        }
+
+        if (!text.Contains("Issue / PR update:", StringComparison.OrdinalIgnoreCase)
+            && !text.Contains("TODO update:", StringComparison.OrdinalIgnoreCase))
+        {
+            result.Error($"{relative} is missing required review field 'Issue / PR update:'; older records may use their legacy progress field.");
         }
 
         if (Regex.IsMatch(text, @"Status:\s*(pass\s*/|pass\s+/\s+pass-with-warnings\s+/\s+fail)", RegexOptions.IgnoreCase))

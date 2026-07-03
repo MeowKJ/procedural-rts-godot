@@ -115,9 +115,18 @@ static class ContentAuthoringReviewGate
 
     private static void RequireScopeLocks(string root, GateResult result)
     {
-        var todo = ReviewGateEvidence.ReadTodoEvidence(root, Path.Combine(root, "TODO.md"));
-        RequireText(todo, "Mode: 1v1 only", "TODO must keep the current vertical-slice mode scope locked.", result);
-        RequireText(todo, "T1, T2, T3 only", "TODO must keep the current tier scope locked.", result);
-        RequireText(todo, "Third faction placeholder", "TODO must keep the third faction as a placeholder for this slice.", result);
+        var matchConfig = ReviewGateSource.Read(root, "scripts", "core", "match", "MatchConfig.cs");
+        RequireText(matchConfig, "FactionId PlayerFaction", "MatchConfig must keep one human player faction.", result);
+        RequireText(matchConfig, "FactionId AiFaction", "MatchConfig must keep one computer AI faction.", result);
+
+        var rosterProfile = ReviewGateSource.Read(root, "scripts", "core", "units", "UnitRosterProfile.cs");
+        RequireText(rosterProfile, "MaximumTechTier", "Roster profile must keep the current tech-tier ceiling.", result);
+        RequireText(rosterProfile, "design.Stats.TechTier > maximumTechTier", "Roster filtering must enforce the tech-tier ceiling.", result);
+
+        var sandboxContext = ReviewGateSource.Read(root, "scripts", "core", "sandbox", "SandboxDeveloperContext.cs");
+        RequireText(sandboxContext, "SandboxFactionAvailability.LockedPlaceholder", "Corruption faction must remain a locked placeholder.", result);
+
+        var menuFlow = ReviewGateSource.Read(root, "scripts", "main-menu", "MainMenuRoot.Flow.cs");
+        RequireText(menuFlow, "FactionId.Corruption => GameText.T(\"faction.corruption.locked\")", "Main menu must present Corruption as locked.", result);
     }
 }

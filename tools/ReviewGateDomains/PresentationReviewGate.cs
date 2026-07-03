@@ -35,7 +35,8 @@ static class PresentationReviewGate
     {
         ReviewGateSource.RequireFile(root, result, "tools", "DesktopHudQa", "DesktopHudQa.csproj");
         ReviewGateSource.RequireFile(root, result, "scripts", "VisualQaCaptureRoot.cs");
-        ReviewGateSource.RequireAnyText(root, result, "battle_hud_1920x1080", "TODO.md", "docs/reviews");
-        ReviewGateSource.RequireAnyText(root, result, "battle_hud_style1c_dusk", "TODO.md", "docs/reviews");
+        ReviewGateSource.RequireFile(root, result, "scenes", "VisualQaCapture.tscn");
+        ReviewGateSource.RequireTextInFile(root, result, "desktop-hud-qa", "tools", "VerifyAll", "Program.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "battle_hud_style1c_dusk.png", "scripts", "VisualQaCaptureRoot.cs");
     }
 }

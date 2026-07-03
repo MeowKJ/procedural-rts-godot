@@ -8,7 +8,7 @@ using ProceduralRts.Core;
 // regression gate: fails if the average sim-step time exceeds a budget.
 //
 // This measures SIMULATION cost only (no Godot rendering); render-side budgets are
-// covered by the in-engine PerfHud item in the TODO Performance Optimization Plan.
+// covered by the in-engine PerfHud issue/project item.
 
 static void Fail(string message)
 {

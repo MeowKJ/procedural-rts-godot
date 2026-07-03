@@ -2,6 +2,11 @@
 
 Desktop RTS prototype built with Godot 4.7 Mono and C#.
 
+## Codex / Agent Entry
+
+Codex agents should start with `AGENTS.md`. Use GitHub Issues/Project for active
+work; this repository intentionally has no local TODO backlog.
+
 ## Run
 
 Open this folder in Godot 4.7 Mono:

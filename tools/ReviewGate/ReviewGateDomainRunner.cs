@@ -10,8 +10,8 @@ static class ReviewGateDomainRunner
 
         switch (mode)
         {
-            case "todo":
-                CheckTodoProtocol(context.Root, context.Result);
+            case "backlog":
+                CheckBacklogProtocol(context.Root, context.Result);
                 return;
             case "filesize":
                 FileSizeGate.Check(context.Root, context.Result);
@@ -29,7 +29,7 @@ static class ReviewGateDomainRunner
 
     private static void RunAll(ReviewGateContext context)
     {
-        CheckTodoProtocol(context.Root, context.Result);
+        CheckBacklogProtocol(context.Root, context.Result);
         FileSizeGate.Check(context.Root, context.Result);
         CheckReviewTemplate(context.Root, context.Result, context.RequiredRecord);
         M1MigrationParentGate.Check(context.Root, context.Result);
