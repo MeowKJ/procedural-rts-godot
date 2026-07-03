@@ -30,6 +30,7 @@ public sealed partial class ResourceSystem
             Mode = HarvesterMode.Idle,
             FieldId = null,
             RefineryId = null,
+            Retreating = false,
         });
     }
 

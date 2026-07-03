@@ -34,6 +34,7 @@ public sealed partial class UnitBattlefield
             HarvestFieldId = harvester is null ? null : LegacyResourceFieldId(harvester.FieldId),
             HarvestRefineryId = harvester is null ? null : LegacyBuildingTargetId(harvester.RefineryId),
             HarvestPulse = harvester?.HarvestPulse ?? 0,
+            HarvesterRetreating = harvester?.Retreating ?? false,
             Cargo = entity.Components.TryGet<ResourceCargoComponentState>(out var cargo) ? cargo.Cargo : 0,
         };
 

@@ -46,6 +46,7 @@ public sealed partial class CombatSystem
         else if (recordRetaliation)
         {
             RecordRetaliationThreat(context.World, target, attacker, context.Tick);
+            RecordHarvesterThreat(context.World, target, attacker);
         }
     }
 
@@ -89,6 +90,20 @@ public sealed partial class CombatSystem
         }
 
         victim.Components.Set(new RetaliationComponentState(attacker.Id, tick));
+    }
+
+    private static void RecordHarvesterThreat(EntityWorld world, EntityInstance victim, EntityInstance attacker)
+    {
+        if (victim.Id.Value == attacker.Id.Value
+            || !victim.Components.TryGet<HarvesterComponentState>(out var harvester)
+            || harvester.Mode == HarvesterMode.Idle
+            || harvester.Retreating
+            || !world.Relations.CanAttack(victim.OwnerId, attacker.OwnerId))
+        {
+            return;
+        }
+
+        victim.Components.Set(harvester with { Retreating = true });
     }
 
     private static bool IsPassiveRetaliate(EntityInstance entity)

@@ -33,6 +33,7 @@ public sealed class UnitInstance
     public int? HarvestFieldId { get; set; }
     public int? HarvestRefineryId { get; set; }
     public float HarvestPulse { get; set; }
+    public bool HarvesterRetreating { get; set; }
     public int Cargo { get; set; }
     public List<WeaponMountRuntimeState> WeaponMounts { get; init; } = [];
     public bool IsMoving => MoveTarget is not null;

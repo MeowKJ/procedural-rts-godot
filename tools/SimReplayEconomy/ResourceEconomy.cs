@@ -97,6 +97,7 @@ static partial class Program
         Assert(metrics.HarvesterIdleSeconds > 0, "economy metrics should record idle harvester time after depletion");
 
         AssertDockCongestionMetrics();
+        AssertHarvesterRetreatsUnderFire();
         AssertEconomyTuningChangesThroughput(BuildResourceWorld, harvestLog, resourceTicks);
 
         Console.WriteLine($"OK [resource-loop]: credits {credits}, node amount {node.Amount}, cargo {cargo.Cargo}.");
@@ -193,5 +194,80 @@ static partial class Program
         Assert(world.Metrics.DockWaitSeconds > 0, "economy metrics should record dock wait time under congestion");
         Assert(world.Metrics.RefineryCongestionEvents >= 1, $"economy metrics should count refinery congestion events, got {world.Metrics.RefineryCongestionEvents}");
         Assert(world.Metrics.CreditsBanked == 60, $"both waiting harvesters should eventually unload 60 credits, got {world.Metrics.CreditsBanked}");
+    }
+
+    static void AssertHarvesterRetreatsUnderFire()
+    {
+        var world = new EntityWorld(seed: 5152);
+        world.AddSystem(new CommandSystem());
+        world.AddSystem(new ResourceSystem());
+        world.AddSystem(new CombatSystem());
+        world.AddSystem(new MovementSystem());
+
+        var harvesterSpec = new EntitySpec
+        {
+            Id = "replay.retreat_harvester",
+            Kind = EntityKind.Unit,
+            Display = new EntityDisplaySpec("Harvester", "harvester.name", "harvester.role", "HAR", IconGlyph.Harvester),
+            Stats = new StatsSpec(UnitWeightClass.Heavy, ArmorTag.Vehicle, MaxHp: 140, SightRange: 260, Cost: 500, TechTier: 1),
+            Movement = new MovementSpec(MovementDomain.Land, Speed: 180, TurnRate: 7),
+            Collision = new CollisionSpec(Radius: 16, Mass: 1.5f, PushPriority: 2),
+        };
+        var resourceSpec = new EntitySpec
+        {
+            Id = "replay.retreat_resource",
+            Kind = EntityKind.Resource,
+            Display = new EntityDisplaySpec("Resource", "resource.name", "resource.role", "RES", IconGlyph.Credits),
+        };
+        var refinerySpec = new EntitySpec
+        {
+            Id = "replay.retreat_refinery",
+            Kind = EntityKind.Building,
+            Display = new EntityDisplaySpec("Refinery", "refinery.name", "refinery.role", "REF", IconGlyph.Building),
+        };
+
+        var harvester = world.Spawn(harvesterSpec, new OwnerId(1), EntityTransform.At(new Vector2(80, 0)), new EntityComponentState[]
+        {
+            new HealthComponentState(140, 140),
+            new HarvesterComponentState(HarvesterMode.Gathering, FieldId: 2),
+            new ResourceCargoComponentState(Cargo: 0, Capacity: 50),
+            new MovementComponentState(Vector2.Zero),
+            new MovementProfileComponentState(MaxSpeed: 180, ArriveRadius: 2),
+            new CollisionComponentState(Radius: 16, Mass: 1.5f, PushPriority: 2, BlocksMovement: true),
+        });
+        world.Spawn(resourceSpec, OwnerId.None, EntityTransform.At(new Vector2(80, 0)), new EntityComponentState[]
+        {
+            new ResourceNodeComponentState(
+                Amount: 120,
+                MaxAmount: 120,
+                GatherRateModifier: 1,
+                DepletionBehavior: ResourceDepletionBehavior.DepleteToZero,
+                VisibilityRule: ResourceVisibilityRule.VisibleWhenExplored,
+                CorruptionState: ResourceCorruptionState.Clean),
+        });
+        world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(Vector2.Zero), new EntityComponentState[]
+        {
+            new DockComponentState(),
+            new CollisionComponentState(Radius: 20, Mass: 10, PushPriority: 5, BlocksMovement: true),
+        });
+        SpawnSoldier(world, CombatSpec(), new OwnerId(2), new Vector2(110, 0));
+
+        var clock = new SimClock();
+        var buffer = new EntityCommandBuffer();
+        buffer.Enqueue(new AttackEntityCommand(new OwnerId(2), new[] { new EntityId(4) }, 1, harvester.Id, CombatTargetKind.Unit));
+
+        for (var tick = 1; tick <= 90; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, buffer.DrainUpToTick(tick));
+        }
+
+        var state = harvester.Components.Require<HarvesterComponentState>();
+        var health = harvester.Components.Require<HealthComponentState>();
+        Assert(health.Hp < health.MaxHp, "hostile attack should damage the active harvester.");
+        Assert(state.Mode == HarvesterMode.Idle, $"under-fire harvester should retreat and idle near refinery, got {state.Mode}.");
+        Assert(!state.Retreating, "retreat marker should clear once the harvester reaches safety.");
+        Assert(state.FieldId is null, "retreated harvester should stop the exposed field assignment.");
+        Assert(harvester.Transform.Position.DistanceTo(Vector2.Zero) < 80, $"retreated harvester should move back toward the refinery, pos {harvester.Transform.Position}.");
+        Console.WriteLine($"OK [harvester-retreat]: hp {health.Hp:0.0}, pos {harvester.Transform.Position}, mode {state.Mode}.");
     }
 }

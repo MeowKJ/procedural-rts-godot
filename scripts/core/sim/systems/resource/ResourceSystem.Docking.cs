@@ -53,6 +53,29 @@ public sealed partial class ResourceSystem
         return best;
     }
 
+    private static EntityInstance? NearestRefinery(EntityWorld world, EntityInstance harvester)
+    {
+        EntityInstance? best = null;
+        var bestDistanceSq = float.MaxValue;
+        foreach (var candidate in world.OrderedEntities)
+        {
+            if (candidate.OwnerId.Value != harvester.OwnerId.Value
+                || !candidate.Components.Has<DockComponentState>())
+            {
+                continue;
+            }
+
+            var distanceSq = harvester.Transform.Position.DistanceSquaredTo(candidate.Transform.Position);
+            if (distanceSq < bestDistanceSq)
+            {
+                bestDistanceSq = distanceSq;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
     private static Vector2 DockApproachPoint(EntityWorld world, EntityInstance harvester, EntityInstance refinery)
     {
         var radius = refinery.Components.TryGet<CollisionComponentState>(out var collision)

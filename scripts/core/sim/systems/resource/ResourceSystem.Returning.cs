@@ -9,6 +9,12 @@ public sealed partial class ResourceSystem
         HarvesterComponentState state,
         ResourceCargoComponentState cargo)
     {
+        if (state.Retreating && cargo.Cargo <= 0)
+        {
+            RetreatToNearestRefinery(world, harvester, state);
+            return;
+        }
+
         if (cargo.Cargo <= 0)
         {
             ReturnToFieldOrIdle(world, harvester, state);
@@ -67,6 +73,30 @@ public sealed partial class ResourceSystem
             Mode = HarvesterMode.ReturningToRefinery,
             RefineryId = refinery.Id.Value,
         });
+    }
+
+    private static void RetreatToNearestRefinery(EntityWorld world, EntityInstance harvester, HarvesterComponentState state)
+    {
+        var refinery = NearestRefinery(world, harvester);
+        if (refinery is null)
+        {
+            ResetHarvester(harvester, state);
+            return;
+        }
+
+        SetMoveTarget(harvester, DockApproachPoint(world, harvester, refinery));
+        if (harvester.Transform.Position.DistanceTo(refinery.Transform.Position) > DockArrivalDistance(world, refinery))
+        {
+            harvester.Components.Set(state with
+            {
+                Mode = HarvesterMode.ReturningToRefinery,
+                RefineryId = refinery.Id.Value,
+                Retreating = true,
+            });
+            return;
+        }
+
+        ResetHarvester(harvester, state);
     }
 
     private static void ReturnToFieldOrIdle(EntityWorld world, EntityInstance harvester, HarvesterComponentState state)
