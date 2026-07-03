@@ -93,6 +93,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         else
         {
             steps.Add(new VerifyStep("godot-battle-headless", godot.Path, "--headless --path . --scene res://scenes/Battle.tscn --quit-after 2"));
+            steps.Add(new VerifyStep("godot-ui-font-qa", godot.Path, "--headless --path . --scene res://scenes/UiFontQa.tscn"));
             steps.Add(new VerifyStep("godot-display-settings-qa", godot.Path, "--headless --path . --scene res://scenes/DisplaySettingsQa.tscn"));
             steps.Add(new VerifyStep("godot-skirmish-flow-qa", godot.Path, "--headless --path . --scene res://scenes/SkirmishFlowQa.tscn"));
             steps.Add(new VerifyStep("godot-active-battle-perf-qa", godot.Path, "--headless --path . --scene res://scenes/ActiveBattlePerfQa.tscn"));

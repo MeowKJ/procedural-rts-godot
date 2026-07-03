@@ -39,7 +39,7 @@ public partial class HudLayer : CanvasLayer
             var style = UiFactory.GetHudPlaceholderSlotDrawStyle(CurrentPalette);
             DrawRect(rect, style.Fill, true);
             DrawRect(rect, style.Border, false, 1.1f);
-            DrawString(ThemeDB.FallbackFont, new Vector2(10, 38), SlotLabel, HorizontalAlignment.Center, rect.Size.X - 20, 14, style.Text);
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Body), new Vector2(10, 38), SlotLabel, HorizontalAlignment.Center, rect.Size.X - 20, 14, style.Text);
         }
     }
 
@@ -197,8 +197,8 @@ public partial class HudLayer : CanvasLayer
                     DynamicUnitIcon.DrawFallbackIcon(this, new Rect2(slot.Position + new Vector2(3, 1), new Vector2(26, 24)), item.Glyph, item.Accent, framed: false);
                 }
 
-                DrawString(ThemeDB.FallbackFont, slot.Position + new Vector2(3, 31), item.Label, HorizontalAlignment.Left, 30, 8, new Color(item.Accent, 0.78f));
-                DrawString(ThemeDB.FallbackFont, slot.Position + new Vector2(20, 31), item.Count.ToString(), HorizontalAlignment.Right, 10, 9, new Color(Ink, 0.88f));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), slot.Position + new Vector2(3, 31), item.Label, HorizontalAlignment.Left, 30, 8, new Color(item.Accent, 0.78f));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Numeric), slot.Position + new Vector2(20, 31), item.Count.ToString(), HorizontalAlignment.Right, 10, 9, new Color(Ink, 0.88f));
             }
         }
     }
@@ -318,8 +318,8 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect, CurrentPalette.PanelFill, true);
             DrawRect(new Rect2(0, 0, 4, rect.Size.Y), new Color(color, alpha), true);
             DrawRect(new Rect2(6, rect.Size.Y - 2, Mathf.Clamp(alert.RemainingRatio, 0, 1) * (rect.Size.X - 8), 2), new Color(color, 0.58f), true);
-            DrawString(ThemeDB.FallbackFont, new Vector2(10, 12), AlertPrefix(alert.Kind), HorizontalAlignment.Left, 58, 10, new Color(color, alpha));
-            DrawString(ThemeDB.FallbackFont, new Vector2(70, 12), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72, 10, new Color(Ink, alpha));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(10, 12), AlertPrefix(alert.Kind), HorizontalAlignment.Left, 58, 10, new Color(color, alpha));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(70, 12), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72, 10, new Color(Ink, alpha));
         }
 
         private static string AlertPrefix(AlertKind kind)

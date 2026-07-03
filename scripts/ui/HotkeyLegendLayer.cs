@@ -71,13 +71,12 @@ public partial class HotkeyLegendLayer : CanvasLayer
         {
             Text = text,
             ClipText = true,
-            LabelSettings = new LabelSettings
-            {
-                FontSize = fontSize,
-                FontColor = color,
-                OutlineColor = new Color("#02060a", 0.84f),
-                OutlineSize = 1,
-            },
+            LabelSettings = UiFontProfile.MakeLabelSettings(
+                UiFontProfile.RoleForSize(fontSize),
+                fontSize,
+                color,
+                new Color("#02060a", 0.84f),
+                outlineSize: 1),
         };
     }
 
@@ -111,8 +110,8 @@ public partial class HotkeyLegendLayer : CanvasLayer
 
         private void DrawHeader()
         {
-            DrawString(ThemeDB.FallbackFont, new Vector2(16, 25), GameText.T("hotkeys.title"), HorizontalAlignment.Left, 180, 18, new Color("#ffffff"));
-            DrawString(ThemeDB.FallbackFont, new Vector2(16, 44), GameText.T("hotkeys.subtitle"), HorizontalAlignment.Left, 240, 11, InkMuted);
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Title), new Vector2(16, 25), GameText.T("hotkeys.title"), HorizontalAlignment.Left, 180, 18, new Color("#ffffff"));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(16, 44), GameText.T("hotkeys.subtitle"), HorizontalAlignment.Left, 240, 11, InkMuted);
             DrawLine(new Vector2(14, 52), new Vector2(Size.X - 14, 52), new Color("#59f1ff", 0.24f), 1, true);
         }
 
@@ -120,11 +119,11 @@ public partial class HotkeyLegendLayer : CanvasLayer
         {
             DrawRect(new Rect2(14, y - 14, Size.X - 28, 20 + rows.Length * 15), new Color("#071019", 0.72f), true);
             DrawRect(new Rect2(14, y - 14, 4, 20 + rows.Length * 15), new Color(accent, 0.78f), true);
-            DrawString(ThemeDB.FallbackFont, new Vector2(26, y), section, HorizontalAlignment.Left, 92, 11, new Color(accent, 0.96f));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(26, y), section, HorizontalAlignment.Left, 92, 11, new Color(accent, 0.96f));
 
             for (var index = 0; index < rows.Length; index++)
             {
-                DrawString(ThemeDB.FallbackFont, new Vector2(116, y + index * 15), rows[index], HorizontalAlignment.Left, Size.X - 132, 11, Ink);
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(116, y + index * 15), rows[index], HorizontalAlignment.Left, Size.X - 132, 11, Ink);
             }
         }
     }

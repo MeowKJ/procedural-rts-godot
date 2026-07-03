@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Ui;
 
 namespace ProceduralRts;
 
@@ -75,8 +76,8 @@ public partial class MainMenuRoot
                 var y = index * rowHeight;
                 DrawRect(new Rect2(0, y, width, rowHeight - 5), new Color("#02060a", 0.54f));
                 DrawRect(new Rect2(0, y, width, rowHeight - 5), new Color(rows[index].Item3, 0.34f), false, 1);
-                DrawString(ThemeDB.FallbackFont, new Vector2(12, y + 17), rows[index].Item1, HorizontalAlignment.Left, 70, 12, new Color(rows[index].Item3, 0.95f));
-                DrawString(ThemeDB.FallbackFont, new Vector2(92, y + 17), rows[index].Item2, HorizontalAlignment.Left, width - 100, 12, InkMuted);
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Body), new Vector2(12, y + 17), rows[index].Item1, HorizontalAlignment.Left, 70, 12, new Color(rows[index].Item3, 0.95f));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Body), new Vector2(92, y + 17), rows[index].Item2, HorizontalAlignment.Left, width - 100, 12, InkMuted);
             }
         }
     }

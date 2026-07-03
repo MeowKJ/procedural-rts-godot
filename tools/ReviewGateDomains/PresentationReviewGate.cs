@@ -14,6 +14,7 @@ static class PresentationReviewGate
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "HudLayer.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFactory.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFontProfile.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "SoftOldCityTheme.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "DynamicUnitIcon.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
@@ -34,6 +35,8 @@ static class PresentationReviewGate
     private static void RequireVisualQa(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "tools", "DesktopHudQa", "DesktopHudQa.csproj");
+        ReviewGateSource.RequireFile(root, result, "scenes", "UiFontQa.tscn");
+        ReviewGateSource.RequireTextInFile(root, result, "godot-ui-font-qa", "tools", "VerifyAll", "Program.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "VisualQaCaptureRoot.cs");
         ReviewGateSource.RequireFile(root, result, "scenes", "VisualQaCapture.tscn");
         ReviewGateSource.RequireTextInFile(root, result, "desktop-hud-qa", "tools", "VerifyAll", "Program.cs");
