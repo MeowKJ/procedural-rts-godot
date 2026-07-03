@@ -37,8 +37,4 @@ public sealed class UnitInstance
     public List<WeaponMountRuntimeState> WeaponMounts { get; init; } = [];
     public bool IsMoving => MoveTarget is not null;
 
-    public IReadOnlyDictionary<string, float> MountFacings()
-    {
-        return WeaponMounts.ToDictionary(mount => mount.MountId, mount => mount.Facing);
-    }
 }

@@ -56,7 +56,14 @@ public partial class DynamicUnitIcon : Control
         var turretFacing = animated ? Mathf.Sin(Time.GetTicksMsec() / 900f + spec.Id.Length * 2.3f) * 0.18f : 0;
 
         canvas.DrawCircle(center, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.34f, new Color(playerAccent, 0.055f + pulse * 0.035f));
-        UnitVisualRenderer.DrawUnitArtRecipe(canvas, spec.Art, palette, center, scale, bodyFacing, new Dictionary<string, float> { ["main"] = turretFacing });
+        UnitVisualRenderer.DrawUnitArtRecipe(
+            canvas,
+            spec.Art,
+            palette,
+            center,
+            scale,
+            bodyFacing,
+            UnitMountFacingSource.Single("main", turretFacing));
     }
 
     public static void DrawFallbackIcon(

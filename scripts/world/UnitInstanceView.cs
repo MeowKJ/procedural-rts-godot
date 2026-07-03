@@ -62,7 +62,15 @@ public partial class UnitInstanceView : Node2D
             DrawArc(Vector2.Zero, radius + 18 + Unit.CommandPulse * 10, 0, Mathf.Tau, OverlayArcSegments, new Color(relationAccent, 0.36f), 1.0f, CrispOverlayStroke);
         }
 
-        UnitVisualRenderer.DrawUnitArtRecipe(this, Unit.Spec.Art, palette, Vector2.Zero, 1, facing, Unit.MountFacings(), environmentTone);
+        UnitVisualRenderer.DrawUnitArtRecipe(
+            this,
+            Unit.Spec.Art,
+            palette,
+            Vector2.Zero,
+            1,
+            facing,
+            UnitMountFacingSource.FromRuntimeMounts(Unit.WeaponMounts),
+            environmentTone);
         DrawStatusGlyph(radius);
         DrawVeterancyGlyph(radius, _projection?.VeterancyRank ?? 0);
         DrawCargo(radius);

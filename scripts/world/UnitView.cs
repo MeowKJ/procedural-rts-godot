@@ -10,7 +10,6 @@ public partial class UnitView : Node2D
     private const int OverlayArcSegments = 40;
     private const bool CrispOverlayStroke = false;
     private float _redrawTimer;
-    private readonly Dictionary<string, float> _mountFacings = [];
 
     public required GameState State { get; init; }
     public required UnitModel Unit { get; init; }
@@ -65,7 +64,7 @@ public partial class UnitView : Node2D
             Vector2.Zero,
             1,
             Unit.Facing,
-            MountFacingsFor(style.Spec),
+            UnitMountFacingSource.FromLegacyUnit(style.Spec, Unit.Facing, Unit.TurretFacing),
             EnvironmentTonePalette.For(State.VisualTheme));
         DrawStatusGlyph(style);
         DrawCargo(style);
@@ -91,19 +90,6 @@ public partial class UnitView : Node2D
             spec.RoleTags,
             EntityRenderPalette.SoftOldCity(ownerColor, descriptor.Accent));
         return true;
-    }
-
-    private IReadOnlyDictionary<string, float> MountFacingsFor(UnitSpec spec)
-    {
-        _mountFacings.Clear();
-        foreach (var mount in spec.Weapons)
-        {
-            _mountFacings[mount.MountId] = mount.FacingMode == WeaponMountFacingMode.BodyFixed
-                ? Unit.Facing
-                : Unit.TurretFacing;
-        }
-
-        return _mountFacings;
     }
 
     private void DrawStatusGlyph(UnitViewSpecStyle style)

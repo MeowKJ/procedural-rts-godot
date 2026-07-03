@@ -17,14 +17,14 @@ public static class UnitVisualRenderer
         Vector2 center,
         float scale,
         float bodyFacing = 0,
-        IReadOnlyDictionary<string, float>? mountFacings = null)
+        UnitMountFacingSource mountFacings = default)
     {
         var compiled = UnitBodyRenderRecipeCache.For(recipe);
         DrawArtLayers(canvas, compiled.BodyLayers, palette, center, scale, bodyFacing);
 
         foreach (var group in compiled.MountGroups)
         {
-            var facing = mountFacings is not null && mountFacings.TryGetValue(group.MountId, out var mountFacing)
+            var facing = mountFacings.TryGetFacing(group.MountId, out var mountFacing)
                 ? mountFacing
                 : bodyFacing;
             DrawArtLayers(canvas, group.Layers, palette, center, scale, facing);
@@ -41,7 +41,7 @@ public static class UnitVisualRenderer
         Vector2 center,
         float scale,
         float bodyFacing = 0,
-        IReadOnlyDictionary<string, float>? mountFacings = null,
+        UnitMountFacingSource mountFacings = default,
         EnvironmentTone? environmentTone = null)
     {
         var compiled = UnitBodyRenderRecipeCache.For(recipe);
@@ -49,7 +49,7 @@ public static class UnitVisualRenderer
 
         foreach (var group in compiled.MountGroups)
         {
-            var facing = mountFacings is not null && mountFacings.TryGetValue(group.MountId, out var mountFacing)
+            var facing = mountFacings.TryGetFacing(group.MountId, out var mountFacing)
                 ? mountFacing
                 : bodyFacing;
             DrawArtLayers(canvas, group.Layers, palette, center, scale, facing, environmentTone);

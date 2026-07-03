@@ -8,8 +8,8 @@ static class PresentationReviewGate
         BattleRootHudAllocationReviewGate.Check(root, result);
         ControlGroupAllocationReviewGate.Check(root, result);
         SelectionControllerAllocationReviewGate.Check(root, result);
+        UnitRenderingAllocationReviewGate.Check(root, result);
     }
-
     private static void RequireHudAndTheme(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "HudLayer.cs");
