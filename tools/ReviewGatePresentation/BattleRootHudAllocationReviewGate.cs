@@ -7,6 +7,7 @@ static class BattleRootHudAllocationReviewGate
         var process = ReviewGateSource.Read(root, "scripts", "BattleRoot.Process.cs");
         var minimap = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudMinimap.cs");
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
+        var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
 
         RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
@@ -18,6 +19,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<UnitInstance> _selectedUnitInstanceBuffer", "BattleRoot runtime selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<BuildingModel> _selectedLegacyBuildingBuffer", "BattleRoot legacy selection HUD sync must reuse selected building storage.", result);
+        RequireText(battleRoot, "List<UnitInstance> _sandboxLaunchUnitBuffer", "BattleRoot sandbox launch selection must reuse unit storage.", result);
+        RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
         RequireText(process, "_unitBattlefieldVisionSourceBuffer.Clear();", "UnitBattlefieldVisionSources must clear and reuse the vision-source buffer.", result);
         RequireText(process, "foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))", "UnitBattlefieldVisionSources must copy vision sources explicitly.", result);
         RequireText(process, "_unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));", "UnitBattlefieldVisionSources must fill the reusable vision-source buffer.", result);
@@ -42,6 +45,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "private bool HasSelectedLegacyBuildings()", "BattleRoot alerts must expose the legacy selected-building scan helper.", result);
         RequireText(alerts, "private bool HasLegacyPlayerPowerPlant()", "BattleRoot alerts must expose the legacy power scan helper.", result);
         RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
+        RequireText(sandbox, "CollectSandboxLaunchSelectionIds();", "Sandbox launch must fill reusable selected-unit id storage.", result);
+        RequireText(sandbox, "_sandboxLaunchUnitBuffer.Sort(CompareSandboxLaunchUnits)", "Sandbox launch selection must sort reusable unit storage in place.", result);
+        RequireText(sandbox, "NextSandboxBuildingTargetId()", "Sandbox structure spawn must compute next building id with an explicit scan.", result);
         RequireText(iconSummary, "List<SelectionIconSummaryEntry> _selectionIconSummaryEntries", "Selection icon summaries must reuse aggregation storage.", result);
         RequireText(iconSummary, "List<HudLayer.SelectionIconItem> _selectionIconSummarySecondaryBuffer", "Selection icon summaries must double-buffer HUD-owned item storage.", result);
         RequireText(iconSummary, "NextSelectionIconSummaryBuffer()", "Selection icon summaries must acquire reusable HUD item storage.", result);
@@ -98,6 +104,11 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(alerts, ".Any(building => building.Kind == BuildingDesignIds.PowerPlant)", "Power alert must not allocate legacy building Any iterators.", result);
         ForbidText(alerts, "_state.Units.Count(unit =>", "Idle harvester alert must not allocate legacy unit count iterators.", result);
         ForbidText(alerts, ".ToList()", "RefreshAlerts must not allocate materialized alert lists.", result);
+        ForbidText(sandbox, ".Where(unit => unit.PlayerSlotId == PlayerSlotId.One", "Sandbox launch selection must not allocate unit filter iterators.", result);
+        ForbidText(sandbox, ".OrderBy(unit => unit.Position.DistanceSquaredTo", "Sandbox launch selection must sort reusable buffers in place.", result);
+        ForbidText(sandbox, ".Select(unit => unit.Id)", "Sandbox launch selection must fill id storage explicitly.", result);
+        ForbidText(sandbox, ".Select(building => building.Id)", "Sandbox structure next-id scans must not allocate building id projections.", result);
+        ForbidText(sandbox, ".DefaultIfEmpty(0)", "Sandbox structure next-id scans must not allocate default LINQ chains.", result);
         ForbidText(hudState, "states.Take(12).ToArray()", "HudLayer command-card refresh must not allocate an ordered state array.", result);
         ForbidText(hudState, "orderedStates.Select(ProductionOptionId).ToHashSet()", "HudLayer command-card refresh must not allocate active id sets.", result);
         ForbidText(hudState, "_commandButtons.Keys.Where(key => !activeIds.Contains(key)).ToArray()", "HudLayer command-card refresh must not allocate stale key arrays.", result);

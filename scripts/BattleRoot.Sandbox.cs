@@ -16,14 +16,9 @@ public partial class BattleRoot
         }
 
         _state.ClearSelection();
-        _unitBattlefield.SelectUnitsByIds(
-            PlayerSlotId.One,
-            _unitBattlefield.Units
-                .Where(unit => unit.PlayerSlotId == PlayerSlotId.One && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
-                .OrderBy(unit => unit.Position.DistanceSquaredTo(new Vector2(980, 1180)))
-                .Take(6)
-                .Select(unit => unit.Id));
-        _camera.FocusOnWorldPoint(new Vector2(980, 1180));
+        CollectSandboxLaunchSelectionIds();
+        _unitBattlefield.SelectUnitsByIds(PlayerSlotId.One, _sandboxLaunchUnitIdBuffer);
+        _camera.FocusOnWorldPoint(SandboxLaunchFocus);
         RefreshSelectionInfo();
         RefreshMinimap();
         ApplySandboxRelationsFromContext();
@@ -125,10 +120,7 @@ public partial class BattleRoot
         var position = ClampSandboxWorldPoint(
             request.Transform.Position,
             MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 8);
-        var nextId = _unitBattlefield.BuildingSnapshots()
-            .Select(building => building.Id)
-            .DefaultIfEmpty(0)
-            .Max() + 1;
+        var nextId = NextSandboxBuildingTargetId();
         var building = _unitBattlefield.UpsertBuildingTarget(
             nextId,
             kind,
@@ -152,6 +144,48 @@ public partial class BattleRoot
         AddChild(view);
         _buildingViews[building.Id] = view;
         return true;
+    }
+
+    private void CollectSandboxLaunchSelectionIds()
+    {
+        _sandboxLaunchUnitBuffer.Clear();
+        _sandboxLaunchUnitIdBuffer.Clear();
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == PlayerSlotId.One
+                && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
+            {
+                _sandboxLaunchUnitBuffer.Add(unit);
+            }
+        }
+
+        _sandboxLaunchUnitBuffer.Sort(CompareSandboxLaunchUnits);
+        var selectedCount = Math.Min(6, _sandboxLaunchUnitBuffer.Count);
+        for (var index = 0; index < selectedCount; index++)
+        {
+            _sandboxLaunchUnitIdBuffer.Add(_sandboxLaunchUnitBuffer[index].Id);
+        }
+    }
+
+    private int NextSandboxBuildingTargetId()
+    {
+        var nextId = 1;
+        foreach (var building in _unitBattlefield.BuildingSnapshots())
+        {
+            if (building.Id >= nextId)
+            {
+                nextId = building.Id + 1;
+            }
+        }
+
+        return nextId;
+    }
+
+    private static int CompareSandboxLaunchUnits(UnitInstance left, UnitInstance right)
+    {
+        var distance = left.Position.DistanceSquaredTo(SandboxLaunchFocus)
+            .CompareTo(right.Position.DistanceSquaredTo(SandboxLaunchFocus));
+        return distance != 0 ? distance : left.Id.CompareTo(right.Id);
     }
 
     private Vector2 SandboxStressCenter()

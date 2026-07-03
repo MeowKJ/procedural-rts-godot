@@ -25,6 +25,7 @@ public partial class BattleRoot : Node2D
     private const float MinimapRefreshInterval = 0.2f;
     private const float ViewCullingInterval = 0.05f;
     private const float ViewCullingMargin = 320f;
+    private static readonly Vector2 SandboxLaunchFocus = new(980, 1180);
     private static readonly Color HudMint = new("#8fffe1");
     private static readonly string[] DogActiveBattlePerfDesigns =
     [
@@ -58,6 +59,8 @@ public partial class BattleRoot : Node2D
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
     private readonly List<UnitModel> _selectedLegacyUnitBuffer = [];
     private readonly List<BuildingModel> _selectedLegacyBuildingBuffer = [];
+    private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
+    private readonly List<int> _sandboxLaunchUnitIdBuffer = [];
     private readonly PresentationMetrics _presentationMetrics = new();
     private readonly Stopwatch _processStopwatch = new();
     private readonly Stopwatch _simStepStopwatch = new();
