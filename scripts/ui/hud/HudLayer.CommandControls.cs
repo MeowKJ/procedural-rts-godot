@@ -98,7 +98,7 @@ public partial class HudLayer : CanvasLayer
                 return;
             }
 
-            var font = ThemeDB.FallbackFont;
+            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
             var textSize = font.GetStringSize(text, HorizontalAlignment.Left, -1, 11);
             var rect = new Rect2(position + new Vector2(-5, -14), textSize + new Vector2(12, 18));
             DrawRect(rect, CurrentPalette.PanelStrongFill, true);
@@ -188,7 +188,7 @@ public partial class HudLayer : CanvasLayer
                     iconAccent,
                     framed: false);
             }
-            DrawString(ThemeDB.FallbackFont, new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, size.X - 16, 9, style.ShortLabel);
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, size.X - 16, 9, style.ShortLabel);
             if (_progress > 0)
             {
                 DrawRect(new Rect2(0, size.Y - 5, size.X * _progress, 5), style.Progress, true);

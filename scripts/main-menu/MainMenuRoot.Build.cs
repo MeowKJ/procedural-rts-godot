@@ -190,7 +190,7 @@ public partial class MainMenuRoot
         button.AddItem(GameText.T("menu.difficulty.normal"));
         button.AddItem(GameText.T("menu.difficulty.hard"));
         button.Selected = (int)EnemyDifficulty.Normal;
-        button.AddThemeFontSizeOverride("font_size", 12);
+        UiFontProfile.ApplyToControl(button, UiFontRole.Body, 12);
         return button;
     }
 
@@ -206,7 +206,7 @@ public partial class MainMenuRoot
         button.AddItem(FactionLabel(FactionId.Corruption), (int)FactionId.Corruption);
         button.SetItemDisabled(2, true);
         button.Selected = selected == FactionId.Cat ? 1 : 0;
-        button.AddThemeFontSizeOverride("font_size", 12);
+        UiFontProfile.ApplyToControl(button, UiFontRole.Body, 12);
         return button;
     }
 
@@ -222,7 +222,7 @@ public partial class MainMenuRoot
             SelectAllOnFocus = true,
             MouseDefaultCursorShape = CursorShape.Ibeam,
         };
-        spinBox.AddThemeFontSizeOverride("font_size", 12);
+        UiFontProfile.ApplyToControl(spinBox, UiFontRole.Numeric, 12);
         return spinBox;
     }
 }

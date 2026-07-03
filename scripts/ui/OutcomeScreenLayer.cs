@@ -255,8 +255,8 @@ public partial class OutcomeScreenLayer : CanvasLayer
                 var rect = new Rect2(index * segmentWidth + 4, 0, segmentWidth - 8, Size.Y);
                 DrawRect(rect, new Color("#02060a", 0.55f));
                 DrawRect(rect, new Color(colors[index], 0.36f), false, 1);
-                DrawString(ThemeDB.FallbackFont, rect.Position + new Vector2(12, 22), labels[index], HorizontalAlignment.Left, rect.Size.X - 24, 12, new Color(colors[index], 0.95f));
-                DrawString(ThemeDB.FallbackFont, rect.Position + new Vector2(12, 46), GameText.T("outcome.telemetry.resolved"), HorizontalAlignment.Left, rect.Size.X - 24, 11, InkMuted);
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Body), rect.Position + new Vector2(12, 22), labels[index], HorizontalAlignment.Left, rect.Size.X - 24, 12, new Color(colors[index], 0.95f));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), rect.Position + new Vector2(12, 46), GameText.T("outcome.telemetry.resolved"), HorizontalAlignment.Left, rect.Size.X - 24, 11, InkMuted);
             }
         }
     }

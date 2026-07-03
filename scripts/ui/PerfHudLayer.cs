@@ -53,13 +53,12 @@ public partial class PerfHudLayer : CanvasLayer
             Position = new Vector2(12, 10),
             CustomMinimumSize = new Vector2(294, 116),
             ClipText = true,
-            LabelSettings = new LabelSettings
-            {
-                FontSize = 11,
-                FontColor = Ink,
-                OutlineColor = new Color("#02060a", 0.92f),
-                OutlineSize = 1,
-            },
+            LabelSettings = UiFontProfile.MakeLabelSettings(
+                UiFontRole.Numeric,
+                fontSize: 11,
+                Ink,
+                new Color("#02060a", 0.92f),
+                outlineSize: 1),
         };
         _panel.AddChild(_label);
         RefreshText();
@@ -123,7 +122,7 @@ public partial class PerfHudLayer : CanvasLayer
             DrawRect(rect, PanelFill, true);
             DrawRect(rect, PanelStroke, false, 1.1f);
             DrawLine(new Vector2(10, 31), new Vector2(Size.X - 10, 31), new Color(Mint, 0.26f), 1, true);
-            DrawString(ThemeDB.FallbackFont, new Vector2(12, 24), "PERF HUD   F3", HorizontalAlignment.Left, 160, 11, InkMuted);
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Numeric), new Vector2(12, 24), "PERF HUD   F3", HorizontalAlignment.Left, 160, 11, InkMuted);
         }
     }
 }

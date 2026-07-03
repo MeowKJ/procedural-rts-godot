@@ -46,13 +46,12 @@ public static class UiFactory
         {
             Text = text,
             ClipText = true,
-            LabelSettings = new LabelSettings
-            {
-                FontSize = fontSize,
-                FontColor = color,
-                OutlineColor = new Color("#02060a", outlineAlpha),
-                OutlineSize = 1,
-            },
+            LabelSettings = UiFontProfile.MakeLabelSettings(
+                UiFontProfile.RoleForSize(fontSize),
+                fontSize,
+                color,
+                new Color("#02060a", outlineAlpha),
+                outlineSize: 1),
         };
     }
 
@@ -71,7 +70,7 @@ public static class UiFactory
 
     public static void StyleButton(BaseButton button, Color accent)
     {
-        button.AddThemeFontSizeOverride("font_size", 14);
+        UiFontProfile.ApplyToControl(button, UiFontRole.Body, 14);
         button.AddThemeColorOverride("font_color", Ink);
         button.AddThemeColorOverride("font_hover_color", new Color("#ffffff"));
         button.AddThemeColorOverride("font_pressed_color", new Color("#ffffff"));
@@ -153,10 +152,12 @@ public static class UiFactory
             Text = text,
             Position = position,
             ClipText = true,
-            LabelSettings = new LabelSettings
-            {
-                FontSize = fontSize,
-            },
+            LabelSettings = UiFontProfile.MakeLabelSettings(
+                fontSize <= 11 ? UiFontRole.Compact : UiFontRole.Body,
+                fontSize,
+                color,
+                new Color("#020403", 0.0f),
+                outlineSize: 0),
         };
         ApplyHudLabelStyle(label, palette, color);
         return label;
@@ -179,6 +180,7 @@ public static class UiFactory
     public static void ApplyHudLabelStyle(Label label, SoftOldCityHudPalette palette, Color color, float? shadowAlpha = null)
     {
         var settings = label.LabelSettings ?? new LabelSettings();
+        UiFontProfile.ApplyToLabelSettings(settings, UiFontProfile.RoleForSize(settings.FontSize));
         settings.FontColor = color;
         settings.OutlineSize = palette.Dark ? 1 : 0;
         settings.OutlineColor = palette.Dark ? new Color("#020403", 0.86f) : new Color(palette.PanelStrongFill, 0.0f);
@@ -211,7 +213,7 @@ public static class UiFactory
         button.AddThemeStyleboxOverride("pressed", HudPanelStyle(new Color(fill.Lightened(0.14f), fill.A), new Color(palette.Text, 0.48f)));
         button.AddThemeStyleboxOverride("disabled", HudPanelStyle(new Color(palette.PanelSubtleFill, 0.68f), new Color(palette.TextDim, 0.36f)));
         button.AddThemeStyleboxOverride("focus", HudPanelStyle(new Color("#000000", 0), new Color(accent, 0.82f)));
-        button.AddThemeFontSizeOverride("font_size", fontSize);
+        UiFontProfile.ApplyToControl(button, fontSize <= 11 ? UiFontRole.Compact : UiFontRole.Body, fontSize);
         button.AddThemeColorOverride("font_color", palette.Text);
         button.AddThemeColorOverride("font_hover_color", palette.Text);
         button.AddThemeColorOverride("font_pressed_color", palette.Repair);
