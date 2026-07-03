@@ -98,7 +98,7 @@ Forbidden vague names:
 ## Bridge And Legacy Rules
 
 Any file containing `Bridge`, `Legacy`, or `Compatibility` in its name must have
-a deletion condition in TODO or in a review record.
+a deletion condition in a GitHub issue or governance document.
 
 Bridge files should trend downward. Adding a new bridge requires explicit
 justification. ReviewGate should fail when bridge/legacy/compatibility file
@@ -130,7 +130,7 @@ Never mix a mechanical move and behavior changes in the same slice.
 
 ## ReviewGate Scope
 
-Do not add one-off gates for every small TODO. Prefer a small set of general
+Do not add one-off gates for every small issue slice. Prefer a small set of general
 discipline gates:
 
 - `ArchitectureGate`: layer boundaries and authority rules.
@@ -141,10 +141,9 @@ ReviewGate itself must follow this governance. `Program.cs` should become an
 entrypoint and registry, not a growing archive of every historical rule.
 `tools/ReviewGate` has an additional total C# source budget of 2000 lines. Keep
 historical narrow mode names as compatibility aliases, but route them to broad
-domain gates instead of adding one C# check per TODO slice.
-`ReviewGate filesize` must also lock the current ReviewGate source budget summary
-in TODO and in the corresponding review record, so validation-system size evidence
-cannot drift from the actual source tree.
+domain gates instead of adding one C# check per issue slice.
+`ReviewGate filesize` must enforce validation-system source budgets directly so
+size evidence cannot drift from the actual source tree.
 `tools/ReviewGate` build output must live outside that source directory, currently
 under `artifacts/dotnet/ReviewGate`; local `tools/ReviewGate/bin` or
 `tools/ReviewGate/obj` directories are treated as validation-system pollution.
