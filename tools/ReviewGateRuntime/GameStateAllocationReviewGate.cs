@@ -79,10 +79,10 @@ static class GameStateAllocationReviewGate
         ForbidText(pathObstacles, ".GroupBy(unit => LocalAvoidanceMath.Cell", "Legacy GameState dense blob obstacles must not allocate grouping queries.", result);
         ForbidText(pathObstacles, "members.Min(unit =>", "Legacy GameState dense blob bounds must not allocate member lists/min queries.", result);
         var fogMap = ReviewGateSource.Read(root, "scripts", "core", "fog", "FogOfWarMap.cs");
-        RequireText(fogMap, "visionSources as IReadOnlyList<(Vector2 Position, float SightRange)>", "FogOfWarMap.Update must not copy caller-owned source lists.", result);
-        ForbidText(fogMap, "visionSources as (Vector2 Position, float SightRange)[] ?? visionSources.ToArray()", "FogOfWarMap.Update must not only recognize arrays as no-copy inputs.", result);
-        ForbidText(fogMap, "sources.Length", "FogOfWarMap.Update must use IReadOnlyList.Count for source buffers.", result);
-
+        RequireText(fogMap, "IReadOnlyList<(Vector2 Position, float SightRange)> visionSources", "FogOfWarMap.Update must take caller-owned source lists on the main runtime path.", result);
+        RequireText(fogMap, "visionSources.Count", "FogOfWarMap.Update must use IReadOnlyList.Count for source buffers.", result);
+        ForbidText(fogMap, "visionSources.ToArray()", "FogOfWarMap.Update must not materialize vision sources per update.", result);
+        ForbidText(fogMap, "IEnumerable<(Vector2 Position, float SightRange)> visionSources", "FogOfWarMap.Update main path must not accept deferred enumerable sources.", result);
         var pathingAvoidance = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathingAvoidance.cs");
         var localAvoidance = ReviewGateSource.Read(root, "scripts", "core", "pathing", "LocalAvoidanceMath.cs");
         RequireText(pathingAvoidance, "LocalAvoidanceMath.BuildHashInto(_legacyLocalAvoidanceBodies, LocalAvoidanceCellSize, _legacyLocalAvoidanceHash)", "Legacy GameState local avoidance must fill the reusable hash bucket dictionary.", result);

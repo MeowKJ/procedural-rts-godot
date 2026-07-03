@@ -59,7 +59,7 @@ public static class BuildingTargetEntityBridge
             spec.ToEntitySpec(),
             OwnerId.FromPlayerSlot(seed.PlayerSlotId),
             EntityTransform.At(seed.Position, seed.Facing),
-            InitialBuildingComponents(
+            CreateBuildingComponents(
                 seed,
                 spec,
                 rallyPoint: rallyPoint,
@@ -89,7 +89,7 @@ public static class BuildingTargetEntityBridge
         int? dockedEntityId = null,
         WeaponUserComponentState? weaponState = null)
     {
-        return InitialBuildingComponents(
+        return CreateBuildingComponents(
             seed,
             spec,
             selected,
@@ -103,10 +103,10 @@ public static class BuildingTargetEntityBridge
             buildProgress,
             dockReservedByEntityId,
             dockedEntityId,
-            weaponState).ToArray();
+            weaponState);
     }
 
-    private static IEnumerable<EntityComponentState> InitialBuildingComponents(
+    private static EntityComponentState[] CreateBuildingComponents(
         BuildingEntitySeed seed,
         BuildSpec spec,
         bool selected = false,
@@ -123,61 +123,100 @@ public static class BuildingTargetEntityBridge
         WeaponUserComponentState? weaponState = null)
     {
         productionQueue ??= [];
-        yield return new BuildingIdentityComponentState(
+        var components = new EntityComponentState[BuildingComponentCount(seed, spec, productionQueue, rallyPoint)];
+        var index = 0;
+        components[index++] = new BuildingIdentityComponentState(
             seed.Id,
             seed.Kind,
             seed.PlayerSlotId,
             seed.Faction);
-        yield return new HealthComponentState(seed.Hp, spec.MaxHp);
-        yield return new SelectableComponentState(selected, selectableAlertPulse);
-        yield return new VisionComponentState(spec.SightRange);
-        yield return new CollisionComponentState(
+        components[index++] = new HealthComponentState(seed.Hp, spec.MaxHp);
+        components[index++] = new SelectableComponentState(selected, selectableAlertPulse);
+        components[index++] = new VisionComponentState(spec.SightRange);
+        components[index++] = new CollisionComponentState(
             Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
             8,
             100,
             BlocksMovement: true);
-        yield return new FootprintComponentState(
+        components[index++] = new FootprintComponentState(
             spec.Footprint,
             spec.PlacementDomain);
-        yield return new ConstructionComponentState(
+        components[index++] = new ConstructionComponentState(
             buildProgress,
             spec.BuildTime,
             spec.Cost,
             spec.RefundRatio);
-        yield return new PowerComponentState(
+        components[index++] = new PowerComponentState(
             spec.PowerProvided,
             spec.PowerUsed,
             powered);
         if (rallyPoint is not null)
         {
-            yield return new RallyPointComponentState(rallyPoint);
+            components[index++] = new RallyPointComponentState(rallyPoint);
         }
 
-        yield return new PresentationPulseComponentState(
+        components[index++] = new PresentationPulseComponentState(
             CommandPulse: rallyPulse,
             AlertPulse: deliveryPulse,
             HitPulse: hitPulse);
 
         if (spec.WeaponKind is { } weaponKind)
         {
-            yield return weaponState ?? new WeaponUserComponentState(
+            components[index++] = weaponState ?? new WeaponUserComponentState(
                 CreateWeaponMountStates(weaponKind, seed.Facing));
         }
 
         if (seed.Kind == BuildingDesignIds.Refinery)
         {
-            yield return new DockComponentState(dockReservedByEntityId, dockedEntityId);
+            components[index++] = new DockComponentState(dockReservedByEntityId, dockedEntityId);
         }
 
         if (productionQueue.Count > 0 || ProducesUnits(seed.Kind))
         {
-            yield return new ProductionQueueComponentState(CreateProductionQueueItems(productionQueue));
+            components[index++] = new ProductionQueueComponentState(CreateProductionQueueItems(productionQueue));
         }
 
         if (spec.BuildRadius > 0)
         {
-            yield return new BuildRadiusComponentState(spec.BuildRadius);
+            components[index++] = new BuildRadiusComponentState(spec.BuildRadius);
         }
+
+        return components;
+    }
+
+    private static int BuildingComponentCount(
+        BuildingEntitySeed seed,
+        BuildSpec spec,
+        IReadOnlyList<UnitProductionQueueItem> productionQueue,
+        Vector2? rallyPoint)
+    {
+        var count = 9;
+        if (rallyPoint is not null)
+        {
+            count++;
+        }
+
+        if (spec.WeaponKind is not null)
+        {
+            count++;
+        }
+
+        if (seed.Kind == BuildingDesignIds.Refinery)
+        {
+            count++;
+        }
+
+        if (productionQueue.Count > 0 || ProducesUnits(seed.Kind))
+        {
+            count++;
+        }
+
+        if (spec.BuildRadius > 0)
+        {
+            count++;
+        }
+
+        return count;
     }
 
     private static WeaponMountRuntimeState[] CreateWeaponMountStates(WeaponKind weaponKind, float facing)

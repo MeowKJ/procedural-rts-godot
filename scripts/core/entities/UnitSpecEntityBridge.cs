@@ -8,11 +8,7 @@ public static class UnitSpecEntityBridge
 
     public static EntitySpec ToEntitySpec(this UnitSpec unitSpec)
     {
-        var tags = unitSpec.RoleTags
-            .Select(tag => tag.ToString())
-            .Append(unitSpec.Archetype.ToString())
-            .Distinct()
-            .ToHashSet();
+        var tags = CreateTags(unitSpec);
 
         return new EntitySpec
         {
@@ -37,6 +33,18 @@ public static class UnitSpecEntityBridge
                 TechTier: unitSpec.Stats.TechTier,
                 RosterTags: tags),
         };
+    }
+
+    private static HashSet<string> CreateTags(UnitSpec unitSpec)
+    {
+        var tags = new HashSet<string>();
+        foreach (var tag in unitSpec.RoleTags)
+        {
+            tags.Add(tag.ToString());
+        }
+
+        tags.Add(unitSpec.Archetype.ToString());
+        return tags;
     }
 
     public static EntityInstance SpawnUnit(

@@ -53,13 +53,12 @@ public sealed partial class FogOfWarMap(float cellSize = FogOfWarMap.DefaultCell
 
     public void Update(
         Vector2 worldSize,
-        IEnumerable<(Vector2 Position, float SightRange)> visionSources)
+        IReadOnlyList<(Vector2 Position, float SightRange)> visionSources)
     {
-        var sources = visionSources as IReadOnlyList<(Vector2 Position, float SightRange)> ?? visionSources.ToArray();
-        var sourceSignature = VisionSourceSignature(worldSize, sources);
+        var sourceSignature = VisionSourceSignature(worldSize, visionSources);
         var canSkipUnchangedSources = _hasVisionSourceSignature
             && _lastVisionSourceSignature == sourceSignature
-            && _lastVisionSourceCount == sources.Count
+            && _lastVisionSourceCount == visionSources.Count
             && WorldSize == worldSize
             && Columns > 0
             && Rows > 0;
@@ -74,9 +73,9 @@ public sealed partial class FogOfWarMap(float cellSize = FogOfWarMap.DefaultCell
         Array.Clear(_visible, 0, _visible.Length);
         Array.Clear(_visibleStrength, 0, _visibleStrength.Length);
 
-        for (var index = 0; index < sources.Count; index++)
+        for (var index = 0; index < visionSources.Count; index++)
         {
-            var source = sources[index];
+            var source = visionSources[index];
             Reveal(source.Position, source.SightRange);
         }
 
@@ -92,7 +91,7 @@ public sealed partial class FogOfWarMap(float cellSize = FogOfWarMap.DefaultCell
         }
 
         _lastVisionSourceSignature = sourceSignature;
-        _lastVisionSourceCount = sources.Count;
+        _lastVisionSourceCount = visionSources.Count;
         _hasVisionSourceSignature = true;
     }
 

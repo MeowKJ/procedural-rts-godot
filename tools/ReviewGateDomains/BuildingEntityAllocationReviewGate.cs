@@ -7,9 +7,11 @@ static class BuildingEntityAllocationReviewGate
         RequireText(building, "new WeaponMountRuntimeState[1]", "Building entity bridge weapon mount helper must allocate the required independent snapshot array explicitly.", result);
         RequireText(building, "CreateProductionQueueItems(productionQueue)", "Building entity bridge production queues must use an explicit snapshot helper.", result);
         RequireText(building, "new UnitProductionQueueItem[items.Count]", "Building entity bridge production queue helper must allocate the required independent snapshot array explicitly.", result);
+        RequireText(building, "new EntityComponentState[BuildingComponentCount", "Building entity bridge component snapshots must allocate the required independent array explicitly.", result);
+        RequireText(building, "components[index++] = new BuildingIdentityComponentState", "Building entity bridge component snapshots must preserve explicit indexed component order.", result);
         ForbidText(building, "new[] { new WeaponMountRuntimeState(\"main\", weaponKind, seed.Facing, 0) }", "Building entity bridge weapon mount snapshots must not use inline array construction.", result);
         ForbidText(building, "productionQueue.ToArray()", "Building entity bridge production queue snapshots must not use ToArray.", result);
-
+        ForbidText(building, "InitialBuildingComponents(", "Building entity bridge component snapshots must not use iterator-based component construction.", result);
         var projection = ReviewGateSource.Read(root, "scripts", "core", "sim", "BuildingPresentationProjection.cs");
         var projectionQueue = ReviewGateSource.Read(root, "scripts", "core", "sim", "BuildingPresentationProjector.Queue.cs");
         RequireText(projection, "partial class BuildingPresentationProjector", "Building presentation projector must be partial so queue clone helpers stay in a focused file.", result);
