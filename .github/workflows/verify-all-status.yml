@@ -1,0 +1,91 @@
+name: VerifyAll PR Status
+
+on:
+  workflow_run:
+    workflows:
+      - VerifyAll
+    types:
+      - requested
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  pr-status:
+    name: Comment VerifyAll status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Update PR status comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            if (prs.length === 0) {
+              core.notice("VerifyAll run is not associated with a pull request; skipping PR status comment.");
+              return;
+            }
+
+            const pr = prs[0];
+            const marker = "<!-- verify-all-status -->";
+            const requested = context.payload.action === "requested";
+            const conclusion = run.conclusion || "pending";
+            const status = requested
+              ? "status:ci-pending"
+              : conclusion === "success"
+                ? "status:verified"
+                : "status:needs-fix";
+            const icon = requested
+              ? "PENDING"
+              : conclusion === "success"
+                ? "PASS"
+                : "FAIL";
+            const runUrl = run.html_url;
+            const headSha = (run.head_sha || "").slice(0, 12);
+            const completedAt = run.updated_at || run.created_at;
+            const next = requested
+              ? "Codex should not wait on this run. A monitor or Integrator can poll later with `sh tools/ci-monitor.sh " + pr.number + "`."
+              : conclusion === "success"
+                ? "Integrator may proceed with review/merge checks."
+                : "Owner should inspect a bounded failed-log tail with `sh tools/ci-failure-tail.sh " + run.id + " 180`.";
+
+            const body = [
+              marker,
+              `**VerifyAll:** ${icon}`,
+              `**State:** \`${status}\``,
+              `**Run:** [${run.id}](${runUrl})`,
+              `**Head:** \`${headSha}\``,
+              `**Updated:** ${completedAt}`,
+              `**Next:** ${next}`,
+            ].join("\n");
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+            const existing = comments.find(comment =>
+              comment.user?.type === "Bot" && comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
