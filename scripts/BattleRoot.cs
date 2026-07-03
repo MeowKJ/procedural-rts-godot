@@ -61,6 +61,8 @@ public partial class BattleRoot : Node2D
     private readonly List<BuildingModel> _selectedLegacyBuildingBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
     private readonly List<int> _sandboxLaunchUnitIdBuffer = [];
+    private readonly List<int> _debugPlayerAttackerIds = [];
+    private readonly List<int> _debugEnemyAttackerIds = [];
     private readonly PresentationMetrics _presentationMetrics = new();
     private readonly Stopwatch _processStopwatch = new();
     private readonly Stopwatch _simStepStopwatch = new();
@@ -136,21 +138,15 @@ public partial class BattleRoot : Node2D
                 facing: Mathf.Pi,
                 count: 24);
 
-            var playerAttackers = _unitBattlefield.Units
-                .Where(unit => unit.PlayerSlotId == PlayerSlotId.One && unit.Hp > 0 && unit.WeaponMounts.Count > 0)
-                .Select(unit => unit.Id)
-                .ToArray();
-            var enemyAttackers = _unitBattlefield.Units
-                .Where(unit => unit.PlayerSlotId == PlayerSlotId.Two && unit.Hp > 0 && unit.WeaponMounts.Count > 0)
-                .Select(unit => unit.Id)
-                .ToArray();
+            CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds);
+            CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerIds);
             var playerTarget = enemyWave.FirstOrDefault(unit => unit.Hp > 0)
                 ?? _unitBattlefield.Units.First(unit => unit.PlayerSlotId == PlayerSlotId.Two && unit.Hp > 0);
             var enemyTarget = playerWave.FirstOrDefault(unit => unit.Hp > 0)
                 ?? _unitBattlefield.Units.First(unit => unit.PlayerSlotId == PlayerSlotId.One && unit.Hp > 0);
 
-            _debugPlayerCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.One, playerAttackers, playerTarget);
-            _debugEnemyCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.Two, enemyAttackers, enemyTarget);
+            _debugPlayerCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.One, _debugPlayerAttackerIds, playerTarget);
+            _debugEnemyCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.Two, _debugEnemyAttackerIds, enemyTarget);
             _camera.InputEnabled = false;
             _camera.SnapToWorldPoint(focus);
             _debugActiveBattlePerfScenarioConfigured = true;
@@ -173,6 +169,20 @@ public partial class BattleRoot : Node2D
             _debugEnemyCommandedUnitCount,
             counts.FogTextureUploads,
             counts.LastFogUpdateMs);
+    }
+
+    private void CollectActiveBattlePerfAttackers(PlayerSlotId playerSlotId, List<int> result)
+    {
+        result.Clear();
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Hp > 0
+                && unit.WeaponMounts.Count > 0)
+            {
+                result.Add(unit.Id);
+            }
+        }
     }
 
     public IReadOnlyList<string> DebugUnitBattlefieldDesignIds(PlayerSlotId playerSlotId)
