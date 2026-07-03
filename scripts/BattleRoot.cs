@@ -187,10 +187,26 @@ public partial class BattleRoot : Node2D
 
     public IReadOnlyList<string> DebugUnitBattlefieldDesignIds(PlayerSlotId playerSlotId)
     {
-        return _unitBattlefield.Units
-            .Where(unit => unit.PlayerSlotId == playerSlotId && unit.Hp > 0)
-            .Select(unit => unit.Spec.Id)
-            .ToArray();
+        var count = 0;
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        var designIds = new string[count];
+        var index = 0;
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Hp > 0)
+            {
+                designIds[index++] = unit.Spec.Id;
+            }
+        }
+
+        return designIds;
     }
 
 }

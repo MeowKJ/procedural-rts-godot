@@ -49,7 +49,7 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<UnitBattlefieldConstructionTicketSnapshot> ReadyConstructionTickets(PlayerSlotId playerSlotId)
     {
         CollectReadyConstructionTickets(playerSlotId, includeQueued: false, _constructionTicketBuffer);
-        return _constructionTicketBuffer.ToArray();
+        return _constructionTicketBuffer;
     }
 
     public bool PlaceReadyConstructionTicket(

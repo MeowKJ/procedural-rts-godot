@@ -49,6 +49,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
         RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds)", "Active battle perf setup must fill player attacker ids explicitly.", result);
         RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerIds)", "Active battle perf setup must fill enemy attacker ids explicitly.", result);
+        RequireText(battleRoot, "var designIds = new string[count];", "BattleRoot debug design-id readout must build an explicit stable snapshot.", result);
+        RequireText(battleRoot, "designIds[index++] = unit.Spec.Id;", "BattleRoot debug design-id readout must fill snapshots with an explicit scan.", result);
         RequireText(sandbox, "CollectSandboxLaunchSelectionIds();", "Sandbox launch must fill reusable selected-unit id storage.", result);
         RequireText(sandbox, "_sandboxLaunchUnitBuffer.Sort(CompareSandboxLaunchUnits)", "Sandbox launch selection must sort reusable unit storage in place.", result);
         RequireText(sandbox, "NextSandboxBuildingTargetId()", "Sandbox structure spawn must compute next building id with an explicit scan.", result);
@@ -97,6 +99,7 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(battleRoot, "var enemyAttackers = _unitBattlefield.Units", "Active battle perf setup must not allocate enemy attacker LINQ chains.", result);
         ForbidText(battleRoot, ".Where(unit => unit.PlayerSlotId == PlayerSlotId.One && unit.Hp > 0 && unit.WeaponMounts.Count > 0)", "Active battle perf setup must scan player attackers explicitly.", result);
         ForbidText(battleRoot, ".Where(unit => unit.PlayerSlotId == PlayerSlotId.Two && unit.Hp > 0 && unit.WeaponMounts.Count > 0)", "Active battle perf setup must scan enemy attackers explicitly.", result);
+        ForbidText(battleRoot, ".Select(unit => unit.Spec.Id)", "BattleRoot debug design-id readout must not allocate LINQ projection chains.", result);
         ForbidText(hudSync, ".GroupBy(", "Selection HUD sync must not allocate icon summary grouping chains.", result);
         ForbidText(hudSync, ".ToList()", "Selection HUD sync must not materialize icon summary lists.", result);
         ForbidText(iconSummary, ".GroupBy(", "Selection icon summaries must not allocate grouping chains.", result);

@@ -146,9 +146,14 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<UnitInstance> SpawnRoster(UnitRosterProfile roster, PlayerSlotId playerSlotId, Vector2 start, Vector2 spacing)
     {
-        return UnitDesignCatalog.ForRoster(roster)
-            .Select((design, index) => Spawn(design.ToSpec(), playerSlotId, start + spacing * index))
-            .ToList();
+        var designs = UnitDesignCatalog.ForRoster(roster);
+        var units = new List<UnitInstance>(designs.Count);
+        for (var index = 0; index < designs.Count; index++)
+        {
+            units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index));
+        }
+
+        return units;
     }
 
     public void Update(double delta)
