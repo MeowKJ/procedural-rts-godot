@@ -45,7 +45,7 @@ public sealed class ProjectileSystem : ISimSystem
         var nextPosition = currentPosition + velocity * context.FixedDelta;
         if (HitsTarget(currentPosition, nextPosition, target.Transform.Position, state.HitRadius))
         {
-            WeaponEngagementResolution.ApplyProjectileImpact(context, target, source, projectile, state.Damage);
+            WeaponEngagementResolution.ApplyProjectileImpact(context, target, source, projectile, state);
             world.QueueRemoval(projectile.Id);
             return;
         }

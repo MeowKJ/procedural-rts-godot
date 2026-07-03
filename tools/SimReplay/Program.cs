@@ -25,6 +25,7 @@ static partial class Program
         RunVeterancyProgressionScenario();
         RunDerivedRegenerationScenario();
         RunProjectileTrackingScenario();
+        RunProjectileSplashScenario();
         RunAuthoredContentScenario();
         RunMapAuthoringScenario();
         RunEntitySharedCorridorScenario();

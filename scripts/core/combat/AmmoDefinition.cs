@@ -14,6 +14,8 @@ public sealed record AmmoDefinition
     public float BeamWidth { get; init; }
     public float AccuracyRadiusMultiplier { get; init; }
     public float TrackingStrength { get; init; }
+    public float SplashRadius { get; init; }
+    public float SplashMinDamageRatio { get; init; }
     public Color Accent { get; init; }
     public DamageProfile DamageProfile { get; init; }
     public SpecialAttackHook Hooks { get; init; }
@@ -35,7 +37,9 @@ public sealed record AmmoDefinition
         float TrackingStrength,
         Color Accent,
         DamageProfile DamageProfile,
-        SpecialAttackHook Hooks)
+        SpecialAttackHook Hooks,
+        float SplashRadius = 0,
+        float SplashMinDamageRatio = 0)
         : this(
             WeaponCatalog.IdFor(Kind),
             Label,
@@ -50,6 +54,8 @@ public sealed record AmmoDefinition
             Accent,
             DamageProfile,
             Hooks,
+            SplashRadius,
+            SplashMinDamageRatio,
             Kind)
     {
     }
@@ -68,6 +74,8 @@ public sealed record AmmoDefinition
         Color Accent,
         DamageProfile DamageProfile,
         SpecialAttackHook Hooks,
+        float SplashRadius = 0,
+        float SplashMinDamageRatio = 0,
         AmmoKind? LegacyKind = null)
     {
         this.Id = Id;
@@ -80,6 +88,8 @@ public sealed record AmmoDefinition
         this.BeamWidth = BeamWidth;
         this.AccuracyRadiusMultiplier = AccuracyRadiusMultiplier;
         this.TrackingStrength = TrackingStrength;
+        this.SplashRadius = SplashRadius;
+        this.SplashMinDamageRatio = SplashMinDamageRatio;
         this.Accent = Accent;
         this.DamageProfile = DamageProfile;
         this.Hooks = Hooks;
