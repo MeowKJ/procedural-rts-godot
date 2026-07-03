@@ -70,10 +70,7 @@ public static class UnitSpecEntityBridge
             unitSpec.Collision.PushPriority,
             unitSpec.Collision.BlocksMovement);
         yield return new VisionComponentState(unitSpec.Stats.SightRange);
-        yield return new WeaponUserComponentState(
-            unitSpec.Weapons
-                .Select(mount => new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind))
-                .ToArray());
+        yield return new WeaponUserComponentState(CreateWeaponMountStates(unitSpec, facing));
         if (unitSpec.Weapons.Count > 0)
         {
             yield return new VeterancyComponentState();
@@ -126,6 +123,18 @@ public static class UnitSpecEntityBridge
         }
 
         return count;
+    }
+
+    private static WeaponMountRuntimeState[] CreateWeaponMountStates(UnitSpec unitSpec, float facing)
+    {
+        var states = new WeaponMountRuntimeState[unitSpec.Weapons.Count];
+        for (var index = 0; index < unitSpec.Weapons.Count; index++)
+        {
+            var mount = unitSpec.Weapons[index];
+            states[index] = new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind);
+        }
+
+        return states;
     }
 
     private static bool IsRuntimeActiveAbility(AbilitySpec ability)
