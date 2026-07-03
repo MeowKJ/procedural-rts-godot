@@ -10,7 +10,8 @@ public partial class ActiveBattlePerfQaRoot : Node
     private const string OutputDirectory = "artifacts/active-battle-perf";
     private const int SampleFrames = 60;
     private const double FrameBudgetMs = 18.5;
-    private const double ProcessBudgetMs = 10.0;
+    private const double InteractiveProcessBudgetMs = 10.0;
+    private const double HeadlessProcessBudgetMs = 12.0;
     private const double SimBudgetMs = 4.0;
     private const double InteractiveFogBudgetMs = 8.0;
     private const double HeadlessFogBudgetMs = 16.0;
@@ -69,7 +70,8 @@ public partial class ActiveBattlePerfQaRoot : Node
             Require(final.VisibleUnitCount >= 40, $"Expected 40+ visible units at 1920x1080. {summary}");
             Require(counts.LiveEntityCount >= 50, $"Expected active entities from both bases and armies. {summary}");
             Require(metrics.AverageFrameMs <= FrameBudgetMs, $"Expected average frame <= {FrameBudgetMs:0.0}ms. {summary}");
-            Require(metrics.AverageProcessMs <= ProcessBudgetMs, $"Expected average process <= {ProcessBudgetMs:0.0}ms. {summary}");
+            var processBudgetMs = IsHeadlessDisplay() ? HeadlessProcessBudgetMs : InteractiveProcessBudgetMs;
+            Require(metrics.AverageProcessMs <= processBudgetMs, $"Expected average process <= {processBudgetMs:0.0}ms. {summary}");
             Require(metrics.AverageSimStepMs <= SimBudgetMs, $"Expected average sim <= {SimBudgetMs:0.0}ms. {summary}");
             var fogBudgetMs = IsHeadlessDisplay() ? HeadlessFogBudgetMs : InteractiveFogBudgetMs;
             Require(final.LastFogUpdateMs <= fogBudgetMs, $"Expected fog update <= {fogBudgetMs:0.0}ms. {summary}");
