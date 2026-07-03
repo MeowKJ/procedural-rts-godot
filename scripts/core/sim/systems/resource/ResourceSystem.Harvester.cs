@@ -11,6 +11,12 @@ public sealed partial class ResourceSystem
         HarvesterComponentState state,
         ResourceCargoComponentState cargo)
     {
+        if (state.Retreating && state.Mode is HarvesterMode.MovingToField or HarvesterMode.Gathering)
+        {
+            SendToRefinery(world, harvester, state);
+            return;
+        }
+
         switch (state.Mode)
         {
             case HarvesterMode.MovingToField:
@@ -108,6 +114,12 @@ public sealed partial class ResourceSystem
             ReleaseDock(world, harvester.Id.Value, state.RefineryId);
             world.Metrics.ClearDockWait(harvester.Id.Value);
             world.Metrics.RecordResourceTripCompleted();
+            if (state.Retreating)
+            {
+                ResetHarvester(harvester, state);
+                return;
+            }
+
             ReturnToFieldOrIdle(world, harvester, state);
             return;
         }

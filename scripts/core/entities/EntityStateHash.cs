@@ -237,7 +237,8 @@ public static partial class EntityStateHash
         hash = Add(hash, (int)state.Mode);
         hash = Add(hash, state.FieldId ?? 0);
         hash = Add(hash, state.RefineryId ?? 0);
-        return Add(hash, state.HarvestPulse);
+        hash = Add(hash, state.HarvestPulse);
+        return Add(hash, state.Retreating ? 1 : 0);
     }
 
     private static ulong AddResourceNode(ulong hash, ResourceNodeComponentState state)

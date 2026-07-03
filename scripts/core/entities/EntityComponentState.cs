@@ -119,7 +119,8 @@ public sealed record HarvesterComponentState(
     HarvesterMode Mode = HarvesterMode.Idle,
     int? FieldId = null,
     int? RefineryId = null,
-    float HarvestPulse = 0) : EntityComponentState;
+    float HarvestPulse = 0,
+    bool Retreating = false) : EntityComponentState;
 
 public sealed record ResourceCargoComponentState(int Cargo = 0, int Capacity = 0) : EntityComponentState;
 

@@ -76,6 +76,7 @@ public sealed partial class UnitBattlefield
             unit.HarvestFieldId = LegacyResourceFieldId(harvester.FieldId);
             unit.HarvestRefineryId = LegacyBuildingTargetId(harvester.RefineryId);
             unit.HarvestPulse = Mathf.Clamp(harvester.HarvestPulse, 0, 1);
+            unit.HarvesterRetreating = harvester.Retreating;
         }
 
         if (entity.Components.TryGet<ResourceCargoComponentState>(out var cargo))
