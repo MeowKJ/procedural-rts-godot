@@ -69,7 +69,7 @@ public readonly record struct BuildingPresentationProjection(
     }
 }
 
-public static class BuildingPresentationProjector
+public static partial class BuildingPresentationProjector
 {
     public static BuildingPresentationProjection ProjectOne(EntityWorld world, EntityInstance entity)
     {
@@ -103,7 +103,7 @@ public static class BuildingPresentationProjector
         var dockOccupied = entity.Components.TryGet<DockComponentState>(out var dock)
             && (dock.ReservedByEntityId is not null || dock.DockedEntityId is not null);
         var productionQueue = entity.Components.TryGet<ProductionQueueComponentState>(out var production)
-            ? production.Items.Select(CloneQueueItem).ToArray()
+            ? CloneProductionQueue(production.Items)
             : [];
 
         return new BuildingPresentationProjection(
@@ -120,18 +120,6 @@ public static class BuildingPresentationProjector
             deliveryPulse,
             dockOccupied,
             productionQueue);
-    }
-
-    private static UnitProductionQueueItem CloneQueueItem(UnitProductionQueueItem item)
-    {
-        return new UnitProductionQueueItem
-        {
-            Id = item.Id,
-            Kind = item.Kind,
-            DesignId = item.DesignId,
-            Faction = item.Faction,
-            Progress = item.Progress,
-        };
     }
 }
 

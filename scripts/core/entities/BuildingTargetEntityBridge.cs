@@ -161,7 +161,7 @@ public static class BuildingTargetEntityBridge
         if (spec.WeaponKind is { } weaponKind)
         {
             yield return weaponState ?? new WeaponUserComponentState(
-                new[] { new WeaponMountRuntimeState("main", weaponKind, seed.Facing, 0) });
+                CreateWeaponMountStates(weaponKind, seed.Facing));
         }
 
         if (seed.Kind == BuildingDesignIds.Refinery)
@@ -171,13 +171,44 @@ public static class BuildingTargetEntityBridge
 
         if (productionQueue.Count > 0 || ProducesUnits(seed.Kind))
         {
-            yield return new ProductionQueueComponentState(productionQueue.ToArray());
+            yield return new ProductionQueueComponentState(CreateProductionQueueItems(productionQueue));
         }
 
         if (spec.BuildRadius > 0)
         {
             yield return new BuildRadiusComponentState(spec.BuildRadius);
         }
+    }
+
+    private static WeaponMountRuntimeState[] CreateWeaponMountStates(WeaponKind weaponKind, float facing)
+    {
+        var states = new WeaponMountRuntimeState[1];
+        states[0] = new WeaponMountRuntimeState("main", weaponKind, facing, 0);
+        return states;
+    }
+
+    private static UnitProductionQueueItem[] CreateProductionQueueItems(IReadOnlyList<UnitProductionQueueItem> items)
+    {
+        if (items.Count == 0)
+        {
+            return [];
+        }
+
+        var copy = new UnitProductionQueueItem[items.Count];
+        for (var index = 0; index < items.Count; index++)
+        {
+            var item = items[index];
+            copy[index] = new UnitProductionQueueItem
+            {
+                Id = item.Id,
+                Kind = item.Kind,
+                DesignId = item.DesignId,
+                Faction = item.Faction,
+                Progress = item.Progress,
+            };
+        }
+
+        return copy;
     }
 
     private static HashSet<string> TagsFor(BuildSpec spec)
