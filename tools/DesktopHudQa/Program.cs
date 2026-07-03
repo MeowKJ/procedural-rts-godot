@@ -58,6 +58,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "UiFactory.ApplyHudActionButtonTheme", "HudLayer icon actions must use UiFactory.ApplyHudActionButtonTheme.");
     RequireText(hudLayer, "UiFactory.ApplyHudCommandButtonTheme", "HudLayer command buttons must use UiFactory.ApplyHudCommandButtonTheme.");
     RequireText(hudLayer, "UiFactory.GetHudControlGroupSlotStyle", "HudLayer control-group slot style must come from UiFactory.");
+    ForbidText(hudLayer, "BuildGlobalSkillPanel", "Normal HUD must not build placeholder global-skill controls.");
+    ForbidText(hudLayer, "GlobalSkillPanel", "Normal HUD must not include an unwired global-skill panel.");
+    ForbidText(hudLayer, "PlaceholderBuildSlot", "Normal HUD must not keep placeholder production slot controls.");
+    ForbidText(hudLayer, "_selectionCluster", "Selection detail must be owned by the right detail drawer, not a permanently hidden duplicate panel.");
 
     RequireText(uiFactory, "ApplyHudLabelStyle", "UiFactory must own HUD label color, outline, and shadow styling.");
     RequireText(uiFactory, "ApplyHudMoveModeButtonTheme", "UiFactory must own HUD move-mode button styling.");
@@ -66,6 +70,14 @@ static void AssertHudFactoryExtraction(string root)
     if (hudLayer.Contains("AddThemeStyleboxOverride(\"panel\"", StringComparison.Ordinal))
     {
         throw new InvalidOperationException("HudLayer must not directly override panel styleboxes; use UiFactory panel helpers.");
+    }
+}
+
+static void ForbidText(string source, string forbidden, string message)
+{
+    if (source.Contains(forbidden, StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException(message);
     }
 }
 

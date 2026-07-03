@@ -15,8 +15,6 @@ public static class UiFactory
 
     public readonly record struct HudProductionTabDrawStyle(Color Fill, Color AccentFill, Color AccentBorder, float BorderWidth, Color Icon);
 
-    public readonly record struct HudPlaceholderSlotDrawStyle(Color Fill, Color Border, Color Text);
-
     public readonly record struct HudControlGroupSlotStyle(
         Color Fill,
         Color Border,
@@ -329,14 +327,6 @@ public static class UiFactory
             new Color(accent, selected ? 0.82f : 0.3f * alpha),
             selected ? 1.8f : 1.1f,
             new Color(accent, active ? 0.92f : 0.38f));
-    }
-
-    public static HudPlaceholderSlotDrawStyle GetHudPlaceholderSlotDrawStyle(SoftOldCityHudPalette palette)
-    {
-        return new HudPlaceholderSlotDrawStyle(
-            palette.PanelSubtleFill,
-            new Color(palette.TextDim, 0.32f),
-            new Color(palette.TextDim, 0.72f));
     }
 
     public static HudControlGroupSlotStyle GetHudControlGroupSlotStyle(ControlGroupSnapshot snapshot, SoftOldCityHudPalette palette)

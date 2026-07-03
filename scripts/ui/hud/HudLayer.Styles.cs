@@ -17,10 +17,6 @@ public partial class HudLayer : CanvasLayer
             SetLabelColor(label, label.Name == "Value" ? Ink : InkMuted);
         }
 
-        SetLabelColor(_selectedTitle, Ink);
-        SetLabelColor(_selectedMeta, Mint);
-        SetLabelColor(_selectedStats, Ink);
-        SetLabelColor(_selectedDetail, InkMuted);
         SetLabelColor(_drawerSelectedTitle, Ink);
         SetLabelColor(_drawerSelectedMeta, Mint);
         SetLabelColor(_drawerSelectedStats, Ink);
