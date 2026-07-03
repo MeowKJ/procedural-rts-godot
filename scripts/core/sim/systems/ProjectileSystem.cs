@@ -30,6 +30,11 @@ public sealed class ProjectileSystem : ISimSystem
             return;
         }
 
+        if (TryIntercept(context, projectile, state))
+        {
+            return;
+        }
+
         var source = world.TryGet(state.Source, out var liveSource) ? liveSource : null;
         var toTarget = target.Transform.Position - projectile.Transform.Position;
         var distance = toTarget.Length();
@@ -76,5 +81,62 @@ public sealed class ProjectileSystem : ISimSystem
         var t = Math.Clamp((target - start).Dot(segment) / segmentLengthSq, 0, 1);
         var closest = start + segment * t;
         return closest.DistanceSquaredTo(target) <= radiusSq;
+    }
+
+    private static bool TryIntercept(SimContext context, EntityInstance projectile, ProjectileComponentState state)
+    {
+        if (!state.Interceptable)
+        {
+            return false;
+        }
+
+        foreach (var interceptor in context.World.OrderedEntities)
+        {
+            if (interceptor.Id.Value == projectile.Id.Value
+                || !context.World.Relations.CanAttack(interceptor.OwnerId, projectile.OwnerId)
+                || !CanAct(interceptor)
+                || !interceptor.Components.TryGet<WeaponUserComponentState>(out var weapon))
+            {
+                continue;
+            }
+
+            var mounts = WeaponEngagementState.WritableMounts(interceptor, weapon);
+            for (var index = 0; index < mounts.Count; index++)
+            {
+                var mount = mounts[index];
+                if (mount.CooldownRemaining > 0
+                    || !context.World.TryGetWeaponDefinition(mount.WeaponId, out var definition)
+                    || !definition.CanInterceptProjectiles
+                    || !IsInInterceptRange(interceptor, projectile, definition))
+                {
+                    continue;
+                }
+
+                mounts[index] = mount with { CooldownRemaining = definition.Cooldown };
+                context.World.Events.Raise(new WeaponFiredEvent(
+                    context.Tick,
+                    interceptor.Id,
+                    mount.MountId,
+                    mount.WeaponId,
+                    interceptor.Transform.Position,
+                    projectile.Transform.Position));
+                context.World.QueueRemoval(projectile.Id);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool CanAct(EntityInstance entity)
+    {
+        return !entity.Components.TryGet<HealthComponentState>(out var health) || health.Hp > 0;
+    }
+
+    private static bool IsInInterceptRange(EntityInstance interceptor, EntityInstance projectile, WeaponDefinition definition)
+    {
+        var range = MathF.Max(0, definition.Range);
+        return range > 0
+            && interceptor.Transform.Position.DistanceSquaredTo(projectile.Transform.Position) <= range * range;
     }
 }

@@ -16,6 +16,7 @@ public sealed record AmmoDefinition
     public float TrackingStrength { get; init; }
     public float SplashRadius { get; init; }
     public float SplashMinDamageRatio { get; init; }
+    public bool Interceptable { get; init; }
     public Color Accent { get; init; }
     public DamageProfile DamageProfile { get; init; }
     public SpecialAttackHook Hooks { get; init; }
@@ -39,7 +40,8 @@ public sealed record AmmoDefinition
         DamageProfile DamageProfile,
         SpecialAttackHook Hooks,
         float SplashRadius = 0,
-        float SplashMinDamageRatio = 0)
+        float SplashMinDamageRatio = 0,
+        bool Interceptable = false)
         : this(
             WeaponCatalog.IdFor(Kind),
             Label,
@@ -56,6 +58,7 @@ public sealed record AmmoDefinition
             Hooks,
             SplashRadius,
             SplashMinDamageRatio,
+            Interceptable,
             Kind)
     {
     }
@@ -76,6 +79,7 @@ public sealed record AmmoDefinition
         SpecialAttackHook Hooks,
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
+        bool Interceptable = false,
         AmmoKind? LegacyKind = null)
     {
         this.Id = Id;
@@ -90,6 +94,7 @@ public sealed record AmmoDefinition
         this.TrackingStrength = TrackingStrength;
         this.SplashRadius = SplashRadius;
         this.SplashMinDamageRatio = SplashMinDamageRatio;
+        this.Interceptable = Interceptable;
         this.Accent = Accent;
         this.DamageProfile = DamageProfile;
         this.Hooks = Hooks;

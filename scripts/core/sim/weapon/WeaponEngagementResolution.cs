@@ -109,7 +109,8 @@ static class WeaponEngagementResolution
                 ammo.Speed,
                 ammo.TrackingStrength,
                 hitRadius,
-                lifetime),
+                lifetime,
+                ammo.Interceptable),
         });
     }
 

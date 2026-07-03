@@ -24,6 +24,7 @@ public sealed class SeekerRocketAmmo : AmmoDesign
                 weights: new() { [UnitWeightClass.Light] = 0.92f, [UnitWeightClass.Medium] = 1.05f, [UnitWeightClass.Heavy] = 1 },
                 domain: new() { [MovementDomain.Air] = 1.18f, [MovementDomain.Naval] = 1.08f },
                 armor: new() { [ArmorTag.Infantry] = 0.86f, [ArmorTag.Vehicle] = 1.35f, [ArmorTag.Structure] = 0.9f, [ArmorTag.Ship] = 1.08f, [ArmorTag.Aircraft] = 1.18f }),
-            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact);
+            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact,
+            Interceptable: true);
     }
 }
