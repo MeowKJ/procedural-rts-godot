@@ -139,6 +139,8 @@ public partial class HudLayer : CanvasLayer
         private int _queued;
         private float _progress;
         private string _disabledReason = "";
+        private float _feedbackPulse;
+        private bool _hasState;
 
         public void SetState(ProductionOptionState state, string disabledReason)
         {
@@ -152,6 +154,16 @@ public partial class HudLayer : CanvasLayer
 
         public void SetState(bool enabled, int queued, float progress, string disabledReason)
         {
+            var wasEnabled = !Disabled;
+            if (_hasState
+                && (queued > _queued
+                    || (queued == 0 && _queued > 0)
+                    || wasEnabled != enabled))
+            {
+                _feedbackPulse = 1f;
+            }
+
+            _hasState = true;
             Disabled = !enabled;
             _queued = queued;
             _progress = Mathf.Clamp(progress, 0, 1);
@@ -165,6 +177,17 @@ public partial class HudLayer : CanvasLayer
             TooltipText = enabled
                 ? $"{label} - {Cost}"
                 : $"{label} - {Cost} - {disabledReason}";
+            QueueRedraw();
+        }
+
+        public override void _Process(double delta)
+        {
+            if (_feedbackPulse <= 0)
+            {
+                return;
+            }
+
+            _feedbackPulse = Mathf.Max(0, _feedbackPulse - (float)delta * 2.6f);
             QueueRedraw();
         }
 
@@ -198,6 +221,12 @@ public partial class HudLayer : CanvasLayer
             {
                 DrawCircle(new Vector2(size.X - 10, 10), 8, style.QueueBadge);
                 DrawCircle(new Vector2(size.X - 10, 10), 4, style.QueueBadgeCutout);
+            }
+
+            if (_feedbackPulse > 0)
+            {
+                var pulse = Mathf.Clamp(_feedbackPulse, 0, 1);
+                DrawRect(new Rect2(Vector2.Zero, size).Grow(pulse * 5f), new Color(Accent, pulse * 0.42f), false, 1.2f + pulse * 1.6f);
             }
 
             if (Disabled)

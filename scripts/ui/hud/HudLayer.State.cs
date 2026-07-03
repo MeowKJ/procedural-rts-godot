@@ -24,10 +24,6 @@ public partial class HudLayer : CanvasLayer
     private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
 
     private Label _creditsValue = null!;
-    private Label _selectedTitle = null!;
-    private Label _selectedMeta = null!;
-    private Label _selectedStats = null!;
-    private Label _selectedDetail = null!;
     private Label _drawerSelectedTitle = null!;
     private Label _drawerSelectedMeta = null!;
     private Label _drawerSelectedStats = null!;
@@ -41,9 +37,7 @@ public partial class HudLayer : CanvasLayer
     private Label _outcomeTitle = null!;
     private Label _outcomeDetail = null!;
     private Panel _outcomeBanner = null!;
-    private Panel _selectionCluster = null!;
     private Panel _commandRibbon = null!;
-    private Panel _globalSkillPanel = null!;
     private Panel _sandboxDeveloperPanel = null!;
     private Panel _rightRail = null!;
     private Panel _rightProductionPanel = null!;
@@ -59,7 +53,6 @@ public partial class HudLayer : CanvasLayer
     private Button _sandboxStressButton = null!;
     private Button _cancelProduction = null!;
     private IconActionButton _settingsButton = null!;
-    private PortraitGlyph _portrait = null!;
     private MinimapSurface _minimapSurface = null!;
     private CommandPreviewOverlay _commandPreview = null!;
     private readonly List<AlertRow> _alertRows = [];
@@ -81,6 +74,11 @@ public partial class HudLayer : CanvasLayer
     private float _productionDrawerProgress;
     private float _detailDrawerProgress;
     private float _drawerInactivity;
+    private float _productionStatusPulse;
+    private float _queueStatusPulse;
+    private string _lastProductionStatus = "";
+    private string _lastQueueSummary = "";
+    private bool _lastCanCancelProduction;
 
     public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
     {
@@ -149,11 +147,6 @@ public partial class HudLayer : CanvasLayer
             _productionDrawerProgress = 1f;
         }
 
-        if (_selectionCluster is not null)
-        {
-            _selectionCluster.Visible = false;
-        }
-
         if (_commandRibbon is not null)
         {
             _commandRibbon.Visible = true;
@@ -176,19 +169,10 @@ public partial class HudLayer : CanvasLayer
         Color iconAccent,
         string? unitDesignId = null)
     {
-        _selectedTitle.Text = CompactText(title, 24);
-        _selectedMeta.Text = CompactText(meta, 34);
-        _selectedStats.Text = CompactText(stats, 34);
-        _selectedDetail.Text = CompactText(detail, 42);
         _drawerSelectedTitle.Text = CompactText(title, 24);
         _drawerSelectedMeta.Text = CompactText(meta, 30);
         _drawerSelectedStats.Text = CompactText(stats, 31);
         _drawerSelectedDetail.Text = CompactText(detail, 34);
-        _portrait.Mode = portraitMode;
-        _portrait.Icon = icon;
-        _portrait.UnitDesignId = unitDesignId;
-        _portrait.Accent = iconAccent;
-        _portrait.QueueRedraw();
         _drawerPortrait.Mode = portraitMode;
         _drawerPortrait.Icon = icon;
         _drawerPortrait.UnitDesignId = unitDesignId;
@@ -207,6 +191,12 @@ public partial class HudLayer : CanvasLayer
 
     public void SetProductionStatus(string status)
     {
+        if (!string.Equals(_lastProductionStatus, status, StringComparison.Ordinal))
+        {
+            _productionStatusPulse = 1f;
+            _lastProductionStatus = status;
+        }
+
         _productionValue.Text = CompactText(status, 54);
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
@@ -218,6 +208,14 @@ public partial class HudLayer : CanvasLayer
 
     public void SetProductionQueueSummary(string summary, bool canCancel)
     {
+        if (!string.Equals(_lastQueueSummary, summary, StringComparison.Ordinal)
+            || _lastCanCancelProduction != canCancel)
+        {
+            _queueStatusPulse = 1f;
+            _lastQueueSummary = summary;
+            _lastCanCancelProduction = canCancel;
+        }
+
         _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
         _cancelProduction.TooltipText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
@@ -346,6 +344,33 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
+    private void UpdateProductionFeedback(float dt)
+    {
+        if (_productionStatusPulse > 0)
+        {
+            _productionStatusPulse = Mathf.Max(0, _productionStatusPulse - dt * 2.8f);
+            var lift = _productionStatusPulse * 0.14f;
+            _productionValue.Modulate = new Color(1f + lift, 1f + lift, 1f + lift, 1);
+        }
+        else if (_productionValue is not null)
+        {
+            _productionValue.Modulate = Colors.White;
+        }
+
+        if (_queueStatusPulse > 0)
+        {
+            _queueStatusPulse = Mathf.Max(0, _queueStatusPulse - dt * 2.8f);
+            var lift = _queueStatusPulse * 0.18f;
+            _queueValue.Modulate = new Color(1f + lift, 1f + lift, 1f + lift, 1);
+            _cancelProduction.Modulate = new Color(1f + lift, 1f + lift * 0.6f, 1f + lift * 0.3f, 1);
+        }
+        else
+        {
+            _queueValue.Modulate = Colors.White;
+            _cancelProduction.Modulate = Colors.White;
+        }
+    }
+
     public void SetMoveCommandMode(MoveCommandMode mode)
     {
         _selectedMoveMode = mode;
@@ -365,7 +390,6 @@ public partial class HudLayer : CanvasLayer
     }
 
     public readonly record struct MinimapUnit(Vector2 Position, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);
-
     public readonly record struct MinimapBuilding(Vector2 Position, Vector2 Size, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);
 
     public readonly record struct MinimapResource(Vector2 Position, float Radius, float RemainingRatio);

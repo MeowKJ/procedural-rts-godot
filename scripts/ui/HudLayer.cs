@@ -40,10 +40,8 @@ public partial class HudLayer : CanvasLayer
         AddChild(root);
 
         BuildResourceStrip(root);
-        BuildGlobalSkillPanel(root);
         BuildSandboxDeveloperPanel(root);
         BuildMinimapCluster(root);
-        BuildSelectionCluster(root);
         BuildCommandRibbon(root);
         BuildAlertChips(root);
         BuildRightRail(root);
@@ -80,6 +78,7 @@ public partial class HudLayer : CanvasLayer
         var detailTarget = _hasSelection ? 1f : 0f;
         _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
         _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);
+        UpdateProductionFeedback(dt);
         LayoutDynamicHud(viewport);
     }
 

@@ -138,19 +138,6 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(tab);
     }
 
-    private static void AddPlaceholderBuildSlot(Control parent, string label, Vector2 position)
-    {
-        var slot = new PlaceholderBuildSlot
-        {
-            SlotLabel = label,
-            Position = position,
-            CustomMinimumSize = new Vector2(80, 70),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        slot.Size = slot.CustomMinimumSize;
-        parent.AddChild(slot);
-    }
-
     private CommandButton AddCommandButton(Control parent, string optionId)
     {
         var button = new CommandButton

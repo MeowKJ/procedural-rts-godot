@@ -28,22 +28,6 @@ public partial class HudLayer : CanvasLayer
         top.AddChild(status);
     }
 
-    private void BuildGlobalSkillPanel(Control root)
-    {
-        _globalSkillPanel = MakePanel("GlobalSkillPanel", CurrentPalette.PanelFill, CurrentPalette.PanelBorder);
-        _globalSkillPanel.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
-        _globalSkillPanel.OffsetLeft = 12;
-        _globalSkillPanel.OffsetTop = 182;
-        _globalSkillPanel.OffsetRight = 76;
-        _globalSkillPanel.OffsetBottom = 420;
-        _globalSkillPanel.MouseFilter = Control.MouseFilterEnum.Stop;
-        root.AddChild(_globalSkillPanel);
-
-        AddIconActionButton(_globalSkillPanel, IconGlyph.AttackMove, GameText.T("ui.globalSkill.scan"), new Vector2(10, 16), new Vector2(44, 44), Cyan);
-        AddIconActionButton(_globalSkillPanel, IconGlyph.Move, GameText.T("ui.globalSkill.boost"), new Vector2(10, 72), new Vector2(44, 44), Mint);
-        AddIconActionButton(_globalSkillPanel, IconGlyph.Building, GameText.T("ui.globalSkill.shield"), new Vector2(10, 128), new Vector2(44, 44), Amber);
-    }
-
     private void BuildSandboxDeveloperPanel(Control root)
     {
         _sandboxDeveloperPanel = MakePanel("SandboxDeveloperPanel", CurrentPalette.PanelFill, CurrentPalette.PanelBorder);
@@ -102,43 +86,6 @@ public partial class HudLayer : CanvasLayer
             JumpRequested = worldPoint => MinimapJumpRequested?.Invoke(worldPoint),
         };
         minimap.AddChild(_minimapSurface);
-    }
-
-    private void BuildSelectionCluster(Control root)
-    {
-        _selectionCluster = MakePanel("SelectionCluster", CurrentPalette.PanelFill, CurrentPalette.PanelBorder);
-        _selectionCluster.SetAnchorsPreset(Control.LayoutPreset.BottomLeft);
-        _selectionCluster.OffsetLeft = 12;
-        _selectionCluster.OffsetTop = -128;
-        _selectionCluster.OffsetRight = 332;
-        _selectionCluster.OffsetBottom = -12;
-        _selectionCluster.MouseFilter = Control.MouseFilterEnum.Ignore;
-        _selectionCluster.Visible = false;
-        root.AddChild(_selectionCluster);
-
-        _portrait = new PortraitGlyph
-        {
-            Name = "Portrait",
-            Position = new Vector2(10, 12),
-            CustomMinimumSize = new Vector2(66, 78),
-        };
-        _selectionCluster.AddChild(_portrait);
-
-        _selectedTitle = MakeLabel(GameText.T("ui.noSelection.title"), new Vector2(88, 12), 15, Ink);
-        _selectedTitle.CustomMinimumSize = new Vector2(214, 20);
-        _selectionCluster.AddChild(_selectedTitle);
-
-        _selectedMeta = MakeLabel(GameText.T("ui.noSelection.meta"), new Vector2(88, 36), 11, Mint);
-        _selectedMeta.CustomMinimumSize = new Vector2(214, 18);
-        _selectionCluster.AddChild(_selectedMeta);
-
-        _selectedStats = MakeLabel(GameText.T("ui.noSelection.stats"), new Vector2(88, 58), 11, Ink);
-        _selectedStats.CustomMinimumSize = new Vector2(214, 18);
-        _selectionCluster.AddChild(_selectedStats);
-
-        _selectedDetail = MakeLabel(GameText.T("ui.noSelection.detail"), new Vector2(10, 94), 10, InkMuted);
-        _selectedDetail.CustomMinimumSize = new Vector2(292, 18);
-        _selectionCluster.AddChild(_selectedDetail);
     }
 
     private void BuildCommandRibbon(Control root)

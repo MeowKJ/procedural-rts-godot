@@ -29,20 +29,6 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
-    private partial class PlaceholderBuildSlot : Control
-    {
-        public string SlotLabel { get; init; } = "";
-
-        public override void _Draw()
-        {
-            var rect = new Rect2(Vector2.Zero, CustomMinimumSize);
-            var style = UiFactory.GetHudPlaceholderSlotDrawStyle(CurrentPalette);
-            DrawRect(rect, style.Fill, true);
-            DrawRect(rect, style.Border, false, 1.1f);
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Body), new Vector2(10, 38), SlotLabel, HorizontalAlignment.Center, rect.Size.X - 20, 14, style.Text);
-        }
-    }
-
     private partial class ProductionTab : Control
     {
         public required IconGlyph Glyph { get; init; }

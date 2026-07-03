@@ -20,11 +20,6 @@ public partial class HudLayer : CanvasLayer
             _rightRail.Visible = true;
         }
 
-        if (_selectionCluster is not null)
-        {
-            _selectionCluster.Visible = false;
-        }
-
         if (_commandRibbon is not null)
         {
             _commandRibbon.Visible = true;
