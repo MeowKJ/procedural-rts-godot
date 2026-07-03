@@ -33,8 +33,7 @@ static class FileSizeThresholdChecks
 
     public static void CheckBridgeLegacyBaseline(
         IReadOnlyList<FileSizeSourceFile> files,
-        string todo,
-        string review,
+        string governance,
         GateResult result)
     {
         var bridgeFiles = files
@@ -48,10 +47,9 @@ static class FileSizeThresholdChecks
         }
 
         if (bridgeFiles.Length > 0
-            && !todo.Contains("Bridge", StringComparison.Ordinal)
-            && !review.Contains("Bridge", StringComparison.Ordinal))
+            && !governance.Contains("Bridge", StringComparison.Ordinal))
         {
-            result.Warning("Bridge/Legacy/Compatibility files exist but no deletion-condition evidence was found in TODO or the file-size review record.");
+            result.Warning("Bridge/Legacy/Compatibility files exist but no deletion-condition evidence was found in governance.");
         }
     }
 

@@ -113,7 +113,9 @@ static class ReviewGateSource
                 yield break;
             }
 
-            foreach (var file in Directory.EnumerateFiles(path, "*.cs", SearchOption.AllDirectories)
+            foreach (var file in Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
+                .Where(file => file.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                    || file.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
                 .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
                 .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)))
             {

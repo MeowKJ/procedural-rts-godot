@@ -1,4 +1,4 @@
-// SimReplay: acceptance gate for the deterministic sim core (docs/Refactor99Plan.md).
+// SimReplay: acceptance gate for the deterministic sim core.
 // Each scenario runs twice from the same seed + command log and must produce
 // identical state hashes at every checkpoint. Covers Phase 1 (movement) and
 // Phase 2 (command vocabulary, combat, seeded damage, deaths).

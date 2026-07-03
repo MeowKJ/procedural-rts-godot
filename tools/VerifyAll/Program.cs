@@ -76,7 +76,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
     var balanceReport = Path.Combine(root, "tools", "BalanceReport", "BalanceReport.csproj");
     steps.Add(File.Exists(balanceReport)
         ? Dotnet("balance-report", "dotnet", "run --project tools/BalanceReport/BalanceReport.csproj --no-restore")
-        : new VerifyStep("balance-report", "dotnet", "run --project tools/BalanceReport/BalanceReport.csproj --no-restore", "tools/BalanceReport is not implemented yet; TODO remains open."));
+        : new VerifyStep("balance-report", "dotnet", "run --project tools/BalanceReport/BalanceReport.csproj --no-restore", "tools/BalanceReport is not implemented yet; keep the corresponding GitHub issue open."));
     steps.Add(Dotnet("counter-readability-qa", "dotnet", "run --project tools/CounterReadabilityQa/CounterReadabilityQa.csproj --no-restore"));
 
     if (!options.SkipGodot)

@@ -2,8 +2,6 @@ static class FileSizeToolBudgetChecks
 {
     public static void Check(
         IReadOnlyList<FileSizeSourceFile> files,
-        string todo,
-        string review,
         GateResult result)
     {
         var toolFiles = files
@@ -24,30 +22,6 @@ static class FileSizeToolBudgetChecks
                 result.Error($"Validation tool suite exceeds budget: {suite.Name} has {suite.Lines} lines, max {FileSizePolicy.ValidationToolSuiteMax}.");
             }
         }
-
-        var summary = CurrentBudgetSummary(toolFiles);
-        FileSizeEvidence.RequireContains(
-            todo,
-            summary,
-            $"TODO must contain the exact current validation tools source budget summary: {summary}",
-            result);
-        FileSizeEvidence.RequireContains(
-            review,
-            summary,
-            $"File-size review record must contain the exact current validation tools source budget summary: {summary}",
-            result);
-    }
-
-    private static string CurrentBudgetSummary(IReadOnlyList<FileSizeSourceFile> toolFiles)
-    {
-        var totalLines = toolFiles.Sum(file => file.Lines);
-        var largestFile = toolFiles[0];
-        var suites = ToolSuites(toolFiles).ToArray();
-        var largestSuite = suites
-            .OrderByDescending(suite => suite.Lines)
-            .ThenBy(suite => suite.Name, StringComparer.OrdinalIgnoreCase)
-            .First();
-        return $"Validation tool suites current source budget: {toolFiles.Count} C# source files / {totalLines} total lines across {suites.Length} suites; largest C# file {largestFile.Path} has {largestFile.Lines} lines; largest suite {largestSuite.Name} has {largestSuite.Lines} lines.";
     }
 
     private static IEnumerable<ToolSuiteBudget> ToolSuites(IReadOnlyList<FileSizeSourceFile> toolFiles)
