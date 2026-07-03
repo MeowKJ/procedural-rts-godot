@@ -23,6 +23,8 @@ public sealed class BallisticCannonAmmo : AmmoDesign
             CombatProfileDesign.DamageProfile(
                 weights: new() { [UnitWeightClass.Light] = 1.05f, [UnitWeightClass.Medium] = 1, [UnitWeightClass.Heavy] = 1.15f },
                 armor: new() { [ArmorTag.Infantry] = 0.68f, [ArmorTag.Vehicle] = 1.05f, [ArmorTag.Structure] = 1.05f, [ArmorTag.Ship] = 1.05f, [ArmorTag.Aircraft] = 0.36f }),
-            SpecialAttackHook.Targeting | SpecialAttackHook.Impact);
+            SpecialAttackHook.Targeting | SpecialAttackHook.Impact,
+            SplashRadius: 42f,
+            SplashMinDamageRatio: 0.32f);
     }
 }

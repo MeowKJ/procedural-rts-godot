@@ -41,6 +41,30 @@ static partial class Program
         Console.WriteLine($"OK [projectile-tracking]: tracking ammo spawned, survived source removal, impacted, and cleaned up; target hp {targetHp:0.0}.");
     }
 
+    static void RunProjectileSplashScenario()
+    {
+        const int Ticks = 4;
+        AssertDeterministic("projectile-splash", BuildProjectileSplashWorld, Ticks, 2);
+
+        var world = BuildProjectileSplashWorld();
+        var clock = new SimClock();
+        for (var tick = 1; tick <= Ticks; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            world.Events.Drain();
+        }
+
+        var primary = HealthOf(world, "replay.splash.primary");
+        var nearbyHostile = HealthOf(world, "replay.splash.nearby_hostile");
+        var nearbyAlly = HealthOf(world, "replay.splash.nearby_ally");
+        var farHostile = HealthOf(world, "replay.splash.far_hostile");
+        Assert(primary < 160, $"ballistic primary target should take direct damage, got {primary:0.0} hp.");
+        Assert(nearbyHostile < 160, $"nearby hostile should take splash damage, got {nearbyHostile:0.0} hp.");
+        Assert(MathF.Abs(nearbyAlly - 160) <= 0.001f, $"nearby allied unit should not take splash damage, got {nearbyAlly:0.0} hp.");
+        Assert(MathF.Abs(farHostile - 160) <= 0.001f, $"far hostile should be outside splash radius, got {farHostile:0.0} hp.");
+        Console.WriteLine($"OK [projectile-splash]: primary {primary:0.0}, nearby hostile {nearbyHostile:0.0}, ally/far untouched.");
+    }
+
     private static EntityWorld BuildProjectileTrackingWorld()
     {
         var world = new EntityWorld(seed: 4242) { WorldWidth = 900, WorldHeight = 600 };
@@ -53,6 +77,31 @@ static partial class Program
         var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(360, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
         world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.RocketPod));
         return world;
+    }
+
+    private static EntityWorld BuildProjectileSplashWorld()
+    {
+        var world = new EntityWorld(seed: 5050) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.Relations.Set(new OwnerId(1), new OwnerId(3), PlayerRelation.Allied);
+        world.AddSystem(new CombatSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.splash.shooter", WeaponKind.VectorCannon, 160);
+        var targetSpec = ProjectileUnitSpec("replay.splash.target", null, 160);
+        var primary = world.Spawn(targetSpec with { Id = "replay.splash.primary" }, new OwnerId(2), EntityTransform.At(new Vector2(260, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec with { Id = "replay.splash.nearby_hostile" }, new OwnerId(2), EntityTransform.At(new Vector2(294, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec with { Id = "replay.splash.nearby_ally" }, new OwnerId(3), EntityTransform.At(new Vector2(286, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec with { Id = "replay.splash.far_hostile" }, new OwnerId(2), EntityTransform.At(new Vector2(340, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, primary.Id, WeaponKind.VectorCannon));
+        return world;
+    }
+
+    private static float HealthOf(EntityWorld world, string specId)
+    {
+        return world.OrderedEntities
+            .Single(entity => entity.SpecId == specId)
+            .Components.Require<HealthComponentState>()
+            .Hp;
     }
 
     private static EntitySpec ProjectileUnitSpec(string id, WeaponKind? weapon, float hp)

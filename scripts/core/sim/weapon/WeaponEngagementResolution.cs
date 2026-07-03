@@ -31,7 +31,16 @@ static class WeaponEngagementResolution
         }
         else
         {
-            CombatSystem.ApplyResolvedDamage(context, target, attacker, damage);
+            ApplyWeaponImpact(
+                context,
+                target,
+                attacker,
+                attacker.OwnerId,
+                attacker,
+                weaponDef,
+                damage,
+                target.Transform.Position,
+                recordRetaliation: true);
         }
     }
 
@@ -46,13 +55,23 @@ static class WeaponEngagementResolution
         EntityInstance target,
         EntityInstance? source,
         EntityInstance projectile,
-        float incomingDamage)
+        ProjectileComponentState state)
     {
-        CombatSystem.ApplyResolvedDamage(
+        if (!context.World.TryGetWeaponDefinition(state.WeaponId, out var weaponDef))
+        {
+            return;
+        }
+
+        var attacker = source ?? projectile;
+        ApplyWeaponImpact(
             context,
             target,
-            source ?? projectile,
-            incomingDamage,
+            attacker,
+            projectile.OwnerId,
+            source,
+            weaponDef,
+            state.Damage,
+            target.Transform.Position,
             recordRetaliation: source is not null);
     }
 
@@ -102,5 +121,86 @@ static class WeaponEngagementResolution
             Kind = EntityKind.Projectile,
             Display = new EntityDisplaySpec(ammo.Label, $"projectile.{ammo.Id}.name", $"weapon.{weaponDef.Id}.role", "PRJ", IconGlyph.AttackMove),
         };
+    }
+
+    private static void ApplyWeaponImpact(
+        SimContext context,
+        EntityInstance target,
+        EntityInstance attacker,
+        OwnerId attackerOwner,
+        EntityInstance? liveSource,
+        WeaponDefinition weaponDef,
+        float primaryDamage,
+        Vector2 impactPosition,
+        bool recordRetaliation)
+    {
+        CombatSystem.ApplyResolvedDamage(context, target, attacker, primaryDamage, recordRetaliation);
+        if (!context.World.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
+            || ammo.SplashRadius <= 0)
+        {
+            return;
+        }
+
+        ApplySplashDamage(context, target.Id, liveSource ?? attacker, attackerOwner, weaponDef, ammo, impactPosition, recordRetaliation);
+    }
+
+    private static void ApplySplashDamage(
+        SimContext context,
+        EntityId primaryTargetId,
+        EntityInstance attacker,
+        OwnerId attackerOwner,
+        WeaponDefinition weaponDef,
+        AmmoDefinition ammo,
+        Vector2 impactPosition,
+        bool recordRetaliation)
+    {
+        foreach (var candidate in context.World.OrderedEntities)
+        {
+            if (candidate.Id == primaryTargetId
+                || candidate.Id == attacker.Id
+                || !context.World.Relations.CanAttack(attackerOwner, candidate.OwnerId)
+                || !candidate.Components.TryGet<HealthComponentState>(out var health)
+                || health.Hp <= 0)
+            {
+                continue;
+            }
+
+            var distance = SplashDistance(impactPosition, candidate);
+            if (distance > ammo.SplashRadius)
+            {
+                continue;
+            }
+
+            var ratio = SplashDamageRatio(distance, ammo.SplashRadius, ammo.SplashMinDamageRatio);
+            var damage = WeaponMath.BaseDamage(context.World, attackerOwner, weaponDef, candidate) * ratio;
+            if (damage <= 0)
+            {
+                continue;
+            }
+
+            CombatSystem.ApplyResolvedDamage(context, candidate, attacker, damage, recordRetaliation);
+        }
+    }
+
+    private static float SplashDistance(Vector2 impactPosition, EntityInstance candidate)
+    {
+        var distance = impactPosition.DistanceTo(candidate.Transform.Position);
+        if (candidate.Components.TryGet<CollisionComponentState>(out var collision))
+        {
+            distance = MathF.Max(0, distance - collision.Radius);
+        }
+
+        return distance;
+    }
+
+    private static float SplashDamageRatio(float distance, float radius, float minimumRatio)
+    {
+        if (radius <= 0)
+        {
+            return 0;
+        }
+
+        var t = Math.Clamp(distance / radius, 0, 1);
+        return Math.Clamp(minimumRatio, 0, 1) + (1f - Math.Clamp(minimumRatio, 0, 1)) * (1f - t);
     }
 }

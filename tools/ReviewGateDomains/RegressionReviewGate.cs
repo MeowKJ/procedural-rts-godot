@@ -9,6 +9,7 @@ static class RegressionReviewGate
         UnitSpecAbilityAllocationReviewGate.Check(root, result); UpgradeStateAllocationReviewGate.Check(root, result);
         BuildingEntityAllocationReviewGate.Check(root, result);
         RequireSimHotAllocationEvidence(root, result);
+        ProjectileImpactReviewGate.Check(root, result);
         PathfindingAllocationReviewGate.Check(root, result);
         TurretCombatAllocationReviewGate.Check(root, result);
         RequireProjectileProjectionBufferEvidence(root, result);
@@ -184,7 +185,6 @@ static class RegressionReviewGate
         ForbidText(constructionSystem, "subjects.OrderBy(id => id.Value)", "Construction producer lookup must not allocate ordered subject enumerables.", result);
         ForbidText(constructionSystem, ".ToList()", "ConstructionSystem must not allocate LINQ lists in construction placement validation paths.", result);
     }
-
     private static void RequireAbilitySystemCooldownBufferEvidence(string root, GateResult result)
     {
         var abilitySystem = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "AbilitySystem.cs"));
