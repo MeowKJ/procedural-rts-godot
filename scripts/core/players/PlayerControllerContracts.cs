@@ -92,6 +92,11 @@ public sealed record PlayerControllerResult(IReadOnlyList<PlayerCommand> Command
     public static readonly PlayerControllerResult Empty = new(Array.Empty<PlayerCommand>());
 }
 
+/// <summary>
+/// Godot-free controller contract for local UI, replay, bots, or external
+/// agents. Implementations read an ObservationView and return player intent;
+/// simulation mutation happens later through CommandGateway and CommandSystem.
+/// </summary>
 public interface IPlayerController
 {
     PlayerControllerId Id { get; }
@@ -100,6 +105,10 @@ public interface IPlayerController
     PlayerControllerResult Poll(in PlayerControllerContext context);
 }
 
+/// <summary>
+/// Agent contract for autonomous decision makers that consume observations but
+/// cannot mutate simulation state directly.
+/// </summary>
 public interface IPlayerAgent
 {
     PlayerAgentId Id { get; }
