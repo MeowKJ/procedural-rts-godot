@@ -134,6 +134,10 @@ public partial class BattleRoot
 
         _powerStable = powerStable;
         AddAlert(AlertKind.Power, powerStable ? GameText.T("ui.alert.powerStable") : GameText.T("ui.alert.powerOffline"));
+        if (!powerStable)
+        {
+            PlayAudioCue(TacticalAudioCue.LowPower);
+        }
     }
 
     private bool HasSelectedLegacyBuildings()

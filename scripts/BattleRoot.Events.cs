@@ -28,6 +28,8 @@ public partial class BattleRoot
 
             view.QueueFree();
         }
+
+        PlayDeathCue(deaths);
     }
 
     private void OnUnitInstancesRemoved(IReadOnlyList<UnitInstanceDeathInfo> deaths)
@@ -41,6 +43,8 @@ public partial class BattleRoot
 
             _combatEffects.AddUnitDeath(death, UnitFactionAccent(death.Faction, death.PlayerSlotId));
         }
+
+        PlayDeathCue(deaths);
     }
 
     private void OnUnitInstanceAttacked(UnitInstance target, UnitInstance attacker)
@@ -68,7 +72,7 @@ public partial class BattleRoot
         }
 
         AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", target.Spec.Label), target.Position);
-        PlayAudioCue(TacticalAudioCue.Alert);
+        PlayAudioCue(TacticalAudioCue.Alert, target.Position);
     }
 
     private void OnUnitInstanceAttackedByBuilding(UnitInstance target, UnitBattlefieldBuildingSnapshot attacker)
@@ -96,7 +100,7 @@ public partial class BattleRoot
         }
 
         AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", target.Spec.Label), target.Position);
-        PlayAudioCue(TacticalAudioCue.Alert);
+        PlayAudioCue(TacticalAudioCue.Alert, target.Position);
     }
 
     private void OnUnitBattlefieldBuildingAttacked(UnitBattlefieldBuildingSnapshot target, UnitInstance attacker)
@@ -132,7 +136,7 @@ public partial class BattleRoot
         }
 
         AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", BuildSpecCatalog.For(target.Kind).Label), target.Position);
-        PlayAudioCue(TacticalAudioCue.Alert);
+        PlayAudioCue(TacticalAudioCue.Alert, target.Position);
     }
 
     private void OnWeaponFired(WeaponFiredEvent fired)
@@ -168,6 +172,8 @@ public partial class BattleRoot
                 view.QueueFree();
             }
         }
+
+        PlayDeathCue(deaths);
     }
 
     private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
@@ -177,6 +183,7 @@ public partial class BattleRoot
 
     private void OnBuildingsRemoved(IReadOnlyList<int> buildingIds)
     {
+        Vector2? deathCuePosition = null;
         foreach (var id in buildingIds)
         {
             _unitBattlefield.RemoveBuildingTarget(id);
@@ -185,6 +192,7 @@ public partial class BattleRoot
                 continue;
             }
 
+            deathCuePosition ??= view.Building.Position;
             if (view.Building.Owner == ProceduralRts.Core.Owner.Player)
             {
                 AddAlert(AlertKind.Building, GameText.Format("ui.building.destroyed", BuildSpecCatalog.For(view.Building.Kind).Label), view.Building.Position);
@@ -196,6 +204,8 @@ public partial class BattleRoot
 
             view.QueueFree();
         }
+
+        PlayDeathCue(deathCuePosition);
     }
 
     private void OnProductionCompleted(BuildingModel building, CompletedProductionItem completed)
@@ -209,7 +219,7 @@ public partial class BattleRoot
         _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
         _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
         AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
-        PlayAudioCue(TacticalAudioCue.Production);
+        PlayAudioCue(TacticalAudioCue.Production, building.Position);
         RefreshCommandCard();
     }
 
@@ -220,7 +230,7 @@ public partial class BattleRoot
         _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
         _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
         AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
-        PlayAudioCue(TacticalAudioCue.Production);
+        PlayAudioCue(TacticalAudioCue.Production, building.Position);
         RefreshCommandCard();
     }
 
@@ -359,7 +369,7 @@ public partial class BattleRoot
         }
 
         AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", label), position);
-        PlayAudioCue(TacticalAudioCue.Alert);
+        PlayAudioCue(TacticalAudioCue.Alert, position);
     }
 
     private void OnOutcomeChanged(GameOutcome outcome)
@@ -381,16 +391,4 @@ public partial class BattleRoot
         AddAlert(outcome == GameOutcome.Victory ? AlertKind.Production : AlertKind.Combat, detail);
     }
 
-    private void PlayAudioCue(TacticalAudioCue cue)
-    {
-        _audio?.Play(cue);
-    }
-
-    private void RequestImpactShake(Vector2 position, ImpactVfxStyle style)
-    {
-        if (DisplayAudioSettings.ImpactScreenShake)
-        {
-            _camera.RequestImpactShake(position, style);
-        }
-    }
 }
