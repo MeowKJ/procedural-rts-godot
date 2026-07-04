@@ -8,6 +8,7 @@ public partial class TacticalAudioLayer : Node
     private const float DefaultDb = -13f;
     private readonly Dictionary<TacticalAudioCue, AudioStreamWav> _streams = [];
     private readonly List<AudioStreamPlayer> _players = [];
+    private readonly TacticalAudioCueDeduper _deduper = new();
     private int _nextPlayer;
 
     public override void _Ready()
@@ -41,6 +42,11 @@ public partial class TacticalAudioLayer : Node
             return;
         }
 
+        if (!_deduper.TryReserve(cue, Time.GetTicksMsec()))
+        {
+            return;
+        }
+
         var player = _players[_nextPlayer];
         _nextPlayer = (_nextPlayer + 1) % _players.Count;
         player.Stop();
@@ -64,6 +70,7 @@ public partial class TacticalAudioLayer : Node
         }
 
         _streams.Clear();
+        _deduper.Clear();
     }
 
     private static AudioStreamWav Tone(IReadOnlyList<(float Frequency, float Duration)> notes, float amplitude, bool square = false)

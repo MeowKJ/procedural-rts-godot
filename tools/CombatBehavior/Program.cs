@@ -17,6 +17,7 @@ static partial class Program
         AssertTerrainThemesAndSignals();
         AssertSelectionVfxFogAndWeapons();
         AssertPresentationDescriptorsAndLocalization();
+        AssertTacticalAudioDedupe();
         AssertLegacyCombatRules();
         AssertLegacyMovementAndAttackTracking();
         AssertLegacyProductionEconomy();
