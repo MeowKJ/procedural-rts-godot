@@ -9,7 +9,7 @@ static class ArchitectureReviewGate
         RequirePlayerControlContracts(root, result);
         CommandGatewayReviewGate.Check(root, result);
         RequireMovementGridConvergence(root, result);
-        ForbidDuplicatedWeaponRangeHelpers(root, result);
+        ForbidDuplicatedWeaponRangeHelpers(root, result); WeaponEngagementConvergenceReviewGate.Check(root, result);
         CombatChemistryReviewGate.Check(root, result);
     }
 
