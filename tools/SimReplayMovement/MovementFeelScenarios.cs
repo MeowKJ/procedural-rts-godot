@@ -11,6 +11,7 @@ static partial class Program
     static void RunMovementFeelReproductionScenario()
     {
         RunMovementFeelAttackMoveScenario();
+        RunMovementFeelAttackMoveContinuationScenario();
         RunMovementFeelReplacementScenario();
     }
 
@@ -276,6 +277,26 @@ static partial class Program
                 || subject.CommandPulse <= 0)
             {
                 Fail($"movement-feel attack-move subject dropped command state: commandTick={commandTick}, target={FormatVector(target)}, unit={subject.Id}, trace={MovementFeelTrace(battlefield, subjects, commandTick, simTick, target, [])}");
+            }
+        }
+    }
+
+    private static void AssertAllSubjectsKeepAttackMoveIntent(
+        UnitBattlefield battlefield,
+        IReadOnlyList<UnitInstance> subjects,
+        int commandTick,
+        Vector2 target,
+        int simTick)
+    {
+        foreach (var subject in subjects)
+        {
+            if (subject.MoveMode != MoveCommandMode.Attack
+                || subject.CommandVisualTarget is not { } visualTarget
+                || visualTarget.DistanceSquaredTo(target) > 1f
+                || subject.PlayerIntentTarget is not { } intentTarget
+                || intentTarget.DistanceSquaredTo(target) > 1f)
+            {
+                Fail($"movement-feel attack-move subject dropped persistent intent: commandTick={commandTick}, target={FormatVector(target)}, unit={subject.Id}, trace={MovementFeelTrace(battlefield, subjects, commandTick, simTick, target, [])}");
             }
         }
     }

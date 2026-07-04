@@ -170,6 +170,7 @@ public sealed partial class UnitBattlefield
             unit.AttackCooldownRemaining = Mathf.Max(0, unit.AttackCooldownRemaining - dt);
             AcquireAutoTarget(unit);
             UpdateCombat(unit, dt);
+            ResumeAttackMoveIntentIfNeeded(unit);
         }
 
         CollectBuildingTargetIds(_buildingTargetIdBuffer);
