@@ -22,7 +22,8 @@ public sealed partial class GameState
     public static float EffectiveDamageAgainst(AmmoKind ammoKind, UnitSpecRuntimeDescriptor targetDescriptor)
     {
         var ammo = AmmoDefinitions[ammoKind];
-        return ammo.BaseDamage * ammo.DamageProfile.Multiplier(
+        return DamageResolver.Resolve(
+            ammo,
             targetDescriptor.WeightClass,
             targetDescriptor.MovementDomain,
             targetDescriptor.ArmorTag);
@@ -31,7 +32,8 @@ public sealed partial class GameState
     public static float EffectiveDamageAgainst(AmmoKind ammoKind, BuildSpec targetSpec)
     {
         var ammo = AmmoDefinitions[ammoKind];
-        return ammo.BaseDamage * ammo.DamageProfile.Multiplier(
+        return DamageResolver.Resolve(
+            ammo,
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             targetSpec.ArmorTag);

@@ -188,8 +188,8 @@ public static class WeaponMath
         }
 
         var (weight, armor, domain) = ResolveTargetProfile(world, target);
-        var baseDamage = ammo.BaseDamage * ammo.DamageProfile.Multiplier(weight, domain, armor);
-        return UpgradeResolver.Damage(world, attackerOwner, baseDamage);
+        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attackerOwner, 1f);
+        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier);
     }
 
     public static float BaseDamage(EntityWorld world, EntityInstance attacker, WeaponDefinition weaponDef, EntityInstance target)
@@ -200,8 +200,8 @@ public static class WeaponMath
         }
 
         var (weight, armor, domain) = ResolveTargetProfile(world, target);
-        var baseDamage = ammo.BaseDamage * ammo.DamageProfile.Multiplier(weight, domain, armor);
-        return UpgradeResolver.Damage(world, attacker, baseDamage);
+        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attacker, 1f);
+        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier);
     }
 
     private static float PriorityFor<T>(IReadOnlyDictionary<T, float> values, T key)
