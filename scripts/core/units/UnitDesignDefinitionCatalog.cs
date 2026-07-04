@@ -36,7 +36,9 @@ public static class UnitDesignDefinitionCatalog
             ammo.Speed,
             SoftOldCityPalette.FactionColor(spec.Faction),
             spec.Stats.TechTier,
-            spec.RoleTags);
+            spec.RoleTags,
+            spec.Stats.ElementDefense,
+            TargetTraitProfile.FromRoleTags(spec.RoleTags, spec.Stats.TargetTraits));
     }
 
     public static IEnumerable<UnitSpecRuntimeDescriptor> WithRole(UnitRoleTag roleTag)

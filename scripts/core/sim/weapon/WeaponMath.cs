@@ -146,6 +146,22 @@ public static class WeaponMath
         return (weight, armor, domain);
     }
 
+    public static (UnitWeightClass Weight, ArmorTag Armor, MovementDomain Domain, ElementDefenseProfile? ElementDefense, TargetTraitProfile? TargetTraits) ResolveDamageTargetProfile(
+        EntityWorld world,
+        EntityInstance target)
+    {
+        var (weight, armor, domain) = ResolveTargetProfile(world, target);
+        ElementDefenseProfile? elementDefense = null;
+        TargetTraitProfile? targetTraits = null;
+        if (world.TryGetSpec(target.SpecId, out var spec))
+        {
+            elementDefense = spec.Stats?.ElementDefense;
+            targetTraits = spec.Stats?.TargetTraits ?? TargetTraitProfile.FromTags(spec.Tags);
+        }
+
+        return (weight, armor, domain, elementDefense, targetTraits);
+    }
+
     public static bool CanTarget(
         EntityWorld world,
         WeaponDefinition weaponDef,
@@ -187,9 +203,9 @@ public static class WeaponMath
             return 0;
         }
 
-        var (weight, armor, domain) = ResolveTargetProfile(world, target);
+        var (weight, armor, domain, elementDefense, targetTraits) = ResolveDamageTargetProfile(world, target);
         var attackerDamageMultiplier = UpgradeResolver.Damage(world, attackerOwner, 1f);
-        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier);
+        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier, elementDefense, targetTraits);
     }
 
     public static float BaseDamage(EntityWorld world, EntityInstance attacker, WeaponDefinition weaponDef, EntityInstance target)
@@ -199,9 +215,9 @@ public static class WeaponMath
             return 0;
         }
 
-        var (weight, armor, domain) = ResolveTargetProfile(world, target);
+        var (weight, armor, domain, elementDefense, targetTraits) = ResolveDamageTargetProfile(world, target);
         var attackerDamageMultiplier = UpgradeResolver.Damage(world, attacker, 1f);
-        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier);
+        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier, elementDefense, targetTraits);
     }
 
     private static float PriorityFor<T>(IReadOnlyDictionary<T, float> values, T key)

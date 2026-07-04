@@ -34,6 +34,7 @@ static void ValidateUnitDesignCatalog(List<string> failures)
     {
         var entitySpec = spec.ToEntitySpec();
         Require(entitySpec.Id == spec.Id && entitySpec.Kind == EntityKind.Unit, $"{spec.Id} must project to a unit EntitySpec.", failures);
+        ValidateElementDefense(spec.Stats.ElementDefense, $"{spec.Id} stats", failures);
         foreach (var mount in spec.Weapons)
         {
             Require(WeaponCatalog.WeaponDefinitions.ContainsKey(mount.WeaponId), $"{spec.Id} references missing weapon {mount.WeaponId}.", failures);
@@ -61,6 +62,7 @@ static void ValidateWeaponAndAmmoCatalogs(List<string> failures)
         Require(ammo.BaseDamage > 0, $"{ammo.Id} must have positive base damage.", failures);
         Require(ammo.DamageProfile.ArmorMultipliers.Count > 0, $"{ammo.Id} must declare armor damage multipliers.", failures);
         Require(DamageElementCatalog.Definitions.ContainsKey(ammo.DamageElementId), $"{ammo.Id} references missing damage element {ammo.DamageElementId}.", failures);
+        Require(ammo.CounterRules.Rules.All(rule => rule.Multiplier > 0), $"{ammo.Id} counter rules must use positive multipliers.", failures);
     }
 }
 
@@ -92,6 +94,7 @@ static void ValidateBuildingCatalog(List<string> failures)
         var expectedKind = spec.WeaponKind is null ? EntityKind.Building : EntityKind.Turret;
         Require(entitySpec.Id == spec.EntitySpecId && entitySpec.Kind == expectedKind, $"{spec.Kind} must project to the expected EntityKind.", failures);
         Require(spec.RequiredProducer is null || BuildSpecCatalog.Definitions.ContainsKey(spec.RequiredProducer), $"{spec.Kind} has a missing required producer.", failures);
+        ValidateElementDefense(spec.ElementDefense, $"{spec.Kind} build spec", failures);
         foreach (var required in spec.RequiredBuildings)
         {
             Require(BuildSpecCatalog.Definitions.ContainsKey(required), $"{spec.Kind} requires missing building {required}.", failures);
@@ -101,6 +104,20 @@ static void ValidateBuildingCatalog(List<string> failures)
         {
             Require(WeaponCatalog.Weapons.ContainsKey(weaponKind), $"{spec.Kind} references missing weapon {weaponKind}.", failures);
         }
+    }
+}
+
+static void ValidateElementDefense(ElementDefenseProfile? profile, string owner, List<string> failures)
+{
+    if (profile is null)
+    {
+        return;
+    }
+
+    foreach (var pair in profile.ElementMultipliers)
+    {
+        Require(DamageElementCatalog.Definitions.ContainsKey(pair.Key), $"{owner} references missing damage element {pair.Key}.", failures);
+        Require(pair.Value > 0, $"{owner} element defense multiplier for {pair.Key} must be positive.", failures);
     }
 }
 

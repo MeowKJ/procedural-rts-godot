@@ -195,7 +195,9 @@ public sealed partial class UnitBattlefield
             ammo,
             target.Stats.WeightClass,
             target.Movement.Domain,
-            target.Stats.ArmorTag);
+            target.Stats.ArmorTag,
+            targetElementDefense: target.Stats.ElementDefense,
+            targetTraits: TargetTraitProfile.FromRoleTags(target.RoleTags, target.Stats.TargetTraits));
     }
 
     private static float EffectiveDamageAgainst(AmmoDefinition ammo, BuildSpec targetSpec)
@@ -204,7 +206,9 @@ public sealed partial class UnitBattlefield
             ammo,
             UnitWeightClass.Heavy,
             MovementDomain.Land,
-            targetSpec.ArmorTag);
+            targetSpec.ArmorTag,
+            targetElementDefense: targetSpec.ElementDefense,
+            targetTraits: targetSpec.TargetTraits);
     }
 
     private static float PriorityFor<T>(IReadOnlyDictionary<T, float> values, T key)

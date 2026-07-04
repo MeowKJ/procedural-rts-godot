@@ -22,4 +22,6 @@ public sealed record UnitSpecRuntimeDescriptor(
     float ProjectileSpeed,
     Color Accent,
     int TechTier,
-    IReadOnlySet<UnitRoleTag> RoleTags);
+    IReadOnlySet<UnitRoleTag> RoleTags,
+    ElementDefenseProfile? ElementDefense,
+    TargetTraitProfile? TargetTraits);
