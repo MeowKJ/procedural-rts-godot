@@ -21,7 +21,11 @@ static class HoverTooltipReviewGate
         RequireText(preview, "CommandPreviewKind.Move", "Selection preview must expose move state.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildValid", "Build placement preview must expose valid placement state.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildInvalid", "Build placement preview must expose invalid placement state.", result);
-        RequireText(buildPlacement, "DrawPlacementCursor(rect, accent, placement.IsValid)", "Build placement must draw a distinct placement cursor.", result);
+        RequireText(buildPlacement, "DrawPlacementCursor(rect, accent, placementValid)", "Build placement must draw a distinct placement cursor.", result);
+        RequireText(buildPlacement, "ReadyConstructionTickets(LocalPlayerSlotId)", "Build placement cycling must surface ready sidebar construction tickets.", result);
+        RequireText(buildPlacement, "QueueConstructionTicket(LocalPlayerSlotId, kind", "Sidebar construction mode must queue a ticket before placement.", result);
+        RequireText(buildPlacement, "PlaceReadyConstructionTicket(", "Build placement must place ready construction tickets through the runtime backend.", result);
+        RequireText(buildPlacement, "DefaultMethodFor(LocalFaction)", "Build placement must choose deploy-vs-sidebar behavior from faction construction policy.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);

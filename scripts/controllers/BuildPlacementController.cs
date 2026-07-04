@@ -23,9 +23,11 @@ public partial class BuildPlacementController : Node2D
     ];
 
     private int _selectedIndex = -1;
+    private EntityId _activeReadyTicketId = EntityId.None;
     private float _previewRotation;
 
     public bool IsActive => _selectedIndex >= 0;
+    private bool HasActiveReadyTicket => _activeReadyTicketId.IsValid;
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
 
     public override void _Process(double delta)
@@ -64,18 +66,43 @@ public partial class BuildPlacementController : Node2D
             var spec = CurrentSpec();
             var mouseWorld = ScreenToWorld(mouse.Position);
             var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld);
-            var accepted = UnitBattlefield.ConstructBuilding(
-                LocalPlayerSlotId,
-                LocalFaction,
-                kind,
-                mouseWorld,
-                out _,
-                out var status,
-                _previewRotation);
+            bool accepted;
+            string status;
+            if (HasActiveReadyTicket)
+            {
+                accepted = UnitBattlefield.PlaceReadyConstructionTicket(
+                    LocalPlayerSlotId,
+                    LocalFaction,
+                    _activeReadyTicketId,
+                    mouseWorld,
+                    out _,
+                    out status,
+                    _previewRotation);
+            }
+            else if (ShouldQueueConstructionTicket(kind))
+            {
+                accepted = QueueConstructionTicket(kind, spec, out status);
+            }
+            else
+            {
+                accepted = UnitBattlefield.ConstructBuilding(
+                    LocalPlayerSlotId,
+                    LocalFaction,
+                    kind,
+                    mouseWorld,
+                    out _,
+                    out status,
+                    _previewRotation);
+            }
 
             StatusChanged?.Invoke(accepted
                 ? status
                 : GameText.Format("build.cannotPlace", spec.Label, PlacementStatusLabel(status, placement.Reason, spec)));
+            if (accepted)
+            {
+                ClearActivePreview();
+            }
+
             if (!accepted)
             {
                 CommandAcknowledged?.Invoke(
@@ -98,14 +125,15 @@ public partial class BuildPlacementController : Node2D
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(GetViewport().GetMousePosition());
         var placement = UnitBattlefield.ValidateBuildingPlacement(CurrentKind(), LocalPlayerSlotId, mouseWorld);
-        var accent = placement.IsValid ? spec.Accent : new Color("#ff5d75");
+        var placementValid = (ShouldQueueConstructionTicket(CurrentKind()) && !HasActiveReadyTicket) || placement.IsValid;
+        var accent = placementValid ? spec.Accent : new Color("#ff5d75");
         var rect = new Rect2(-spec.Footprint / 2f, spec.Footprint);
         var pulse = 0.58f + Mathf.Sin(Time.GetTicksMsec() / 110f) * 0.22f;
 
         DrawSetTransform(new Vector2(placement.X, placement.Y), _previewRotation, Vector2.One);
-        DrawFootprintPreview(rect, accent, pulse, placement.IsValid);
-        DrawStructurePreview(rect, accent, pulse, placement.IsValid);
-        DrawPlacementCursor(rect, accent, placement.IsValid);
+        DrawFootprintPreview(rect, accent, pulse, placementValid);
+        DrawStructurePreview(rect, accent, pulse, placementValid);
+        DrawPlacementCursor(rect, accent, placementValid);
         DrawSetTransform(Vector2.Zero, 0, Vector2.One);
     }
 
@@ -131,18 +159,25 @@ public partial class BuildPlacementController : Node2D
 
     private void CyclePreview(int direction)
     {
+        if (TryCycleReadyTicket(direction))
+        {
+            return;
+        }
+
+        _activeReadyTicketId = EntityId.None;
         _selectedIndex = _selectedIndex < 0
             ? 0
             : PosMod(_selectedIndex + direction, BuildOrder.Length);
 
         var spec = CurrentSpec();
-        StatusChanged?.Invoke(GameText.Format("build.preview", spec.Label));
+        var key = ShouldQueueConstructionTicket(CurrentKind()) ? "build.queuePreview" : "build.preview";
+        StatusChanged?.Invoke(GameText.Format(key, spec.Label));
     }
 
     private void CancelPreview()
     {
         var wasActive = IsActive;
-        _selectedIndex = -1;
+        ClearActivePreview();
 
         if (wasActive)
         {
@@ -161,6 +196,70 @@ public partial class BuildPlacementController : Node2D
         return BuildOrder[_selectedIndex];
     }
 
+    private bool TryCycleReadyTicket(int direction)
+    {
+        var tickets = UnitBattlefield.ReadyConstructionTickets(LocalPlayerSlotId);
+        if (tickets.Count == 0)
+        {
+            _activeReadyTicketId = EntityId.None;
+            return false;
+        }
+
+        var currentIndex = -1;
+        for (var index = 0; index < tickets.Count; index++)
+        {
+            if (tickets[index].EntityId == _activeReadyTicketId)
+            {
+                currentIndex = index;
+                break;
+            }
+        }
+
+        var nextIndex = currentIndex < 0
+            ? direction < 0 ? tickets.Count - 1 : 0
+            : PosMod(currentIndex + direction, tickets.Count);
+        var ticket = tickets[nextIndex];
+        _activeReadyTicketId = ticket.EntityId;
+        _selectedIndex = BuildIndexForKind(ticket.Kind);
+        StatusChanged?.Invoke(GameText.Format("build.readyTicket", BuildSpecCatalog.For(ticket.Kind).Label));
+        return true;
+    }
+
+    private bool QueueConstructionTicket(string kind, BuildSpec spec, out string status)
+    {
+        var ticket = UnitBattlefield.QueueConstructionTicket(LocalPlayerSlotId, kind, out var queueStatus);
+        status = ticket is null ? queueStatus : GameText.Format("build.queued", spec.Label);
+        return ticket is not null;
+    }
+
+    private bool ShouldQueueConstructionTicket(string kind)
+    {
+        return BuildSpecCatalog.For(kind)
+            .ConstructionPolicy?
+            .DefaultMethodFor(LocalFaction)
+            .PlacementMode == BuildPlacementMode.SidebarPlacement;
+    }
+
+    private static int BuildIndexForKind(string kind)
+    {
+        for (var index = 0; index < BuildOrder.Length; index++)
+        {
+            if (BuildOrder[index] == kind)
+            {
+                return index;
+            }
+        }
+
+        return 0;
+    }
+
+    private void ClearActivePreview()
+    {
+        _selectedIndex = -1;
+        _activeReadyTicketId = EntityId.None;
+        QueueRedraw();
+    }
+
     private Vector2 ScreenToWorld(Vector2 screenPoint)
     {
         var viewportSize = GetViewportRect().Size;
@@ -175,8 +274,16 @@ public partial class BuildPlacementController : Node2D
         var mouseWorld = ScreenToWorld(screenPoint);
         var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld);
         var snapped = new Vector2(placement.X, placement.Y);
+        if (ShouldQueueConstructionTicket(kind) && !HasActiveReadyTicket)
+        {
+            return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true);
+        }
+
+        var label = HasActiveReadyTicket
+            ? GameText.Format("build.placeReadyPreview", spec.Label.ToUpperInvariant())
+            : GameText.Format("build.placePreview", spec.Label.ToUpperInvariant());
         return placement.IsValid
-            ? new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.placePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true)
+            ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true)
             : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false);
     }
 
