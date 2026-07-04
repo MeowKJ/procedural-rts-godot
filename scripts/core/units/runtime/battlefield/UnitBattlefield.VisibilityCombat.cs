@@ -204,7 +204,9 @@ public sealed partial class UnitBattlefield
 
     private void AcquireAutoTarget(UnitInstance unit)
     {
-        if (unit.AttackTargetId is not null || unit.MoveMode == MoveCommandMode.Ignore)
+        if (unit.AttackTargetId is not null
+            || unit.MoveMode == MoveCommandMode.Ignore
+            || (unit.MoveTarget is not null && unit.MoveMode != MoveCommandMode.Attack))
         {
             return;
         }
@@ -262,6 +264,12 @@ public sealed partial class UnitBattlefield
     {
         if (unit.AttackTargetId is not { } targetId)
         {
+            return;
+        }
+
+        if (unit.MoveTarget is not null && unit.MoveMode != MoveCommandMode.Attack)
+        {
+            ClearAttackTarget(unit);
             return;
         }
 
