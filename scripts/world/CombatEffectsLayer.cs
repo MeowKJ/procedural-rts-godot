@@ -68,9 +68,10 @@ public partial class CombatEffectsLayer : Node2D
         UnitWeightClass weightClass = UnitWeightClass.Medium,
         MovementDomain movementDomain = MovementDomain.Land,
         float damage = 0,
-        AmmoKind? ammoKind = null)
+        AmmoKind? ammoKind = null,
+        string? damageElementId = null)
     {
-        var style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoKind, damage);
+        var style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoKind, damage, damageElementId);
         var effect = RentImpactFlashEffect();
         effect.Reset(position, radius, accent, damage, ammoKind, style);
         _impactFlashes.Add(effect);

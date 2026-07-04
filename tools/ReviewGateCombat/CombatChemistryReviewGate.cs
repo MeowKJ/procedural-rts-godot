@@ -13,6 +13,11 @@ static class CombatChemistryReviewGate
         var statusCatalog = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementStatusCatalog.cs");
         var reactionCatalog = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementReactionCatalog.cs");
         var reactionResolver = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementReactionResolver.cs");
+        var elementPresentation =
+            ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ElementPresentationCatalog.cs")
+            + ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ElementPresentationCatalog.Definitions.cs");
+        var elementPresentationStyle = ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ElementPresentationStyle.cs");
+        var elementBadge = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ElementBadgePresentation.cs");
         RequireText(ids, "public static class DamageElementIds", "Damage elements must expose stable string ids.", result);
         RequireText(catalog, "public static class DamageElementCatalog", "Damage elements must be routed through a catalog.", result);
         RequireText(resolver, "public static class DamageResolver", "Damage calculation must route through DamageResolver.", result);
@@ -29,11 +34,19 @@ static class CombatChemistryReviewGate
         RequireText(reactionCatalog, "public static class ElementReactionCatalog", "Element reactions must be routed through a catalog.", result);
         RequireText(reactionResolver, "public static class ElementReactionResolver", "Element reactions must resolve through a single resolver.", result);
         RequireText(reactionResolver, "ElementReactionCatalog.Match", "ElementReactionResolver must be the reaction calculation entry point over catalog data.", result);
+        RequireText(elementPresentation, "ElementPresentationCatalog", "Element visuals must be routed through a presentation catalog.", result);
+        RequireText(elementPresentationStyle, "public sealed record ElementPresentationStyle", "Element presentation must use data definitions.", result);
+        RequireText(elementPresentationStyle, "ElementProjectileTrailStyle", "Element presentation must author projectile trail style.", result);
+        RequireText(elementPresentationStyle, "ElementBeamStyle", "Element presentation must author beam style.", result);
+        RequireText(elementBadge, "public readonly record struct ElementBadgePresentation", "Element UI badges must be presentation read models.", result);
         RequireText(catalog, "DamageElementIds.Moonshadow", "DamageElementCatalog must include the moonshadow element.", result);
         RequireText(catalog, "DamageElementIds.Resonance", "DamageElementCatalog must include the resonance element.", result);
         RequireText(reactionCatalog, "ElementReactionIds.Overload", "ElementReactionCatalog must include Energy + Explosive -> Overload.", result);
         RequireText(reactionCatalog, "ElementStatusIds.EnergyCharge", "ElementReactionCatalog must define Overload as status-driven data.", result);
         RequireText(reactionCatalog, "DamageElementIds.Explosive", "ElementReactionCatalog must define Overload's explosive trigger as data.", result);
+        RequireText(elementPresentation, "DamageElementIds.Moonshadow", "ElementPresentationCatalog must include Moonshadow styling.", result);
+        RequireText(elementPresentation, "DamageElementIds.Resonance", "ElementPresentationCatalog must include Resonance styling.", result);
+        RequireText(elementPresentation, "BadgeFor(string damageElementId)", "ElementPresentationCatalog must expose UI badge data.", result);
         RequireText(resolver, "targetElementDefense", "DamageResolver must accept target-side element defense.", result);
         RequireText(resolver, "CounterRules.MultiplierFor", "DamageResolver must apply counter rules through the resolver spine.", result);
 
@@ -48,6 +61,14 @@ static class CombatChemistryReviewGate
         RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs")), "DamageResolver.Resolve(", "UnitBattlefield legacy damage must route through DamageResolver.", result);
         ReviewGateSource.RequireAnyText(root, result, "RunElementReactionScenario", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "ValidateElementReactionCatalog", "tools/ContentAuthoringQa");
+        ReviewGateSource.RequireAnyText(root, result, "CheckElementPresentationStyles", "tools/CounterReadabilityQa");
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Projectile VFX must prefer element style while preserving AmmoKind fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ImpactVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Impact VFX must prefer element style while preserving AmmoKind fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "DeathVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Death VFX must prefer element style while preserving AmmoKind fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "sim", "ProjectilePresentationProjection.cs"), "ProjectileVfxMath.StyleFor(ammo)", "ECS projectile projections must use ammo element presentation style.", result);
+        RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs")), "ElementPresentationCatalog.BeamAccentFor", "Legacy GameState beams must use element presentation style.", result);
+        ReviewGateSource.ForbidTextInSources(root, result, "DamageResolver", "scripts/core/presentation/ui", "scripts/core/presentation/vfx");
+        ReviewGateSource.ForbidTextInSources(root, result, "ElementReactionResolver", "scripts/core/presentation/ui", "scripts/core/presentation/vfx");
 
         var systemsRoot = Path.Combine(root, "scripts", "core", "sim", "systems");
         foreach (var path in Directory.EnumerateFiles(systemsRoot, "*.cs", SearchOption.AllDirectories)

@@ -112,7 +112,7 @@ static class RegressionReviewGate
         RequireText(projector, "ProjectInto(EntityWorld world, PlayerSlotId viewer, List<ProjectilePresentationProjection> result)", "ProjectilePresentationProjector must expose a caller-owned buffer API.", result);
         RequireText(projector, "result.Clear();", "ProjectilePresentationProjector.ProjectInto must clear and reuse the caller-owned buffer.", result);
         RequireText(projector, "Count(EntityWorld world)", "ProjectilePresentationProjector must expose a count-only projectile path.", result);
-        RequireText(projector, "ProjectileVfxMath.StyleFor(ammo.LegacyKind)", "ECS projectile projections must use the shared projectile readability style.", result);
+        RequireText(projector, "ProjectileVfxMath.StyleFor(ammo)", "ECS projectile projections must use the shared projectile readability style.", result);
 
         var projectileStyle = ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs");
         RequireText(projectileStyle, "MinimumTrailWidth = 3.6f", "Ordinary projectile trails must keep a readable minimum width.", result);
@@ -121,7 +121,7 @@ static class RegressionReviewGate
         RequireText(projectileStyle, "MinimumCoreAlpha = 0.82f", "Projectile cores must remain bright enough under theme/fog overlays.", result);
         RequireText(projectileStyle, "AmmoKind.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
         var gameStateCombat = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
-        RequireText(gameStateCombat, "ProjectileVfxMath.StyleFor(ammo.LegacyKind)", "Legacy GameState projectiles must initialize from the shared projectile readability style.", result);
+        RequireText(gameStateCombat, "ProjectileVfxMath.StyleFor(ammo)", "Legacy GameState projectiles must initialize from the shared projectile readability style.", result);
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         RequireText(battleRoot, "AddChild(_fogOfWar);\n\n        _combatEffects", "CombatEffectsLayer must be added after fog so visible projectiles render above the fog overlay.", result);
 

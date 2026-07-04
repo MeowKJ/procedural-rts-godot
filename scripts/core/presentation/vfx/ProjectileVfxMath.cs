@@ -12,7 +12,24 @@ public static class ProjectileVfxMath
     public const float MinimumHeadAlpha = 0.96f;
     public const float CullingPadding = 50f;
 
+    public static ProjectileVfxStyle StyleFor(AmmoDefinition ammo)
+    {
+        return StyleFor(ammo.LegacyKind, ammo.DamageElementId);
+    }
+
     public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind)
+    {
+        return StyleFor(ammoKind, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+    }
+
+    public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind, string? damageElementId)
+    {
+        return ElementPresentationCatalog.TryFor(damageElementId, out var element)
+            ? element.Projectile
+            : LegacyStyleFor(ammoKind);
+    }
+
+    private static ProjectileVfxStyle LegacyStyleFor(AmmoKind? ammoKind)
     {
         return ammoKind switch
         {

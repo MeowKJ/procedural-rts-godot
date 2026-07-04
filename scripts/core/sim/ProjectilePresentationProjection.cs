@@ -84,8 +84,8 @@ public static class ProjectilePresentationProjector
             ammo.Behavior,
             ammo.HitRule,
             ammo.LegacyKind,
-            ProjectileVfxMath.StyleFor(ammo.LegacyKind),
-            AccentFor(world, viewer, sourceOwner, ammo.Accent));
+            ProjectileVfxMath.StyleFor(ammo),
+            AccentFor(world, viewer, sourceOwner, ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent)));
     }
 
     private static Color AccentFor(EntityWorld world, OwnerId viewer, OwnerId sourceOwner, Color ammoAccent)

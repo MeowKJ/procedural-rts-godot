@@ -23,8 +23,10 @@ public partial class BattleRoot
             start,
             end,
             ammo.BeamDuration,
-            ammo.BeamWidth,
-            UnitFactionAccent(sourceFaction, sourcePlayerSlot).Lerp(ammo.Accent, 0.44f));
+            ammo.BeamWidth * ElementPresentationCatalog.BeamWidthMultiplierFor(ammo.DamageElementId),
+            UnitFactionAccent(sourceFaction, sourcePlayerSlot).Lerp(
+                ElementPresentationCatalog.BeamAccentFor(ammo.DamageElementId, ammo.Accent),
+                0.44f));
     }
 
     private static AmmoKind? AmmoKindForPrimaryWeapon(UnitInstance attacker)
@@ -35,6 +37,11 @@ public partial class BattleRoot
         }
 
         return WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind].AmmoKind;
+    }
+
+    private static string? DamageElementIdForAmmoKind(AmmoKind? ammoKind)
+    {
+        return ElementPresentationCatalog.DamageElementIdFor(ammoKind);
     }
 
     private static float DamageForPrimaryWeapon(UnitInstance attacker, BuildSpec targetSpec)
