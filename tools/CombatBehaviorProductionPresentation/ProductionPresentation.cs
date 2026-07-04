@@ -66,6 +66,14 @@ static partial class Program
             0,
             BuildSpecCatalog.For(BuildingDesignIds.Airfield).MaxHp);
         productionPresentationBattlefield.UpsertBuildingTarget(
+            916,
+            BuildingDesignIds.PowerPlant,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(160, 540),
+            0,
+            BuildSpecCatalog.For(BuildingDesignIds.PowerPlant).MaxHp);
+        productionPresentationBattlefield.UpsertBuildingTarget(
             911,
             BuildingDesignIds.VehicleFactory,
             PlayerSlotId.Two,
@@ -125,6 +133,76 @@ static partial class Program
             || catDesignProductionOptions["cat.scout_aircraft"].ProducerKind != BuildingDesignIds.Airfield)
         {
             throw new InvalidOperationException("player can train T1-T3 from UnitDesign production options across infantry, vehicle, defense, economy, and air producers");
+        }
+
+        var selectedPowerPlantOptions = productionPresentationBattlefield.ProductionDesignOptionStatesForSelectedProducers(
+            PlayerSlotId.One,
+            new[] { 916 },
+            out var hasSelectedPowerPlantProducer);
+        if (hasSelectedPowerPlantProducer || selectedPowerPlantOptions.Count != 0)
+        {
+            throw new InvalidOperationException("selected non-production buildings should let the HUD fall back to aggregate production options");
+        }
+
+        var expectedDogBarracksDesignIds = expectedDogPlayableDesignIds
+            .Where(designId => UnitDesignCatalog.Spec(designId).Production!.ProducerKind == BuildingDesignIds.Barracks)
+            .ToArray();
+        var dogBarracksSelectedOptions = productionPresentationBattlefield.ProductionDesignOptionStatesForSelectedProducers(
+                PlayerSlotId.One,
+                new[] { 912 },
+                out var hasDogBarracksProducer)
+            .Where(option => option.UnitDesignId is not null)
+            .ToDictionary(option => option.UnitDesignId!);
+        if (!hasDogBarracksProducer
+            || dogBarracksSelectedOptions.Count != expectedDogBarracksDesignIds.Length
+            || !expectedDogBarracksDesignIds.All(dogBarracksSelectedOptions.ContainsKey)
+            || dogBarracksSelectedOptions.ContainsKey("dog.guard_tank")
+            || dogBarracksSelectedOptions.ContainsKey("dog.sky_patrol_aircraft")
+            || dogBarracksSelectedOptions.Values.Any(option => option.ProducerKind != BuildingDesignIds.Barracks || !option.CanQueue))
+        {
+            throw new InvalidOperationException("selected Dog Barracks command card should show only barracks-trainable UnitDesign options");
+        }
+
+        var expectedDogVehicleFactoryDesignIds = expectedDogPlayableDesignIds
+            .Where(designId => UnitDesignCatalog.Spec(designId).Production!.ProducerKind == BuildingDesignIds.VehicleFactory)
+            .ToArray();
+        var dogVehicleFactorySelectedOptions = productionPresentationBattlefield.ProductionDesignOptionStatesForSelectedProducers(
+                PlayerSlotId.One,
+                new[] { 910 },
+                out var hasDogVehicleFactoryProducer)
+            .Where(option => option.UnitDesignId is not null)
+            .ToDictionary(option => option.UnitDesignId!);
+        if (!hasDogVehicleFactoryProducer
+            || dogVehicleFactorySelectedOptions.Count != expectedDogVehicleFactoryDesignIds.Length
+            || !expectedDogVehicleFactoryDesignIds.All(dogVehicleFactorySelectedOptions.ContainsKey)
+            || dogVehicleFactorySelectedOptions.ContainsKey("dog.infantry")
+            || dogVehicleFactorySelectedOptions.ContainsKey("dog.sky_patrol_aircraft")
+            || dogVehicleFactorySelectedOptions.Values.Any(option => option.ProducerKind != BuildingDesignIds.VehicleFactory || !option.CanQueue))
+        {
+            throw new InvalidOperationException("selected Dog Vehicle Factory command card should show only vehicle-factory UnitDesign options");
+        }
+
+        var expectedDogBarracksAirfieldDesignIds = expectedDogPlayableDesignIds
+            .Where(designId =>
+            {
+                var producerKind = UnitDesignCatalog.Spec(designId).Production!.ProducerKind;
+                return producerKind == BuildingDesignIds.Barracks || producerKind == BuildingDesignIds.Airfield;
+            })
+            .ToArray();
+        var dogBarracksAirfieldSelectedOptions = productionPresentationBattlefield.ProductionDesignOptionStatesForSelectedProducers(
+                PlayerSlotId.One,
+                new[] { 912, 915 },
+                out var hasDogBarracksAirfieldProducer)
+            .Where(option => option.UnitDesignId is not null)
+            .ToDictionary(option => option.UnitDesignId!);
+        if (!hasDogBarracksAirfieldProducer
+            || dogBarracksAirfieldSelectedOptions.Count != expectedDogBarracksAirfieldDesignIds.Length
+            || !expectedDogBarracksAirfieldDesignIds.All(dogBarracksAirfieldSelectedOptions.ContainsKey)
+            || !dogBarracksAirfieldSelectedOptions.ContainsKey("dog.sky_patrol_aircraft")
+            || dogBarracksAirfieldSelectedOptions.ContainsKey("dog.guard_tank")
+            || dogBarracksAirfieldSelectedOptions.Values.Any(option => option.ProducerKind == BuildingDesignIds.VehicleFactory || !option.CanQueue))
+        {
+            throw new InvalidOperationException("multi-selected Dog producer command card should union selected producer lanes and exclude unselected factories");
         }
 
         var trainedDesignIds = new List<string>();

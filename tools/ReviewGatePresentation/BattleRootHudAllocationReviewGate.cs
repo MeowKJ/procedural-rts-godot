@@ -19,6 +19,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<UnitInstance> _selectedUnitInstanceBuffer", "BattleRoot runtime selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<BuildingModel> _selectedLegacyBuildingBuffer", "BattleRoot legacy selection HUD sync must reuse selected building storage.", result);
+        RequireText(battleRoot, "List<int> _selectedProductionBuildingIdBuffer", "BattleRoot selected producer command-card sync must reuse selected building id storage.", result);
         RequireText(battleRoot, "List<UnitInstance> _sandboxLaunchUnitBuffer", "BattleRoot sandbox launch selection must reuse unit storage.", result);
         RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
         RequireText(battleRoot, "List<int> _debugPlayerAttackerIds", "Active battle perf setup must reuse player attacker id storage.", result);
@@ -32,6 +33,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
+        RequireText(hudSync, "RuntimeProductionCommandCardStates()", "Runtime command-card refresh must route through selected-producer state selection.", result);
+        RequireText(hudSync, "_unitBattlefield.ProductionDesignOptionStatesForSelectedProducers", "Runtime command-card refresh must use selected producer production options when available.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);
         RequireText(hudSync, "CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer)", "Legacy selection HUD sync must fill the reusable selected-unit buffer.", result);

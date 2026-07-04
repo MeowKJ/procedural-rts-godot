@@ -45,10 +45,14 @@ static class UnitBattlefieldProductionAllocationReviewGate
         RequireText(battlefield, "List<UnitSpec> _productionDesignSpecBuffer", "Production option states must reuse design spec storage.", result);
         RequireText(battlefield, "List<ProductionOptionState> _legacyProductionOptionStateBuffer", "Legacy production option states must reuse result storage.", result);
         RequireText(battlefield, "List<ProductionOptionState> _designProductionOptionStateBuffer", "UnitDesign production option states must reuse result storage.", result);
+        RequireText(battlefield, "List<int> _selectedProductionProducerIdBuffer", "Selected producer command-card states must reuse producer id storage.", result);
 
         var options = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs");
         RequireText(options, "CollectCandidateProducerIds(kind, playerSlotId, _productionCandidateProducerIds)", "Legacy production option states must reuse producer candidate storage.", result);
         RequireText(options, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production option states must reuse producer candidate storage.", result);
+        RequireText(options, "ProductionDesignOptionStatesForSelectedProducers", "UnitDesign production options must expose a selected-producer command-card path.", result);
+        RequireText(options, "CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer)", "Selected producer command-card states must fill reusable producer id storage.", result);
+        RequireText(options, "CollectCandidateProducerIds(spec, playerSlotId, selectedProducerBuildingIds, _productionCandidateProducerIds)", "Selected producer command-card states must reuse producer candidate storage.", result);
         RequireText(options, "CollectProductionDesignSpecs(playerSlotId, _productionDesignSpecBuffer)", "UnitDesign production option states must reuse design spec storage.", result);
         RequireText(options, "_legacyProductionOptionStateBuffer.Clear()", "Legacy production option states must clear reusable result storage.", result);
         RequireText(options, "_designProductionOptionStateBuffer.Clear()", "UnitDesign production option states must clear reusable result storage.", result);

@@ -86,6 +86,7 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitSpec> _productionDesignSpecBuffer = [];
     private readonly List<ProductionOptionState> _legacyProductionOptionStateBuffer = [];
     private readonly List<ProductionOptionState> _designProductionOptionStateBuffer = [];
+    private readonly List<int> _selectedProductionProducerIdBuffer = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
     private bool _useSecondaryBuildingMinimapProjectionBuffer;
