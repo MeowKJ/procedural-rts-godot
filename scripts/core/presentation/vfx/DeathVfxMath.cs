@@ -48,6 +48,8 @@ public static class DeathVfxMath
             FragmentCount: fragmentCount + Mathf.RoundToInt(overkillScale * 8),
             SmokeCount: smokeCount + Mathf.RoundToInt(overkillScale * 5),
             SmokeScale: weightScale * (movementDomain == MovementDomain.Air ? 0.72f : 1f),
+            ScorchScale: weightScale * (movementDomain == MovementDomain.Air ? 0.58f : 1f) + overkillScale * 0.46f,
+            ScorchAlpha: Mathf.Clamp(0.16f + weightScale * 0.06f + overkillScale * 0.08f, 0.12f, 0.34f),
             RingWidth: 1.8f + weightScale * 1.2f + overkillScale * 1.4f,
             SecondaryColor: secondary,
             EmitsEmbers: ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || overkillDamage > 25,

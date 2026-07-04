@@ -21,6 +21,7 @@ public partial class CombatEffectsLayer : Node2D
             var outer = radius + 10 + t * 54 * effect.Style.BurstScale;
             var inner = Mathf.Max(2, radius * (0.42f + t * 0.75f));
 
+            DrawDeathScorch(effect, t, fade);
             DrawCircle(effect.Position, radius * (1.25f + burst * 0.65f * effect.Style.BurstScale), new Color("#ffffff", 0.2f * fade));
             DrawCircle(effect.Position, radius * (1.7f + t * 1.1f * effect.Style.BurstScale), new Color(effect.Accent, 0.2f * fade));
             DrawArc(effect.Position, outer, 0, Mathf.Tau, LargeEffectArcSegments, new Color(effect.Accent, 0.78f * fade), effect.Style.RingWidth * fade + 0.7f, true);
@@ -29,6 +30,29 @@ public partial class CombatEffectsLayer : Node2D
             DrawDeathFragments(effect, t, fade);
             DrawDeathSmoke(effect, t, fade);
             DrawDeathSpecials(effect, t, fade);
+        }
+    }
+
+    private void DrawDeathScorch(UnitDeathEffect effect, float t, float fade)
+    {
+        var scorchFade = Mathf.Clamp(1 - t * 1.18f, 0, 1) * fade;
+        if (scorchFade <= 0)
+        {
+            return;
+        }
+
+        var radius = effect.Radius * (0.74f + effect.Style.ScorchScale * 0.42f);
+        DrawCircle(effect.Position, radius, new Color("#05070a", effect.Style.ScorchAlpha * scorchFade));
+        DrawArc(effect.Position, radius * 1.12f, 0, Mathf.Tau, MediumEffectArcSegments, new Color("#10151a", effect.Style.ScorchAlpha * 0.7f * scorchFade), 1.5f, true);
+
+        for (var index = 0; index < 4; index++)
+        {
+            var angle = NoiseAngle(effect.Seed + 503, index);
+            var direction = Vector2.FromAngle(angle);
+            var normal = direction.Orthogonal();
+            var length = radius * (0.34f + Noise01(effect.Seed, index + 521) * 0.34f);
+            var center = effect.Position + direction * radius * (0.12f + index * 0.055f);
+            DrawLine(center - direction * length - normal * 2.2f, center + direction * length + normal * 2.2f, new Color("#02060a", 0.18f * scorchFade), 1.4f, true);
         }
     }
 
