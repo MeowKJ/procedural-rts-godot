@@ -1,5 +1,10 @@
 namespace ProceduralRts.Core;
 
+/// <summary>
+/// Caller-owned scratch storage for deterministic pathfinding. Systems reuse
+/// one workspace per planner; returned paths must copy durable results before
+/// the workspace is reused.
+/// </summary>
 public sealed class PathfindingWorkspace
 {
     internal HashSet<GridObstacle> Blocked { get; } = [];

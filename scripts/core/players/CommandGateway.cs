@@ -5,12 +5,21 @@ public sealed record CommandGatewayOptions(
     int MaxSubjectsPerCommand = 256,
     int MaxSpecIdLength = 128);
 
+/// <summary>
+/// Per-poll authority context supplied by the driver; keep it Godot-free so
+/// replay, bots, and network clients share the same validation path.
+/// </summary>
 public readonly record struct CommandGatewaySubmission(
     PlayerControllerId ControllerId,
     PlayerControllerKind ControllerKind,
     IReadOnlyList<PlayerSlotId> ControlledSlots,
     int CurrentTick);
 
+/// <summary>
+/// Narrow adapter boundary from validated player intent into the authoritative
+/// EntityCommandBuffer. Implementations reject commands without mutating
+/// simulation state directly.
+/// </summary>
 public interface ICommandGatewayEntityCommandSink
 {
     bool TryEnqueue(
@@ -20,6 +29,12 @@ public interface ICommandGatewayEntityCommandSink
         out string message);
 }
 
+/// <summary>
+/// Public handoff point between local/remote controllers and deterministic
+/// entity commands. It validates authority, monotonic client sequence,
+/// sandbox-only commands, and payload shape before a command reaches the
+/// simulation sink.
+/// </summary>
 public sealed partial class CommandGateway
 {
     private readonly CommandGatewayOptions _options;

@@ -5,6 +5,7 @@ static class CoreReviewChecks
     public static void CheckReviewTemplate(string root, GateResult result, string? requiredRecord)
     {
         CheckGitHubReviewSurface(root, result);
+        CheckCommentDiscipline(root, result);
 
         if (requiredRecord is null)
         {
