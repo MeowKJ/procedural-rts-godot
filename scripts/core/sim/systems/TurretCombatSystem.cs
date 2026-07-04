@@ -208,14 +208,14 @@ public sealed class TurretCombatSystem : ISimSystem
     {
         var desiredFacing = (target.Transform.Position - turret.Transform.Position).Angle();
         var mounts = WeaponEngagementState.WritableMounts(turret, weapon);
-        WeaponEngagementMountLoop.Tick(
+        WeaponSystem.Tick(
             context,
             turret,
             target,
             mounts,
             desiredFacing,
             dt,
-            new WeaponEngagementMountLoopOptions(
+            new WeaponSystemOptions(
                 InRange: true,
                 CenterDistance: turret.Transform.Position.DistanceTo(target.Transform.Position),
                 TargetRadius: target.Components.TryGet<CollisionComponentState>(out var targetCollision) ? targetCollision.Radius : 0,

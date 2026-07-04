@@ -14,6 +14,8 @@ public sealed record WeaponDefinition
     public SpecialAttackHook Hooks { get; init; }
     public float MinRange { get; init; }
     public bool CanInterceptProjectiles { get; init; }
+    public float Warmup { get; init; }
+    public float Reload { get; init; }
     public WeaponKind? LegacyKind { get; init; }
     public AmmoKind? LegacyAmmoKind { get; init; }
 
@@ -35,7 +37,9 @@ public sealed record WeaponDefinition
         WeaponTargetProfile TargetProfile,
         SpecialAttackHook Hooks,
         float MinRange = 0,
-        bool CanInterceptProjectiles = false)
+        bool CanInterceptProjectiles = false,
+        float Warmup = 0,
+        float Reload = 0)
         : this(
             WeaponCatalog.IdFor(Kind),
             Label,
@@ -49,6 +53,8 @@ public sealed record WeaponDefinition
             Hooks,
             MinRange,
             CanInterceptProjectiles,
+            Warmup,
+            Reload,
             Kind,
             AmmoKind)
     {
@@ -67,6 +73,8 @@ public sealed record WeaponDefinition
         SpecialAttackHook Hooks,
         float MinRange = 0,
         bool CanInterceptProjectiles = false,
+        float Warmup = 0,
+        float Reload = 0,
         WeaponKind? LegacyKind = null,
         AmmoKind? LegacyAmmoKind = null)
     {
@@ -82,6 +90,8 @@ public sealed record WeaponDefinition
         this.Hooks = Hooks;
         this.MinRange = MinRange;
         this.CanInterceptProjectiles = CanInterceptProjectiles;
+        this.Warmup = Warmup;
+        this.Reload = Reload;
         this.LegacyKind = LegacyKind;
         this.LegacyAmmoKind = LegacyAmmoKind;
     }

@@ -88,14 +88,14 @@ public sealed class BuildingTargetCombatSystem : ISimSystem
 
         var desiredFacing = toTarget.Angle();
         var mounts = WeaponEngagementState.WritableMounts(attacker, weapon);
-        WeaponEngagementMountLoop.Tick(
+        WeaponSystem.Tick(
             context,
             attacker,
             target,
             mounts,
             desiredFacing,
             dt,
-            new WeaponEngagementMountLoopOptions(
+            new WeaponSystemOptions(
                 InRange: inRange,
                 CenterDistance: distance,
                 TargetRadius: target.Components.TryGet<CollisionComponentState>(out var firingTargetCollision) ? firingTargetCollision.Radius : 0,

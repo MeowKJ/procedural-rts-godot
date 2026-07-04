@@ -68,14 +68,14 @@ public sealed partial class CombatSystem
 
         var desiredFacing = toTarget.Angle();
         var mounts = WeaponEngagementState.WritableMounts(attacker, weapon);
-        WeaponEngagementMountLoop.Tick(
+        WeaponSystem.Tick(
             context,
             attacker,
             target,
             mounts,
             desiredFacing,
             dt,
-            new WeaponEngagementMountLoopOptions(
+            new WeaponSystemOptions(
                 InRange: inRange,
                 CenterDistance: distance,
                 TargetRadius: targetRadius,

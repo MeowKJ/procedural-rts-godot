@@ -95,6 +95,35 @@ static partial class Program
         Console.WriteLine($"OK [projectile-splash]: primary {primary:0.0}, nearby hostile {nearbyHostile:0.0}, ally/far untouched.");
     }
 
+    static void RunWeaponStateMachineScenario()
+    {
+        const int Ticks = 8;
+        AssertDeterministic("weapon-state-machine", BuildWeaponStateMachineWorld, Ticks, 2);
+
+        var world = BuildWeaponStateMachineWorld();
+        var clock = new SimClock();
+        var phases = new HashSet<WeaponMountPhase>();
+        var fired = false;
+        for (var tick = 1; tick <= Ticks; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            fired |= world.Events.Drain().Any(simEvent => simEvent is WeaponFiredEvent);
+            var mount = MountOf(world, "replay.weapon_state.shooter");
+            phases.Add(mount.Phase);
+        }
+
+        var targetHp = HealthOf(world, "replay.weapon_state.target");
+        var finalMount = MountOf(world, "replay.weapon_state.shooter");
+        Assert(phases.Contains(WeaponMountPhase.Warmup), "weapon state machine should enter warmup before firing.");
+        Assert(phases.Contains(WeaponMountPhase.Fire), "weapon state machine should expose a fire phase when the shot resolves.");
+        Assert(phases.Contains(WeaponMountPhase.Cooldown), "weapon state machine should enter cooldown after firing.");
+        Assert(phases.Contains(WeaponMountPhase.Reload), "weapon state machine should enter reload after cooldown when reload time is authored.");
+        Assert(fired, "weapon state machine scenario should raise a WeaponFiredEvent.");
+        Assert(targetHp < 160, $"weapon state machine shot should damage the target, got {targetHp:0.0} hp.");
+        Assert(finalMount.WarmupRemaining > 0, "weapon state machine should be able to reacquire and begin the next warmup after reload.");
+        Console.WriteLine($"OK [weapon-state-machine]: phases {string.Join(',', phases.Order())}, target hp {targetHp:0.0}, next warmup {finalMount.WarmupRemaining:0.00}.");
+    }
+
     private static EntityWorld BuildProjectileTrackingWorld()
     {
         var world = new EntityWorld(seed: 4242) { WorldWidth = 900, WorldHeight = 600 };
@@ -142,12 +171,43 @@ static partial class Program
         return world;
     }
 
+    private static EntityWorld BuildWeaponStateMachineWorld()
+    {
+        var world = new EntityWorld(seed: 6161) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.RegisterCombatDefinitions(
+            [
+                WeaponCatalog.Weapons[WeaponKind.NeedleRifle] with
+                {
+                    Warmup = 0.07f,
+                    Cooldown = 0.06f,
+                    Reload = 0.04f,
+                },
+            ],
+            WeaponCatalog.AmmoDefinitions.Values);
+        world.AddSystem(new CombatSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.weapon_state.shooter", WeaponKind.NeedleRifle, 160);
+        var targetSpec = ProjectileUnitSpec("replay.weapon_state.target", null, 160);
+        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(240, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.NeedleRifle));
+        return world;
+    }
+
     private static float HealthOf(EntityWorld world, string specId)
     {
         return world.OrderedEntities
             .Single(entity => entity.SpecId == specId)
             .Components.Require<HealthComponentState>()
             .Hp;
+    }
+
+    private static WeaponMountRuntimeState MountOf(EntityWorld world, string specId)
+    {
+        return world.OrderedEntities
+            .Single(entity => entity.SpecId == specId)
+            .Components.Require<WeaponUserComponentState>()
+            .Mounts[0];
     }
 
     private static EntitySpec ProjectileUnitSpec(string id, WeaponKind? weapon, float hp)

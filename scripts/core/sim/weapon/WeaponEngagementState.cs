@@ -6,7 +6,7 @@ static class WeaponEngagementState
     {
         foreach (var mount in weapon.Mounts)
         {
-            if (mount.CooldownRemaining > 0)
+            if (WeaponSystem.IsRecovering(mount))
             {
                 return true;
             }
@@ -23,10 +23,10 @@ static class WeaponEngagementState
         for (var index = 0; index < mounts.Count; index++)
         {
             var mount = mounts[index];
-            var cooldown = WeaponEngagementMath.TickCooldown(mount.CooldownRemaining, dt);
+            var next = WeaponSystem.TickIdle(mount, dt);
             if (copy is null)
             {
-                if (MathF.Abs(cooldown - mount.CooldownRemaining) <= 0.0001f)
+                if (next == mount)
                 {
                     continue;
                 }
@@ -38,7 +38,7 @@ static class WeaponEngagementState
                 }
             }
 
-            copy[index] = mount with { CooldownRemaining = cooldown };
+            copy[index] = next;
         }
 
         return copy ?? mounts;
@@ -50,7 +50,7 @@ static class WeaponEngagementState
         for (var index = 0; index < mounts.Count; index++)
         {
             var mount = mounts[index];
-            mounts[index] = mount with { CooldownRemaining = WeaponEngagementMath.TickCooldown(mount.CooldownRemaining, dt) };
+            mounts[index] = WeaponSystem.TickIdle(mount, dt);
         }
     }
 
