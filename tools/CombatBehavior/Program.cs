@@ -4,6 +4,7 @@ static partial class Program
     {
         AssertScopeAndCatalogs();
         AssertUnitDesignCatalogs();
+        AssertFactionShapeLanguage();
         AssertEntityWorldAndPalette();
         AssertBuildSpecBuildingRuntime();
         AssertBuildingEntityComponents();
@@ -36,6 +37,7 @@ static partial class Program
         public const string DogPatrolVehicle = "dog.patrol_vehicle";
         public const string DogGuardTank = "dog.guard_tank";
         public const string DogHarvester = "dog.harvester";
+        public const string DogSkyPatrolAircraft = "dog.sky_patrol_aircraft";
         public const string DogRepairDog = "dog.repair_dog";
         public const string DogShieldTank = "dog.shield_tank";
         public const string DogSiegeArtillery = "dog.siege_artillery";
