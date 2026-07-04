@@ -73,6 +73,8 @@ public partial class BattleRoot
         _commandAcknowledgements.CullingWorldRect = visibleRect;
         _footprints.CullingWorldRect = visibleRect;
         _fogOfWar.VisibleWorldRect = visibleRect;
+        _unitBodyBatchLayer.CullingWorldRect = visibleRect;
+        _unitBodyBatchLayer.QueueRedraw();
 
         foreach (var (id, view) in _buildingViews)
         {

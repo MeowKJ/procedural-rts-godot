@@ -152,6 +152,7 @@ public partial class BattleRoot
             Relations = _unitBattlefield.Relations,
             ProjectionProvider = () => _unitBattlefield.UnitProjection(unit.Id),
             VisualThemeProvider = () => _state.VisualTheme,
+            DrawBodyArt = false,
         };
         _unitInstanceRoot.AddChild(view);
         _unitInstanceViews[unit.Id] = view;
