@@ -6,6 +6,7 @@ static partial class Program
         AssertUnitDesignCatalogs();
         AssertFactionShapeLanguage();
         AssertEntityWorldAndPalette();
+        AssertPerClassSilhouetteRules();
         AssertBuildSpecBuildingRuntime();
         AssertBuildingEntityComponents();
         AssertUnitDesignRosters();
