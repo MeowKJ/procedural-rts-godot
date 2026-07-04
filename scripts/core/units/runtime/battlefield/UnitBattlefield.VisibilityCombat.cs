@@ -336,6 +336,29 @@ public sealed partial class UnitBattlefield
         ApplyDamage(unit, target, weapon);
     }
 
+    private static void ResumeAttackMoveIntentIfNeeded(UnitInstance unit)
+    {
+        if (unit.Hp <= 0
+            || unit.MoveMode != MoveCommandMode.Attack
+            || unit.AttackTargetId is not null
+            || unit.MoveTarget is not null
+            || unit.PlayerIntentTarget is not { } intent)
+        {
+            return;
+        }
+
+        var resumeTarget = unit.FormationSlot ?? intent;
+        var stopDistance = MathF.Max(unit.Spec.Movement.StopDistance, MathF.Max(4f, unit.Spec.Collision.Radius * 0.22f));
+        if (unit.Position.DistanceSquaredTo(resumeTarget) <= stopDistance * stopDistance)
+        {
+            unit.CommandVisualTarget = intent;
+            return;
+        }
+
+        unit.MoveTarget = resumeTarget;
+        unit.CommandVisualTarget = intent;
+    }
+
     private static Vector2 MuzzlePosition(UnitInstance unit, WeaponMountRuntimeState? mount)
     {
         var mountId = mount?.MountId;
