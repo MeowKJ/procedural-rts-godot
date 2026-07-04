@@ -6,6 +6,7 @@ public sealed class EntityCommandBuffer
 {
     private readonly List<SequencedCommandEnvelope> _commands = [];
     private readonly List<SequencedCommandEnvelope> _snapshotBuffer = [];
+    private readonly List<SequencedCommandEnvelope> _drainSnapshotBuffer = [];
     private readonly List<SequencedCommandEnvelope> _readyBuffer = [];
     private readonly HashSet<long> _readySequences = [];
     private long _nextSequence = 1;
@@ -22,15 +23,15 @@ public sealed class EntityCommandBuffer
     public IReadOnlyList<SequencedCommandEnvelope> Snapshot()
     {
         CopyOrderedCommandsInto(_snapshotBuffer);
-        return _snapshotBuffer.ToArray();
+        return _snapshotBuffer;
     }
 
     public IReadOnlyList<SequencedCommandEnvelope> DrainUpToTick(int tick)
     {
-        CopyOrderedCommandsInto(_snapshotBuffer);
+        CopyOrderedCommandsInto(_drainSnapshotBuffer);
         _readyBuffer.Clear();
         _readySequences.Clear();
-        foreach (var item in _snapshotBuffer)
+        foreach (var item in _drainSnapshotBuffer)
         {
             if (item.Command.Tick <= tick)
             {
