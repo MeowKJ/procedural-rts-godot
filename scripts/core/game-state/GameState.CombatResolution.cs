@@ -205,7 +205,8 @@ public sealed partial class GameState
         var direction = (aimPoint - muzzle).LengthSquared() <= 0.01f
             ? Vector2.FromAngle(source.WeaponFacing)
             : (aimPoint - muzzle).Normalized();
-        var projectileStyle = ProjectileVfxMath.StyleFor(ammo.LegacyKind);
+        var projectileStyle = ProjectileVfxMath.StyleFor(ammo);
+        var projectileAccent = ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent);
 
         Projectiles.Add(new ProjectileModel
         {
@@ -227,7 +228,7 @@ public sealed partial class GameState
             TrailWidth = projectileStyle.TrailWidth,
             CoreWidth = projectileStyle.CoreWidth,
             HeadRadius = projectileStyle.HeadRadius,
-            Accent = FactionVisualPolicy.CommandAccent(Owner.Player, MatchConfig.PlayerFaction, source.Owner, source.FactionId, ammo.Accent),
+            Accent = FactionVisualPolicy.CommandAccent(Owner.Player, MatchConfig.PlayerFaction, source.Owner, source.FactionId, projectileAccent),
         });
     }
 
@@ -244,8 +245,13 @@ public sealed partial class GameState
             End = targetPosition,
             Duration = ammo.BeamDuration,
             Age = 0,
-            Width = ammo.BeamWidth,
-            Accent = FactionVisualPolicy.CommandAccent(Owner.Player, MatchConfig.PlayerFaction, source.Owner, source.FactionId, ammo.Accent),
+            Width = ammo.BeamWidth * ElementPresentationCatalog.BeamWidthMultiplierFor(ammo.DamageElementId),
+            Accent = FactionVisualPolicy.CommandAccent(
+                Owner.Player,
+                MatchConfig.PlayerFaction,
+                source.Owner,
+                source.FactionId,
+                ElementPresentationCatalog.BeamAccentFor(ammo.DamageElementId, ammo.Accent)),
         });
     }
 

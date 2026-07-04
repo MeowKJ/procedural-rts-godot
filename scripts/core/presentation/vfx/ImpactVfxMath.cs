@@ -7,8 +7,27 @@ public static class ImpactVfxMath
     public static ImpactVfxStyle StyleFor(
         UnitWeightClass weightClass,
         MovementDomain movementDomain,
+        AmmoDefinition ammo,
+        float damage)
+    {
+        return StyleFor(weightClass, movementDomain, ammo.LegacyKind, damage, ammo.DamageElementId);
+    }
+
+    public static ImpactVfxStyle StyleFor(
+        UnitWeightClass weightClass,
+        MovementDomain movementDomain,
         AmmoKind? ammoKind,
         float damage)
+    {
+        return StyleFor(weightClass, movementDomain, ammoKind, damage, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+    }
+
+    public static ImpactVfxStyle StyleFor(
+        UnitWeightClass weightClass,
+        MovementDomain movementDomain,
+        AmmoKind? ammoKind,
+        float damage,
+        string? damageElementId)
     {
         var weightScale = weightClass switch
         {
@@ -49,7 +68,9 @@ public static class ImpactVfxMath
         var shakeDomain = movementDomain == MovementDomain.Air ? 0.72f : 1f;
         var shakeAmplitude = Mathf.Clamp((shakeBase + shakeDamage + shakeWeight) * shakeDomain, 0, 6.5f);
         var shakeRadius = shakeAmplitude <= 0 ? 0 : Mathf.Clamp(420f + damage * 2.4f + shakeAmplitude * 42f, 420, 860);
-        var secondary = ammoKind switch
+        var secondary = ElementPresentationCatalog.TryFor(damageElementId, out var element)
+            ? element.ImpactColor
+            : ammoKind switch
         {
             AmmoKind.ElectromagneticLance => new Color("#8fffe1", 0.92f),
             AmmoKind.IonBeam => new Color("#d8f7ff", 0.94f),
@@ -67,7 +88,7 @@ public static class ImpactVfxMath
             SecondaryColor: secondary,
             ShakeAmplitude: shakeAmplitude,
             ShakeRadius: shakeRadius,
-            EmitsEmbers: ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || damage > 55,
-            EmitsEmpDissolve: ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
+            EmitsEmbers: element?.EmitsEmbers == true || ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || damage > 55,
+            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
     }
 }

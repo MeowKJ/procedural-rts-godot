@@ -63,7 +63,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind);
+            target.LastDamageAmmoKind,
+            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -91,7 +92,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind);
+            target.LastDamageAmmoKind,
+            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -128,7 +130,8 @@ public partial class BattleRoot
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             damage,
-            ammoKind);
+            ammoKind,
+            DamageElementIdForAmmoKind(ammoKind));
         RequestImpactShake(target.Position, impactStyle);
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"building-attack:{target.Id}", CombatAlertCooldown))
         {

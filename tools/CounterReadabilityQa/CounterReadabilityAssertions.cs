@@ -1,3 +1,4 @@
+using Godot;
 using ProceduralRts.Core;
 
 internal static class CounterReadabilityAssertions
@@ -64,6 +65,7 @@ internal static class CounterReadabilityAssertions
 
         Console.WriteLine("CHECK [data] WeaponTargetProfile / MovementDomain / ArmorTag / cost / speed rules are explicit.");
         CheckCombatChemistryProfiles(failures);
+        CheckElementPresentationStyles(failures);
     }
 
     public static void Require(bool condition, string message, List<string> failures)
@@ -119,6 +121,56 @@ internal static class CounterReadabilityAssertions
             targetElementDefense: CombatProfileDesign.ElementDefense(new() { [ammo.DamageElementId] = 0.75f }));
         Require(Nearly(resistant, neutral * 0.75f), "ElementDefenseProfile must apply sparse element overrides through DamageResolver.", failures);
         Console.WriteLine("CHECK [combat chemistry] ElementDefenseProfile and TargetTrait counter rules resolve without unit design ids.");
+    }
+
+    private static void CheckElementPresentationStyles(List<string> failures)
+    {
+        Require(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "ElementPresentationCatalog must define every damage element.", failures);
+        Require(DamageElementIds.All.SequenceEqual(ElementPresentationCatalog.Definitions.Keys), "ElementPresentationCatalog must enumerate damage elements in stable order.", failures);
+
+        var shortCodes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var id in DamageElementIds.All)
+        {
+            var style = ElementPresentationCatalog.For(id);
+            Require(style.DamageElementId == id, $"{id} presentation style id must match catalog key.", failures);
+            Require(!string.IsNullOrWhiteSpace(style.Label), $"{id} presentation label must be present.", failures);
+            Require(shortCodes.Add(style.ShortCode), $"{id} presentation short code must be unique.", failures);
+            Require(style.Badge.DamageElementId == id, $"{id} UI badge must point back to its element id.", failures);
+            Require(style.Badge.ShortCode == style.ShortCode, $"{id} UI badge must reuse presentation short code.", failures);
+            Require(style.Projectile.TrailWidth >= ProjectileVfxMath.MinimumTrailWidth, $"{id} projectile trail must stay readable.", failures);
+            Require(style.Projectile.CoreWidth >= ProjectileVfxMath.MinimumCoreWidth, $"{id} projectile core must stay readable.", failures);
+            Require(style.Projectile.HeadRadius >= ProjectileVfxMath.MinimumHeadRadius, $"{id} projectile head must stay readable.", failures);
+            Require(style.Projectile.TrailAlpha >= ProjectileVfxMath.MinimumTrailAlpha, $"{id} projectile trail alpha must stay readable.", failures);
+            Require(style.BeamWidthMultiplier > 0, $"{id} beam width multiplier must be positive.", failures);
+        }
+
+        for (var outer = 0; outer < DamageElementIds.All.Count; outer++)
+        {
+            for (var inner = outer + 1; inner < DamageElementIds.All.Count; inner++)
+            {
+                var left = ElementPresentationCatalog.For(DamageElementIds.All[outer]);
+                var right = ElementPresentationCatalog.For(DamageElementIds.All[inner]);
+                Require(ColorDistance(left.Accent, right.Accent) >= 0.18f, $"{left.Label} and {right.Label} accents must be visually distinct.", failures);
+            }
+        }
+
+        var kineticAmmo = WeaponCatalog.Ammo[AmmoKind.NeedleDart];
+        var explosiveAmmo = WeaponCatalog.Ammo[AmmoKind.SeekerRocket];
+        var energyAmmo = WeaponCatalog.Ammo[AmmoKind.IonBeam];
+        Require(ProjectileVfxMath.StyleFor(kineticAmmo) == ElementPresentationCatalog.For(DamageElementIds.Kinetic).Projectile, "ProjectileVfxMath must prefer kinetic element style when ammo has an element id.", failures);
+        Require(ProjectileVfxMath.StyleFor(explosiveAmmo) == ElementPresentationCatalog.For(DamageElementIds.Explosive).Projectile, "ProjectileVfxMath must prefer explosive element style when ammo has an element id.", failures);
+        Require(ImpactVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Air, energyAmmo, 34).EmitsEmpDissolve, "Energy impact style must expose EMP dissolve through element presentation.", failures);
+        Require(DeathVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, explosiveAmmo, 90).EmitsEmbers, "Explosive death style must expose embers through element presentation.", failures);
+        Require(ElementPresentationCatalog.BadgeFor(DamageElementIds.Moonshadow).ShortCode == "MSH", "Moonshadow badge must be available as presentation data.", failures);
+        Console.WriteLine("CHECK [combat chemistry] ElementPresentationCatalog resolves seven distinct VFX and UI badge styles.");
+    }
+
+    private static float ColorDistance(Color left, Color right)
+    {
+        var red = left.R - right.R;
+        var green = left.G - right.G;
+        var blue = left.B - right.B;
+        return MathF.Sqrt(red * red + green * green + blue * blue);
     }
 
     private static bool Nearly(float actual, float expected)

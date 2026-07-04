@@ -4,7 +4,17 @@ namespace ProceduralRts.Core;
 
 public static class DeathVfxMath
 {
+    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoDefinition ammo, float overkillDamage)
+    {
+        return StyleFor(weightClass, movementDomain, ammo.LegacyKind, overkillDamage, ammo.DamageElementId);
+    }
+
     public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoKind? ammoKind, float overkillDamage)
+    {
+        return StyleFor(weightClass, movementDomain, ammoKind, overkillDamage, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+    }
+
+    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoKind? ammoKind, float overkillDamage, string? damageElementId)
     {
         var weightScale = weightClass switch
         {
@@ -32,7 +42,9 @@ public static class DeathVfxMath
             _ => 5,
         };
 
-        var secondary = ammoKind switch
+        var secondary = ElementPresentationCatalog.TryFor(damageElementId, out var element)
+            ? element.DeathColor
+            : ammoKind switch
         {
             AmmoKind.ElectromagneticLance => new Color("#8fffe1", 0.92f),
             AmmoKind.IonBeam => new Color("#d8f7ff", 0.94f),
@@ -52,7 +64,7 @@ public static class DeathVfxMath
             ScorchAlpha: Mathf.Clamp(0.16f + weightScale * 0.06f + overkillScale * 0.08f, 0.12f, 0.34f),
             RingWidth: 1.8f + weightScale * 1.2f + overkillScale * 1.4f,
             SecondaryColor: secondary,
-            EmitsEmbers: ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || overkillDamage > 25,
-            EmitsEmpDissolve: ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
+            EmitsEmbers: element?.EmitsEmbers == true || ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || overkillDamage > 25,
+            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
     }
 }
