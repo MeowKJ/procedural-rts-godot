@@ -22,7 +22,7 @@ static class WeaponEngagementResolution
             attacker.Id,
             mount.MountId,
             mount.WeaponId,
-            attacker.Transform.Position,
+            MuzzlePosition(context.World, attacker, mount),
             target.Transform.Position));
 
         if (ShouldSpawnProjectile(context.World, weaponDef))
@@ -42,6 +42,28 @@ static class WeaponEngagementResolution
                 target.Transform.Position,
                 recordRetaliation: true);
         }
+    }
+
+    public static Vector2 MuzzlePosition(EntityWorld world, EntityInstance source, WeaponMountRuntimeState mount)
+    {
+        if (!world.TryGetSpec(source.SpecId, out var spec))
+        {
+            return source.Transform.Position;
+        }
+
+        foreach (var mountSpec in spec.Weapons)
+        {
+            if (mountSpec.MountId != mount.MountId)
+            {
+                continue;
+            }
+
+            return source.Transform.Position
+                + mountSpec.Anchor.Rotated(source.Transform.Facing)
+                + mountSpec.MuzzleOffset.Rotated(mount.Facing);
+        }
+
+        return source.Transform.Position;
     }
 
     public static bool ShouldSpawnProjectile(EntityWorld world, WeaponDefinition weaponDef)

@@ -108,6 +108,7 @@ public partial class BattleRoot
         _state.UnitsRemoved += OnUnitsRemoved;
         _state.BuildingsRemoved += OnBuildingsRemoved;
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;
+        _unitBattlefield.WeaponFired += OnWeaponFired;
         _unitBattlefield.UnitAttacked += OnUnitInstanceAttacked;
         _unitBattlefield.UnitAttackedByBuilding += OnUnitInstanceAttackedByBuilding;
         _unitBattlefield.BuildingAttacked += OnUnitBattlefieldBuildingAttacked;

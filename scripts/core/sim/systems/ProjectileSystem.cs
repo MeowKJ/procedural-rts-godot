@@ -118,7 +118,7 @@ public sealed class ProjectileSystem : ISimSystem
                     interceptor.Id,
                     mount.MountId,
                     mount.WeaponId,
-                    interceptor.Transform.Position,
+                    WeaponEngagementResolution.MuzzlePosition(context.World, interceptor, mount),
                     projectile.Transform.Position));
                 context.World.QueueRemoval(projectile.Id);
                 return true;
