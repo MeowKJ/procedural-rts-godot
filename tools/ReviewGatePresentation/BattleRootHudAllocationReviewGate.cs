@@ -15,6 +15,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitSecondaryBuffer", "BattleRoot minimap units must be double-buffered for redraw safety.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapBuilding> _minimapBuildingBuffer", "BattleRoot minimap buildings must use reusable storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapResource> _minimapResourceBuffer", "BattleRoot minimap resources must use reusable storage.", result);
+        RequireText(battleRoot, "List<HudLayer.MinimapAlertPing> _minimapAlertPingBuffer", "BattleRoot minimap alert pings must use reusable storage.", result);
+        RequireText(battleRoot, "List<HudLayer.MinimapAlertPing> _minimapAlertPingSecondaryBuffer", "BattleRoot minimap alert pings must be double-buffered for redraw safety.", result);
         RequireText(battleRoot, "List<HudLayer.AlertLine> _alertLineBuffer", "BattleRoot alert HUD sync must reuse alert line storage.", result);
         RequireText(battleRoot, "List<UnitInstance> _selectedUnitInstanceBuffer", "BattleRoot runtime selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
@@ -75,9 +77,16 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "FillMinimapUnits(units)", "RefreshMinimap must fill the reusable unit buffer.", result);
         RequireText(battleRoot, "FillUnitBattlefieldMinimapBuildings(buildings)", "RefreshMinimap must fill the reusable runtime building buffer.", result);
         RequireText(battleRoot, "FillMinimapResources(resources)", "RefreshMinimap must fill the reusable resource buffer.", result);
+        RequireText(battleRoot, "FillMinimapAlertPings(alertPings)", "RefreshMinimap must fill active alert pings from reusable alert storage.", result);
+        RequireText(minimap, "for (var index = 0; index < _alerts.Count; index++)", "BattleRoot minimap alert pings must scan active alerts explicitly.", result);
+        RequireText(minimap, "alert.WorldPosition is not { } position", "BattleRoot minimap alert pings must come from world-positioned alerts.", result);
+        RequireText(minimap, "result.Add(new HudLayer.MinimapAlertPing", "BattleRoot minimap alert pings must copy HUD presentation data explicitly.", result);
+        RequireText(hudState, "IReadOnlyList<MinimapAlertPing>? alertPings = null", "HudLayer minimap state must accept active alert pings as optional presentation data.", result);
+        RequireText(hudState, "_minimapSurface.AlertPings = alertPings ?? []", "HudLayer minimap state must keep alert ping assignment allocation-free.", result);
         RequireText(minimap, "foreach (var unit in _state.Units)", "BattleRoot minimap units must use an explicit scan.", result);
         RequireText(minimap, "foreach (var building in projections)", "BattleRoot runtime minimap buildings must copy projections explicitly.", result);
         RequireText(minimap, "foreach (var resource in pips)", "BattleRoot minimap resources must copy pips explicitly.", result);
+        RequireText(hudState, "public readonly record struct MinimapAlertPing", "HudLayer must expose a compact minimap alert ping presentation record.", result);
         RequireText(alerts, "_alertLineBuffer.Clear();", "RefreshAlerts must clear and reuse the alert line buffer.", result);
         RequireText(alerts, "_alertLineBuffer.Count < 4", "RefreshAlerts must cap HUD alert lines without LINQ Take.", result);
         RequireText(alerts, "_hud.SetAlerts(_alertLineBuffer)", "RefreshAlerts must pass reusable alert lines to HudLayer.", result);

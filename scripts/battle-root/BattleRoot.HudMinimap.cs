@@ -12,6 +12,8 @@ public partial class BattleRoot
     private readonly List<HudLayer.MinimapBuilding> _minimapBuildingSecondaryBuffer = [];
     private readonly List<HudLayer.MinimapResource> _minimapResourceBuffer = [];
     private readonly List<HudLayer.MinimapResource> _minimapResourceSecondaryBuffer = [];
+    private readonly List<HudLayer.MinimapAlertPing> _minimapAlertPingBuffer = [];
+    private readonly List<HudLayer.MinimapAlertPing> _minimapAlertPingSecondaryBuffer = [];
     private bool _useSecondaryMinimapHudBuffers;
 
     private void RefreshMinimap()
@@ -20,9 +22,11 @@ public partial class BattleRoot
         var units = _useSecondaryMinimapHudBuffers ? _minimapUnitSecondaryBuffer : _minimapUnitBuffer;
         var buildings = _useSecondaryMinimapHudBuffers ? _minimapBuildingSecondaryBuffer : _minimapBuildingBuffer;
         var resources = _useSecondaryMinimapHudBuffers ? _minimapResourceSecondaryBuffer : _minimapResourceBuffer;
+        var alertPings = _useSecondaryMinimapHudBuffers ? _minimapAlertPingSecondaryBuffer : _minimapAlertPingBuffer;
         units.Clear();
         buildings.Clear();
         resources.Clear();
+        alertPings.Clear();
 
         FillMinimapUnits(units);
         if (UseUnitDesignRuntime)
@@ -35,6 +39,7 @@ public partial class BattleRoot
         }
 
         FillMinimapResources(resources);
+        FillMinimapAlertPings(alertPings);
 
         _hud.SetMinimapState(
             _state.WorldSize,
@@ -43,7 +48,8 @@ public partial class BattleRoot
             buildings,
             resources,
             _state.FogOfWar.MaskTexture(),
-            _unitBattlefield.MinimapPips(PlayerSlotId.One));
+            _unitBattlefield.MinimapPips(PlayerSlotId.One),
+            alertPings);
     }
 
     private void FillMinimapUnits(List<HudLayer.MinimapUnit> result)
@@ -108,6 +114,26 @@ public partial class BattleRoot
                 resource.Position,
                 resource.Radius,
                 resource.RemainingRatio));
+        }
+    }
+
+    private void FillMinimapAlertPings(List<HudLayer.MinimapAlertPing> result)
+    {
+        for (var index = 0; index < _alerts.Count; index++)
+        {
+            var alert = _alerts[index];
+            if (alert.WorldPosition is not { } position)
+            {
+                continue;
+            }
+
+            var remainingRatio = 1 - Mathf.Clamp(alert.Age / alert.Lifetime, 0, 1);
+            if (remainingRatio <= 0.01f)
+            {
+                continue;
+            }
+
+            result.Add(new HudLayer.MinimapAlertPing(position, alert.Kind, remainingRatio));
         }
     }
 }
