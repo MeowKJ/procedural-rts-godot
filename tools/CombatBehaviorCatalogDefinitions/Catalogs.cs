@@ -176,6 +176,7 @@ static partial class Program
         {
             throw new InvalidOperationException("UnitDesign runtime definitions should project aircraft target metadata without legacy GameState unit definitions");
         }
+        AssertAircraftPathingDomain();
 
         var forbiddenSuperUnitTerms = new[] { "Hero", "Super", "Experimental", "Commander", "Ultimate", "T4", "T5" };
         var unitDesignTypeNames = UnitDesignCatalog.Designs.Values.Select(design => design.GetType().Name).ToArray();
@@ -340,5 +341,52 @@ static partial class Program
         {
             throw new InvalidOperationException("unit specs should convert into entity specs without mixing authoring faction metadata with runtime ownership");
         }
+    }
+
+    private static void AssertAircraftPathingDomain()
+    {
+        var blockers = new[] { new GridObstacle(2, 1) };
+        var terrain = new[] { new GridTerrain(1, 1, TerrainLayer.Water) };
+        var landPath = PathfindingMath.FindPathWithDebug(
+            32,
+            96,
+            288,
+            96,
+            320,
+            192,
+            64,
+            blockers,
+            MovementDomain.Land,
+            terrain);
+        var airPath = PathfindingMath.FindPathWithDebug(
+            32,
+            96,
+            288,
+            96,
+            320,
+            192,
+            64,
+            blockers,
+            MovementDomain.Air,
+            terrain);
+
+        if (airPath.Path.Count != 1
+            || !SamePathPoint(airPath.Path[0], 288, 96)
+            || airPath.RawCells.Count != 2)
+        {
+            throw new InvalidOperationException("air pathfinding should fly directly over terrain and static blockers");
+        }
+
+        if (landPath.Path.Count <= 1)
+        {
+            throw new InvalidOperationException("land pathfinding should route around the same terrain/blocker wall that aircraft ignore");
+        }
+    }
+
+    private static bool SamePathPoint(PathPoint point, float x, float y)
+    {
+        var dx = point.X - x;
+        var dy = point.Y - y;
+        return dx * dx + dy * dy <= 0.001f;
     }
 }
