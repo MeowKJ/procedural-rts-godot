@@ -50,44 +50,50 @@ public partial class SelectionController
             if (UnitBattlefield.PickHostileUnit(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } unitInstanceEnemy)
             {
                 UnitBattlefield.CommandAttackSelected(LocalPlayerSlotId, unitInstanceEnemy);
-                CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, unitInstanceEnemy.Position);
-                AudioCueRequested?.Invoke(TacticalAudioCue.Attack);
+                AcknowledgeCommand(CommandAcknowledgementKind.Attack, unitInstanceEnemy.Position, CommandAcknowledgementAudioCue.Attack);
             }
             else if (UnitBattlefield.PickHostileBuildingHoverProjection(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } unitInstanceBuildingEnemy)
             {
                 UnitBattlefield.CommandAttackSelected(LocalPlayerSlotId, unitInstanceBuildingEnemy.Id);
-                CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, unitInstanceBuildingEnemy.Position);
-                AudioCueRequested?.Invoke(TacticalAudioCue.Attack);
+                AcknowledgeCommand(CommandAcknowledgementKind.Attack, unitInstanceBuildingEnemy.Position, CommandAcknowledgementAudioCue.Attack);
             }
             else if (UnitBattlefield.PickAnyUnit(worldPoint, PickPaddingWorld()) is { } repairUnit
                 && UnitBattlefield.CanRepairSelected(LocalPlayerSlotId, repairUnit))
             {
                 var accepted = UnitBattlefield.CommandRepairSelected(LocalPlayerSlotId, repairUnit, out var status);
                 StatusChanged?.Invoke(status);
-                CommandAcknowledged?.Invoke(accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid, repairUnit.Position);
-                AudioCueRequested?.Invoke(accepted ? TacticalAudioCue.Move : TacticalAudioCue.Invalid);
+                AcknowledgeCommand(
+                    accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
+                    repairUnit.Position,
+                    accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
             }
             else if (UnitBattlefield.PickAnyBuildingHoverProjection(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } repairBuilding
                 && UnitBattlefield.CanRepairSelectedBuilding(LocalPlayerSlotId, repairBuilding.Id))
             {
                 var accepted = UnitBattlefield.CommandRepairSelectedBuilding(LocalPlayerSlotId, repairBuilding.Id, out var status);
                 StatusChanged?.Invoke(status);
-                CommandAcknowledged?.Invoke(accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid, repairBuilding.Position);
-                AudioCueRequested?.Invoke(accepted ? TacticalAudioCue.Move : TacticalAudioCue.Invalid);
+                AcknowledgeCommand(
+                    accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
+                    repairBuilding.Position,
+                    accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
             }
             else if (PickResourceField(worldPoint) is { } resourceField && HasSelectedHarvester())
             {
                 var accepted = UnitBattlefield.CommandHarvestSelected(LocalPlayerSlotId, resourceField, out var status);
                 StatusChanged?.Invoke(status);
-                CommandAcknowledged?.Invoke(accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid, resourceField.Position);
-                AudioCueRequested?.Invoke(accepted ? TacticalAudioCue.Move : TacticalAudioCue.Invalid);
+                AcknowledgeCommand(
+                    accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid,
+                    resourceField.Position,
+                    accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
             }
             else
             {
                 UnitBattlefield.CommandMoveSelected(LocalPlayerSlotId, worldPoint, State.WorldSize, moveMode);
                 StatusChanged?.Invoke(MoveModeStatus(moveMode));
-                CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Move, worldPoint);
-                AudioCueRequested?.Invoke(moveMode == MoveCommandMode.Attack ? TacticalAudioCue.Attack : TacticalAudioCue.Move);
+                AcknowledgeCommand(
+                    CommandAcknowledgementKind.Move,
+                    worldPoint,
+                    moveMode == MoveCommandMode.Attack ? CommandAcknowledgementAudioCue.Attack : CommandAcknowledgementAudioCue.Move);
             }
 
             ClearDrag();
@@ -100,14 +106,12 @@ public partial class SelectionController
         if (enemy is not null && hasSelectedUnits)
         {
             State.CommandAttackSelected(enemy);
-            CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, enemy.Position);
-            AudioCueRequested?.Invoke(TacticalAudioCue.Attack);
+            AcknowledgeCommand(CommandAcknowledgementKind.Attack, enemy.Position, CommandAcknowledgementAudioCue.Attack);
         }
         else if (State.PickHostileBuilding(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld()) is { } enemyBuilding && hasSelectedUnits)
         {
             State.CommandAttackSelected(enemyBuilding);
-            CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Attack, enemyBuilding.Position);
-            AudioCueRequested?.Invoke(TacticalAudioCue.Attack);
+            AcknowledgeCommand(CommandAcknowledgementKind.Attack, enemyBuilding.Position, CommandAcknowledgementAudioCue.Attack);
         }
         else if (PickResourceField(worldPoint) is { } resourceField && HasSelectedHarvester())
         {
@@ -123,8 +127,10 @@ public partial class SelectionController
             }
 
             StatusChanged?.Invoke(status);
-            CommandAcknowledged?.Invoke(accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid, resourceField.Position);
-            AudioCueRequested?.Invoke(accepted ? TacticalAudioCue.Move : TacticalAudioCue.Invalid);
+            AcknowledgeCommand(
+                accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid,
+                resourceField.Position,
+                accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
         }
         else
         {
@@ -132,8 +138,10 @@ public partial class SelectionController
             {
                 State.CommandMoveSelected(worldPoint, moveMode);
                 StatusChanged?.Invoke(MoveModeStatus(moveMode));
-                CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Move, worldPoint);
-                AudioCueRequested?.Invoke(moveMode == MoveCommandMode.Attack ? TacticalAudioCue.Attack : TacticalAudioCue.Move);
+                AcknowledgeCommand(
+                    CommandAcknowledgementKind.Move,
+                    worldPoint,
+                    moveMode == MoveCommandMode.Attack ? CommandAcknowledgementAudioCue.Attack : CommandAcknowledgementAudioCue.Move);
             }
             else
             {
@@ -143,8 +151,10 @@ public partial class SelectionController
                 {
                     var accepted = CommandUnitBattlefieldSelectedBuildingRally(rallyResource, out var status);
                     StatusChanged?.Invoke(status);
-                    CommandAcknowledged?.Invoke(accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid, rallyResource.Position);
-                    AudioCueRequested?.Invoke(accepted ? TacticalAudioCue.Move : TacticalAudioCue.Invalid);
+                    AcknowledgeCommand(
+                        accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
+                        rallyResource.Position,
+                        accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
                 }
                 else
                 {
@@ -154,14 +164,12 @@ public partial class SelectionController
                     if (accepted)
                     {
                         StatusChanged?.Invoke(status);
-                        CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Rally, worldPoint);
-                        AudioCueRequested?.Invoke(TacticalAudioCue.Move);
+                        AcknowledgeCommand(CommandAcknowledgementKind.Rally, worldPoint, CommandAcknowledgementAudioCue.Move);
                     }
                     else
                     {
                         StatusChanged?.Invoke(status);
-                        CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Invalid, worldPoint);
-                        AudioCueRequested?.Invoke(TacticalAudioCue.Invalid);
+                        AcknowledgeCommand(CommandAcknowledgementKind.Invalid, worldPoint, CommandAcknowledgementAudioCue.Invalid);
                     }
                 }
             }
@@ -174,6 +182,11 @@ public partial class SelectionController
     {
         CurrentMoveMode = mode;
         StatusChanged?.Invoke(MoveModeStatus(mode));
+    }
+
+    private void AcknowledgeCommand(CommandAcknowledgementKind kind, Vector2 position, CommandAcknowledgementAudioCue audioCue)
+    {
+        CommandAcknowledged?.Invoke(kind, position, audioCue);
     }
 
     private bool CommandUnitBattlefieldSelectedBuildingRally(Vector2 worldPoint, out string status)

@@ -27,6 +27,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "_presentationEvents.Raise(new CommandAcknowledgedEvent", "BattleRoot command acknowledgement callbacks must raise CommandAcknowledgedEvent data.", result);
         RequireText(process, "DrainPresentationEvents();", "BattleRoot process must drain presentation SimEvents before drawing command acknowledgement rings.", result);
         RequireText(battleRoot, "_commandAcknowledgements.Add(acknowledgement.Kind, acknowledgement.Position)", "BattleRoot command acknowledgement rings must be applied from drained SimEvents.", result);
+        RequireText(battleRoot, "PlayCommandAcknowledgementAudio(acknowledgement.AudioCue", "BattleRoot command audio cues must be applied from drained CommandAcknowledgedEvent data.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Commands.cs"), "AcknowledgeCommand(CommandAcknowledgementKind.Attack", "SelectionController command branches must send attack feedback through command acknowledgement events.", result);
+        ForbidText(ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Commands.cs"), "AudioCueRequested?.Invoke", "SelectionController command branches must not play command audio directly.", result);
         ForbidText(battleRoot, "CommandAcknowledged = AddCommandAcknowledgement", "BattleRoot command acknowledgement callbacks must not draw rings directly.", result);
         RequireText(battleRoot, "List<UnitInstance> _sandboxLaunchUnitBuffer", "BattleRoot sandbox launch selection must reuse unit storage.", result);
         RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
