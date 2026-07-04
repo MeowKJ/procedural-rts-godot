@@ -31,7 +31,13 @@ static class UnitBattlefieldProductionAllocationReviewGate
 
         var summary = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionQueueSummary.cs");
         RequireText(summary, "CollectQueuedProductionSummary(playerSlotId, _productionQueueSummaryBuffer)", "Production queue summary and cancel paths must fill reusable queue storage.", result);
-        RequireText(summary, "_productionQueueSummaryBuffer.Sort(CompareProductionQueueSummaryEntries)", "Production queue summary must sort reusable queue storage in place.", result);
+        RequireText(summary, "queueEntries.Sort(CompareProductionQueueSummaryEntries)", "Production queue summary must sort reusable queue storage in place.", result);
+        RequireText(summary, "ProductionQueueSummaryForSelectedProducers", "Production queue summary must expose a selected-producer queue path.", result);
+        RequireText(summary, "HasQueuedProductionForSelectedProducers", "Production queue cancel controls must expose selected-producer queue state.", result);
+        RequireText(summary, "CancelFirstProductionForSelectedProducers", "Production queue cancel must expose a selected-producer cancel path.", result);
+        RequireText(summary, "CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer)", "Selected producer queue paths must fill reusable producer id storage.", result);
+        RequireText(summary, "CollectQueuedProductionSummary(playerSlotId, _selectedProductionProducerIdBuffer, _productionQueueSummaryBuffer)", "Selected producer queue paths must fill reusable queue storage.", result);
+        RequireText(summary, "CollectQueuedProductionSummary(\n        PlayerSlotId playerSlotId,\n        IReadOnlyList<int> producerBuildingIds,\n        List<ProductionQueueSummaryEntry> result)", "Selected producer queue paths must use caller-provided producer ids without allocating filters.", result);
         ForbidText(summary, ".SelectMany(buildingId => BuildingProductionQueue(buildingId).Select(item => new", "Production queue summary must not allocate anonymous queue entries.", result);
         ForbidText(summary, ".OrderBy(entry => entry.Item.Id)\n            .ToList();", "Production queue summary must not allocate ordered queue lists.", result);
         ForbidText(summary, ".Where(buildingId => BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId)", "Production queue summary paths must not allocate LINQ building filters.", result);

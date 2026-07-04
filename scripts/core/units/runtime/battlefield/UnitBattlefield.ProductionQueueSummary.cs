@@ -9,14 +9,40 @@ public sealed partial class UnitBattlefield
     public bool CancelFirstProduction(PlayerSlotId playerSlotId, out string status)
     {
         CollectQueuedProductionSummary(playerSlotId, _productionQueueSummaryBuffer);
-        if (_productionQueueSummaryBuffer.Count == 0)
+        return CancelFirstQueuedProduction(playerSlotId, _productionQueueSummaryBuffer, out status);
+    }
+
+    public bool CancelFirstProductionForSelectedProducers(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedBuildingIds,
+        out bool hasSelectedProducers,
+        out string status)
+    {
+        CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer);
+        hasSelectedProducers = _selectedProductionProducerIdBuffer.Count > 0;
+        if (!hasSelectedProducers)
         {
             status = GameText.T("production.noneQueued");
             return false;
         }
 
-        _productionQueueSummaryBuffer.Sort(CompareProductionQueueSummaryEntries);
-        var first = _productionQueueSummaryBuffer[0];
+        CollectQueuedProductionSummary(playerSlotId, _selectedProductionProducerIdBuffer, _productionQueueSummaryBuffer);
+        return CancelFirstQueuedProduction(playerSlotId, _productionQueueSummaryBuffer, out status);
+    }
+
+    private bool CancelFirstQueuedProduction(
+        PlayerSlotId playerSlotId,
+        List<ProductionQueueSummaryEntry> queueEntries,
+        out string status)
+    {
+        if (queueEntries.Count == 0)
+        {
+            status = GameText.T("production.noneQueued");
+            return false;
+        }
+
+        queueEntries.Sort(CompareProductionQueueSummaryEntries);
+        var first = queueEntries[0];
         var spec = UnitDesignCatalog.Spec(first.Item.DesignId);
         var refund = Mathf.RoundToInt(spec.Stats.Cost * 0.5f);
         SyncBuildingTargetEntity(first.BuildingId);
@@ -47,20 +73,74 @@ public sealed partial class UnitBattlefield
         return false;
     }
 
+    public bool HasQueuedProductionForSelectedProducers(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedBuildingIds,
+        out bool hasSelectedProducers)
+    {
+        CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer);
+        hasSelectedProducers = _selectedProductionProducerIdBuffer.Count > 0;
+        if (!hasSelectedProducers)
+        {
+            return false;
+        }
+
+        return HasQueuedProduction(playerSlotId, _selectedProductionProducerIdBuffer);
+    }
+
     public string ProductionQueueSummary(PlayerSlotId playerSlotId)
     {
         CollectQueuedProductionSummary(playerSlotId, _productionQueueSummaryBuffer);
-        if (_productionQueueSummaryBuffer.Count == 0)
+        return ProductionQueueSummary(_productionQueueSummaryBuffer);
+    }
+
+    public string ProductionQueueSummaryForSelectedProducers(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedBuildingIds,
+        out bool hasSelectedProducers,
+        out bool hasQueuedProduction)
+    {
+        CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer);
+        hasSelectedProducers = _selectedProductionProducerIdBuffer.Count > 0;
+        if (!hasSelectedProducers)
+        {
+            hasQueuedProduction = false;
+            return GameText.T("ui.queue.empty");
+        }
+
+        CollectQueuedProductionSummary(playerSlotId, _selectedProductionProducerIdBuffer, _productionQueueSummaryBuffer);
+        hasQueuedProduction = _productionQueueSummaryBuffer.Count > 0;
+        return ProductionQueueSummary(_productionQueueSummaryBuffer);
+    }
+
+    private bool HasQueuedProduction(PlayerSlotId playerSlotId, IReadOnlyList<int> producerBuildingIds)
+    {
+        for (var index = 0; index < producerBuildingIds.Count; index++)
+        {
+            var buildingId = producerBuildingIds[index];
+            if (BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId
+                && BuildingProductionQueue(buildingId).Count > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string ProductionQueueSummary(List<ProductionQueueSummaryEntry> queueEntries)
+    {
+        if (queueEntries.Count == 0)
         {
             return GameText.T("ui.queue.empty");
         }
 
-        _productionQueueSummaryBuffer.Sort(CompareProductionQueueSummaryEntries);
-        var first = _productionQueueSummaryBuffer[0];
+        queueEntries.Sort(CompareProductionQueueSummaryEntries);
+        var first = queueEntries[0];
         var spec = UnitDesignCatalog.Spec(first.Item.DesignId);
         var progress = spec.Production is null ? 0 : Mathf.RoundToInt(Mathf.Clamp(first.Item.Progress / spec.Production.Duration, 0, 1) * 100);
         var refund = Mathf.RoundToInt(spec.Stats.Cost * 0.5f);
-        return GameText.Format("ui.queue.summary", spec.Label.ToUpperInvariant(), progress, _productionQueueSummaryBuffer.Count, refund);
+        return GameText.Format("ui.queue.summary", spec.Label.ToUpperInvariant(), progress, queueEntries.Count, refund);
     }
 
     private void CollectQueuedProductionSummary(PlayerSlotId playerSlotId, List<ProductionQueueSummaryEntry> result)
@@ -80,6 +160,28 @@ public sealed partial class UnitBattlefield
             for (var index = 0; index < queue.Count; index++)
             {
                 result.Add(new ProductionQueueSummaryEntry(identity.LegacyBuildingId, queue[index]));
+            }
+        }
+    }
+
+    private void CollectQueuedProductionSummary(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> producerBuildingIds,
+        List<ProductionQueueSummaryEntry> result)
+    {
+        result.Clear();
+        for (var producerIndex = 0; producerIndex < producerBuildingIds.Count; producerIndex++)
+        {
+            var buildingId = producerBuildingIds[producerIndex];
+            if (BuildingIdentity(buildingId)?.PlayerSlotId != playerSlotId)
+            {
+                continue;
+            }
+
+            var queue = BuildingProductionQueue(buildingId);
+            for (var queueIndex = 0; queueIndex < queue.Count; queueIndex++)
+            {
+                result.Add(new ProductionQueueSummaryEntry(buildingId, queue[queueIndex]));
             }
         }
     }

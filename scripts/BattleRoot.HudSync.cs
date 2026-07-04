@@ -23,25 +23,38 @@ public partial class BattleRoot
     }
     private void RefreshCommandCard()
     {
-        _hud.SetCommandCardState(UseUnitDesignRuntime
-            ? RuntimeProductionCommandCardStates()
-            : _unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
-        _hud.SetProductionQueueSummary(_unitBattlefield.ProductionQueueSummary(PlayerSlotId.One), _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
+        if (UseUnitDesignRuntime)
+        {
+            CollectSelectedProductionBuildingIds();
+            _hud.SetCommandCardState(RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer));
+            _hud.SetProductionQueueSummary(
+                RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
+                canCancel);
+            return;
+        }
+
+        _hud.SetCommandCardState(_unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
+        _hud.SetProductionQueueSummary(
+            _unitBattlefield.ProductionQueueSummary(PlayerSlotId.One),
+            _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
     }
 
-    private IReadOnlyList<ProductionOptionState> RuntimeProductionCommandCardStates()
+    private void CollectSelectedProductionBuildingIds()
     {
         _selectedProductionBuildingIdBuffer.Clear();
         foreach (var building in _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One))
         {
             _selectedProductionBuildingIdBuffer.Add(building.Id);
         }
+    }
 
-        if (_selectedProductionBuildingIdBuffer.Count > 0)
+    private IReadOnlyList<ProductionOptionState> RuntimeProductionCommandCardStates(IReadOnlyList<int> selectedBuildingIds)
+    {
+        if (selectedBuildingIds.Count > 0)
         {
             var selectedStates = _unitBattlefield.ProductionDesignOptionStatesForSelectedProducers(
                 PlayerSlotId.One,
-                _selectedProductionBuildingIdBuffer,
+                selectedBuildingIds,
                 out var hasSelectedProducers);
             if (hasSelectedProducers)
             {
@@ -52,9 +65,48 @@ public partial class BattleRoot
         return _unitBattlefield.ProductionDesignOptionStates(PlayerSlotId.One);
     }
 
+    private string RuntimeProductionQueueSummary(IReadOnlyList<int> selectedBuildingIds, out bool canCancel)
+    {
+        if (selectedBuildingIds.Count > 0)
+        {
+            var selectedSummary = _unitBattlefield.ProductionQueueSummaryForSelectedProducers(
+                PlayerSlotId.One,
+                selectedBuildingIds,
+                out var hasSelectedProducers,
+                out var hasQueuedProduction);
+            if (hasSelectedProducers)
+            {
+                canCancel = hasQueuedProduction;
+                return selectedSummary;
+            }
+        }
+
+        canCancel = _unitBattlefield.HasQueuedProduction(PlayerSlotId.One);
+        return _unitBattlefield.ProductionQueueSummary(PlayerSlotId.One);
+    }
+
     private void OnCancelProductionRequested()
     {
-        _unitBattlefield.CancelFirstProduction(PlayerSlotId.One, out var status);
+        CollectSelectedProductionBuildingIds();
+        string status;
+        if (_selectedProductionBuildingIdBuffer.Count > 0)
+        {
+            _unitBattlefield.CancelFirstProductionForSelectedProducers(
+                PlayerSlotId.One,
+                _selectedProductionBuildingIdBuffer,
+                out var hasSelectedProducers,
+                out status);
+            if (hasSelectedProducers)
+            {
+                _hud.SetStatus(status);
+                _hud.SetProductionStatus(status);
+                RefreshCommandCard();
+                return;
+            }
+        }
+
+        _unitBattlefield.CancelFirstProduction(PlayerSlotId.One, out status);
+
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
         RefreshCommandCard();

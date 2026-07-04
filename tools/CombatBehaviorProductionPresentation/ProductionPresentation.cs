@@ -205,6 +205,8 @@ static partial class Program
             throw new InvalidOperationException("multi-selected Dog producer command card should union selected producer lanes and exclude unselected factories");
         }
 
+        AssertSelectedProducerQueueSummaryAndCancel();
+
         var trainedDesignIds = new List<string>();
         productionPresentationBattlefield.ProductionCompleted += (_, _, unit) => trainedDesignIds.Add(unit.Spec.Id);
         productionPresentationBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Allied);
