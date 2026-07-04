@@ -8,7 +8,7 @@ namespace ProceduralRts.Core;
 /// MovementSystem/SeparationSystem and plans only around static EntityWorld
 /// blockers such as buildings, using PathfindingMath's LOS simplification.
 /// </summary>
-public sealed class PathfindingSystem : ISimSystem
+public sealed partial class PathfindingSystem : ISimSystem
 {
     private const float SamePointDistanceSquared = 1f;
     private readonly float _cellSize;
@@ -65,6 +65,7 @@ public sealed class PathfindingSystem : ISimSystem
             if (entity.Components.TryGet<PathfindingComponentState>(out var path)
                 && IsFollowingCurrentPath(moveTarget, path))
             {
+                AdvanceArcTurnCornerIfNeeded(entity, movement, path);
                 continue;
             }
 
@@ -282,8 +283,9 @@ public sealed class PathfindingSystem : ISimSystem
             return;
         }
 
-        var waypoint = path.Waypoints[path.NextWaypointIndex];
-        entity.Components.Set(path with { NextWaypointIndex = path.NextWaypointIndex + 1 });
+        var waypointIndex = SelectNextWaypointIndex(entity, path);
+        var waypoint = path.Waypoints[waypointIndex];
+        entity.Components.Set(path with { NextWaypointIndex = waypointIndex + 1 });
         entity.Components.Set(movement with { MoveTarget = new Vector2(waypoint.X, waypoint.Y) });
     }
 
