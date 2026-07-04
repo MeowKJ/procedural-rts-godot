@@ -31,6 +31,7 @@ static partial class Program
         RunAuthoredContentScenario();
         RunMapAuthoringScenario();
         RunEntitySharedCorridorScenario();
+        RunEntityArcTurnCornerPathingScenario();
         RunGroupMoveScenario();
         RunMovementFeelReproductionScenario();
         RunAnchoredGroupAttackSlottingScenario();
