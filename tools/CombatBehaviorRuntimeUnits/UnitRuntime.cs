@@ -101,6 +101,43 @@ static partial class Program
             throw new InvalidOperationException("new unit battlefield should box-select UnitInstance records by collision radius before movement assigns formation slots");
         }
 
+        var selectionHotkeyBattlefield = new UnitBattlefield();
+        var armyHotkeyGuard = selectionHotkeyBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(100, 100));
+        var armyHotkeyRocket = selectionHotkeyBattlefield.Spawn("dog.rocket", PlayerSlotId.One, new Vector2(140, 100));
+        var armyHotkeyIdleHarvesterA = selectionHotkeyBattlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(180, 100));
+        var armyHotkeyIdleHarvesterB = selectionHotkeyBattlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(220, 100));
+        var armyHotkeyBusyHarvester = selectionHotkeyBattlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(260, 100));
+        var armyHotkeyEnemy = selectionHotkeyBattlefield.Spawn("cat.tank", PlayerSlotId.Two, new Vector2(320, 100));
+        armyHotkeyBusyHarvester.HarvesterMode = HarvesterMode.Gathering;
+        var selectArmyCommandsBefore = selectionHotkeyBattlefield.AppliedInputCommandCount;
+        var selectedArmyCount = selectionHotkeyBattlefield.SelectArmy(PlayerSlotId.One);
+        if (selectedArmyCount != 2
+            || selectionHotkeyBattlefield.AppliedInputCommandCount != selectArmyCommandsBefore + 1
+            || !armyHotkeyGuard.Selected
+            || !armyHotkeyRocket.Selected
+            || armyHotkeyIdleHarvesterA.Selected
+            || armyHotkeyBusyHarvester.Selected
+            || armyHotkeyEnemy.Selected)
+        {
+            throw new InvalidOperationException("select-all-army hotkey should route through UnitBattlefield selection commands while excluding harvesters and enemy units");
+        }
+
+        var idleHarvesterCommandsBefore = selectionHotkeyBattlefield.AppliedInputCommandCount;
+        var selectedIdleHarvesterA = selectionHotkeyBattlefield.SelectNextIdleHarvester(PlayerSlotId.One);
+        var selectedIdleHarvesterB = selectionHotkeyBattlefield.SelectNextIdleHarvester(PlayerSlotId.One);
+        if (selectedIdleHarvesterA?.Id != armyHotkeyIdleHarvesterA.Id
+            || selectedIdleHarvesterB?.Id != armyHotkeyIdleHarvesterB.Id
+            || selectionHotkeyBattlefield.AppliedInputCommandCount != idleHarvesterCommandsBefore + 2
+            || armyHotkeyGuard.Selected
+            || armyHotkeyRocket.Selected
+            || armyHotkeyIdleHarvesterA.Selected
+            || !armyHotkeyIdleHarvesterB.Selected
+            || armyHotkeyBusyHarvester.Selected
+            || armyHotkeyEnemy.Selected)
+        {
+            throw new InvalidOperationException("idle-harvester cycle hotkey should select only the next idle local harvester through EntityWorld selection commands");
+        }
+
         var selectedBeforeMove = newUnitBattlefield.SelectedUnits(PlayerSlotId.One).ToList();
         var firstBeforeMove = selectedBeforeMove[0].Position;
         newUnitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Allied);

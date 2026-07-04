@@ -31,6 +31,9 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         RequireText(commands, "ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect)", "Rect selection must compute economy intent without temporary unit lists.", result);
         RequireText(commands, "PrepareUnitSelectionBuffer(playerSlotId, additive)", "Rect selection must reuse the existing selection entity buffer.", result);
         RequireText(commands, "CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer)", "Id selection must fill the reusable selected-unit buffer.", result);
+        RequireText(commands, "public int SelectArmy(PlayerSlotId playerSlotId)", "Select-all-army must stay on the UnitBattlefield selection command path.", result);
+        RequireText(commands, "public UnitInstance? SelectNextIdleHarvester(PlayerSlotId playerSlotId)", "Idle-harvester cycle must stay on the UnitBattlefield selection command path.", result);
+        RequireText(commands, "private static bool IsIdleHarvester(PlayerSlotId playerSlotId, UnitInstance unit)", "Idle-harvester cycle must use an explicit idle harvester predicate.", result);
         RequireText(commands, "return _selectionUnitBuffer;", "Id selection must return the reusable selected-unit buffer used by current callers.", result);
         ForbidText(commands, "var unitsInRect = Units", "Rect selection must not allocate a units-in-rect list.", result);
         ForbidText(commands, "var economyUnits = unitsInRect", "Rect selection must not allocate an economy-unit list.", result);

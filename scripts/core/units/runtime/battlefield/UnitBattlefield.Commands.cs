@@ -40,6 +40,59 @@ public sealed partial class UnitBattlefield
         return _selectionUnitBuffer;
     }
 
+    public int SelectArmy(PlayerSlotId playerSlotId)
+    {
+        _selectionEntityBuffer.Clear();
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Hp > 0
+                && !IsHarvester(unit))
+            {
+                _selectionEntityBuffer.Add(unit.EntityId);
+            }
+        }
+
+        return SubmitSelectionBuffer(playerSlotId);
+    }
+
+    public UnitInstance? SelectNextIdleHarvester(PlayerSlotId playerSlotId)
+    {
+        var selectedIdleSeen = false;
+        UnitInstance? firstIdleHarvester = null;
+        UnitInstance? nextIdleHarvester = null;
+        foreach (var unit in Units)
+        {
+            if (!IsIdleHarvester(playerSlotId, unit))
+            {
+                continue;
+            }
+
+            firstIdleHarvester ??= unit;
+            if (selectedIdleSeen)
+            {
+                nextIdleHarvester = unit;
+                break;
+            }
+
+            if (unit.Selected)
+            {
+                selectedIdleSeen = true;
+            }
+        }
+
+        var target = nextIdleHarvester ?? firstIdleHarvester;
+        if (target is null)
+        {
+            return null;
+        }
+
+        _selectionEntityBuffer.Clear();
+        _selectionEntityBuffer.Add(target.EntityId);
+        SubmitSelectionBuffer(playerSlotId);
+        return target;
+    }
+
     public void CommandMoveSelected(PlayerSlotId playerSlotId, Vector2 target, Vector2 worldSize, MoveCommandMode mode = MoveCommandMode.Direct)
     {
         CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);
@@ -84,6 +137,15 @@ public sealed partial class UnitBattlefield
             target,
             mode));
         return _unitCommandBuffer.Count;
+    }
+
+    private static bool IsIdleHarvester(PlayerSlotId playerSlotId, UnitInstance unit)
+    {
+        return unit.PlayerSlotId == playerSlotId
+            && unit.Hp > 0
+            && IsHarvester(unit)
+            && unit.HarvesterMode == HarvesterMode.Idle
+            && unit.MoveTarget is null;
     }
 
     public void CommandAttackSelected(PlayerSlotId playerSlotId, UnitInstance target)
