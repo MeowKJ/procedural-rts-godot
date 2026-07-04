@@ -23,6 +23,7 @@ static class CombatChemistryReviewGate
         RequireText(ammo, "public string DamageElementId", "AmmoDefinition must carry a data-driven damage element id.", result);
         RequireText(ammo, "public CounterRuleProfile CounterRules", "AmmoDefinition must carry data-driven counter rules.", result);
         RequireText(ammo, "DamageElementCatalog.For(this.DamageElementId)", "AmmoDefinition must validate its damage element id through the catalog.", result);
+        RequireAmmoElementMappings(root, result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "UnitSpec.cs"), "TargetTraitProfile? TargetTraits", "StatsSpec must carry target trait profiles.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs"), "DamageResolver.Resolve(ammo", "Generic weapon damage must route through DamageResolver.", result);
         RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs")), "DamageResolver.Resolve(", "Legacy GameState damage must route through DamageResolver.", result);
@@ -37,5 +38,14 @@ static class CombatChemistryReviewGate
             ForbidText(File.ReadAllText(path), "DamageElementIds.", $"{relative} must not branch on damage element ids directly; route damage policy through DamageResolver.", result);
             ForbidText(File.ReadAllText(path), "TargetTrait.", $"{relative} must not branch on target traits directly; route counter policy through DamageResolver.", result);
         }
+    }
+
+    private static void RequireAmmoElementMappings(string root, GateResult result)
+    {
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "combat", "ammo", "NeedleDartAmmo.cs"), "DamageElementId: DamageElementIds.Kinetic", "NeedleDart must explicitly map to Kinetic.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "combat", "ammo", "BallisticCannonAmmo.cs"), "DamageElementId: DamageElementIds.Explosive", "BallisticCannon must explicitly map to Explosive.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "combat", "ammo", "SeekerRocketAmmo.cs"), "DamageElementId: DamageElementIds.Explosive", "SeekerRocket must explicitly map to Explosive.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "combat", "ammo", "IonBeamAmmo.cs"), "DamageElementId: DamageElementIds.Energy", "IonBeam must explicitly map to Energy.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "combat", "ammo", "ElectromagneticLanceAmmo.cs"), "DamageElementId: DamageElementIds.Energy", "ElectromagneticLance must explicitly map to Energy.", result);
     }
 }

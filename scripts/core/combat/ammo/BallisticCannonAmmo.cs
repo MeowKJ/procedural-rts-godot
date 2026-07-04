@@ -25,6 +25,7 @@ public sealed class BallisticCannonAmmo : AmmoDesign
                 armor: new() { [ArmorTag.Infantry] = 0.68f, [ArmorTag.Vehicle] = 1.05f, [ArmorTag.Structure] = 1.05f, [ArmorTag.Ship] = 1.05f, [ArmorTag.Aircraft] = 0.36f }),
             SpecialAttackHook.Targeting | SpecialAttackHook.Impact,
             SplashRadius: 42f,
-            SplashMinDamageRatio: 0.32f);
+            SplashMinDamageRatio: 0.32f,
+            DamageElementId: DamageElementIds.Explosive);
     }
 }

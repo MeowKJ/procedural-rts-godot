@@ -23,6 +23,7 @@ public sealed class IonBeamAmmo : AmmoDesign
             CombatProfileDesign.DamageProfile(
                 weights: new() { [UnitWeightClass.Light] = 1.78f, [UnitWeightClass.Medium] = 0.92f, [UnitWeightClass.Heavy] = 0.82f },
                 armor: new() { [ArmorTag.Infantry] = 1.2f, [ArmorTag.Vehicle] = 0.92f, [ArmorTag.Structure] = 0.78f, [ArmorTag.Ship] = 0.88f, [ArmorTag.Aircraft] = 0.94f }),
-            SpecialAttackHook.Beam | SpecialAttackHook.Impact);
+            SpecialAttackHook.Beam | SpecialAttackHook.Impact,
+            DamageElementId: DamageElementIds.Energy);
     }
 }
