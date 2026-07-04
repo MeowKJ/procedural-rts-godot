@@ -79,6 +79,7 @@ public partial class BattleRoot : Node2D
     private CameraController _camera = null!;
     private BuildPlacementController _buildPlacement = null!;
     private SelectionController _selection = null!;
+    private UnitBodyBatchLayer _unitBodyBatchLayer = null!;
     private Node2D _unitInstanceRoot = null!;
     private CombatEffectsLayer _combatEffects = null!;
     private CommandAcknowledgementLayer _commandAcknowledgements = null!;

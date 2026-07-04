@@ -101,6 +101,17 @@ public partial class BattleRoot
             _unitViews[unit.Id] = view;
         };
 
+        _unitBodyBatchLayer = new UnitBodyBatchLayer
+        {
+            Name = "UnitBodyBatch",
+            Units = _unitBattlefield.Units,
+            Viewer = PlayerSlotId.One,
+            Relations = _unitBattlefield.Relations,
+            ProjectionProvider = id => _unitBattlefield.UnitProjection(id),
+            VisualThemeProvider = () => _state.VisualTheme,
+        };
+        AddChild(_unitBodyBatchLayer);
+
         _unitInstanceRoot = new Node2D { Name = "UnitInstances" };
         AddChild(_unitInstanceRoot);
         ConfigureUnitBattlefield();

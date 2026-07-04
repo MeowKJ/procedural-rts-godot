@@ -16,6 +16,7 @@ public partial class UnitInstanceView : Node2D
     public required PlayerRelationTable Relations { get; init; }
     public Func<EntityProjection?>? ProjectionProvider { get; init; }
     public Func<WorldVisualThemeState>? VisualThemeProvider { get; init; }
+    public bool DrawBodyArt { get; init; } = true;
     private EntityProjection? _projection;
 
     public override void _Process(double delta)
@@ -37,12 +38,9 @@ public partial class UnitInstanceView : Node2D
     {
         var owner = _projection?.Owner.ToPlayerSlot() ?? Unit.PlayerSlotId;
         var selected = _projection?.Selected ?? Unit.Selected;
-        var facing = _projection?.Facing ?? Unit.Facing;
         var hp = _projection?.Hp ?? Unit.Hp;
         var maxHp = _projection?.MaxHp ?? Unit.Spec.Stats.MaxHp;
         var relation = Relations.Relation(Viewer, owner);
-        var palette = EntityRenderPalette.SoftOldCity(SoftOldCityPalette.PlayerColor(owner));
-        var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());
         var relationAccent = SoftOldCityPalette.RelationColor(relation);
         var pulse = 0.55f + Mathf.Sin((float)Time.GetTicksMsec() / 250f + Unit.Id) * 0.25f;
         var radius = Unit.Spec.Collision.Radius;
@@ -62,15 +60,22 @@ public partial class UnitInstanceView : Node2D
             DrawArc(Vector2.Zero, radius + 18 + Unit.CommandPulse * 10, 0, Mathf.Tau, OverlayArcSegments, new Color(relationAccent, 0.36f), 1.0f, CrispOverlayStroke);
         }
 
-        UnitVisualRenderer.DrawUnitArtRecipe(
-            this,
-            Unit.Spec.Art,
-            palette,
-            Vector2.Zero,
-            1,
-            facing,
-            UnitMountFacingSource.FromRuntimeMounts(Unit.WeaponMounts),
-            environmentTone);
+        if (DrawBodyArt)
+        {
+            var facing = _projection?.Facing ?? Unit.Facing;
+            var palette = EntityRenderPalette.SoftOldCity(SoftOldCityPalette.PlayerColor(owner));
+            var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());
+            UnitVisualRenderer.DrawUnitArtRecipe(
+                this,
+                Unit.Spec.Art,
+                palette,
+                Vector2.Zero,
+                1,
+                facing,
+                UnitMountFacingSource.FromRuntimeMounts(Unit.WeaponMounts),
+                environmentTone);
+        }
+
         DrawStatusGlyph(radius);
         DrawVeterancyGlyph(radius, _projection?.VeterancyRank ?? 0);
         DrawCargo(radius);
