@@ -14,7 +14,7 @@ public sealed class CatShieldVehicle : UnitDesign
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Shield, UnitRoleTag.Support };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 190, 420, 250, 2);
-    public override MovementSpec Movement => new(MovementDomain.Land, 108, 6.1f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 108, 6.1f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(26, 1.45f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

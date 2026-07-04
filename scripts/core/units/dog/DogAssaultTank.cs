@@ -14,7 +14,7 @@ public sealed class DogAssaultTank : UnitDesign
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Assault, UnitRoleTag.Siege };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 185, 460, 360, 2);
-    public override MovementSpec Movement => new(MovementDomain.Land, 116, 6.4f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 116, 6.4f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(26, 1.45f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

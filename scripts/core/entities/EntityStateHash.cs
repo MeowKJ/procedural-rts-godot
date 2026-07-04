@@ -86,6 +86,7 @@ public static partial class EntityStateHash
             SelectableComponentState selectable => Add(Add(hash, selectable.Selected ? 1 : 0), selectable.AlertPulse),
             CommandableComponentState commandable => AddCommandable(hash, commandable),
             MovementComponentState movement => AddMovement(hash, movement),
+            MovementProfileComponentState movementProfile => AddMovementProfile(hash, movementProfile),
             PatrolOrderComponentState patrol => AddPatrolOrder(hash, patrol),
             GuardOrderComponentState guard => AddGuardOrder(hash, guard),
             PathfindingComponentState pathfinding => AddPathfinding(hash, pathfinding),
@@ -153,6 +154,14 @@ public static partial class EntityStateHash
         hash = AddNullableVector(hash, state.MoveTarget);
         hash = AddNullableVector(hash, state.FormationSlot);
         return Add(hash, state.FireAnchorRemaining);
+    }
+
+    private static ulong AddMovementProfile(ulong hash, MovementProfileComponentState state)
+    {
+        hash = Add(hash, state.MaxSpeed);
+        hash = Add(hash, state.ArriveRadius);
+        hash = Add(hash, state.TurnRate);
+        return Add(hash, (int)state.TurnMode);
     }
 
     private static ulong AddPatrolOrder(ulong hash, PatrolOrderComponentState state)

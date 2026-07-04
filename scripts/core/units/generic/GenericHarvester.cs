@@ -14,7 +14,7 @@ public sealed class GenericHarvester : UnitDesign
     public override IconGlyph Icon => IconGlyph.Harvester;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Economy, UnitRoleTag.Worker };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 180, 280, 620, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 92, 5.5f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 92, 5.5f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(25, 1.6f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

@@ -62,9 +62,10 @@ public static partial class SimInvariants
         {
             CheckFinite(entity, "MovementProfile.MaxSpeed", profile.MaxSpeed, violations);
             CheckFinite(entity, "MovementProfile.ArriveRadius", profile.ArriveRadius, violations);
-            if (profile.MaxSpeed < 0 || profile.ArriveRadius < 0)
+            CheckFinite(entity, "MovementProfile.TurnRate", profile.TurnRate, violations);
+            if (profile.MaxSpeed < 0 || profile.ArriveRadius < 0 || profile.TurnRate < 0)
             {
-                Add(entity, "MovementProfile", "speed and arrive radius must be non-negative", violations);
+                Add(entity, "MovementProfile", "speed, arrive radius, and turn rate must be non-negative", violations);
             }
         }
 

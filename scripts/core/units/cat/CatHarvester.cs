@@ -14,7 +14,7 @@ public sealed class CatHarvester : UnitDesign
     public override IconGlyph Icon => IconGlyph.Harvester;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Economy, UnitRoleTag.Worker };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 176, 285, 125, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 96, 5.8f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 96, 5.8f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(25, 1.5f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

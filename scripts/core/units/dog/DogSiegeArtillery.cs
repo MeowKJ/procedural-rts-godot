@@ -14,7 +14,7 @@ public sealed class DogSiegeArtillery : UnitDesign
     public override IconGlyph Icon => IconGlyph.Turret;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Siege, UnitRoleTag.Support };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 135, 540, 455, 3);
-    public override MovementSpec Movement => new(MovementDomain.Land, 86, 4.9f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 86, 4.9f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(25, 1.8f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

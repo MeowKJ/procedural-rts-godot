@@ -14,7 +14,7 @@ public sealed class CatRepairVehicle : UnitDesign
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Repair, UnitRoleTag.Support };
     public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 108, 390, 160, 2);
-    public override MovementSpec Movement => new(MovementDomain.Land, 118, 7.2f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 118, 7.2f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(20, 1.2f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

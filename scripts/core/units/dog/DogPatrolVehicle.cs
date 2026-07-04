@@ -14,7 +14,7 @@ public sealed class DogPatrolVehicle : UnitDesign
     public override IconGlyph Icon => IconGlyph.Move;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Scout, UnitRoleTag.AntiAir };
     public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 92, 460, 235, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 156, 8.8f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 156, 8.8f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(18, 1.1f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

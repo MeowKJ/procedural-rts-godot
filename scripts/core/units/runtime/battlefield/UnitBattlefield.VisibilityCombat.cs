@@ -184,13 +184,17 @@ public sealed partial class UnitBattlefield
         var desiredDirection = toTarget / MathF.Max(distance, 0.001f);
         var slowRadius = MathF.Max(unit.Spec.Collision.Radius * 2.6f, 42);
         var speedScale = Mathf.Clamp(distance / slowRadius, 0.22f, 1f);
-        var desiredVelocity = desiredDirection * unit.Spec.Movement.Speed * speedScale;
+        var desiredAngle = desiredDirection.Angle();
+        var facing = TurnModeMath.NextFacing(unit.Facing, desiredAngle, unit.Spec.Movement.TurnRate, dt, unit.Spec.Movement.TurnMode);
+        var movementDirection = TurnModeMath.MovementDirection(unit.Spec.Movement.TurnMode, desiredDirection, facing);
+        var turnSpeedScale = TurnModeMath.SpeedScale(unit.Spec.Movement.TurnMode, facing, desiredAngle);
+        var desiredVelocity = movementDirection * unit.Spec.Movement.Speed * speedScale * turnSpeedScale;
         var acceleration = unit.Spec.Movement.Acceleration > 0
             ? unit.Spec.Movement.Acceleration
             : unit.Spec.Movement.Speed * DefaultAccelerationMultiplier;
         unit.Velocity = unit.Velocity.MoveToward(desiredVelocity, acceleration * dt);
         unit.Position += unit.Velocity * dt;
-        unit.Facing = RotateToward(unit.Facing, unit.Velocity.Angle(), unit.Spec.Movement.TurnRate * dt);
+        unit.Facing = facing;
 
         for (var index = 0; index < unit.WeaponMounts.Count; index++)
         {

@@ -10,4 +10,6 @@ namespace ProceduralRts.Core;
 /// </summary>
 public sealed record MovementProfileComponentState(
     float MaxSpeed,
-    float ArriveRadius = 2f) : EntityComponentState;
+    float ArriveRadius = 2f,
+    float TurnRate = 8f,
+    TurnMode TurnMode = TurnMode.PivotInPlace) : EntityComponentState;

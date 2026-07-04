@@ -14,7 +14,7 @@ public sealed class CatScoutAircraft : UnitDesign
     public override IconGlyph Icon => IconGlyph.Air;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Aircraft, UnitRoleTag.Scout, UnitRoleTag.Assault };
     public override StatsSpec Stats => new(UnitWeightClass.Light, ArmorTag.Aircraft, 64, 620, 185, 1);
-    public override MovementSpec Movement => new(MovementDomain.Air, 220, 12.5f);
+    public override MovementSpec Movement => new(MovementDomain.Air, 220, 12.5f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(17, 0.5f, 1, BlocksMovement: false);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

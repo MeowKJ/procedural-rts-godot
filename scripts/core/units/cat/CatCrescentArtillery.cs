@@ -14,7 +14,7 @@ public sealed class CatCrescentArtillery : UnitDesign
     public override IconGlyph Icon => IconGlyph.Turret;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Siege, UnitRoleTag.Support };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 126, 545, 440, 3);
-    public override MovementSpec Movement => new(MovementDomain.Land, 90, 5.0f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 90, 5.0f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(25, 1.7f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

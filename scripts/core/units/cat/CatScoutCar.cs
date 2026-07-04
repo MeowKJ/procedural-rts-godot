@@ -14,7 +14,7 @@ public sealed class CatScoutCar : UnitDesign
     public override IconGlyph Icon => IconGlyph.Move;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Scout, UnitRoleTag.AntiAir };
     public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 82, 500, 220, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 170, 9.4f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 170, 9.4f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(17, 1.0f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
