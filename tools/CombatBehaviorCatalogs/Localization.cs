@@ -125,6 +125,7 @@ static partial class Program
         if (GameText.T("unit.lightTank.name") != "\u77e2\u91cf\u5766\u514b"
             || GameText.T("ui.noSelection.title") != "\u672a\u9009\u62e9"
             || GameText.T("preview.attackStructure") != "\u653b\u51fb\u5efa\u7b51"
+            || GameText.Format("preview.attack.matchup", GameText.Format("preview.matchup.good", GameText.T("preview.target.armor"))) != "\u653b\u51fb - \u514b\u5236 \u88c5\u7532"
             || GameText.T("menu.startSkirmish") != "\u5f00\u59cb\u906d\u9047\u6218"
             || GameText.T("pause.title") != "\u6218\u672f\u6682\u505c"
             || GameText.T("settings.title") != "\u8bbe\u7f6e"

@@ -18,7 +18,7 @@ public partial class SelectionController
             var relation = UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, hoveredUnitInstance.PlayerSlotId);
             if (relation == PlayerRelation.Hostile && UnitBattlefield.SelectedCount(LocalPlayerSlotId) > 0)
             {
-                return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attack"), screenPosition, hoveredUnitInstance.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Attack, RuntimeUnitAttackPreviewLabel(hoveredUnitInstance.Spec), screenPosition, hoveredUnitInstance.Position, true);
             }
 
             if (UnitBattlefield.CanRepairSelected(LocalPlayerSlotId, hoveredUnitInstance))
@@ -34,7 +34,7 @@ public partial class SelectionController
             var isEnemy = State.IsHostileToPlayer(hoveredUnit);
             if (isEnemy && HasSelectedLegacyUnits())
             {
-                return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attack"), screenPosition, hoveredUnit.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Attack, LegacyUnitAttackPreviewLabel(hoveredUnit), screenPosition, hoveredUnit.Position, true);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemy") : GameText.T("preview.unit"), screenPosition, hoveredUnit.Position, true);
@@ -45,7 +45,7 @@ public partial class SelectionController
             var isEnemy = buildingProjection.Relation == PlayerRelation.Hostile;
             if (isEnemy && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
             {
-                return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attackStructure"), screenPosition, buildingProjection.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Attack, RuntimeBuildingAttackPreviewLabel(buildingProjection), screenPosition, buildingProjection.Position, true);
             }
 
             if (UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, buildingProjection.Id))
@@ -61,7 +61,7 @@ public partial class SelectionController
             var isEnemy = State.IsHostileToPlayer(hoveredBuilding);
             if (isEnemy && HasSelectedLegacyUnits())
             {
-                return new CommandPreviewState(CommandPreviewKind.Attack, GameText.T("preview.attackStructure"), screenPosition, hoveredBuilding.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Attack, LegacyBuildingAttackPreviewLabel(hoveredBuilding), screenPosition, hoveredBuilding.Position, true);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, hoveredBuilding.Position, true);

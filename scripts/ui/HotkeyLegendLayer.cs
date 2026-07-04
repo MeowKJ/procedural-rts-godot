@@ -43,6 +43,7 @@ public partial class HotkeyLegendLayer : CanvasLayer
         _root.AddChild(_panel);
 
         _hint = MakeLabel(GameText.T("hotkeys.hint.open"), 11, InkMuted);
+        _hint.Visible = false;
         _hint.SetAnchorsPreset(Control.LayoutPreset.TopRight);
         _hint.OffsetLeft = -382;
         _hint.OffsetTop = 12;
@@ -61,6 +62,7 @@ public partial class HotkeyLegendLayer : CanvasLayer
 
         _open = !_open;
         _panel.Visible = _open;
+        _hint.Visible = _open;
         _hint.Text = _open ? GameText.T("hotkeys.hint.close") : GameText.T("hotkeys.hint.open");
         GetViewport().SetInputAsHandled();
     }
