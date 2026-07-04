@@ -37,6 +37,7 @@ public partial class SelectionController : Node2D
     private readonly List<UnitModel> _legacyCommandLineUnitBuffer = [];
     private readonly List<BuildingModel> _legacyCommandLineBuildingBuffer = [];
     private readonly List<UnitInstance> _runtimeCommandLineUnitBuffer = [];
+    private readonly List<int> _selectionHotkeyUnitIdBuffer = [];
     private readonly Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers = [];
     private float _redrawTimer;
 
@@ -122,7 +123,7 @@ public partial class SelectionController : Node2D
         }
         else if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
-            if (HandleMoveModeHotkey(key) || HandleStanceHotkey(key))
+            if (HandleSelectionHotkey(key) || HandleMoveModeHotkey(key) || HandleStanceHotkey(key))
             {
                 GetViewport().SetInputAsHandled();
             }
