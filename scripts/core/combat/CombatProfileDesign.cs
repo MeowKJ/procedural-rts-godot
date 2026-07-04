@@ -24,4 +24,21 @@ public static class CombatProfileDesign
             domainPriority ?? [],
             armorPriority ?? []);
     }
+
+    public static ElementDefenseProfile ElementDefense(Dictionary<string, float>? elements = null)
+    {
+        return new ElementDefenseProfile(elements);
+    }
+
+    public static TargetTraitProfile TargetTraits(
+        HashSet<TargetTrait>? traits = null,
+        HashSet<UnitRoleTag>? roles = null)
+    {
+        return new TargetTraitProfile(traits, roles);
+    }
+
+    public static CounterRuleProfile CounterRules(params CounterRule[] rules)
+    {
+        return new CounterRuleProfile(rules);
+    }
 }

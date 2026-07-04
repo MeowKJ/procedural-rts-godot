@@ -24,7 +24,9 @@ public static class BuildingTargetEntityBridge
                 spec.MaxHp,
                 spec.SightRange,
                 spec.Cost,
-                TechTierFor(spec.Kind)),
+                TechTierFor(spec.Kind),
+                spec.ElementDefense,
+                spec.TargetTraits),
             Collision = new CollisionSpec(
                 Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
                 8,

@@ -63,6 +63,7 @@ internal static class CounterReadabilityAssertions
             "SkySpear WeaponTargetProfile should be aircraft-only.", failures);
 
         Console.WriteLine("CHECK [data] WeaponTargetProfile / MovementDomain / ArmorTag / cost / speed rules are explicit.");
+        CheckCombatChemistryProfiles(failures);
     }
 
     public static void Require(bool condition, string message, List<string> failures)
@@ -89,5 +90,39 @@ internal static class CounterReadabilityAssertions
         where T : notnull
     {
         return priorities.TryGetValue(key, out var value) ? value : 1f;
+    }
+
+    private static void CheckCombatChemistryProfiles(List<string> failures)
+    {
+        var ammo = WeaponCatalog.Ammo[AmmoKind.NeedleDart];
+        var shieldedVehicle = TargetTraitProfile.FromRoleTags(new HashSet<UnitRoleTag>
+        {
+            UnitRoleTag.Vehicle,
+            UnitRoleTag.Shield,
+        });
+        var counterAmmo = ammo with
+        {
+            CounterRules = CombatProfileDesign.CounterRules(
+                new CounterRule(1.35f, Trait: TargetTrait.Shielded),
+                new CounterRule(1.1f, Role: UnitRoleTag.Vehicle)),
+        };
+
+        var neutral = DamageResolver.Resolve(ammo, UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle, targetTraits: shieldedVehicle);
+        var countered = DamageResolver.Resolve(counterAmmo, UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle, targetTraits: shieldedVehicle);
+        Require(Nearly(countered, neutral * 1.35f * 1.1f), "Trait and role counter rules must stack deterministically without design ids.", failures);
+
+        var resistant = DamageResolver.Resolve(
+            ammo,
+            UnitWeightClass.Medium,
+            MovementDomain.Land,
+            ArmorTag.Vehicle,
+            targetElementDefense: CombatProfileDesign.ElementDefense(new() { [ammo.DamageElementId] = 0.75f }));
+        Require(Nearly(resistant, neutral * 0.75f), "ElementDefenseProfile must apply sparse element overrides through DamageResolver.", failures);
+        Console.WriteLine("CHECK [combat chemistry] ElementDefenseProfile and TargetTrait counter rules resolve without unit design ids.");
+    }
+
+    private static bool Nearly(float actual, float expected)
+    {
+        return MathF.Abs(actual - expected) < 0.001f;
     }
 }

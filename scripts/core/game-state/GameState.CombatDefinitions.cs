@@ -26,7 +26,9 @@ public sealed partial class GameState
             ammo,
             targetDescriptor.WeightClass,
             targetDescriptor.MovementDomain,
-            targetDescriptor.ArmorTag);
+            targetDescriptor.ArmorTag,
+            targetElementDefense: targetDescriptor.ElementDefense,
+            targetTraits: targetDescriptor.TargetTraits);
     }
 
     public static float EffectiveDamageAgainst(AmmoKind ammoKind, BuildSpec targetSpec)
@@ -36,7 +38,9 @@ public sealed partial class GameState
             ammo,
             UnitWeightClass.Heavy,
             MovementDomain.Land,
-            targetSpec.ArmorTag);
+            targetSpec.ArmorTag,
+            targetElementDefense: targetSpec.ElementDefense,
+            targetTraits: targetSpec.TargetTraits);
     }
 
     public static bool WeaponCanTarget(WeaponDefinition weapon, UnitSpecRuntimeDescriptor targetDescriptor)

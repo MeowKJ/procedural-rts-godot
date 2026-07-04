@@ -116,7 +116,9 @@ public sealed record BuildSpec(
     float BuildRadius,
     MovementDomain PlacementDomain,
     float RefundRatio = 0.5f,
-    BuildConstructionPolicy? ConstructionPolicy = null)
+    BuildConstructionPolicy? ConstructionPolicy = null,
+    ElementDefenseProfile? ElementDefense = null,
+    TargetTraitProfile? TargetTraits = null)
 {
     public BuildConstructionPolicy ConstructionMethods => ConstructionPolicy ?? BuildConstructionPolicy.Standard;
 

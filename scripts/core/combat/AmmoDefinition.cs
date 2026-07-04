@@ -20,6 +20,7 @@ public sealed record AmmoDefinition
     public Color Accent { get; init; }
     public DamageProfile DamageProfile { get; init; }
     public string DamageElementId { get; init; }
+    public CounterRuleProfile CounterRules { get; init; }
     public SpecialAttackHook Hooks { get; init; }
     public AmmoKind? LegacyKind { get; init; }
 
@@ -43,7 +44,8 @@ public sealed record AmmoDefinition
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
         bool Interceptable = false,
-        string? DamageElementId = null)
+        string? DamageElementId = null,
+        CounterRuleProfile? CounterRules = null)
         : this(
             WeaponCatalog.IdFor(Kind),
             Label,
@@ -62,7 +64,8 @@ public sealed record AmmoDefinition
             SplashMinDamageRatio,
             Interceptable,
             Kind,
-            DamageElementId)
+            DamageElementId,
+            CounterRules)
     {
     }
 
@@ -84,7 +87,8 @@ public sealed record AmmoDefinition
         float SplashMinDamageRatio = 0,
         bool Interceptable = false,
         AmmoKind? LegacyKind = null,
-        string? DamageElementId = null)
+        string? DamageElementId = null,
+        CounterRuleProfile? CounterRules = null)
     {
         this.Id = Id;
         this.Label = Label;
@@ -105,6 +109,7 @@ public sealed record AmmoDefinition
             ? DamageElementIds.Kinetic
             : DamageElementId;
         _ = DamageElementCatalog.For(this.DamageElementId);
+        this.CounterRules = CounterRules ?? CounterRuleProfile.Neutral;
         this.Hooks = Hooks;
         this.LegacyKind = LegacyKind;
     }

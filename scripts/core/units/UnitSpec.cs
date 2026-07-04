@@ -6,7 +6,9 @@ public sealed record StatsSpec(
     float MaxHp,
     float SightRange,
     int Cost,
-    int TechTier);
+    int TechTier,
+    ElementDefenseProfile? ElementDefense = null,
+    TargetTraitProfile? TargetTraits = null);
 
 public sealed record MovementSpec(
     MovementDomain Domain,
