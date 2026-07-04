@@ -10,7 +10,8 @@ static partial class Program
             12,
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             CommandAcknowledgementKind.Harvest,
-            position));
+            position,
+            CommandAcknowledgementAudioCue.Move));
         events.DrainInto(drainedEvents);
 
         if (drainedEvents.Count != 1
@@ -18,7 +19,8 @@ static partial class Program
             || acknowledgement.Tick != 12
             || acknowledgement.Owner != OwnerId.FromPlayerSlot(PlayerSlotId.One)
             || acknowledgement.Kind != CommandAcknowledgementKind.Harvest
-            || acknowledgement.Position != position)
+            || acknowledgement.Position != position
+            || acknowledgement.AudioCue != CommandAcknowledgementAudioCue.Move)
         {
             throw new InvalidOperationException("command acknowledgement feedback should travel as a caller-buffer-drained SimEvent");
         }

@@ -9,3 +9,11 @@ public enum CommandAcknowledgementKind
     Rally,
     Invalid
 }
+
+public enum CommandAcknowledgementAudioCue
+{
+    None,
+    Move,
+    Attack,
+    Invalid
+}

@@ -52,7 +52,8 @@ public sealed record CommandAcknowledgedEvent(
     int Tick,
     OwnerId Owner,
     CommandAcknowledgementKind Kind,
-    Vector2 Position) : SimEvent(Tick);
+    Vector2 Position,
+    CommandAcknowledgementAudioCue AudioCue) : SimEvent(Tick);
 
 public sealed record ConstructionRejectedEvent(
     int Tick,

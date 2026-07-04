@@ -11,7 +11,7 @@ public partial class BuildPlacementController : Node2D
     public PlayerSlotId LocalPlayerSlotId { get; init; } = PlayerSlotId.One;
     public UnitFactionId LocalFaction { get; init; } = UnitFactionId.Dog;
     public Action<string>? StatusChanged { get; init; }
-    public Action<CommandAcknowledgementKind, Vector2>? CommandAcknowledged { get; init; }
+    public Action<CommandAcknowledgementKind, Vector2, CommandAcknowledgementAudioCue>? CommandAcknowledged { get; init; }
 
     private static readonly string[] BuildOrder =
     [
@@ -78,7 +78,10 @@ public partial class BuildPlacementController : Node2D
                 : GameText.Format("build.cannotPlace", spec.Label, PlacementStatusLabel(status, placement.Reason, spec)));
             if (!accepted)
             {
-                CommandAcknowledged?.Invoke(CommandAcknowledgementKind.Invalid, new Vector2(placement.X, placement.Y));
+                CommandAcknowledged?.Invoke(
+                    CommandAcknowledgementKind.Invalid,
+                    new Vector2(placement.X, placement.Y),
+                    CommandAcknowledgementAudioCue.Invalid);
             }
             GetViewport().SetInputAsHandled();
         }

@@ -1,17 +1,19 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Ui;
 
 namespace ProceduralRts;
 
 public partial class BattleRoot
 {
-    private void QueueCommandAcknowledgementEvent(CommandAcknowledgementKind kind, Vector2 position)
+    private void QueueCommandAcknowledgementEvent(CommandAcknowledgementKind kind, Vector2 position, CommandAcknowledgementAudioCue audioCue)
     {
         _presentationEvents.Raise(new CommandAcknowledgedEvent(
             _simClock.CurrentTick,
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             kind,
-            position));
+            position,
+            audioCue));
     }
 
     private void DrainPresentationEvents()
@@ -29,7 +31,24 @@ public partial class BattleRoot
                 && acknowledgement.Owner == OwnerId.FromPlayerSlot(PlayerSlotId.One))
             {
                 _commandAcknowledgements.Add(acknowledgement.Kind, acknowledgement.Position);
+                PlayCommandAcknowledgementAudio(acknowledgement.AudioCue, acknowledgement.Position);
             }
+        }
+    }
+
+    private void PlayCommandAcknowledgementAudio(CommandAcknowledgementAudioCue audioCue, Vector2 position)
+    {
+        switch (audioCue)
+        {
+            case CommandAcknowledgementAudioCue.Move:
+                PlayAudioCue(TacticalAudioCue.Move, position);
+                break;
+            case CommandAcknowledgementAudioCue.Attack:
+                PlayAudioCue(TacticalAudioCue.Attack, position);
+                break;
+            case CommandAcknowledgementAudioCue.Invalid:
+                PlayAudioCue(TacticalAudioCue.Invalid, position);
+                break;
         }
     }
 }

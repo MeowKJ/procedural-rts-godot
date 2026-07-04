@@ -16,7 +16,7 @@ public partial class SelectionController : Node2D
     public Action<int>? SelectionChanged { get; init; }
     public Action<string>? StatusChanged { get; init; }
     public Action<TacticalAudioCue>? AudioCueRequested { get; init; }
-    public Action<CommandAcknowledgementKind, Vector2>? CommandAcknowledged { get; init; }
+    public Action<CommandAcknowledgementKind, Vector2, CommandAcknowledgementAudioCue>? CommandAcknowledged { get; init; }
     public Action<MoveCommandMode>? MoveModeRequested { get; init; }
     public Action<UnitStance>? UnitStanceRequested { get; init; }
     public Func<bool>? MouseInputBlocked { get; init; }
