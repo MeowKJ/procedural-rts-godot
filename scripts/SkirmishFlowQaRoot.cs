@@ -28,7 +28,9 @@ public partial class SkirmishFlowQaRunner : Node
 {
     private const int TimeoutFrames = 600;
     private int _frames;
+    private int _cleanupFrames;
     private bool _startedBattle;
+    private bool _cleanupStarted;
 
     public override void _Ready()
     {
@@ -43,6 +45,12 @@ public partial class SkirmishFlowQaRunner : Node
             if (_frames > TimeoutFrames)
             {
                 throw new InvalidOperationException("Skirmish flow QA timed out before Battle loaded.");
+            }
+
+            if (_cleanupStarted)
+            {
+                AssertBattleCleanedUp();
+                return;
             }
 
             if (!_startedBattle && GetTree().CurrentScene is MainMenuRoot menu)
@@ -65,8 +73,9 @@ public partial class SkirmishFlowQaRunner : Node
                 GD.Print("Skirmish flow QA: validating Battle.");
                 AssertBattleState(battle.State);
                 AssertBattleRuntime(battle);
-                GD.Print("Skirmish flow QA passed: main menu setup launched Battle with selected faction, seed, credits, and difficulty.");
-                GetTree().Quit(0);
+                GD.Print("Skirmish flow QA: main menu setup launched Battle with selected faction, seed, credits, and difficulty.");
+                battle.QueueFree();
+                _cleanupStarted = true;
             }
         }
         catch (Exception exception)
@@ -143,5 +152,34 @@ public partial class SkirmishFlowQaRunner : Node
     {
         return root.FindChild(name, recursive: true, owned: false) as T
             ?? throw new InvalidOperationException($"Missing required child {name}.");
+    }
+
+    private void AssertBattleCleanedUp()
+    {
+        _cleanupFrames++;
+        if (_cleanupFrames < 3)
+        {
+            return;
+        }
+
+        if (CountNodes<BattleRoot>(GetTree().Root) != 0)
+        {
+            throw new InvalidOperationException("Skirmish flow QA leaked a BattleRoot after cleanup.");
+        }
+
+        GD.Print("Skirmish flow QA passed: battle scene cleaned up after setup flow.");
+        GetTree().Quit(0);
+    }
+
+    private static int CountNodes<T>(Node root)
+        where T : Node
+    {
+        var count = root is T ? 1 : 0;
+        foreach (var child in root.GetChildren())
+        {
+            count += CountNodes<T>(child);
+        }
+
+        return count;
     }
 }

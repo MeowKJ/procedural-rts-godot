@@ -99,30 +99,35 @@ public partial class PauseMenuLayer : CanvasLayer
         panel.AddChild(meta);
 
         var resume = UiFactory.MakeButton(GameText.T("pause.resume"), Mint);
+        resume.Name = "PauseResumeButton";
         resume.Position = new Vector2(28, 112);
         resume.CustomMinimumSize = new Vector2(384, 48);
         resume.Pressed += () => SetPaused(false);
         panel.AddChild(resume);
 
         var restart = UiFactory.MakeButton(GameText.T("pause.restart"), Cyan);
+        restart.Name = "PauseRestartButton";
         restart.Position = new Vector2(28, 172);
         restart.CustomMinimumSize = new Vector2(384, 48);
         restart.Pressed += RestartBattle;
         panel.AddChild(restart);
 
         var settings = UiFactory.MakeButton(GameText.T("common.settings"), Amber);
+        settings.Name = "PauseSettingsButton";
         settings.Position = new Vector2(28, 232);
         settings.CustomMinimumSize = new Vector2(384, 48);
         settings.Pressed += OpenSettings;
         panel.AddChild(settings);
 
         var menu = UiFactory.MakeButton(GameText.T("common.mainMenu"), Amber);
+        menu.Name = "PauseMainMenuButton";
         menu.Position = new Vector2(28, 292);
         menu.CustomMinimumSize = new Vector2(384, 48);
         menu.Pressed += ReturnToMainMenu;
         panel.AddChild(menu);
 
         var quit = UiFactory.MakeButton(GameText.T("common.quit"), Danger);
+        quit.Name = "PauseQuitButton";
         quit.Position = new Vector2(28, 352);
         quit.CustomMinimumSize = new Vector2(384, 44);
         quit.Pressed += QuitGame;
