@@ -24,7 +24,25 @@ static class ProjectileImpactReviewGate
         var projectileSystem = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProjectileSystem.cs");
         RequireText(projectileSystem, "TryIntercept", "ProjectileSystem must resolve gameplay projectile interception before impact.", result);
         RequireText(projectileSystem, "definition.CanInterceptProjectiles", "Projectile interception must be driven by weapon metadata.", result);
-        RequireText(projectileSystem, "mount with { CooldownRemaining = definition.Cooldown }", "Projectile interception must consume the interceptor mount cooldown.", result);
+        RequireText(projectileSystem, "WeaponSystem.BeginRecovery(mount, definition)", "Projectile interception must consume the interceptor mount through the shared weapon state machine.", result);
+
+        var weaponSystem = ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponSystem.cs");
+        RequireText(weaponSystem, "static class WeaponSystem", "WeaponSystem must own shared mount state-machine stepping.", result);
+        RequireText(weaponSystem, "WeaponMountPhase.Warmup", "WeaponSystem must model warmup before fire.", result);
+        RequireText(weaponSystem, "WeaponMountPhase.Fire", "WeaponSystem must expose a fire phase when shots resolve.", result);
+        RequireText(weaponSystem, "WeaponMountPhase.Cooldown", "WeaponSystem must model post-fire cooldown.", result);
+        RequireText(weaponSystem, "WeaponMountPhase.Reload", "WeaponSystem must model post-cooldown reload.", result);
+        RequireText(weaponSystem, "BeginRecovery", "WeaponSystem must centralize fire-to-recovery transitions.", result);
+
+        var mountState = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "WeaponMountRuntimeState.cs");
+        RequireText(mountState, "WeaponMountPhase Phase", "Weapon mount runtime state must persist the active state-machine phase.", result);
+        RequireText(mountState, "float WarmupRemaining", "Weapon mount runtime state must persist warmup remaining time.", result);
+        RequireText(mountState, "float ReloadRemaining", "Weapon mount runtime state must persist reload remaining time.", result);
+
+        var hashOrdering = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityStateHash.Ordering.cs");
+        RequireText(hashOrdering, "Add(hash, (int)mount.Phase)", "Deterministic state hash must include weapon mount phase.", result);
+        RequireText(hashOrdering, "Add(hash, mount.WarmupRemaining)", "Deterministic state hash must include weapon warmup time.", result);
+        RequireText(hashOrdering, "Add(hash, mount.ReloadRemaining)", "Deterministic state hash must include weapon reload time.", result);
 
         var combatEffects = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.cs");
         RequireText(combatEffects, "List<BeamEffect> _beamEffects", "CombatEffectsLayer must own live beam presentation effects outside legacy GameState.Beams.", result);
@@ -42,19 +60,8 @@ static class ProjectileImpactReviewGate
         RequireText(battleRootBeams, "ammo.Behavior != ProjectileBehavior.Beam", "Beam bridge must be gated by ammo behavior data.", result);
         RequireText(battleRootBeams, "AmmoKindForPrimaryWeapon", "Building-target beam bridge must resolve attacker weapon ammo data.", result);
 
-        ReviewGateSource.RequireTextInFile(
-            root,
-            result,
-            "projectile-splash",
-            "tools",
-            "SimReplayCombatTactics",
-            "ProjectileTrackingScenarios.cs");
-        ReviewGateSource.RequireTextInFile(
-            root,
-            result,
-            "projectile-intercept",
-            "tools",
-            "SimReplayCombatTactics",
-            "ProjectileTrackingScenarios.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "projectile-splash", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "projectile-intercept", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "weapon-state-machine", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
     }
 }

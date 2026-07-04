@@ -104,7 +104,7 @@ public sealed class ProjectileSystem : ISimSystem
             for (var index = 0; index < mounts.Count; index++)
             {
                 var mount = mounts[index];
-                if (mount.CooldownRemaining > 0
+                if (WeaponSystem.IsRecovering(mount)
                     || !context.World.TryGetWeaponDefinition(mount.WeaponId, out var definition)
                     || !definition.CanInterceptProjectiles
                     || !IsInInterceptRange(interceptor, projectile, definition))
@@ -112,7 +112,7 @@ public sealed class ProjectileSystem : ISimSystem
                     continue;
                 }
 
-                mounts[index] = mount with { CooldownRemaining = definition.Cooldown };
+                mounts[index] = WeaponSystem.BeginRecovery(mount, definition);
                 context.World.Events.Raise(new WeaponFiredEvent(
                     context.Tick,
                     interceptor.Id,

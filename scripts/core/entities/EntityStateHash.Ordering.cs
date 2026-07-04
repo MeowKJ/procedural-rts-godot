@@ -22,6 +22,9 @@ public static partial class EntityStateHash
             hash = Add(hash, mount.WeaponId);
             hash = Add(hash, mount.Facing);
             hash = Add(hash, mount.CooldownRemaining);
+            hash = Add(hash, (int)mount.Phase);
+            hash = Add(hash, mount.WarmupRemaining);
+            hash = Add(hash, mount.ReloadRemaining);
         }
 
         ordered.Clear();
