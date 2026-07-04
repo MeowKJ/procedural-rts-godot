@@ -75,10 +75,10 @@ static class ContentAuthoringReviewGate
         ReviewGateSource.RequireTextInFile(root, result, "DiscoverDesigns<AmmoDesign>", "scripts", "core", "combat", "WeaponCatalog.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "ContentAuthoringQa", "Program.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "ContentAuthoringQa", "ThrowawayAuthoringDesigns.cs");
-        var contentQa = ReviewGateSource.Read(root, "tools", "ContentAuthoringQa", "Program.cs")
-            + ReviewGateSource.Read(root, "tools", "ContentAuthoringQa", "ThrowawayAuthoringDesigns.cs");
+        var contentQa = ReviewGateSource.Read(root, "tools", "ContentAuthoringQa", "Program.cs") + ReviewGateSource.Read(root, "tools", "ContentAuthoringQa", "ThrowawayAuthoringDesigns.cs");
         RequireText(contentQa, "weapon.qa.throwaway.probe", "ContentAuthoringQa must prove a tool-local string weapon id.", result);
         RequireText(contentQa, "ammo.qa.throwaway.spark", "ContentAuthoringQa must prove a tool-local string ammo id.", result);
+        RequireText(contentQa, "RequireHasTranslation(spec.NameKey", "ContentAuthoringQa must close declarative spec localization/sort/turret contracts.", result);
         RequireText(contentQa, "RegisterCombatDefinitions(toolWeapons.Values, toolAmmo.Values)", "Tool-local weapon/ammo must be injected into EntityWorld, not the runtime catalog.", result);
         RequireText(contentQa, "!WeaponCatalog.WeaponDefinitions.ContainsKey(ThrowawayProbeWeaponDesign.WeaponId)", "Throwaway weapon must not pollute the runtime WeaponCatalog.", result);
         ReviewGateSource.RequireTextInFile(root, result, "ContentAuthoringQa", "tools", "VerifyAll", "Program.cs");

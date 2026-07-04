@@ -22,7 +22,7 @@ public static partial class GameText
             || (language != GameLanguage.English && English.ContainsKey(key));
     }
 
-    public static IReadOnlyCollection<string> Keys => English.Keys.ToList();
+    public static IEnumerable<string> Keys => English.Keys;
 
     private static IReadOnlyDictionary<string, string> TableFor(GameLanguage language)
     {
