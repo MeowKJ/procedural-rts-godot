@@ -28,8 +28,11 @@ public sealed class TacticalAudioCueDeduper
     {
         return cue switch
         {
+            TacticalAudioCue.LowPower => 360,
             TacticalAudioCue.Alert => 220,
+            TacticalAudioCue.BuildComplete => 200,
             TacticalAudioCue.Production => 180,
+            TacticalAudioCue.Death => 140,
             TacticalAudioCue.Invalid => 120,
             TacticalAudioCue.Attack => 90,
             TacticalAudioCue.Move => 55,

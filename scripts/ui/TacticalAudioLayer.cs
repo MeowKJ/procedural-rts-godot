@@ -2,6 +2,8 @@ using Godot;
 
 namespace ProceduralRts.Ui;
 
+public readonly record struct TacticalAudioSpatialMix(float VolumeDbOffset, float PitchScale);
+
 public partial class TacticalAudioLayer : Node
 {
     private const int MixRate = 22050;
@@ -18,6 +20,9 @@ public partial class TacticalAudioLayer : Node
         _streams[TacticalAudioCue.Attack] = Tone([(190f, 0.05f), (96f, 0.075f), (280f, 0.035f)], 0.30f, square: true);
         _streams[TacticalAudioCue.Alert] = Tone([(880f, 0.04f), (660f, 0.04f), (880f, 0.05f)], 0.26f, square: true);
         _streams[TacticalAudioCue.Production] = Tone([(520f, 0.045f), (780f, 0.045f), (1040f, 0.08f)], 0.24f);
+        _streams[TacticalAudioCue.BuildComplete] = Tone([(480f, 0.035f), (640f, 0.04f), (920f, 0.09f)], 0.23f);
+        _streams[TacticalAudioCue.Death] = Tone([(240f, 0.04f), (160f, 0.06f), (86f, 0.08f)], 0.24f, square: true);
+        _streams[TacticalAudioCue.LowPower] = Tone([(180f, 0.08f), (135f, 0.08f), (180f, 0.08f)], 0.22f, square: true);
         _streams[TacticalAudioCue.OutcomeVictory] = Tone([(520f, 0.08f), (780f, 0.08f), (1040f, 0.14f)], 0.28f);
         _streams[TacticalAudioCue.OutcomeDefeat] = Tone([(360f, 0.08f), (220f, 0.10f), (120f, 0.16f)], 0.30f, square: true);
         _streams[TacticalAudioCue.Invalid] = Tone([(110f, 0.055f), (82f, 0.08f)], 0.26f, square: true);
@@ -35,7 +40,7 @@ public partial class TacticalAudioLayer : Node
         }
     }
 
-    public void Play(TacticalAudioCue cue)
+    public void Play(TacticalAudioCue cue, Vector2? worldPosition = null, Rect2? listenerWorldRect = null)
     {
         if (!_streams.TryGetValue(cue, out var stream) || _players.Count == 0)
         {
@@ -51,9 +56,27 @@ public partial class TacticalAudioLayer : Node
         _nextPlayer = (_nextPlayer + 1) % _players.Count;
         player.Stop();
         player.Stream = stream;
-        player.PitchScale = cue == TacticalAudioCue.Alert ? 1.04f : 1f;
-        player.VolumeDb = cue is TacticalAudioCue.OutcomeVictory or TacticalAudioCue.OutcomeDefeat ? -10f : DefaultDb;
+        var spatial = SpatialMixFor(worldPosition, listenerWorldRect);
+        player.PitchScale = BasePitchScale(cue) * spatial.PitchScale;
+        player.VolumeDb = BaseVolumeDb(cue) + spatial.VolumeDbOffset;
         player.Play();
+    }
+
+    public static TacticalAudioSpatialMix SpatialMixFor(Vector2? worldPosition, Rect2? listenerWorldRect)
+    {
+        if (worldPosition is not { } position || listenerWorldRect is not { } rect || rect.Size.X <= 0 || rect.Size.Y <= 0)
+        {
+            return new TacticalAudioSpatialMix(0, 1);
+        }
+
+        var center = rect.Position + rect.Size * 0.5f;
+        var end = rect.End;
+        var dx = position.X < rect.Position.X ? rect.Position.X - position.X : position.X > end.X ? position.X - end.X : 0;
+        var dy = position.Y < rect.Position.Y ? rect.Position.Y - position.Y : position.Y > end.Y ? position.Y - end.Y : 0;
+        var distanceToView = Mathf.Sqrt(dx * dx + dy * dy);
+        var attenuation = Mathf.Clamp(distanceToView / Mathf.Max(rect.Size.X, rect.Size.Y), 0, 1);
+        var side = Mathf.Clamp((position.X - center.X) / Mathf.Max(rect.Size.X * 0.5f, 1), -1, 1);
+        return new TacticalAudioSpatialMix(-attenuation * 7.5f, 1f + side * 0.018f);
     }
 
     public void ReleaseManagedResources()
@@ -102,6 +125,29 @@ public partial class TacticalAudioLayer : Node
             MixRate = MixRate,
             Stereo = false,
             Data = data,
+        };
+    }
+
+    private static float BasePitchScale(TacticalAudioCue cue)
+    {
+        return cue switch
+        {
+            TacticalAudioCue.Alert => 1.04f,
+            TacticalAudioCue.BuildComplete => 1.02f,
+            TacticalAudioCue.Death => 0.94f,
+            TacticalAudioCue.LowPower => 0.9f,
+            _ => 1f,
+        };
+    }
+
+    private static float BaseVolumeDb(TacticalAudioCue cue)
+    {
+        return cue switch
+        {
+            TacticalAudioCue.OutcomeVictory or TacticalAudioCue.OutcomeDefeat => -10f,
+            TacticalAudioCue.LowPower => -11f,
+            TacticalAudioCue.Death or TacticalAudioCue.BuildComplete => -12f,
+            _ => DefaultDb,
         };
     }
 

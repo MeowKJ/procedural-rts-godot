@@ -7,6 +7,9 @@ public enum TacticalAudioCue
     Attack,
     Alert,
     Production,
+    BuildComplete,
+    Death,
+    LowPower,
     OutcomeVictory,
     OutcomeDefeat,
     Invalid

@@ -1,3 +1,4 @@
+using Godot;
 using ProceduralRts.Ui;
 
 static partial class Program
@@ -22,6 +23,12 @@ static partial class Program
             throw new InvalidOperationException("alert audio cues should use a longer load-shedding repeat window");
         }
 
+        if (TacticalAudioCueDeduper.RepeatWindowMsec(TacticalAudioCue.LowPower) <= alertWindow
+            || TacticalAudioCueDeduper.RepeatWindowMsec(TacticalAudioCue.BuildComplete) <= TacticalAudioCueDeduper.RepeatWindowMsec(TacticalAudioCue.Death))
+        {
+            throw new InvalidOperationException("build complete, death, and low-power audio cues should have event-specific repeat windows");
+        }
+
         if (!deduper.TryReserve(TacticalAudioCue.OutcomeVictory, 3000)
             || !deduper.TryReserve(TacticalAudioCue.OutcomeVictory, 3000))
         {
@@ -32,6 +39,20 @@ static partial class Program
         if (!deduper.TryReserve(TacticalAudioCue.Alert, 2000))
         {
             throw new InvalidOperationException("audio cue de-duplication reset should clear previous cue timestamps");
+        }
+
+        var visibleRect = new Rect2(Vector2.Zero, new Vector2(200, 120));
+        var centered = TacticalAudioLayer.SpatialMixFor(new Vector2(100, 60), visibleRect);
+        var offscreenRight = TacticalAudioLayer.SpatialMixFor(new Vector2(420, 60), visibleRect);
+        var uiCue = TacticalAudioLayer.SpatialMixFor(null, visibleRect);
+        if (centered.VolumeDbOffset != 0
+            || MathF.Abs(centered.PitchScale - 1) > 0.0001f
+            || offscreenRight.VolumeDbOffset >= centered.VolumeDbOffset
+            || offscreenRight.PitchScale <= centered.PitchScale
+            || uiCue.VolumeDbOffset != 0
+            || MathF.Abs(uiCue.PitchScale - 1) > 0.0001f)
+        {
+            throw new InvalidOperationException("world-positioned tactical audio cues should get a small spatial-ish mix while UI cues remain centered");
         }
     }
 }

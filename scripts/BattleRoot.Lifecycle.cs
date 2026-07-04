@@ -68,6 +68,7 @@ public partial class BattleRoot
             if (building.Owner == ProceduralRts.Core.Owner.Player)
             {
                 AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(building.Kind).Label), building.Position);
+                PlayAudioCue(TacticalAudioCue.BuildComplete, building.Position);
                 if (building.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
                 {
                     UpdatePowerAlert(true);
@@ -159,7 +160,7 @@ public partial class BattleRoot
             LocalPlayerSlotId = PlayerSlotId.One,
             SelectionChanged = OnSelectionChanged,
             StatusChanged = OnStatusChanged,
-            AudioCueRequested = PlayAudioCue,
+            AudioCueRequested = cue => PlayAudioCue(cue),
             CommandAcknowledged = QueueCommandAcknowledgementEvent,
             MoveModeRequested = OnMoveModeRequested,
             UnitStanceRequested = OnUnitStanceRequested,
