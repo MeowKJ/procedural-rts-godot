@@ -6,6 +6,7 @@ var failures = new List<string>();
 ValidateUnitDesignCatalog(failures);
 ValidateDamageElementCatalog(failures);
 ValidateWeaponAndAmmoCatalogs(failures);
+ValidateAmmoElementMapping(failures);
 ValidateBuildingCatalog(failures);
 ValidateGenericSpawnPath(failures);
 ValidateThrowawayAuthoringPath(failures);
@@ -63,6 +64,29 @@ static void ValidateWeaponAndAmmoCatalogs(List<string> failures)
         Require(ammo.DamageProfile.ArmorMultipliers.Count > 0, $"{ammo.Id} must declare armor damage multipliers.", failures);
         Require(DamageElementCatalog.Definitions.ContainsKey(ammo.DamageElementId), $"{ammo.Id} references missing damage element {ammo.DamageElementId}.", failures);
         Require(ammo.CounterRules.Rules.All(rule => rule.Multiplier > 0), $"{ammo.Id} counter rules must use positive multipliers.", failures);
+    }
+}
+
+static void ValidateAmmoElementMapping(List<string> failures)
+{
+    var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [WeaponCatalog.IdFor(AmmoKind.NeedleDart)] = DamageElementIds.Kinetic,
+        [WeaponCatalog.IdFor(AmmoKind.BallisticCannon)] = DamageElementIds.Explosive,
+        [WeaponCatalog.IdFor(AmmoKind.SeekerRocket)] = DamageElementIds.Explosive,
+        [WeaponCatalog.IdFor(AmmoKind.IonBeam)] = DamageElementIds.Energy,
+        [WeaponCatalog.IdFor(AmmoKind.ElectromagneticLance)] = DamageElementIds.Energy,
+    };
+
+    foreach (var pair in expected)
+    {
+        if (!WeaponCatalog.AmmoDefinitions.TryGetValue(pair.Key, out var ammo))
+        {
+            failures.Add($"Expected ammo mapping is missing {pair.Key}.");
+            continue;
+        }
+
+        Require(ammo.DamageElementId == pair.Value, $"{pair.Key} must map to damage element {pair.Value}.", failures);
     }
 }
 

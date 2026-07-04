@@ -23,6 +23,7 @@ public sealed class ElectromagneticLanceAmmo : AmmoDesign
             CombatProfileDesign.DamageProfile(
                 weights: new() { [UnitWeightClass.Light] = 0.38f, [UnitWeightClass.Medium] = 1.45f, [UnitWeightClass.Heavy] = 1.72f },
                 armor: new() { [ArmorTag.Infantry] = 0.55f, [ArmorTag.Vehicle] = 1.18f, [ArmorTag.Structure] = 1.18f, [ArmorTag.Ship] = 1.12f, [ArmorTag.Aircraft] = 0.72f }),
-            SpecialAttackHook.Beam | SpecialAttackHook.Impact);
+            SpecialAttackHook.Beam | SpecialAttackHook.Impact,
+            DamageElementId: DamageElementIds.Energy);
     }
 }

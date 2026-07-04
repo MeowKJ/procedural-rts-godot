@@ -23,6 +23,7 @@ public sealed class NeedleDartAmmo : AmmoDesign
             CombatProfileDesign.DamageProfile(
                 weights: new() { [UnitWeightClass.Light] = 1.05f, [UnitWeightClass.Medium] = 0.85f, [UnitWeightClass.Heavy] = 0.68f },
                 armor: new() { [ArmorTag.Infantry] = 1.18f, [ArmorTag.Vehicle] = 0.86f, [ArmorTag.Structure] = 0.55f, [ArmorTag.Ship] = 0.82f, [ArmorTag.Aircraft] = 0.9f }),
-            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact);
+            SpecialAttackHook.ProjectileUpdate | SpecialAttackHook.Impact,
+            DamageElementId: DamageElementIds.Kinetic);
     }
 }
