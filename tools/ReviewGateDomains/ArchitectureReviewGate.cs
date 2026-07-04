@@ -10,7 +10,7 @@ static class ArchitectureReviewGate
         CommandGatewayReviewGate.Check(root, result);
         RequireMovementGridConvergence(root, result);
         ForbidDuplicatedWeaponRangeHelpers(root, result);
-        RequireDamageResolverSpine(root, result);
+        CombatChemistryReviewGate.Check(root, result);
     }
 
     private static void RequireCoreFiles(string root, GateResult result)
@@ -113,36 +113,4 @@ static class ArchitectureReviewGate
         }
     }
 
-    private static void RequireDamageResolverSpine(string root, GateResult result)
-    {
-        var damageElementIds = ReviewGateSource.Read(root, "scripts", "core", "combat", "DamageElementIds.cs");
-        var damageElementCatalog = ReviewGateSource.Read(root, "scripts", "core", "combat", "DamageElementCatalog.cs");
-        var damageResolver = ReviewGateSource.Read(root, "scripts", "core", "combat", "DamageResolver.cs");
-        RequireText(damageElementIds, "public static class DamageElementIds", "Damage elements must expose stable string ids.", result);
-        RequireText(damageElementCatalog, "public static class DamageElementCatalog", "Damage elements must be routed through a catalog.", result);
-        RequireText(damageResolver, "public static class DamageResolver", "Damage calculation must route through DamageResolver.", result);
-        RequireText(damageElementCatalog, "DamageElementIds.Moonshadow", "DamageElementCatalog must include the moonshadow element.", result);
-        RequireText(damageElementCatalog, "DamageElementIds.Resonance", "DamageElementCatalog must include the resonance element.", result);
-
-        var ammo = ReviewGateSource.Read(root, "scripts", "core", "combat", "AmmoDefinition.cs");
-        RequireText(ammo, "public string DamageElementId", "AmmoDefinition must carry a data-driven damage element id.", result);
-        RequireText(ammo, "DamageElementCatalog.For(this.DamageElementId)", "AmmoDefinition must validate its damage element id through the catalog.", result);
-
-        var weaponMath = ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs");
-        RequireText(weaponMath, "DamageResolver.Resolve(ammo", "Generic weapon damage must route through DamageResolver.", result);
-        var gameState = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
-        RequireText(gameState, "DamageResolver.Resolve(", "Legacy GameState damage must route through DamageResolver.", result);
-        var unitBattlefield = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(unitBattlefield, "DamageResolver.Resolve(", "UnitBattlefield legacy damage must route through DamageResolver.", result);
-
-        var systemsRoot = Path.Combine(root, "scripts", "core", "sim", "systems");
-        foreach (var path in Directory.EnumerateFiles(systemsRoot, "*.cs", SearchOption.AllDirectories)
-            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
-            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
-        {
-            var relative = Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/');
-            ForbidText(File.ReadAllText(path), "DamageElementIds.", $"{relative} must not branch on damage element ids directly; route damage policy through DamageResolver.", result);
-        }
-    }
 }
