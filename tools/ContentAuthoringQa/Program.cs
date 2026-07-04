@@ -5,6 +5,7 @@ var failures = new List<string>();
 
 ValidateUnitDesignCatalog(failures);
 ValidateDamageElementCatalog(failures);
+ValidateElementPresentationCatalog(failures);
 ValidateElementStatusCatalog(failures);
 ValidateElementReactionCatalog(failures);
 ValidateWeaponAndAmmoCatalogs(failures);
@@ -25,7 +26,7 @@ if (failures.Count > 0)
 }
 
 Console.WriteLine(
-    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, elements {DamageElementCatalog.Definitions.Count}, statuses {ElementStatusCatalog.Definitions.Count}, reactions {ElementReactionCatalog.Definitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
+    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, elements {DamageElementCatalog.Definitions.Count}, presentations {ElementPresentationCatalog.Definitions.Count}, statuses {ElementStatusCatalog.Definitions.Count}, reactions {ElementReactionCatalog.Definitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
 
 static void ValidateUnitDesignCatalog(List<string> failures)
 {
@@ -117,6 +118,36 @@ static void ValidateDamageElementCatalog(List<string> failures)
             Require(!string.IsNullOrWhiteSpace(definition.Label), $"{id} damage element must have a label.", failures);
             Require(definition.DamageMultiplier > 0, $"{id} damage element must have a positive neutral/default multiplier.", failures);
         }
+    }
+}
+
+static void ValidateElementPresentationCatalog(List<string> failures)
+{
+    Require(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "ElementPresentationCatalog must define presentation metadata for every stable DamageElementIds entry.", failures);
+    Require(DamageElementIds.All.SequenceEqual(ElementPresentationCatalog.Definitions.Keys), "DamageElementIds.All must mirror discovered element presentation definitions in deterministic order.", failures);
+
+    var shortCodes = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var id in DamageElementIds.All)
+    {
+        Require(ElementPresentationCatalog.Definitions.TryGetValue(id, out var style), $"ElementPresentationCatalog missing {id}.", failures);
+        if (!ElementPresentationCatalog.Definitions.TryGetValue(id, out style))
+        {
+            continue;
+        }
+
+        Require(style.DamageElementId == id, $"{id} element presentation id must match the catalog key.", failures);
+        Require(!string.IsNullOrWhiteSpace(style.Label), $"{id} element presentation must have a label.", failures);
+        Require(!string.IsNullOrWhiteSpace(style.ShortCode), $"{id} element presentation must have a short code.", failures);
+        Require(shortCodes.Add(style.ShortCode), $"{id} element presentation short code must be unique.", failures);
+        Require(style.Badge.DamageElementId == id, $"{id} element badge must point back to the element id.", failures);
+        Require(style.Badge.Label == style.Label, $"{id} element badge must reuse the presentation label.", failures);
+        Require(style.Badge.ShortCode == style.ShortCode, $"{id} element badge must reuse the presentation short code.", failures);
+        Require(style.Projectile.TrailWidth >= ProjectileVfxMath.MinimumTrailWidth, $"{id} projectile presentation trail must stay readable.", failures);
+        Require(style.Projectile.CoreWidth >= ProjectileVfxMath.MinimumCoreWidth, $"{id} projectile presentation core must stay readable.", failures);
+        Require(style.Projectile.HeadRadius >= ProjectileVfxMath.MinimumHeadRadius, $"{id} projectile presentation head must stay readable.", failures);
+        Require(style.BeamWidthMultiplier > 0, $"{id} beam width multiplier must be positive.", failures);
+        Require(style.ImpactColor.A > 0, $"{id} impact color must be visible.", failures);
+        Require(style.DeathColor.A > 0, $"{id} death color must be visible.", failures);
     }
 }
 
