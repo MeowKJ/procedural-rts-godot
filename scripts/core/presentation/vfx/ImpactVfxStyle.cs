@@ -8,5 +8,7 @@ public readonly record struct ImpactVfxStyle(
     float SparkScale,
     int SparkCount,
     Color SecondaryColor,
+    float ShakeAmplitude,
+    float ShakeRadius,
     bool EmitsEmbers,
     bool EmitsEmpDissolve);

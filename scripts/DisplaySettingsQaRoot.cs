@@ -14,7 +14,8 @@ public partial class DisplaySettingsQaRoot : Node
             CheckFrameRateMode(FrameRateMode.Fps60, 60);
             CheckFrameRateMode(FrameRateMode.Fps144, 144);
             CheckOwnerColorPalette();
-            GD.Print("Display settings QA passed: Off/VSync/60/144 apply MaxFps, physics ticks, and owner color palette modes.");
+            CheckImpactScreenShake();
+            GD.Print("Display settings QA passed: Off/VSync/60/144 apply MaxFps, physics ticks, owner color palette modes, and impact shake setting.");
             GetTree().Quit(0);
         }
         catch (Exception exception)
@@ -71,6 +72,21 @@ public partial class DisplaySettingsQaRoot : Node
             || ColorDistance(safeThree, safeFour) < 0.34f)
         {
             throw new InvalidOperationException("Expected colorblind-safe owner colors to remain visually separated.");
+        }
+    }
+
+    private static void CheckImpactScreenShake()
+    {
+        DisplayAudioSettings.ApplyImpactScreenShake(false, persist: false);
+        if (DisplayAudioSettings.ImpactScreenShake)
+        {
+            throw new InvalidOperationException("Expected impact screen shake to be disabled.");
+        }
+
+        DisplayAudioSettings.ApplyImpactScreenShake(true, persist: false);
+        if (!DisplayAudioSettings.ImpactScreenShake)
+        {
+            throw new InvalidOperationException("Expected impact screen shake to be enabled.");
         }
     }
 

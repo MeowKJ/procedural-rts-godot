@@ -36,4 +36,15 @@ public partial class BattleRoot
 
         return WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind].AmmoKind;
     }
+
+    private static float DamageForPrimaryWeapon(UnitInstance attacker, BuildSpec targetSpec)
+    {
+        if (attacker.Spec.Weapons.Count == 0)
+        {
+            return 0;
+        }
+
+        var weapon = WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind];
+        return GameState.EffectiveDamageAgainst(weapon.AmmoKind, targetSpec);
+    }
 }

@@ -8,6 +8,7 @@ public static class DisplayAudioSettings
     private const string DisplaySection = "display";
     private const string AudioSection = "audio";
     private const string UiSection = "ui";
+    private const string FeedbackSection = "feedback";
 
     public static readonly Vector2I[] SupportedResolutions =
     [
@@ -21,6 +22,7 @@ public static class DisplayAudioSettings
     public static bool Fullscreen { get; private set; }
     public static FrameRateMode FrameRate { get; private set; } = FrameRateMode.VSync;
     public static OwnerColorPaletteMode OwnerColors { get; private set; } = OwnerColorPaletteMode.Standard;
+    public static bool ImpactScreenShake { get; private set; } = true;
     public static float MasterVolume { get; private set; } = 0.75f;
     public static GameLanguage Language { get; private set; } = GameLanguage.English;
     private static bool _loaded;
@@ -43,6 +45,7 @@ public static class DisplayAudioSettings
                 SupportedResolutions.Length - 1);
             FrameRate = FrameRateFromIndex(config.GetValue(DisplaySection, "frame_rate", (int)FrameRateMode.VSync).AsInt32());
             OwnerColors = OwnerColorPaletteFromIndex(config.GetValue(UiSection, "owner_colors", (int)OwnerColorPaletteMode.Standard).AsInt32());
+            ImpactScreenShake = config.GetValue(FeedbackSection, "impact_screen_shake", true).AsBool();
             MasterVolume = Mathf.Clamp(config.GetValue(AudioSection, "master_volume", 0.75f).AsSingle(), 0, 1);
             Language = LanguageFromIndex(config.GetValue(UiSection, "language", (int)GameLanguage.English).AsInt32());
         }
@@ -52,6 +55,7 @@ public static class DisplayAudioSettings
         ApplyFullscreen(Fullscreen, persist: false);
         ApplyFrameRateMode(FrameRate, persist: false);
         ApplyOwnerColorPalette(OwnerColors, persist: false);
+        ApplyImpactScreenShake(ImpactScreenShake, persist: false);
         ApplyMasterVolume(MasterVolume, persist: false);
     }
 
@@ -156,6 +160,15 @@ public static class DisplayAudioSettings
         }
     }
 
+    public static void ApplyImpactScreenShake(bool enabled, bool persist = true)
+    {
+        ImpactScreenShake = enabled;
+        if (persist)
+        {
+            Save();
+        }
+    }
+
     public static string ResolutionLabel(int index)
     {
         var resolution = SupportedResolutions[Mathf.Clamp(index, 0, SupportedResolutions.Length - 1)];
@@ -229,6 +242,7 @@ public static class DisplayAudioSettings
         config.SetValue(AudioSection, "master_volume", MasterVolume);
         config.SetValue(UiSection, "language", (int)Language);
         config.SetValue(UiSection, "owner_colors", (int)OwnerColors);
+        config.SetValue(FeedbackSection, "impact_screen_shake", ImpactScreenShake);
         config.Save(SettingsPath);
     }
 }

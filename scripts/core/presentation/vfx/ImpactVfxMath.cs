@@ -37,6 +37,18 @@ public static class ImpactVfxMath
             AmmoKind.ElectromagneticLance or AmmoKind.IonBeam => 6,
             _ => 5,
         };
+        var shakeBase = ammoKind switch
+        {
+            AmmoKind.SeekerRocket => 2.8f,
+            AmmoKind.BallisticCannon => 2.4f,
+            _ => 0,
+        };
+        var damageCanShake = shakeBase > 0 || ammoKind is null;
+        var shakeDamage = damageCanShake && ammoKind != AmmoKind.NeedleDart ? Mathf.Clamp((damage - 55f) / 55f, 0, 1) * 2.2f : 0;
+        var shakeWeight = weightClass == UnitWeightClass.Heavy && shakeBase > 0 ? 1.1f : 0;
+        var shakeDomain = movementDomain == MovementDomain.Air ? 0.72f : 1f;
+        var shakeAmplitude = Mathf.Clamp((shakeBase + shakeDamage + shakeWeight) * shakeDomain, 0, 6.5f);
+        var shakeRadius = shakeAmplitude <= 0 ? 0 : Mathf.Clamp(420f + damage * 2.4f + shakeAmplitude * 42f, 420, 860);
         var secondary = ammoKind switch
         {
             AmmoKind.ElectromagneticLance => new Color("#8fffe1", 0.92f),
@@ -53,6 +65,8 @@ public static class ImpactVfxMath
             SparkScale: Mathf.Clamp(weightScale * domainScale * ammoScale, 0.7f, 1.9f),
             SparkCount: sparkCount + Mathf.RoundToInt(damageScale * 3),
             SecondaryColor: secondary,
+            ShakeAmplitude: shakeAmplitude,
+            ShakeRadius: shakeRadius,
             EmitsEmbers: ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || damage > 55,
             EmitsEmpDissolve: ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
     }
