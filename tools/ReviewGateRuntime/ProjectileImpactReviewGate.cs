@@ -26,6 +26,22 @@ static class ProjectileImpactReviewGate
         RequireText(projectileSystem, "definition.CanInterceptProjectiles", "Projectile interception must be driven by weapon metadata.", result);
         RequireText(projectileSystem, "mount with { CooldownRemaining = definition.Cooldown }", "Projectile interception must consume the interceptor mount cooldown.", result);
 
+        var combatEffects = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.cs");
+        RequireText(combatEffects, "List<BeamEffect> _beamEffects", "CombatEffectsLayer must own live beam presentation effects outside legacy GameState.Beams.", result);
+        RequireText(combatEffects, "public void AddBeam(", "CombatEffectsLayer must expose a presentation-only beam effect bridge.", result);
+        RequireText(combatEffects, "+ _beamEffects.Count", "ActiveEffectCount must include live beam presentation effects.", result);
+
+        var combatDraw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
+        RequireText(combatDraw, "foreach (var beam in _beamEffects)", "CombatEffectsLayer must draw live presentation beam effects.", result);
+        RequireText(combatDraw, "private void DrawBeam(", "Legacy and live beam paths must share the same draw helper.", result);
+
+        var battleRootEvents = ReviewGateSource.Read(root, "scripts", "BattleRoot.Events.cs");
+        RequireText(battleRootEvents, "AddBeamIfNeeded", "BattleRoot attack callbacks must bridge live UnitBattlefield attacks into beam effects.", result);
+
+        var battleRootBeams = ReviewGateSource.Read(root, "scripts", "battle", "BattleRoot.BeamEffects.cs");
+        RequireText(battleRootBeams, "ammo.Behavior != ProjectileBehavior.Beam", "Beam bridge must be gated by ammo behavior data.", result);
+        RequireText(battleRootBeams, "AmmoKindForPrimaryWeapon", "Building-target beam bridge must resolve attacker weapon ammo data.", result);
+
         ReviewGateSource.RequireTextInFile(
             root,
             result,

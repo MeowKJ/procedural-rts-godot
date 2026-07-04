@@ -32,36 +32,46 @@ public partial class CombatEffectsLayer : Node2D
     {
         foreach (var beam in State.Beams)
         {
-            var fade = BeamMath.Fade(beam.Age, beam.Duration);
-            var pulse = BeamMath.Pulse(beam.Age, beam.Duration);
-            if (fade <= 0)
-            {
-                continue;
-            }
-
-            var direction = beam.End - beam.Start;
-            if (direction.LengthSquared() <= 0.01f)
-            {
-                continue;
-            }
-
-            if (!IsSegmentVisible(beam.Start, beam.End, beam.Width * 4f))
-            {
-                continue;
-            }
-
-            var normal = direction.Normalized().Orthogonal();
-            var jitter = normal * (1.6f + pulse * 2.4f);
-            var coreWidth = Mathf.Max(1.2f, beam.Width * (0.42f + pulse * 0.2f));
-
-            DrawLine(beam.Start, beam.End, new Color(beam.Accent, 0.18f * fade), beam.Width * 3.8f, true);
-            DrawLine(beam.Start + jitter, beam.End + jitter, new Color(beam.Accent, 0.32f * fade), beam.Width * 1.4f, true);
-            DrawLine(beam.Start - jitter, beam.End - jitter, new Color(beam.Accent, 0.22f * fade), beam.Width, true);
-            DrawLine(beam.Start, beam.End, new Color("#ffffff", 0.84f * fade), coreWidth, true);
-
-            DrawCircle(beam.Start, beam.Width * (0.8f + pulse), new Color("#ffffff", 0.58f * fade));
-            DrawCircle(beam.End, beam.Width * (1.1f + pulse * 1.3f), new Color(beam.Accent, 0.38f * fade));
+            DrawBeam(beam.Start, beam.End, beam.Age, beam.Duration, beam.Width, beam.Accent);
         }
+
+        foreach (var beam in _beamEffects)
+        {
+            DrawBeam(beam.Start, beam.End, beam.Age, beam.Duration, beam.Width, beam.Accent);
+        }
+    }
+
+    private void DrawBeam(Vector2 start, Vector2 end, float age, float duration, float width, Color accent)
+    {
+        var fade = BeamMath.Fade(age, duration);
+        var pulse = BeamMath.Pulse(age, duration);
+        if (fade <= 0)
+        {
+            return;
+        }
+
+        var direction = end - start;
+        if (direction.LengthSquared() <= 0.01f)
+        {
+            return;
+        }
+
+        if (!IsSegmentVisible(start, end, width * 4f))
+        {
+            return;
+        }
+
+        var normal = direction.Normalized().Orthogonal();
+        var jitter = normal * (1.6f + pulse * 2.4f);
+        var coreWidth = Mathf.Max(1.2f, width * (0.42f + pulse * 0.2f));
+
+        DrawLine(start, end, new Color(accent, 0.18f * fade), width * 3.8f, true);
+        DrawLine(start + jitter, end + jitter, new Color(accent, 0.32f * fade), width * 1.4f, true);
+        DrawLine(start - jitter, end - jitter, new Color(accent, 0.22f * fade), width, true);
+        DrawLine(start, end, new Color("#ffffff", 0.84f * fade), coreWidth, true);
+
+        DrawCircle(start, width * (0.8f + pulse), new Color("#ffffff", 0.58f * fade));
+        DrawCircle(end, width * (1.1f + pulse * 1.3f), new Color(accent, 0.38f * fade));
     }
 
     private void DrawProjectiles()
