@@ -40,6 +40,10 @@ static void ValidateUnitDesignCatalog(List<string> failures)
     {
         var entitySpec = spec.ToEntitySpec();
         Require(entitySpec.Id == spec.Id && entitySpec.Kind == EntityKind.Unit, $"{spec.Id} must project to a unit EntitySpec.", failures);
+        Require(entitySpec.Display.NameKey == spec.NameKey, $"{spec.Id} must carry its UnitDesign NameKey into EntitySpec display.", failures);
+        Require(entitySpec.Display.RoleKey == spec.RoleKey, $"{spec.Id} must carry its UnitDesign RoleKey into EntitySpec display.", failures);
+        RequireHasTranslation(spec.NameKey, $"{spec.Id} name key", failures);
+        RequireHasTranslation(spec.RoleKey, $"{spec.Id} role key", failures);
         ValidateElementDefense(spec.Stats.ElementDefense, $"{spec.Id} stats", failures);
         hasPivotTurn |= spec.Movement.TurnMode == TurnMode.PivotInPlace;
         hasArcTurn |= spec.Movement.TurnMode == TurnMode.ArcTurn;
@@ -206,14 +210,29 @@ static void ValidateElementReactionCatalog(List<string> failures)
 static void ValidateBuildingCatalog(List<string> failures)
 {
     var concreteTypes = ConcreteTypes<BuildingDesign>();
+    var discoveredOrder = concreteTypes
+        .Select(type => (BuildingDesign)Activator.CreateInstance(type)!)
+        .OrderBy(design => design.SortOrder)
+        .ThenBy(design => design.Kind, StringComparer.Ordinal)
+        .ToArray();
+    var sortOrders = new HashSet<int>();
     Require(BuildSpecCatalog.Definitions.Count == concreteTypes.Count, "BuildSpecCatalog must discover every concrete BuildingDesign.", failures);
     Require(BuildingDesignIds.All.SequenceEqual(BuildSpecCatalog.Definitions.Keys), "BuildingDesignIds.All must mirror discovered build specs.", failures);
+    Require(discoveredOrder.Select(design => design.Kind).SequenceEqual(BuildSpecCatalog.Definitions.Keys), "BuildSpecCatalog order must come from BuildingDesign SortOrder plus Kind.", failures);
+    foreach (var design in discoveredOrder)
+    {
+        Require(sortOrders.Add(design.SortOrder), $"{design.Kind} must have a unique BuildingDesign SortOrder.", failures);
+    }
 
     foreach (var spec in BuildSpecCatalog.Definitions.Values)
     {
         var entitySpec = spec.ToEntitySpec();
         var expectedKind = spec.WeaponKind is null ? EntityKind.Building : EntityKind.Turret;
         Require(entitySpec.Id == spec.EntitySpecId && entitySpec.Kind == expectedKind, $"{spec.Kind} must project to the expected EntityKind.", failures);
+        Require(entitySpec.Display.NameKey == spec.NameKey, $"{spec.Kind} must carry its BuildSpec NameKey into EntitySpec display.", failures);
+        Require(entitySpec.Display.RoleKey == spec.RoleKey, $"{spec.Kind} must carry its BuildSpec RoleKey into EntitySpec display.", failures);
+        RequireHasTranslation(spec.NameKey, $"{spec.Kind} name key", failures);
+        RequireHasTranslation(spec.RoleKey, $"{spec.Kind} role key", failures);
         Require(spec.RequiredProducer is null || BuildSpecCatalog.Definitions.ContainsKey(spec.RequiredProducer), $"{spec.Kind} has a missing required producer.", failures);
         ValidateElementDefense(spec.ElementDefense, $"{spec.Kind} build spec", failures);
         foreach (var required in spec.RequiredBuildings)
@@ -224,8 +243,17 @@ static void ValidateBuildingCatalog(List<string> failures)
         if (spec.WeaponKind is { } weaponKind)
         {
             Require(WeaponCatalog.Weapons.ContainsKey(weaponKind), $"{spec.Kind} references missing weapon {weaponKind}.", failures);
+            Require(entitySpec.Kind == EntityKind.Turret, $"{spec.Kind} with weapon {weaponKind} must project as a turret EntitySpec.", failures);
+            Require(entitySpec.Weapons.Count > 0, $"{spec.Kind} turret EntitySpec must expose weapon mount data.", failures);
+            Require(entitySpec.UnitArt is null, $"{spec.Kind} turret-backed building must not require a UnitArt recipe.", failures);
         }
     }
+}
+
+static void RequireHasTranslation(string key, string owner, List<string> failures)
+{
+    Require(GameText.HasTranslation(key, GameLanguage.English), $"{owner} must have an English translation.", failures);
+    Require(GameText.HasTranslation(key, GameLanguage.ChineseSimplified), $"{owner} must have a Chinese or English fallback translation.", failures);
 }
 
 static void ValidateElementDefense(ElementDefenseProfile? profile, string owner, List<string> failures)
