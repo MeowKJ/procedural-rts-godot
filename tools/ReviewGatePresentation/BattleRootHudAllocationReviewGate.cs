@@ -43,7 +43,16 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "LiveLegacyBuildingCount()", "PerfHudCounts must use explicit legacy building counting.", result);
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
+        var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.command\")", "Production drawer tabs must expose the command build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.power\")", "Production drawer tabs must expose the power build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.economy\")", "Production drawer tabs must expose the economy build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.infantry\")", "Production drawer tabs must expose the infantry build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.vehicle\")", "Production drawer tabs must expose the vehicle build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.defense\")", "Production drawer tabs must expose the defense build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.air\")", "Production drawer tabs must expose the air build category.", result);
+        RequireText(hudBuild, "GameText.T(\"ui.tabs.naval\")", "Production drawer tabs must expose the naval build category.", result);
         RequireText(hudSync, "CollectSelectedProductionBuildingIds();", "Runtime command-card refresh must collect selected building ids once for command-card and queue sync.", result);
         RequireText(hudSync, "RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer)", "Runtime command-card refresh must route through selected-producer state selection.", result);
         RequireText(hudSync, "_unitBattlefield.ProductionDesignOptionStatesForSelectedProducers", "Runtime command-card refresh must use selected producer production options when available.", result);
