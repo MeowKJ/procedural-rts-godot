@@ -50,6 +50,13 @@ public partial class BattleRoot
 
     private void OnUnitInstanceAttacked(UnitInstance target, UnitInstance attacker)
     {
+        AddBeamIfNeeded(
+            attacker.Position,
+            target.Position,
+            target.LastDamageAmmoKind,
+            attacker.Spec.Faction,
+            attacker.PlayerSlotId);
+
         _combatEffects.AddImpactFlash(
             target.Position,
             target.Spec.Collision.Radius,
@@ -70,6 +77,13 @@ public partial class BattleRoot
 
     private void OnUnitInstanceAttackedByBuilding(UnitInstance target, UnitBattlefieldBuildingSnapshot attacker)
     {
+        AddBeamIfNeeded(
+            attacker.Position,
+            target.Position,
+            target.LastDamageAmmoKind,
+            attacker.Faction,
+            attacker.PlayerSlotId);
+
         _combatEffects.AddImpactFlash(
             target.Position,
             target.Spec.Collision.Radius,
@@ -91,6 +105,13 @@ public partial class BattleRoot
     private void OnUnitBattlefieldBuildingAttacked(UnitBattlefieldBuildingSnapshot target, UnitInstance attacker)
     {
         var spec = BuildSpecCatalog.For(target.Kind);
+        AddBeamIfNeeded(
+            attacker.Position,
+            target.Position,
+            AmmoKindForPrimaryWeapon(attacker),
+            attacker.Spec.Faction,
+            attacker.PlayerSlotId);
+
         if (_state.BuildingById(target.Id) is { } building)
         {
             building.Hp = target.Hp;

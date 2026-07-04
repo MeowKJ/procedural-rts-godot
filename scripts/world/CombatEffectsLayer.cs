@@ -11,6 +11,8 @@ public partial class CombatEffectsLayer : Node2D
     private const int ImpactFlashSoftLimit = 96;
     private const int ImpactFlashHardLimit = 128;
     private const int ImpactFlashPoolLimit = 160;
+    private const int BeamEffectSoftLimit = 48;
+    private const int BeamEffectHardLimit = 64;
     private const float UnderLoadFadeSeconds = 0.35f;
     private const float ImpactFlashLifetime = 0.32f;
     private const int LargeEffectArcSegments = 48;
@@ -25,10 +27,12 @@ public partial class CombatEffectsLayer : Node2D
     private readonly List<UnitDeathEffect> _pooledUnitDeaths = [];
     private readonly List<ImpactFlashEffect> _impactFlashes = [];
     private readonly List<ImpactFlashEffect> _pooledImpactFlashes = [];
+    private readonly List<BeamEffect> _beamEffects = [];
     private readonly List<ProjectilePresentationProjection> _projectileProjections = [];
     public int ActiveEffectCount =>
         _unitDeaths.Count
         + _impactFlashes.Count
+        + _beamEffects.Count
         + State.Projectiles.Count
         + State.Beams.Count
         + (UnitBattlefield?.ProjectileProjectionCount() ?? 0);
@@ -64,9 +68,30 @@ public partial class CombatEffectsLayer : Node2D
         ApplyImpactFlashBudget();
     }
 
+    public void AddBeam(Vector2 start, Vector2 end, float duration, float width, Color accent)
+    {
+        if (duration <= 0 || width <= 0 || start.DistanceSquaredTo(end) <= 0.01f)
+        {
+            return;
+        }
+
+        _beamEffects.Add(new BeamEffect(start, end, duration, width, accent));
+        ApplyBeamEffectBudget();
+    }
+
     public override void _Process(double delta)
     {
         var dt = (float)delta;
+        for (var index = _beamEffects.Count - 1; index >= 0; index--)
+        {
+            var effect = _beamEffects[index];
+            effect.Age += dt;
+            if (effect.Age >= effect.Duration)
+            {
+                _beamEffects.RemoveAt(index);
+            }
+        }
+
         for (var index = _impactFlashes.Count - 1; index >= 0; index--)
         {
             _impactFlashes[index].Age += dt;
@@ -96,5 +121,37 @@ public partial class CombatEffectsLayer : Node2D
         DrawProjectiles();
         DrawImpactFlashes();
         DrawHitPulses();
+    }
+
+    private void ApplyBeamEffectBudget()
+    {
+        if (_beamEffects.Count > BeamEffectSoftLimit)
+        {
+            var overflow = _beamEffects.Count - BeamEffectSoftLimit;
+            for (var index = 0; index < overflow && index < _beamEffects.Count; index++)
+            {
+                _beamEffects[index].FadeOutSoon(UnderLoadFadeSeconds);
+            }
+        }
+
+        while (_beamEffects.Count > BeamEffectHardLimit)
+        {
+            _beamEffects.RemoveAt(0);
+        }
+    }
+
+    private sealed class BeamEffect(Vector2 start, Vector2 end, float duration, float width, Color accent)
+    {
+        public Vector2 Start { get; } = start;
+        public Vector2 End { get; } = end;
+        public float Duration { get; } = duration;
+        public float Width { get; } = width;
+        public Color Accent { get; } = accent;
+        public float Age { get; set; }
+
+        public void FadeOutSoon(float remainingSeconds)
+        {
+            Age = Mathf.Max(Age, Duration - remainingSeconds);
+        }
     }
 }
