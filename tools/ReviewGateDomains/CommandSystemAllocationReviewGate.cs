@@ -12,14 +12,14 @@ static class CommandSystemAllocationReviewGate
     private static void RequireEntityCommandBufferDrainBuffers(string root, GateResult result)
     {
         var buffer = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityCommandBuffer.cs");
-        RequireText(buffer, "List<SequencedCommandEnvelope> _snapshotBuffer", "EntityCommandBuffer must reuse its ordered snapshot buffer.", result);
+        RequireText(buffer, "List<SequencedCommandEnvelope> _snapshotBuffer", "EntityCommandBuffer must reuse its ordered snapshot buffer.", result); RequireText(buffer, "List<SequencedCommandEnvelope> _drainSnapshotBuffer", "EntityCommandBuffer drain must keep a separate reusable scan buffer.", result);
         RequireText(buffer, "List<SequencedCommandEnvelope> _readyBuffer", "EntityCommandBuffer must reuse its ready command buffer.", result);
         RequireText(buffer, "HashSet<long> _readySequences", "EntityCommandBuffer must reuse its removal sequence set.", result);
-        RequireText(buffer, "CopyOrderedCommandsInto(_snapshotBuffer)", "DrainUpToTick must sort through the reusable snapshot buffer.", result);
+        RequireText(buffer, "CopyOrderedCommandsInto(_drainSnapshotBuffer)", "DrainUpToTick must sort through a reusable drain scan buffer.", result); RequireText(buffer, "return _snapshotBuffer;", "EntityCommandBuffer snapshot readout must return reusable storage without copying.", result);
         RequireText(buffer, "_commands.RemoveAll(IsReadySequence)", "DrainUpToTick must remove ready commands through the reusable sequence set.", result);
         ForbidText(buffer, ".Where(item => item.Command.Tick <= tick)", "EntityCommandBuffer drain must not allocate a LINQ ready list.", result);
         ForbidText(buffer, ".Select(item => item.Sequence).ToHashSet()", "EntityCommandBuffer drain must not allocate a sequence HashSet per tick.", result);
-        ForbidText(buffer, ".OrderBy(item => item.Command.Tick)", "EntityCommandBuffer must not allocate ordered LINQ snapshots.", result);
+        ForbidText(buffer, ".OrderBy(item => item.Command.Tick)", "EntityCommandBuffer must not allocate ordered LINQ snapshots.", result); ForbidText(buffer, "_snapshotBuffer.ToArray()", "EntityCommandBuffer snapshot readout must not allocate array copies.", result);
     }
 
     private static void RequireScalarOrderSubjectBuffer(string root, GateResult result)
