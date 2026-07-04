@@ -130,7 +130,7 @@ public partial class HudLayer : CanvasLayer
             Active = active,
             Selected = glyph == IconGlyph.Building,
             Position = position,
-            CustomMinimumSize = new Vector2(38, 32),
+            CustomMinimumSize = new Vector2(31, 32),
             MouseFilter = Control.MouseFilterEnum.Stop,
             TooltipText = tooltip,
         };

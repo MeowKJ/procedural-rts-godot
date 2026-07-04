@@ -160,12 +160,14 @@ public partial class HudLayer : CanvasLayer
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
 
-        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.build"), new Vector2(10, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Turret, GameText.T("ui.tabs.turret"), new Vector2(58, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.light"), new Vector2(106, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.tank"), new Vector2(154, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(202, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(250, 8), active: false);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 8), active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 8), active: false);
 
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(12, 42), new Vector2(270, 24), FontBody, Ink);
         _rightProductionPanel.AddChild(_productionValue);
