@@ -11,10 +11,14 @@ public partial class CombatEffectsLayer : Node2D
     private const int ImpactFlashSoftLimit = 96;
     private const int ImpactFlashHardLimit = 128;
     private const int ImpactFlashPoolLimit = 160;
+    private const int MuzzleFlashSoftLimit = 96;
+    private const int MuzzleFlashHardLimit = 128;
+    private const int MuzzleFlashPoolLimit = 160;
     private const int BeamEffectSoftLimit = 48;
     private const int BeamEffectHardLimit = 64;
     private const float UnderLoadFadeSeconds = 0.35f;
     private const float ImpactFlashLifetime = 0.32f;
+    private const float MuzzleFlashLifetime = 0.16f;
     private const int LargeEffectArcSegments = 48;
     private const int MediumEffectArcSegments = 36;
     private const int SmallEffectArcSegments = 24;
@@ -27,11 +31,14 @@ public partial class CombatEffectsLayer : Node2D
     private readonly List<UnitDeathEffect> _pooledUnitDeaths = [];
     private readonly List<ImpactFlashEffect> _impactFlashes = [];
     private readonly List<ImpactFlashEffect> _pooledImpactFlashes = [];
+    private readonly List<MuzzleFlashEffect> _muzzleFlashes = [];
+    private readonly List<MuzzleFlashEffect> _pooledMuzzleFlashes = [];
     private readonly List<BeamEffect> _beamEffects = [];
     private readonly List<ProjectilePresentationProjection> _projectileProjections = [];
     public int ActiveEffectCount =>
         _unitDeaths.Count
         + _impactFlashes.Count
+        + _muzzleFlashes.Count
         + _beamEffects.Count
         + State.Projectiles.Count
         + State.Beams.Count
@@ -68,6 +75,14 @@ public partial class CombatEffectsLayer : Node2D
         ApplyImpactFlashBudget();
     }
 
+    public void AddMuzzleFlash(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind = null)
+    {
+        var effect = RentMuzzleFlashEffect();
+        effect.Reset(position, targetPosition, accent, weaponKind);
+        _muzzleFlashes.Add(effect);
+        ApplyMuzzleFlashBudget();
+    }
+
     public void AddBeam(Vector2 start, Vector2 end, float duration, float width, Color accent)
     {
         if (duration <= 0 || width <= 0 || start.DistanceSquaredTo(end) <= 0.01f)
@@ -101,6 +116,15 @@ public partial class CombatEffectsLayer : Node2D
             }
         }
 
+        for (var index = _muzzleFlashes.Count - 1; index >= 0; index--)
+        {
+            _muzzleFlashes[index].Age += dt;
+            if (_muzzleFlashes[index].Age >= MuzzleFlashLifetime)
+            {
+                ReturnAndRemoveMuzzleFlash(index);
+            }
+        }
+
         for (var index = _unitDeaths.Count - 1; index >= 0; index--)
         {
             _unitDeaths[index].Age += dt;
@@ -117,6 +141,7 @@ public partial class CombatEffectsLayer : Node2D
     {
         DrawThreatAlerts();
         DrawUnitDeaths();
+        DrawMuzzleFlashes();
         DrawBeams();
         DrawProjectiles();
         DrawImpactFlashes();

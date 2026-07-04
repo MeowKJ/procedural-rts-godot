@@ -313,7 +313,37 @@ public sealed partial class UnitBattlefield
         }
 
         unit.AttackCooldownRemaining = weapon.Cooldown;
+        WeaponFired?.Invoke(new WeaponFiredEvent(
+            _inputCommandTick,
+            unit.EntityId,
+            primaryMount?.MountId ?? "main",
+            weapon.Id,
+            MuzzlePosition(unit, primaryMount),
+            target.Position,
+            weapon.LegacyKind));
         ApplyDamage(unit, target, weapon);
+    }
+
+    private static Vector2 MuzzlePosition(UnitInstance unit, WeaponMountRuntimeState? mount)
+    {
+        var mountId = mount?.MountId;
+        if (!string.IsNullOrWhiteSpace(mountId))
+        {
+            foreach (var spec in unit.Spec.Weapons)
+            {
+                if (spec.MountId != mountId)
+                {
+                    continue;
+                }
+
+                return unit.Position
+                    + spec.Anchor.Rotated(unit.Facing)
+                    + spec.MuzzleOffset.Rotated(mount!.Facing);
+            }
+        }
+
+        var facing = mount?.Facing ?? unit.Facing;
+        return unit.Position + Vector2.FromAngle(facing) * (unit.Spec.Collision.Radius + 12);
     }
 
 }

@@ -128,6 +128,15 @@ public partial class BattleRoot
         PlayAudioCue(TacticalAudioCue.Alert);
     }
 
+    private void OnWeaponFired(WeaponFiredEvent fired)
+    {
+        var accent = WeaponCatalog.WeaponDefinitions.TryGetValue(fired.WeaponId, out var weapon)
+            && WeaponCatalog.AmmoDefinitions.TryGetValue(weapon.AmmoId, out var ammo)
+            ? ammo.Accent
+            : new Color("#f6c55c");
+        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
+    }
+
     private void OnUnitBattlefieldBuildingsRemoved(IReadOnlyList<UnitBattlefieldBuildingDeathInfo> deaths)
     {
         foreach (var death in deaths)

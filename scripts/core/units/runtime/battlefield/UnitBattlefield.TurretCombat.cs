@@ -34,6 +34,12 @@ public sealed partial class UnitBattlefield
     {
         foreach (var simEvent in events)
         {
+            if (simEvent is WeaponFiredEvent fired)
+            {
+                WeaponFired?.Invoke(fired);
+                continue;
+            }
+
             if (simEvent is not EntityDamagedEvent damaged)
             {
                 continue;

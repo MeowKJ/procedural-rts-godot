@@ -103,6 +103,7 @@ public sealed partial class UnitBattlefield
     public PlayerSlotId OutcomeViewer { get; set; } = PlayerSlotId.One;
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
     public event Action<IReadOnlyList<UnitInstanceDeathInfo>>? UnitsRemoved;
+    public event Action<WeaponFiredEvent>? WeaponFired;
     public event Action<UnitInstance, UnitInstance>? UnitAttacked;
     public event Action<UnitInstance, UnitBattlefieldBuildingSnapshot>? UnitAttackedByBuilding;
     public event Action<UnitBattlefieldBuildingSnapshot, UnitInstance>? BuildingAttacked;

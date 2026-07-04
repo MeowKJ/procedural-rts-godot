@@ -8,6 +8,13 @@ static class UnitRenderingAllocationReviewGate
         var legacyView = ReviewGateSource.Read(root, "scripts", "world", "UnitView.cs");
         var dynamicIcon = ReviewGateSource.Read(root, "scripts", "ui", "DynamicUnitIcon.cs");
         var unitInstance = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitInstance.cs");
+        var combatEffects = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "world", "CombatEffectsLayer.cs"));
+        var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "BattleRoot.cs"));
+        var unitBattlefield = ReviewGateEvidence.ReadSourceWithPartials(
+            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
+        var weaponResolution = ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponEngagementResolution.cs");
 
         RequireText(renderer, "UnitMountFacingSource mountFacings = default", "Unit renderer must accept mount-facing sources without dictionaries.", result);
         RequireText(facingSource, "FromRuntimeMounts(IReadOnlyList<WeaponMountRuntimeState> mounts)", "Runtime unit draw must pass existing weapon mount storage.", result);
@@ -16,6 +23,13 @@ static class UnitRenderingAllocationReviewGate
         RequireText(runtimeView, "UnitMountFacingSource.FromRuntimeMounts(Unit.WeaponMounts)", "UnitInstanceView must draw from runtime mount storage directly.", result);
         RequireText(legacyView, "UnitMountFacingSource.FromLegacyUnit(style.Spec, Unit.Facing, Unit.TurretFacing)", "Legacy UnitView must draw from a mount-facing source.", result);
         RequireText(dynamicIcon, "UnitMountFacingSource.Single(\"main\", turretFacing)", "DynamicUnitIcon must not allocate a mount-facing dictionary.", result);
+        RequireText(unitBattlefield, "event Action<WeaponFiredEvent>? WeaponFired", "UnitBattlefield must expose WeaponFiredEvent data for presentation-only muzzle flashes.", result);
+        RequireText(battleRoot, "_unitBattlefield.WeaponFired += OnWeaponFired", "BattleRoot must subscribe to runtime WeaponFiredEvent presentation data.", result);
+        RequireText(battleRoot, "_combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind)", "BattleRoot must route WeaponFiredEvent data to muzzle flash VFX.", result);
+        RequireText(combatEffects, "List<MuzzleFlashEffect> _muzzleFlashes", "CombatEffectsLayer must pool muzzle flash VFX instead of allocating ad-hoc nodes.", result);
+        RequireText(combatEffects, "DrawMuzzleFlashes();", "CombatEffectsLayer must draw weapon-fired muzzle flashes.", result);
+        RequireText(combatEffects, "DrawHitPunch(", "CombatEffectsLayer must add visual-only hit punch feedback on damage pulses.", result);
+        RequireText(weaponResolution, "MuzzlePosition(context.World, attacker, mount)", "WeaponFiredEvent muzzle must be computed from the firing mount, not the entity center.", result);
         ForbidText(runtimeView, "Unit.MountFacings()", "UnitInstanceView draw must not allocate mount-facing dictionaries.", result);
         ForbidText(dynamicIcon, "new Dictionary<string, float>", "DynamicUnitIcon draw must not allocate mount-facing dictionaries.", result);
         ForbidText(unitInstance, "MountFacings()", "UnitInstance must not expose a dictionary-allocating draw helper.", result);
