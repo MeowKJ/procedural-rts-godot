@@ -53,6 +53,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "GameText.T(\"ui.tabs.defense\")", "Production drawer tabs must expose the defense build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.air\")", "Production drawer tabs must expose the air build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.naval\")", "Production drawer tabs must expose the naval build category.", result);
+        RequireText(hudState, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
+        RequireText(hudBuild, "Name = \"SandboxStateHash\"", "Sandbox developer HUD must expose the state-hash readout as a stable node.", result);
+        RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);
+        RequireText(sandbox, "_unitBattlefield.EntityWorld.DeterministicStateHash()", "Sandbox state-hash readout must use the live runtime EntityWorld hash.", result);
+        RequireText(process, "RefreshSandboxStateHash();", "BattleRoot process must refresh sandbox state-hash overlay state.", result);
         RequireText(hudSync, "CollectSelectedProductionBuildingIds();", "Runtime command-card refresh must collect selected building ids once for command-card and queue sync.", result);
         RequireText(hudSync, "RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer)", "Runtime command-card refresh must route through selected-producer state selection.", result);
         RequireText(hudSync, "_unitBattlefield.ProductionDesignOptionStatesForSelectedProducers", "Runtime command-card refresh must use selected producer production options when available.", result);

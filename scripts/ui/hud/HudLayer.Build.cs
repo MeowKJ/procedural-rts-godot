@@ -63,6 +63,11 @@ public partial class HudLayer : CanvasLayer
         _sandboxStressButton = AddSandboxDeveloperButton("SandboxStress", "Spawn a deterministic stress pack", new Vector2(126, 112), new Vector2(104, 28), Danger, () =>
             SandboxStressRequested?.Invoke());
 
+        _sandboxStateHashValue = MakeSizedLabel("", new Vector2(12, 154), new Vector2(218, 18), FontTiny, InkMuted);
+        _sandboxStateHashValue.Name = "SandboxStateHash";
+        _sandboxStateHashValue.Visible = false;
+        _sandboxDeveloperPanel.AddChild(_sandboxStateHashValue);
+
         SetSandboxDeveloperContext(_sandboxDeveloperContext);
     }
 

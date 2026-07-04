@@ -43,6 +43,7 @@ public partial class HudLayer : CanvasLayer
     private Panel _rightProductionPanel = null!;
     private Panel _rightDetailPanel = null!;
     private Label _sandboxDeveloperStatus = null!;
+    private Label _sandboxStateHashValue = null!;
     private Button _sandboxOwnerButton = null!;
     private Button _sandboxFactionButton = null!;
     private Button _sandboxTeamButton = null!;
@@ -105,11 +106,26 @@ public partial class HudLayer : CanvasLayer
         _sandboxOverlayButton.Text = overlay == "Sandbox overlays: off" ? "Overlay off" : "Overlay on";
         _sandboxStressButton.Text = context.CanSpawnCurrentFaction ? "Stress spawn" : "Locked";
         _sandboxStressButton.Disabled = !context.CanSpawnCurrentFaction;
+        if (!context.DebugOverlay.IsEnabled(SandboxDebugOverlayFlag.StateHash))
+        {
+            SetSandboxStateHash(null);
+        }
 
         foreach (var button in _sandboxDeveloperButtons)
         {
             button.QueueRedraw();
         }
+    }
+
+    public void SetSandboxStateHash(ulong? hash)
+    {
+        if (_sandboxStateHashValue is null)
+        {
+            return;
+        }
+
+        _sandboxStateHashValue.Visible = hash is not null;
+        _sandboxStateHashValue.Text = hash is null ? "" : $"HASH {hash.Value:X16}";
     }
 
     public void SetSelectedCount(int count)
