@@ -8,6 +8,8 @@ public readonly record struct DeathVfxStyle(
     int FragmentCount,
     int SmokeCount,
     float SmokeScale,
+    float ScorchScale,
+    float ScorchAlpha,
     float RingWidth,
     Color SecondaryColor,
     bool EmitsEmbers,

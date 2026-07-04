@@ -123,9 +123,11 @@ static partial class Program
         if (heavyRocketDeathStyle.FragmentCount <= lightDeathStyle.FragmentCount
             || heavyRocketDeathStyle.SmokeCount <= lightDeathStyle.SmokeCount
             || heavyRocketDeathStyle.BurstScale <= lightDeathStyle.BurstScale
+            || heavyRocketDeathStyle.ScorchScale <= lightDeathStyle.ScorchScale
+            || heavyRocketDeathStyle.ScorchAlpha <= lightDeathStyle.ScorchAlpha
             || !heavyRocketDeathStyle.EmitsEmbers)
         {
-            throw new InvalidOperationException("death VFX should scale up for heavy overkilled rocket/cannon kills");
+            throw new InvalidOperationException("death VFX should scale up burst, smoke, and fading scorch for heavy overkilled rocket/cannon kills");
         }
 
         if (!empDeathStyle.EmitsEmpDissolve || empDeathStyle.EmitsEmbers)
