@@ -233,7 +233,8 @@ public partial class HudLayer : CanvasLayer
         IReadOnlyList<MinimapBuilding> buildings,
         IReadOnlyList<MinimapResource> resources,
         Texture2D? fogMask,
-        IReadOnlyList<UnitMinimapPip>? unitDesignPips = null)
+        IReadOnlyList<UnitMinimapPip>? unitDesignPips = null,
+        IReadOnlyList<MinimapAlertPing>? alertPings = null)
     {
         _minimapSurface.WorldSize = worldSize;
         _minimapSurface.ViewerFaction = ViewerFaction;
@@ -242,6 +243,7 @@ public partial class HudLayer : CanvasLayer
         _minimapSurface.UnitDesignPips = unitDesignPips ?? [];
         _minimapSurface.Buildings = buildings;
         _minimapSurface.Resources = resources;
+        _minimapSurface.AlertPings = alertPings ?? [];
         _minimapSurface.FogMask = fogMask;
         _minimapSurface.QueueRedraw();
     }
@@ -393,6 +395,8 @@ public partial class HudLayer : CanvasLayer
     public readonly record struct MinimapBuilding(Vector2 Position, Vector2 Size, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);
 
     public readonly record struct MinimapResource(Vector2 Position, float Radius, float RemainingRatio);
+
+    public readonly record struct MinimapAlertPing(Vector2 Position, AlertKind Kind, float RemainingRatio);
 
     public readonly record struct AlertLine(AlertKind Kind, FactionId? FactionId, string Text, float RemainingRatio);
 

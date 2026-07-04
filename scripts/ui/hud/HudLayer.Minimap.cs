@@ -13,6 +13,7 @@ public partial class HudLayer : CanvasLayer
         public IReadOnlyList<UnitMinimapPip> UnitDesignPips { get; set; } = [];
         public IReadOnlyList<MinimapBuilding> Buildings { get; set; } = [];
         public IReadOnlyList<MinimapResource> Resources { get; set; } = [];
+        public IReadOnlyList<MinimapAlertPing> AlertPings { get; set; } = [];
         public Texture2D? FogMask { get; set; }
         public FactionId ViewerFaction { get; set; } = FactionId.Dog;
         public Action<Vector2>? JumpRequested { get; init; }
@@ -99,6 +100,11 @@ public partial class HudLayer : CanvasLayer
 
             DrawFog(rect);
 
+            foreach (var ping in AlertPings)
+            {
+                DrawAlertPing(WorldToLocal(ping.Position), ping.Kind, ping.RemainingRatio);
+            }
+
             var cameraRect = WorldRectToLocal(CameraWorldRect).Intersection(rect);
             if (cameraRect.Size.X > 0 && cameraRect.Size.Y > 0)
             {
@@ -160,6 +166,21 @@ public partial class HudLayer : CanvasLayer
             var radius = baseRadius + pulse * 8;
             DrawCircle(position, radius, new Color(Danger, 0.2f * pulse), false, 1.4f, true);
             DrawCircle(position, radius + 3, new Color(Danger, 0.12f * pulse), false, 1, true);
+        }
+
+        private void DrawAlertPing(Vector2 position, AlertKind kind, float remainingRatio)
+        {
+            var pulse = Mathf.Clamp(remainingRatio, 0, 1);
+            if (pulse <= 0.01f)
+            {
+                return;
+            }
+
+            var accent = SoftOldCityTheme.AccentForAlert(kind, CurrentPalette);
+            var radius = 8 + (1 - pulse) * 16;
+            DrawCircle(position, 3.2f, new Color(accent, 0.9f * pulse), true);
+            DrawCircle(position, radius, new Color(accent, 0.42f * pulse), false, 1.8f, true);
+            DrawCircle(position, radius + 4, new Color(accent, 0.2f * pulse), false, 1.1f, true);
         }
 
         private static Color EntityPipColor(FactionId viewerFaction, Owner owner, FactionId factionId, float alpha)
