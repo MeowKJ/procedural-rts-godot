@@ -129,6 +129,7 @@ static partial class Program
             || GameText.T("menu.startSkirmish") != "\u5f00\u59cb\u906d\u9047\u6218"
             || GameText.T("pause.title") != "\u6218\u672f\u6682\u505c"
             || GameText.T("settings.title") != "\u8bbe\u7f6e"
+            || GameText.T("settings.impactShake") != "\u547d\u4e2d\u9707\u52a8"
             || GameText.T("outcome.retry") != "\u91cd\u8bd5\u906d\u9047\u6218"
             || GameText.T("move.attack") != "\u653b\u51fb\u524d\u8fdb"
             || GameText.T("hotkeys.title") != "\u70ed\u952e")

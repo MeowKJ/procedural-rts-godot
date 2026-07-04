@@ -60,7 +60,7 @@ public partial class CombatEffectsLayer : Node2D
         ApplyDeathEffectBudget();
     }
 
-    public void AddImpactFlash(
+    public ImpactVfxStyle AddImpactFlash(
         Vector2 position,
         float radius,
         Color accent,
@@ -69,10 +69,12 @@ public partial class CombatEffectsLayer : Node2D
         float damage = 0,
         AmmoKind? ammoKind = null)
     {
+        var style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoKind, damage);
         var effect = RentImpactFlashEffect();
-        effect.Reset(position, radius, accent, weightClass, movementDomain, damage, ammoKind);
+        effect.Reset(position, radius, accent, damage, ammoKind, style);
         _impactFlashes.Add(effect);
         ApplyImpactFlashBudget();
+        return style;
     }
 
     public void AddMuzzleFlash(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind = null)

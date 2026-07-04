@@ -141,12 +141,20 @@ static partial class Program
         if (heavyRocketImpactStyle.Expansion <= lightNeedleImpactStyle.Expansion
             || heavyRocketImpactStyle.LineWidth <= lightNeedleImpactStyle.LineWidth
             || heavyRocketImpactStyle.SparkCount <= lightNeedleImpactStyle.SparkCount
+            || heavyRocketImpactStyle.ShakeAmplitude <= lightNeedleImpactStyle.ShakeAmplitude
+            || heavyRocketImpactStyle.ShakeRadius <= 0
             || !heavyRocketImpactStyle.EmitsEmbers)
         {
-            throw new InvalidOperationException("impact VFX should scale up for heavy rocket/cannon hits");
+            throw new InvalidOperationException("impact VFX should scale up flash, spark, and optional shake for heavy rocket/cannon hits");
+        }
+
+        if (lightNeedleImpactStyle.ShakeAmplitude > 0 || lightNeedleImpactStyle.ShakeRadius > 0)
+        {
+            throw new InvalidOperationException("needle impact VFX should stay crisp without screen shake");
         }
 
         if (airIonImpactStyle.SparkScale <= lightNeedleImpactStyle.SparkScale
+            || airIonImpactStyle.ShakeAmplitude > 0
             || !airIonImpactStyle.EmitsEmpDissolve
             || airIonImpactStyle.EmitsEmbers)
         {

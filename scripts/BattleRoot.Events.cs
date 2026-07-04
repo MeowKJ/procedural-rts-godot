@@ -52,7 +52,7 @@ public partial class BattleRoot
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
-        _combatEffects.AddImpactFlash(
+        var impactStyle = _combatEffects.AddImpactFlash(
             target.Position,
             target.Spec.Collision.Radius,
             UnitFactionAccent(target.Spec.Faction, target.PlayerSlotId),
@@ -60,6 +60,7 @@ public partial class BattleRoot
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
             target.LastDamageAmmoKind);
+        RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
         {
@@ -79,7 +80,7 @@ public partial class BattleRoot
             attacker.Faction,
             attacker.PlayerSlotId);
 
-        _combatEffects.AddImpactFlash(
+        var impactStyle = _combatEffects.AddImpactFlash(
             target.Position,
             target.Spec.Collision.Radius,
             UnitFactionAccent(target.Spec.Faction, target.PlayerSlotId),
@@ -87,6 +88,7 @@ public partial class BattleRoot
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
             target.LastDamageAmmoKind);
+        RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
         {
@@ -113,12 +115,17 @@ public partial class BattleRoot
             building.HitPulse = 1;
         }
 
-        _combatEffects.AddImpactFlash(
+        var ammoKind = AmmoKindForPrimaryWeapon(attacker);
+        var damage = DamageForPrimaryWeapon(attacker, spec);
+        var impactStyle = _combatEffects.AddImpactFlash(
             target.Position,
             Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
             UnitFactionAccent(target.Faction, target.PlayerSlotId),
             UnitWeightClass.Heavy,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            damage,
+            ammoKind);
+        RequestImpactShake(target.Position, impactStyle);
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"building-attack:{target.Id}", CombatAlertCooldown))
         {
             return;
@@ -337,12 +344,13 @@ public partial class BattleRoot
 
     private void OnEntityAttacked(ProceduralRts.Core.Owner owner, FactionId factionId, Vector2 position, string label)
     {
-        _combatEffects.AddImpactFlash(
+        var impactStyle = _combatEffects.AddImpactFlash(
             position,
             24,
             _state.VisualAccent(owner, factionId, FactionCatalog.For(factionId).Accent),
             UnitWeightClass.Medium,
             MovementDomain.Land);
+        RequestImpactShake(position, impactStyle);
 
         if (!FactionRelations.IsAllied(ProceduralRts.Core.Owner.Player, _state.MatchConfig.PlayerFaction, owner, factionId)
             || !TryUseAlertCooldown($"attack:{label}", CombatAlertCooldown))
@@ -376,5 +384,13 @@ public partial class BattleRoot
     private void PlayAudioCue(TacticalAudioCue cue)
     {
         _audio?.Play(cue);
+    }
+
+    private void RequestImpactShake(Vector2 position, ImpactVfxStyle style)
+    {
+        if (DisplayAudioSettings.ImpactScreenShake)
+        {
+            _camera.RequestImpactShake(position, style);
+        }
     }
 }

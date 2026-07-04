@@ -104,17 +104,16 @@ public partial class CombatEffectsLayer : Node2D
             Vector2 position,
             float radius,
             Color accent,
-            UnitWeightClass weightClass,
-            MovementDomain movementDomain,
             float damage,
-            AmmoKind? ammoKind)
+            AmmoKind? ammoKind,
+            ImpactVfxStyle style)
         {
             Position = position;
             Radius = Mathf.Max(8, radius);
             Accent = accent;
             Age = 0;
             Seed = Mathf.RoundToInt(position.X * 7 + position.Y * 11 + damage * 3 + (ammoKind is null ? 0 : (int)ammoKind.Value * 101));
-            Style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoKind, damage);
+            Style = style;
         }
 
         public void FadeOutSoon(float remainingSeconds)
