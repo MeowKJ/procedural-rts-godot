@@ -14,6 +14,12 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
+            var readability = ReadabilityFor(effect.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
             var t = Mathf.Clamp(effect.Age / MuzzleFlashLifetime, 0, 1);
             var fade = 1 - t;
             var direction = effect.Direction;
@@ -22,12 +28,12 @@ public partial class CombatEffectsLayer : Node2D
             var left = effect.Position + normal * effect.Width * fade;
             var right = effect.Position - normal * effect.Width * fade;
 
-            DrawCircle(effect.Position, effect.Width * 0.72f, new Color("#ffffff", 0.72f * fade));
-            DrawLine(effect.Position, tip, new Color("#ffffff", 0.74f * fade), effect.CoreWidth * fade + 0.6f, true);
-            DrawLine(left, right, new Color(effect.Accent, 0.20f * fade), effect.Width * 1.1f * fade + 0.8f, true);
-            DrawLine(left + direction * effect.Length * 0.38f, right + direction * effect.Length * 0.38f, new Color(effect.Accent, 0.18f * fade), effect.Width * 0.74f * fade + 0.6f, true);
-            DrawLine(left, tip, new Color(effect.Accent, 0.52f * fade), 1.1f, true);
-            DrawLine(right, tip, new Color(effect.Accent, 0.44f * fade), 1.1f, true);
+            DrawCircle(effect.Position, effect.Width * 0.72f, Readable(new Color("#ffffff"), 0.72f * fade, readability));
+            DrawLine(effect.Position, tip, Readable(new Color("#ffffff"), 0.74f * fade, readability), ReadableWidth(effect.CoreWidth * fade + 0.6f, readability), true);
+            DrawLine(left, right, Readable(effect.Accent, 0.20f * fade, readability), ReadableWidth(effect.Width * 1.1f * fade + 0.8f, readability), true);
+            DrawLine(left + direction * effect.Length * 0.38f, right + direction * effect.Length * 0.38f, Readable(effect.Accent, 0.18f * fade, readability), ReadableWidth(effect.Width * 0.74f * fade + 0.6f, readability), true);
+            DrawLine(left, tip, Readable(effect.Accent, 0.52f * fade, readability), ReadableWidth(1.1f, readability), true);
+            DrawLine(right, tip, Readable(effect.Accent, 0.44f * fade, readability), ReadableWidth(1.1f, readability), true);
         }
     }
 
