@@ -191,7 +191,8 @@ public sealed partial class UnitBattlefield
 
     private static float EffectiveDamageAgainst(AmmoDefinition ammo, UnitSpec target)
     {
-        return ammo.BaseDamage * ammo.DamageProfile.Multiplier(
+        return DamageResolver.Resolve(
+            ammo,
             target.Stats.WeightClass,
             target.Movement.Domain,
             target.Stats.ArmorTag);
@@ -199,7 +200,8 @@ public sealed partial class UnitBattlefield
 
     private static float EffectiveDamageAgainst(AmmoDefinition ammo, BuildSpec targetSpec)
     {
-        return ammo.BaseDamage * ammo.DamageProfile.Multiplier(
+        return DamageResolver.Resolve(
+            ammo,
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             targetSpec.ArmorTag);

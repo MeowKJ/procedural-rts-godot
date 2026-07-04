@@ -10,6 +10,7 @@ static class ArchitectureReviewGate
         CommandGatewayReviewGate.Check(root, result);
         RequireMovementGridConvergence(root, result);
         ForbidDuplicatedWeaponRangeHelpers(root, result);
+        CombatChemistryReviewGate.Check(root, result);
     }
 
     private static void RequireCoreFiles(string root, GateResult result)
@@ -111,4 +112,5 @@ static class ArchitectureReviewGate
             ForbidRegex(File.ReadAllText(path), @"private\s+static\s+float\s+WeaponRange\s*\(", $"{relative} must call WeaponMath for weapon range math instead of defining a private WeaponRange helper.", result);
         }
     }
+
 }

@@ -23,6 +23,7 @@ static class FileSizePolicy
     public static readonly string[] ReviewGateSourceRoots =
     [
         "tools/ReviewGate/",
+        "tools/ReviewGateCombat/",
         "tools/ReviewGateCore/",
         "tools/ReviewGateDomains/",
         "tools/ReviewGateFileSize/",

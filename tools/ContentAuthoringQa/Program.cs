@@ -4,6 +4,7 @@ using ProceduralRts.Core;
 var failures = new List<string>();
 
 ValidateUnitDesignCatalog(failures);
+ValidateDamageElementCatalog(failures);
 ValidateWeaponAndAmmoCatalogs(failures);
 ValidateBuildingCatalog(failures);
 ValidateGenericSpawnPath(failures);
@@ -21,7 +22,7 @@ if (failures.Count > 0)
 }
 
 Console.WriteLine(
-    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
+    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, elements {DamageElementCatalog.Definitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
 
 static void ValidateUnitDesignCatalog(List<string> failures)
 {
@@ -59,6 +60,23 @@ static void ValidateWeaponAndAmmoCatalogs(List<string> failures)
     {
         Require(ammo.BaseDamage > 0, $"{ammo.Id} must have positive base damage.", failures);
         Require(ammo.DamageProfile.ArmorMultipliers.Count > 0, $"{ammo.Id} must declare armor damage multipliers.", failures);
+        Require(DamageElementCatalog.Definitions.ContainsKey(ammo.DamageElementId), $"{ammo.Id} references missing damage element {ammo.DamageElementId}.", failures);
+    }
+}
+
+static void ValidateDamageElementCatalog(List<string> failures)
+{
+    Require(DamageElementCatalog.Definitions.Count == DamageElementIds.All.Count, "DamageElementCatalog must define every stable DamageElementIds entry.", failures);
+    Require(DamageElementIds.All.SequenceEqual(DamageElementCatalog.Definitions.Keys), "DamageElementIds.All must mirror discovered damage element definitions in deterministic order.", failures);
+    foreach (var id in DamageElementIds.All)
+    {
+        Require(DamageElementCatalog.Definitions.TryGetValue(id, out var definition), $"DamageElementCatalog missing {id}.", failures);
+        if (DamageElementCatalog.Definitions.TryGetValue(id, out definition))
+        {
+            Require(definition.Id == id, $"{id} damage element definition id must match the catalog key.", failures);
+            Require(!string.IsNullOrWhiteSpace(definition.Label), $"{id} damage element must have a label.", failures);
+            Require(definition.DamageMultiplier > 0, $"{id} damage element must have a positive neutral/default multiplier.", failures);
+        }
     }
 }
 

@@ -19,6 +19,7 @@ public sealed record AmmoDefinition
     public bool Interceptable { get; init; }
     public Color Accent { get; init; }
     public DamageProfile DamageProfile { get; init; }
+    public string DamageElementId { get; init; }
     public SpecialAttackHook Hooks { get; init; }
     public AmmoKind? LegacyKind { get; init; }
 
@@ -41,7 +42,8 @@ public sealed record AmmoDefinition
         SpecialAttackHook Hooks,
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
-        bool Interceptable = false)
+        bool Interceptable = false,
+        string? DamageElementId = null)
         : this(
             WeaponCatalog.IdFor(Kind),
             Label,
@@ -59,7 +61,8 @@ public sealed record AmmoDefinition
             SplashRadius,
             SplashMinDamageRatio,
             Interceptable,
-            Kind)
+            Kind,
+            DamageElementId)
     {
     }
 
@@ -80,7 +83,8 @@ public sealed record AmmoDefinition
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
         bool Interceptable = false,
-        AmmoKind? LegacyKind = null)
+        AmmoKind? LegacyKind = null,
+        string? DamageElementId = null)
     {
         this.Id = Id;
         this.Label = Label;
@@ -97,6 +101,10 @@ public sealed record AmmoDefinition
         this.Interceptable = Interceptable;
         this.Accent = Accent;
         this.DamageProfile = DamageProfile;
+        this.DamageElementId = string.IsNullOrWhiteSpace(DamageElementId)
+            ? DamageElementIds.Kinetic
+            : DamageElementId;
+        _ = DamageElementCatalog.For(this.DamageElementId);
         this.Hooks = Hooks;
         this.LegacyKind = LegacyKind;
     }

@@ -121,6 +121,7 @@ static class ReviewGateEvidence
             .Replace(Path.DirectorySeparatorChar, '/')
             .Replace(Path.AltDirectorySeparatorChar, '/');
         return relativePath.StartsWith("tools/ReviewGate/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("tools/ReviewGateCombat/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateCore/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateDomains/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateFileSize/", StringComparison.OrdinalIgnoreCase);
