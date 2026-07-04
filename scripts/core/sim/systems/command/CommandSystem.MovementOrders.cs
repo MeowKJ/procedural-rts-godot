@@ -18,9 +18,13 @@ public sealed partial class CommandSystem
             var movement = entity.Components.TryGet<MovementComponentState>(out var existing)
                 ? existing
                 : new MovementComponentState(Velocity: default);
-            entity.Components.Set(movement with { MoveTarget = target });
-            entity.Components.Remove<PatrolOrderComponentState>();
-            entity.Components.Remove<GuardOrderComponentState>();
+            entity.Components.Set(movement with
+            {
+                MoveTarget = target,
+                FormationSlot = null,
+                FireAnchorRemaining = 0,
+            });
+            ClearReplacedOrders(entity);
 
             var commandable = entity.Components.TryGet<CommandableComponentState>(out var cmd)
                 ? cmd
@@ -32,16 +36,7 @@ public sealed partial class CommandSystem
                 MoveMode = mode,
             });
 
-            // A move order cancels any manual attack focus.
-            if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon) && weapon.AttackTargetIsManual)
-            {
-                entity.Components.Set(weapon with
-                {
-                    AttackTarget = default,
-                    AttackTargetIsManual = false,
-                    AutoReacquireCooldownRemaining = 0,
-                });
-            }
+            ClearWeaponFocus(entity);
         }
 
         _scalarOrderMembers.Clear();
@@ -214,11 +209,15 @@ public sealed partial class CommandSystem
             var slotPoint = new Vector2(slot.X, slot.Y);
             if (entity.Components.TryGet<MovementComponentState>(out var movement))
             {
-                entity.Components.Set(movement with { MoveTarget = slotPoint, FormationSlot = slotPoint });
+                entity.Components.Set(movement with
+                {
+                    MoveTarget = slotPoint,
+                    FormationSlot = slotPoint,
+                    FireAnchorRemaining = 0,
+                });
             }
 
-            entity.Components.Remove<PatrolOrderComponentState>();
-            entity.Components.Remove<GuardOrderComponentState>();
+            ClearReplacedOrders(entity);
 
             // The visible command line points at the shared intent, not the slot.
             var commandable = entity.Components.TryGet<CommandableComponentState>(out var cmd) ? cmd : new CommandableComponentState();
@@ -229,10 +228,7 @@ public sealed partial class CommandSystem
                 MoveMode = command.Mode,
             });
 
-            if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon) && weapon.AttackTargetIsManual)
-            {
-                entity.Components.Set(weapon with { AttackTarget = default, AttackTargetIsManual = false, AutoReacquireCooldownRemaining = 0 });
-            }
+            ClearWeaponFocus(entity);
         }
 
         _groupOrderMembers.Clear();
@@ -255,10 +251,7 @@ public sealed partial class CommandSystem
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
 
-            if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
-            {
-                entity.Components.Set(weapon with { AttackTarget = default, AttackTargetIsManual = false, AutoReacquireCooldownRemaining = 0 });
-            }
+            ClearWeaponFocus(entity);
 
             if (hold && entity.Components.TryGet<StanceComponentState>(out var stance))
             {
@@ -276,6 +269,32 @@ public sealed partial class CommandSystem
         }
 
         _scalarOrderMembers.Clear();
+    }
+
+    private static void ClearReplacedOrders(EntityInstance entity)
+    {
+        entity.Components.Remove<PathfindingComponentState>();
+        entity.Components.Remove<PatrolOrderComponentState>();
+        entity.Components.Remove<GuardOrderComponentState>();
+        entity.Components.Remove<RepairOrderComponentState>();
+    }
+
+    private static void ClearWeaponFocus(EntityInstance entity)
+    {
+        if (!entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
+        {
+            return;
+        }
+
+        entity.Components.Set(weapon with
+        {
+            AttackTarget = default,
+            AttackTargetKind = CombatTargetKind.Unit,
+            AttackTargetIsManual = false,
+            AutoReacquireCooldownRemaining = 0,
+            LastKnownTargetPosition = null,
+            LastKnownTargetRemaining = 0,
+        });
     }
 
     private void ApplyStance(EntityWorld world, SetStanceEntityCommand command)

@@ -9,8 +9,17 @@ public sealed partial class CommandSystem
         CollectOwnedSubjects(world, attack.Issuer, attack.Subjects, _scalarOrderMembers);
         foreach (var entity in _scalarOrderMembers)
         {
-            entity.Components.Remove<PatrolOrderComponentState>();
-            entity.Components.Remove<GuardOrderComponentState>();
+            ClearReplacedOrders(entity);
+            if (entity.Components.TryGet<MovementComponentState>(out var movement))
+            {
+                entity.Components.Set(movement with
+                {
+                    MoveTarget = null,
+                    FormationSlot = null,
+                    FireAnchorRemaining = 0,
+                });
+            }
+
             SetManualTarget(entity, attack.Target, attack.TargetKind);
         }
 
@@ -57,8 +66,7 @@ public sealed partial class CommandSystem
         foreach (var entity in _groupOrderMembers)
         {
             // Every attacker focuses the target; CombatSystem fires when in range.
-            entity.Components.Remove<PatrolOrderComponentState>();
-            entity.Components.Remove<GuardOrderComponentState>();
+            ClearReplacedOrders(entity);
             SetManualTarget(entity, command.Target, command.TargetKind);
 
             if (!_groupAttackAssignments.TryGetValue(entity.Id.Value, out var assignment))
@@ -70,7 +78,12 @@ public sealed partial class CommandSystem
             {
                 // Anchors hold; movers head to their ring slot.
                 var slot = assignment.IsAnchor ? (Vector2?)null : assignment.Slot;
-                entity.Components.Set(movement with { MoveTarget = slot, FormationSlot = assignment.Slot });
+                entity.Components.Set(movement with
+                {
+                    MoveTarget = slot,
+                    FormationSlot = assignment.Slot,
+                    FireAnchorRemaining = 0,
+                });
             }
 
             var commandable = entity.Components.TryGet<CommandableComponentState>(out var cmd) ? cmd : new CommandableComponentState();

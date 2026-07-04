@@ -90,15 +90,15 @@ static partial class Program
 
         var previousFacings = InitialFacings(subjects);
         var maxFacingDeltas = new float[subjects.Count];
-        var staleObservedTick = -1;
+        var stalePathGoals = new[] { firstMoveTarget, MovementFeelAttackMoveTarget };
+        AssertNoSubjectEntityTargets(battlefield, subjects, hostile.EntityId, finalMoveTick, simTick: 0, MovementFeelReplacementFinalTarget, maxFacingDeltas);
+        AssertNoSubjectStalePathGoal(battlefield, subjects, stalePathGoals, finalMoveTick, simTick: 0, MovementFeelReplacementFinalTarget, maxFacingDeltas);
         for (var simTick = 1; simTick <= 90; simTick++)
         {
             battlefield.Update(MovementFeelDelta);
             UpdateFacingDeltas(subjects, previousFacings, maxFacingDeltas);
-            if (staleObservedTick < 0 && AnySubjectEntityTargets(battlefield, subjects, hostile.EntityId))
-            {
-                staleObservedTick = simTick;
-            }
+            AssertNoSubjectEntityTargets(battlefield, subjects, hostile.EntityId, finalMoveTick, simTick, MovementFeelReplacementFinalTarget, maxFacingDeltas);
+            AssertNoSubjectStalePathGoal(battlefield, subjects, stalePathGoals, finalMoveTick, simTick, MovementFeelReplacementFinalTarget, maxFacingDeltas);
         }
 
         AssertAllSubjectsKeepDirectReplacementOrder(
@@ -108,11 +108,8 @@ static partial class Program
             MovementFeelReplacementFinalTarget,
             simTick: 90,
             maxFacingDeltas);
-        Assert(
-            staleObservedTick > 0,
-            $"movement-feel replacement did not reproduce stale attack-target evidence; do not claim a fix without updating #239 evidence. commandTicks={firstMoveTick}->{attackMoveTick}->{finalMoveTick}, hostile={hostile.Id}, trace={MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}");
 
-        Console.WriteLine($"OK [movement-feel replacement repro]: commandTicks {firstMoveTick}->{attackMoveTick}->{finalMoveTick}, finalTarget {FormatVector(MovementFeelReplacementFinalTarget)}, staleEntityTargetSimTick {staleObservedTick}, hostile {hostile.Id}, trace {MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}.");
+        Console.WriteLine($"OK [movement-feel replacement fixed]: commandTicks {firstMoveTick}->{attackMoveTick}->{finalMoveTick}, finalTarget {FormatVector(MovementFeelReplacementFinalTarget)}, stale target/path cleared for hostile {hostile.Id}, trace {MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}.");
     }
 
     private static UnitBattlefield BuildMovementFeelBattlefield(out IReadOnlyList<UnitInstance> subjects, out UnitInstance hostile)
@@ -194,7 +191,14 @@ static partial class Program
         return false;
     }
 
-    private static bool AnySubjectEntityTargets(UnitBattlefield battlefield, IReadOnlyList<UnitInstance> subjects, EntityId targetEntityId)
+    private static void AssertNoSubjectEntityTargets(
+        UnitBattlefield battlefield,
+        IReadOnlyList<UnitInstance> subjects,
+        EntityId targetEntityId,
+        int commandTick,
+        int simTick,
+        Vector2 target,
+        IReadOnlyList<float> facingDeltas)
     {
         foreach (var subject in subjects)
         {
@@ -202,11 +206,37 @@ static partial class Program
                 && entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
                 && weapon.AttackTarget == targetEntityId)
             {
-                return true;
+                Fail($"movement-feel replacement retained stale entity attack target after final direct move: commandTick={commandTick}, simTick={simTick}, unit={subject.Id}, staleTarget={targetEntityId.Value}, trace={MovementFeelTrace(battlefield, subjects, commandTick, simTick, target, facingDeltas)}");
             }
         }
+    }
 
-        return false;
+    private static void AssertNoSubjectStalePathGoal(
+        UnitBattlefield battlefield,
+        IReadOnlyList<UnitInstance> subjects,
+        IReadOnlyList<Vector2> staleGoals,
+        int commandTick,
+        int simTick,
+        Vector2 target,
+        IReadOnlyList<float> facingDeltas)
+    {
+        foreach (var subject in subjects)
+        {
+            if (battlefield.UnitEntityByInstanceId(subject.Id) is not { } entity
+                || !entity.Components.TryGet<PathfindingComponentState>(out var path))
+            {
+                continue;
+            }
+
+            var goal = new Vector2(path.Goal.X, path.Goal.Y);
+            foreach (var staleGoal in staleGoals)
+            {
+                if (goal.DistanceSquaredTo(staleGoal) <= 1f)
+                {
+                    Fail($"movement-feel replacement retained stale path goal after final direct move: commandTick={commandTick}, simTick={simTick}, unit={subject.Id}, staleGoal={FormatVector(staleGoal)}, trace={MovementFeelTrace(battlefield, subjects, commandTick, simTick, target, facingDeltas)}");
+                }
+            }
+        }
     }
 
     private static bool IsSubjectEntity(IReadOnlyList<UnitInstance> subjects, EntityId entityId)
