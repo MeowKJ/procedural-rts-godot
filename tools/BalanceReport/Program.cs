@@ -61,6 +61,9 @@ Console.WriteLine($"Trials/scenario: {Trials}, max ticks: {MaxTicks}");
 Console.WriteLine();
 
 var failures = new List<string>();
+PrintCombatChemistryCoverage(failures);
+Console.WriteLine();
+
 foreach (var scenario in scenarios)
 {
     var report = RunScenario(scenario);
@@ -80,6 +83,61 @@ if (failures.Count > 0)
 }
 
 Console.WriteLine("BalanceReport PASSED.");
+
+void PrintCombatChemistryCoverage(List<string> failures)
+{
+    var ammoByElement = WeaponCatalog.AmmoDefinitions.Values
+        .GroupBy(ammo => ammo.DamageElementId)
+        .OrderBy(group => group.Key, StringComparer.Ordinal)
+        .Select(group => $"{group.Key}={group.Count()}")
+        .ToArray();
+    var authoredCounterAmmo = WeaponCatalog.AmmoDefinitions.Values
+        .Where(ammo => ammo.CounterRules.Rules.Count > 0)
+        .OrderBy(ammo => ammo.Id, StringComparer.Ordinal)
+        .Select(ammo => $"{ammo.Id}({ammo.CounterRules.Rules.Count})")
+        .ToArray();
+    var authoredDefenses = UnitDesignCatalog.Designs.Values
+        .Select(design => design.ToSpec())
+        .SelectMany(spec => DefenseEntries(spec.Id, spec.Stats.ElementDefense))
+        .Concat(BuildSpecCatalog.Definitions.Values.SelectMany(spec => DefenseEntries(spec.Kind, spec.ElementDefense)))
+        .OrderBy(entry => entry, StringComparer.Ordinal)
+        .ToArray();
+    var counterProbe = CombatProfileDesign.CounterRules(
+        new CounterRule(1.35f, Trait: TargetTrait.Shielded),
+        new CounterRule(1.1f, Role: UnitRoleTag.Vehicle));
+    var shieldedVehicle = CombatProfileDesign.TargetTraits([TargetTrait.Shielded], [UnitRoleTag.Vehicle]);
+    var resistanceProbe = CombatProfileDesign.ElementDefense(new() { [DamageElementIds.Energy] = 0.75f });
+    var overload = ElementReactionCatalog.Match(ElementStatusIds.EnergyCharge, DamageElementIds.Explosive);
+
+    Console.WriteLine("Combat chemistry coverage");
+    Console.WriteLine($"  elements {DamageElementCatalog.Definitions.Count}/{DamageElementIds.All.Count}; ammo elements {string.Join(", ", ammoByElement)}");
+    Console.WriteLine($"  authored counter ammo: {(authoredCounterAmmo.Length == 0 ? "none authored; QA probe covers trait/role counters" : string.Join(", ", authoredCounterAmmo))}");
+    Console.WriteLine($"  non-neutral defenses: {(authoredDefenses.Length == 0 ? "none authored; QA probe covers sparse resistance" : string.Join(", ", authoredDefenses))}");
+    Console.WriteLine($"  reactions {ElementReactionCatalog.Definitions.Count}/{ElementReactionIds.All.Count}; overload {(overload is null ? "missing" : overload.ReactionId)}");
+    Console.WriteLine($"  presentations {ElementPresentationCatalog.Definitions.Count}/{DamageElementIds.All.Count}; badges {ElementPresentationCatalog.Definitions.Values.Select(style => style.Badge.ShortCode).Distinct(StringComparer.Ordinal).Count()} unique");
+
+    RequireCoverage(WeaponCatalog.AmmoDefinitions.Values.All(ammo => DamageElementCatalog.Definitions.ContainsKey(ammo.DamageElementId)), "Every authored ammo entry must reference a known damage element.", failures);
+    RequireCoverage(counterProbe.MultiplierFor(shieldedVehicle, UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle) > 1.4f, "Counter rule probe must cover special target-trait and role multipliers.", failures);
+    RequireCoverage(Nearly(resistanceProbe.MultiplierFor(DamageElementIds.Energy), 0.75f), "Element defense probe must cover sparse resistance multipliers.", failures);
+    RequireCoverage(overload?.ReactionId == ElementReactionIds.Overload, "Element reaction coverage must include EnergyCharge + Explosive -> Overload.", failures);
+    RequireCoverage(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "Every damage element must have presentation metadata.", failures);
+}
+
+IEnumerable<string> DefenseEntries(string owner, ElementDefenseProfile? defense)
+{
+    if (defense is null)
+    {
+        yield break;
+    }
+
+    foreach (var pair in defense.ElementMultipliers)
+    {
+        if (!Nearly(pair.Value, 1f))
+        {
+            yield return $"{owner}:{pair.Key}={pair.Value:0.00}";
+        }
+    }
+}
 
 DuelReport RunScenario(BattleScenario scenario)
 {
@@ -247,6 +305,19 @@ void Validate(DuelReport report, List<string> failures)
             failures.Add($"{report.Scenario.Name}: parity matchup is outside 15%-85% win-rate band; left={report.LeftWinRate:P0}.");
             break;
     }
+}
+
+void RequireCoverage(bool condition, string message, List<string> failures)
+{
+    if (!condition)
+    {
+        failures.Add(message);
+    }
+}
+
+bool Nearly(float actual, float expected)
+{
+    return MathF.Abs(actual - expected) < 0.001f;
 }
 
 enum ExpectedOutcome

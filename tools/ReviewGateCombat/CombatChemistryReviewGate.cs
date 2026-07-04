@@ -61,6 +61,10 @@ static class CombatChemistryReviewGate
         RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs")), "DamageResolver.Resolve(", "UnitBattlefield legacy damage must route through DamageResolver.", result);
         ReviewGateSource.RequireAnyText(root, result, "RunElementReactionScenario", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "ValidateElementReactionCatalog", "tools/ContentAuthoringQa");
+        ReviewGateSource.RequireAnyText(root, result, "ValidateElementPresentationCatalog", "tools/ContentAuthoringQa");
+        ReviewGateSource.RequireAnyText(root, result, "Combat chemistry coverage", "tools/BalanceReport");
+        ReviewGateSource.RequireAnyText(root, result, "Counter rule probe", "tools/BalanceReport");
+        ReviewGateSource.RequireAnyText(root, result, "Element defense probe", "tools/BalanceReport");
         ReviewGateSource.RequireAnyText(root, result, "CheckElementPresentationStyles", "tools/CounterReadabilityQa");
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Projectile VFX must prefer element style while preserving AmmoKind fallback.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ImpactVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Impact VFX must prefer element style while preserving AmmoKind fallback.", result);
