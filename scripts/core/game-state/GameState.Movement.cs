@@ -108,13 +108,15 @@ public sealed partial class GameState
 
         steering = steering.Normalized();
         var targetAngle = steering.Angle();
-        unit.Facing = RotateToward(unit.Facing, targetAngle, descriptor.TurnRate * dt);
+        unit.Facing = TurnModeMath.NextFacing(unit.Facing, targetAngle, descriptor.TurnRate, dt, descriptor.TurnMode);
         unit.TurretFacing = RotateToward(unit.TurretFacing, targetAngle, descriptor.TurnRate * dt * 0.8f);
         var slowFactor = finalSlot is null
             ? 1
             : Mathf.Clamp(distanceToSlot / SlotSlowRadius, 0.22f, 1f);
         var step = Mathf.Min(distance, descriptor.Speed * slowFactor * dt);
-        var nextPosition = unit.Position + steering * step;
+        var movementDirection = TurnModeMath.MovementDirection(descriptor.TurnMode, steering, unit.Facing);
+        var turnSpeedScale = TurnModeMath.SpeedScale(descriptor.TurnMode, unit.Facing, targetAngle);
+        var nextPosition = unit.Position + movementDirection * step * turnSpeedScale;
         if (finalSlot is { } slotDestination
             && (nextPosition.DistanceTo(slotDestination) <= SlotHoldRadius || HasCrossedTarget(unit.Position, nextPosition, slotDestination)))
         {

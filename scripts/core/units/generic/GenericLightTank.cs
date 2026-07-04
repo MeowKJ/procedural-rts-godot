@@ -14,7 +14,7 @@ public sealed class GenericLightTank : UnitDesign
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Assault };
     public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 120, 430, 420, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 132, 7.5f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 132, 7.5f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(21, 1.05f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

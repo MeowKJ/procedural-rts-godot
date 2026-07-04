@@ -29,6 +29,7 @@ public static class UnitDesignDefinitionCatalog
             spec.Collision.Radius,
             spec.Movement.Speed,
             spec.Movement.TurnRate,
+            spec.Movement.TurnMode,
             spec.Stats.SightRange,
             weapon.Range,
             ammo.BaseDamage,

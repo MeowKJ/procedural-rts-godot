@@ -14,7 +14,7 @@ public sealed class DogShieldTank : UnitDesign
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Shield, UnitRoleTag.Support };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 210, 410, 250, 2);
-    public override MovementSpec Movement => new(MovementDomain.Land, 102, 5.9f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 102, 5.9f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(27, 1.55f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

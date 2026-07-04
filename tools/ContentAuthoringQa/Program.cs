@@ -31,16 +31,28 @@ static void ValidateUnitDesignCatalog(List<string> failures)
     Require(UnitDesignCatalog.Designs.Count == concreteTypes.Count, "UnitDesignCatalog must discover every concrete UnitDesign.", failures);
     Require(IsSorted(UnitDesignCatalog.Designs.Keys), "UnitDesignCatalog ids must enumerate in deterministic sorted order.", failures);
 
+    var hasPivotTurn = false;
+    var hasArcTurn = false;
     foreach (var spec in UnitDesignCatalog.Designs.Values.Select(design => design.ToSpec()))
     {
         var entitySpec = spec.ToEntitySpec();
         Require(entitySpec.Id == spec.Id && entitySpec.Kind == EntityKind.Unit, $"{spec.Id} must project to a unit EntitySpec.", failures);
         ValidateElementDefense(spec.Stats.ElementDefense, $"{spec.Id} stats", failures);
+        hasPivotTurn |= spec.Movement.TurnMode == TurnMode.PivotInPlace;
+        hasArcTurn |= spec.Movement.TurnMode == TurnMode.ArcTurn;
+        if (spec.RoleTags.Contains(UnitRoleTag.Vehicle) || spec.RoleTags.Contains(UnitRoleTag.Aircraft))
+        {
+            Require(spec.Movement.TurnMode == TurnMode.ArcTurn, $"{spec.Id} vehicle/aircraft movement must use ArcTurn.", failures);
+        }
+
         foreach (var mount in spec.Weapons)
         {
             Require(WeaponCatalog.WeaponDefinitions.ContainsKey(mount.WeaponId), $"{spec.Id} references missing weapon {mount.WeaponId}.", failures);
         }
     }
+
+    Require(hasPivotTurn, "Unit roster must keep at least one PivotInPlace mover.", failures);
+    Require(hasArcTurn, "Unit roster must keep at least one ArcTurn mover.", failures);
 }
 
 static void ValidateWeaponAndAmmoCatalogs(List<string> failures)

@@ -71,7 +71,9 @@ public static class UnitSpecEntityBridge
         // MovementSystem/CombatSystem — no per-unit code. A new unit is just a spec.
         yield return new MovementProfileComponentState(
             MaxSpeed: unitSpec.Movement.Speed,
-            ArriveRadius: MathF.Max(2f, unitSpec.Collision.Radius * 0.5f));
+            ArriveRadius: MathF.Max(2f, unitSpec.Collision.Radius * 0.5f),
+            TurnRate: unitSpec.Movement.TurnRate,
+            TurnMode: unitSpec.Movement.TurnMode);
         yield return new CollisionComponentState(
             unitSpec.Collision.Radius,
             unitSpec.Collision.Mass,

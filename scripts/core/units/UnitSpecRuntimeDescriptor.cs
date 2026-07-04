@@ -15,6 +15,7 @@ public sealed record UnitSpecRuntimeDescriptor(
     float Radius,
     float Speed,
     float TurnRate,
+    TurnMode TurnMode,
     float SightRange,
     float AttackRange,
     float Damage,

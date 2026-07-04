@@ -144,11 +144,14 @@ public sealed partial class MovementSystem : ISimSystem
                 }
             }
 
-            var nextPosition = position + (direction * step);
-            var facing = direction.Angle();
+            var targetAngle = direction.Angle();
+            var facing = TurnModeMath.NextFacing(entity.Transform.Facing, targetAngle, profile.TurnRate, dt, profile.TurnMode);
+            var movementDirection = TurnModeMath.MovementDirection(profile.TurnMode, direction, facing);
+            var turnSpeedScale = TurnModeMath.SpeedScale(profile.TurnMode, facing, targetAngle);
+            var nextPosition = position + (movementDirection * step * turnSpeedScale);
 
             entity.Transform = new EntityTransform(nextPosition, facing);
-            entity.Components.Set(movement with { Velocity = direction * maxSpeed });
+            entity.Components.Set(movement with { Velocity = movementDirection * maxSpeed * turnSpeedScale });
             world.Metrics.RecordMovementSample(entity.Id.Value, position, nextPosition, target, dt);
         }
     }

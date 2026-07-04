@@ -14,7 +14,7 @@ public sealed class DogHarvester : UnitDesign
     public override IconGlyph Icon => IconGlyph.Harvester;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Worker, UnitRoleTag.Economy };
     public override StatsSpec Stats => new(UnitWeightClass.Heavy, ArmorTag.Vehicle, 190, 295, 620, 1);
-    public override MovementSpec Movement => new(MovementDomain.Land, 92, 5.6f);
+    public override MovementSpec Movement => new(MovementDomain.Land, 92, 5.6f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(25, 1.8f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [

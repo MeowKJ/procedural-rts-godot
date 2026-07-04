@@ -87,16 +87,20 @@ static partial class Program
         Assert(
             battlefield.AppliedInputCommandCount == finalMoveTick,
             $"movement-feel replacement final move ignored: commandTick={finalMoveTick}, trace={MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, [])}");
+        AssertMixedTurnModes(subjects, finalMoveTick, MovementFeelReplacementFinalTarget, battlefield);
 
         var previousFacings = InitialFacings(subjects);
         var maxFacingDeltas = new float[subjects.Count];
         var stalePathGoals = new[] { firstMoveTarget, MovementFeelAttackMoveTarget };
+        var sawPivotOffFacing = false;
+        var sawArcFacingLocked = false;
         AssertNoSubjectEntityTargets(battlefield, subjects, hostile.EntityId, finalMoveTick, simTick: 0, MovementFeelReplacementFinalTarget, maxFacingDeltas);
         AssertNoSubjectStalePathGoal(battlefield, subjects, stalePathGoals, finalMoveTick, simTick: 0, MovementFeelReplacementFinalTarget, maxFacingDeltas);
         for (var simTick = 1; simTick <= 90; simTick++)
         {
             battlefield.Update(MovementFeelDelta);
             UpdateFacingDeltas(subjects, previousFacings, maxFacingDeltas);
+            UpdateTurnModeEvidence(subjects, ref sawPivotOffFacing, ref sawArcFacingLocked);
             AssertNoSubjectEntityTargets(battlefield, subjects, hostile.EntityId, finalMoveTick, simTick, MovementFeelReplacementFinalTarget, maxFacingDeltas);
             AssertNoSubjectStalePathGoal(battlefield, subjects, stalePathGoals, finalMoveTick, simTick, MovementFeelReplacementFinalTarget, maxFacingDeltas);
         }
@@ -108,8 +112,11 @@ static partial class Program
             MovementFeelReplacementFinalTarget,
             simTick: 90,
             maxFacingDeltas);
+        Assert(
+            sawPivotOffFacing && sawArcFacingLocked,
+            $"movement-feel replacement did not prove mixed turn modes: pivotOffFacing={sawPivotOffFacing}, arcFacingLocked={sawArcFacingLocked}, trace={MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}");
 
-        Console.WriteLine($"OK [movement-feel replacement fixed]: commandTicks {firstMoveTick}->{attackMoveTick}->{finalMoveTick}, finalTarget {FormatVector(MovementFeelReplacementFinalTarget)}, stale target/path cleared for hostile {hostile.Id}, trace {MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}.");
+        Console.WriteLine($"OK [movement-feel replacement fixed]: commandTicks {firstMoveTick}->{attackMoveTick}->{finalMoveTick}, finalTarget {FormatVector(MovementFeelReplacementFinalTarget)}, stale target/path cleared for hostile {hostile.Id}, mixed turn modes pivot/arc proven, trace {MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, maxFacingDeltas)}.");
     }
 
     private static UnitBattlefield BuildMovementFeelBattlefield(out IReadOnlyList<UnitInstance> subjects, out UnitInstance hostile)
@@ -322,6 +329,7 @@ static partial class Program
             builder.Append(" attack=").Append(subject.AttackTargetId?.ToString() ?? "none");
             builder.Append("/").Append(subject.AttackTargetKind);
             builder.Append("/manual=").Append(subject.AttackTargetIsManual);
+            builder.Append(" turn=").Append(subject.Spec.Movement.TurnMode);
             builder.Append(" facingDelta=").Append(delta.ToString("0.000"));
             builder.Append(" path=").Append(PathState(battlefield, subject));
         }

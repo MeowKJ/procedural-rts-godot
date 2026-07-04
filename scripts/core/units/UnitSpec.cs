@@ -15,7 +15,8 @@ public sealed record MovementSpec(
     float Speed,
     float TurnRate,
     float Acceleration = 0,
-    float StopDistance = 0);
+    float StopDistance = 0,
+    TurnMode TurnMode = TurnMode.PivotInPlace);
 
 public sealed record CollisionSpec(
     float Radius,

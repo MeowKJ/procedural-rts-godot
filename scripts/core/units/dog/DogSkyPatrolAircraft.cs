@@ -14,7 +14,7 @@ public sealed class DogSkyPatrolAircraft : UnitDesign
     public override IconGlyph Icon => IconGlyph.Air;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Aircraft, UnitRoleTag.Scout, UnitRoleTag.AntiAir };
     public override StatsSpec Stats => new(UnitWeightClass.Light, ArmorTag.Aircraft, 72, 600, 220, 2);
-    public override MovementSpec Movement => new(MovementDomain.Air, 205, 11.4f);
+    public override MovementSpec Movement => new(MovementDomain.Air, 205, 11.4f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(18, 0.55f, 1, BlocksMovement: false);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
