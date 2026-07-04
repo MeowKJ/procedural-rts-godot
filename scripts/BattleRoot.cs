@@ -55,6 +55,7 @@ public partial class BattleRoot : Node2D
     private readonly SimClock _simClock = new();
     private readonly EntityWorld _entityWorld = new();
     private readonly EntityCommandBuffer _entityCommands = new();
+    private readonly SimEventSink _presentationEvents = new();
     private readonly List<SimEvent> _simEventDrainBuffer = [];
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
     private readonly List<UnitModel> _selectedLegacyUnitBuffer = [];

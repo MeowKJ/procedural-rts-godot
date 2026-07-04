@@ -11,6 +11,7 @@ static partial class Program
         AssertUnitBattlefieldCommandsAndCombat();
         AssertUnitBattlefieldProduction();
         AssertRuntimeSnapshotsSmartClickAndBuildingWeapons();
+        AssertCommandAcknowledgementEvents();
         AssertRelationsAndFactionPresentation();
         AssertProductionPresentationAndBuildOptions();
         AssertTerrainThemesAndSignals();

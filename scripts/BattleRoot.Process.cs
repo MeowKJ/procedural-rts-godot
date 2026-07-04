@@ -28,6 +28,7 @@ public partial class BattleRoot
         _simStepStopwatch.Restart();
         StepEntityWorld(gameplayDelta);
         _simStepStopwatch.Stop();
+        DrainPresentationEvents();
         SyncUnitBattlefieldBuildingRuntimeState();
         RefreshSelectionInfo();
         RefreshCommandCard();

@@ -145,7 +145,7 @@ public partial class BattleRoot
             LocalPlayerSlotId = PlayerSlotId.One,
             LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),
             StatusChanged = OnStatusChanged,
-            CommandAcknowledged = AddCommandAcknowledgement,
+            CommandAcknowledged = QueueCommandAcknowledgementEvent,
         };
         AddChild(_buildPlacement);
 
@@ -159,7 +159,7 @@ public partial class BattleRoot
             SelectionChanged = OnSelectionChanged,
             StatusChanged = OnStatusChanged,
             AudioCueRequested = PlayAudioCue,
-            CommandAcknowledged = AddCommandAcknowledgement,
+            CommandAcknowledged = QueueCommandAcknowledgementEvent,
             MoveModeRequested = OnMoveModeRequested,
             UnitStanceRequested = OnUnitStanceRequested,
             MouseInputBlocked = () => _buildPlacement.IsActive,
