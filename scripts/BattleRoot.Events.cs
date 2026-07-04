@@ -14,11 +14,6 @@ public partial class BattleRoot
         AddStatusAlert(status);
     }
 
-    private void AddCommandAcknowledgement(CommandAcknowledgementKind kind, Vector2 position)
-    {
-        _commandAcknowledgements.Add(kind, position);
-    }
-
     private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
     {
         foreach (var death in deaths)

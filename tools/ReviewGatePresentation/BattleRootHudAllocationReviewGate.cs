@@ -20,6 +20,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<BuildingModel> _selectedLegacyBuildingBuffer", "BattleRoot legacy selection HUD sync must reuse selected building storage.", result);
         RequireText(battleRoot, "List<int> _selectedProductionBuildingIdBuffer", "BattleRoot selected producer command-card sync must reuse selected building id storage.", result);
+        RequireText(battleRoot, "SimEventSink _presentationEvents", "BattleRoot command acknowledgement feedback must use a SimEvent sink before drawing rings.", result);
+        RequireText(battleRoot, "CommandAcknowledged = QueueCommandAcknowledgementEvent", "BattleRoot command acknowledgement callbacks must enqueue SimEvents instead of drawing rings directly.", result);
+        RequireText(battleRoot, "_presentationEvents.Raise(new CommandAcknowledgedEvent", "BattleRoot command acknowledgement callbacks must raise CommandAcknowledgedEvent data.", result);
+        RequireText(process, "DrainPresentationEvents();", "BattleRoot process must drain presentation SimEvents before drawing command acknowledgement rings.", result);
+        RequireText(battleRoot, "_commandAcknowledgements.Add(acknowledgement.Kind, acknowledgement.Position)", "BattleRoot command acknowledgement rings must be applied from drained SimEvents.", result);
+        ForbidText(battleRoot, "CommandAcknowledged = AddCommandAcknowledgement", "BattleRoot command acknowledgement callbacks must not draw rings directly.", result);
         RequireText(battleRoot, "List<UnitInstance> _sandboxLaunchUnitBuffer", "BattleRoot sandbox launch selection must reuse unit storage.", result);
         RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
         RequireText(battleRoot, "List<int> _debugPlayerAttackerIds", "Active battle perf setup must reuse player attacker id storage.", result);
