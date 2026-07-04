@@ -24,9 +24,32 @@ public partial class BattleRoot
     private void RefreshCommandCard()
     {
         _hud.SetCommandCardState(UseUnitDesignRuntime
-            ? _unitBattlefield.ProductionDesignOptionStates(PlayerSlotId.One)
+            ? RuntimeProductionCommandCardStates()
             : _unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
         _hud.SetProductionQueueSummary(_unitBattlefield.ProductionQueueSummary(PlayerSlotId.One), _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
+    }
+
+    private IReadOnlyList<ProductionOptionState> RuntimeProductionCommandCardStates()
+    {
+        _selectedProductionBuildingIdBuffer.Clear();
+        foreach (var building in _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One))
+        {
+            _selectedProductionBuildingIdBuffer.Add(building.Id);
+        }
+
+        if (_selectedProductionBuildingIdBuffer.Count > 0)
+        {
+            var selectedStates = _unitBattlefield.ProductionDesignOptionStatesForSelectedProducers(
+                PlayerSlotId.One,
+                _selectedProductionBuildingIdBuffer,
+                out var hasSelectedProducers);
+            if (hasSelectedProducers)
+            {
+                return selectedStates;
+            }
+        }
+
+        return _unitBattlefield.ProductionDesignOptionStates(PlayerSlotId.One);
     }
 
     private void OnCancelProductionRequested()

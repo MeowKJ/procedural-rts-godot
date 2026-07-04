@@ -48,13 +48,50 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(PlayerSlotId playerSlotId)
     {
+        return ProductionDesignOptionStates(playerSlotId, Array.Empty<int>());
+    }
+
+    public IReadOnlyList<ProductionOptionState> ProductionDesignOptionStatesForSelectedProducers(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedBuildingIds,
+        out bool hasSelectedProducers)
+    {
+        CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer);
+        hasSelectedProducers = _selectedProductionProducerIdBuffer.Count > 0;
+        if (!hasSelectedProducers)
+        {
+            _designProductionOptionStateBuffer.Clear();
+            return _designProductionOptionStateBuffer;
+        }
+
+        return ProductionDesignOptionStates(playerSlotId, _selectedProductionProducerIdBuffer);
+    }
+
+    private IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedProducerBuildingIds)
+    {
         var credits = Credits(playerSlotId);
+        var restrictToSelectedProducers = selectedProducerBuildingIds.Count > 0;
         CollectProductionDesignSpecs(playerSlotId, _productionDesignSpecBuffer);
         _designProductionOptionStateBuffer.Clear();
         foreach (var spec in _productionDesignSpecBuffer)
         {
             var production = spec.Production!;
-            CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds);
+            if (restrictToSelectedProducers && !AnySelectedProducerSupports(spec, playerSlotId, selectedProducerBuildingIds))
+            {
+                continue;
+            }
+
+            if (restrictToSelectedProducers)
+            {
+                CollectCandidateProducerIds(spec, playerSlotId, selectedProducerBuildingIds, _productionCandidateProducerIds);
+            }
+            else
+            {
+                CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds);
+            }
+
             var metrics = ProductionDesignQueueMetrics(spec);
             var presentation = UnitPresentationCatalog.ForProductionSpec(ProductionKindFor(spec), spec);
             var hasProducer = _productionCandidateProducerIds.Count > 0;
@@ -82,6 +119,70 @@ public sealed partial class UnitBattlefield
 
         _designProductionOptionStateBuffer.Sort(CompareDesignProductionOptionStates);
         return _designProductionOptionStateBuffer;
+    }
+
+    private void CollectSelectedProductionProducerIds(PlayerSlotId playerSlotId, IReadOnlyList<int> selectedBuildingIds, List<int> result)
+    {
+        result.Clear();
+        for (var index = 0; index < selectedBuildingIds.Count; index++)
+        {
+            var buildingId = selectedBuildingIds[index];
+            if (BuildingIdentity(buildingId)?.PlayerSlotId == playerSlotId
+                && HasAnyProductionForCore(buildingId))
+            {
+                result.Add(buildingId);
+            }
+        }
+
+        result.Sort(CompareBuildingIds);
+    }
+
+    private bool AnySelectedProducerSupports(UnitSpec spec, PlayerSlotId playerSlotId, IReadOnlyList<int> selectedProducerBuildingIds)
+    {
+        for (var index = 0; index < selectedProducerBuildingIds.Count; index++)
+        {
+            if (ProducerSupportsSpec(selectedProducerBuildingIds[index], playerSlotId, spec))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void CollectCandidateProducerIds(
+        UnitSpec spec,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<int> selectedProducerBuildingIds,
+        List<int> result)
+    {
+        result.Clear();
+        for (var index = 0; index < selectedProducerBuildingIds.Count; index++)
+        {
+            var buildingId = selectedProducerBuildingIds[index];
+            if (ProducerCanQueueSpec(buildingId, playerSlotId, spec))
+            {
+                result.Add(buildingId);
+            }
+        }
+    }
+
+    private bool ProducerCanQueueSpec(int buildingId, PlayerSlotId playerSlotId, UnitSpec spec)
+    {
+        return ProducerSupportsSpec(buildingId, playerSlotId, spec)
+            && BuildingPowered(buildingId)
+            && BuildingBuildProgress(buildingId) >= 1;
+    }
+
+    private bool ProducerSupportsSpec(int buildingId, PlayerSlotId playerSlotId, UnitSpec spec)
+    {
+        return spec.Production is not null
+            && BuildingSnapshot(buildingId) is { } building
+            && building.PlayerSlotId == playerSlotId
+            && building.Faction == spec.Faction
+            && building.Hp > 0
+            && building.Kind == spec.Production.ProducerKind
+            && ProducerTechTier(building.Kind) >= spec.Stats.TechTier;
     }
 
     private void CollectProductionDesignSpecs(PlayerSlotId playerSlotId, List<UnitSpec> result)
