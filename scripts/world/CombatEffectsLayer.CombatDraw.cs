@@ -23,8 +23,14 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
-            DrawArc(unit.Position, shareRadius, 0, Mathf.Tau, LargeEffectArcSegments, new Color(style.Accent, unit.AlertPulse * 0.12f), 1.6f, true);
-            DrawArc(unit.Position, shareRadius * 0.24f, 0, Mathf.Tau, MediumEffectArcSegments, new Color("#ffffff", unit.AlertPulse * 0.24f), 1.2f, true);
+            var readability = ReadabilityFor(unit.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
+            DrawArc(unit.Position, shareRadius, 0, Mathf.Tau, LargeEffectArcSegments, Readable(style.Accent, unit.AlertPulse * 0.12f, readability), ReadableWidth(1.6f, readability), true);
+            DrawArc(unit.Position, shareRadius * 0.24f, 0, Mathf.Tau, MediumEffectArcSegments, Readable(new Color("#ffffff"), unit.AlertPulse * 0.24f, readability), ReadableWidth(1.2f, readability), true);
         }
     }
 
@@ -61,17 +67,23 @@ public partial class CombatEffectsLayer : Node2D
             return;
         }
 
+        var readability = ReadabilityForSegment(start, end);
+        if (!readability.Draw)
+        {
+            return;
+        }
+
         var normal = direction.Normalized().Orthogonal();
         var jitter = normal * (1.6f + pulse * 2.4f);
         var coreWidth = Mathf.Max(1.2f, width * (0.42f + pulse * 0.2f));
 
-        DrawLine(start, end, new Color(accent, 0.18f * fade), width * 3.8f, true);
-        DrawLine(start + jitter, end + jitter, new Color(accent, 0.32f * fade), width * 1.4f, true);
-        DrawLine(start - jitter, end - jitter, new Color(accent, 0.22f * fade), width, true);
-        DrawLine(start, end, new Color("#ffffff", 0.84f * fade), coreWidth, true);
+        DrawLine(start, end, Readable(accent, 0.18f * fade, readability), ReadableWidth(width * 3.8f, readability), true);
+        DrawLine(start + jitter, end + jitter, Readable(accent, 0.32f * fade, readability), ReadableWidth(width * 1.4f, readability), true);
+        DrawLine(start - jitter, end - jitter, Readable(accent, 0.22f * fade, readability), ReadableWidth(width, readability), true);
+        DrawLine(start, end, Readable(new Color("#ffffff"), 0.84f * fade, readability), ReadableWidth(coreWidth, readability), true);
 
-        DrawCircle(start, width * (0.8f + pulse), new Color("#ffffff", 0.58f * fade));
-        DrawCircle(end, width * (1.1f + pulse * 1.3f), new Color(accent, 0.38f * fade));
+        DrawCircle(start, width * (0.8f + pulse), Readable(new Color("#ffffff"), 0.58f * fade, readability));
+        DrawCircle(end, width * (1.1f + pulse * 1.3f), Readable(accent, 0.38f * fade, readability));
     }
 
     private void DrawProjectiles()
@@ -122,12 +134,18 @@ public partial class CombatEffectsLayer : Node2D
             return;
         }
 
-        DrawLine(tail, position, new Color(accent, style.TrailAlpha), style.TrailWidth, true);
-        DrawLine(tail, position, new Color("#ffffff", style.CoreAlpha), style.CoreWidth, true);
-        DrawCircle(position, style.HeadRadius, new Color(accent, style.HeadAlpha));
+        var readability = ReadabilityForSegment(tail, position);
+        if (!readability.Draw)
+        {
+            return;
+        }
+
+        DrawLine(tail, position, Readable(accent, style.TrailAlpha, readability), ReadableWidth(style.TrailWidth, readability), true);
+        DrawLine(tail, position, Readable(new Color("#ffffff"), style.CoreAlpha, readability), ReadableWidth(style.CoreWidth, readability), true);
+        DrawCircle(position, style.HeadRadius, Readable(accent, style.HeadAlpha, readability));
         if (isSeekerRocket)
         {
-            DrawCircle(tail, style.HeadRadius * 0.74f, style.TailFlare);
+            DrawCircle(tail, style.HeadRadius * 0.74f, Readable(style.TailFlare, style.TailFlare.A, readability));
         }
     }
 }

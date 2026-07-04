@@ -30,6 +30,31 @@ public partial class CombatEffectsLayer : Node2D
             || State.IsVisibleToPlayer((tail + head) * 0.5f);
     }
 
+    private CombatReadabilityStyle ReadabilityFor(Vector2 position)
+    {
+        var visible = State.IsVisibleToPlayer(position);
+        var explored = visible || State.IsExploredByPlayer(position);
+        return CombatReadabilityMath.StyleFor(visible, explored, ActiveEffectCount, CommandMarkerCount);
+    }
+
+    private CombatReadabilityStyle ReadabilityForSegment(Vector2 start, Vector2 end)
+    {
+        var midpoint = (start + end) * 0.5f;
+        var visible = State.IsVisibleToPlayer(start) || State.IsVisibleToPlayer(end) || State.IsVisibleToPlayer(midpoint);
+        var explored = visible || State.IsExploredByPlayer(start) || State.IsExploredByPlayer(end) || State.IsExploredByPlayer(midpoint);
+        return CombatReadabilityMath.StyleFor(visible, explored, ActiveEffectCount, CommandMarkerCount);
+    }
+
+    private static Color Readable(Color color, float alpha, CombatReadabilityStyle style)
+    {
+        return new Color(color, alpha * style.AlphaScale);
+    }
+
+    private static float ReadableWidth(float width, CombatReadabilityStyle style)
+    {
+        return Mathf.Max(0.7f, width * style.LineWidthScale);
+    }
+
     private static float NoiseAngle(int seed, int index)
     {
         return Noise01(seed, index) * Mathf.Tau;

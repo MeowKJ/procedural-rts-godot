@@ -161,6 +161,23 @@ static partial class Program
             throw new InvalidOperationException("impact VFX should vary by movement domain and expose ion/EMP dissolve separately");
         }
 
+        var visibleCombatReadability = CombatReadabilityMath.StyleFor(visibleToPlayer: true, exploredByPlayer: true, activeEffectCount: 24, commandMarkerCount: 0);
+        var commandCombatReadability = CombatReadabilityMath.StyleFor(visibleToPlayer: true, exploredByPlayer: true, activeEffectCount: 24, commandMarkerCount: 2);
+        var fogCombatReadability = CombatReadabilityMath.StyleFor(visibleToPlayer: false, exploredByPlayer: true, activeEffectCount: 24, commandMarkerCount: 0);
+        var loadedCombatReadability = CombatReadabilityMath.StyleFor(visibleToPlayer: true, exploredByPlayer: true, activeEffectCount: 160, commandMarkerCount: 0);
+        var hiddenCombatReadability = CombatReadabilityMath.StyleFor(visibleToPlayer: false, exploredByPlayer: false, activeEffectCount: 24, commandMarkerCount: 0);
+        if (!visibleCombatReadability.Draw
+            || !commandCombatReadability.Draw
+            || !fogCombatReadability.Draw
+            || hiddenCombatReadability.Draw
+            || commandCombatReadability.AlphaScale >= visibleCombatReadability.AlphaScale
+            || fogCombatReadability.AlphaScale >= commandCombatReadability.AlphaScale
+            || loadedCombatReadability.AlphaScale >= visibleCombatReadability.AlphaScale
+            || commandCombatReadability.LineWidthScale >= visibleCombatReadability.LineWidthScale)
+        {
+            throw new InvalidOperationException("combat readability should keep transient juice below command markers and strongly suppressed by fog/load");
+        }
+
         if (!GameState.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.StaticTurret)
             || !GameState.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.MobileTurret)
             || !GameState.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.FixedForward))

@@ -7,6 +7,7 @@ static class PresentationReviewGate
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);
         HoverTooltipReviewGate.Check(root, result);
+        CombatReadabilityReviewGate.Check(root, result);
         TacticalAudioReviewGate.Check(root, result);
         ControlGroupAllocationReviewGate.Check(root, result);
         SelectionControllerAllocationReviewGate.Check(root, result);

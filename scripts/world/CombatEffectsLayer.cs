@@ -26,6 +26,7 @@ public partial class CombatEffectsLayer : Node2D
     public required GameState State { get; init; }
     public UnitBattlefield? UnitBattlefield { get; init; }
     public Rect2? CullingWorldRect { get; set; }
+    public int CommandMarkerCount { get; set; }
 
     private readonly List<UnitDeathEffect> _unitDeaths = [];
     private readonly List<UnitDeathEffect> _pooledUnitDeaths = [];

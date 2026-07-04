@@ -21,10 +21,16 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
+            var readability = ReadabilityFor(unit.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
             var pulseRadius = style.Radius + 8 + (1 - unit.HitPulse) * 22;
-            DrawArc(unit.Position, pulseRadius, 0, Mathf.Tau, MediumEffectArcSegments, new Color(style.Accent, unit.HitPulse * 0.85f), 3, true);
-            DrawCircle(unit.Position, style.Radius + 7, new Color("#ffffff", unit.HitPulse * 0.16f));
-            DrawHitPunch(unit.Position, style.Radius, style.Accent, unit.HitPulse, unit.LastDamageAmount);
+            DrawArc(unit.Position, pulseRadius, 0, Mathf.Tau, MediumEffectArcSegments, Readable(style.Accent, unit.HitPulse * 0.85f, readability), ReadableWidth(3, readability), true);
+            DrawCircle(unit.Position, style.Radius + 7, Readable(new Color("#ffffff"), unit.HitPulse * 0.16f, readability));
+            DrawHitPunch(unit.Position, style.Radius, style.Accent, unit.HitPulse, unit.LastDamageAmount, readability);
         }
 
         if (UnitBattlefield is not null && UnitBattlefield.LiveBuildingCount() > 0)
@@ -48,9 +54,15 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
-            DrawArc(building.Position, radius, 0, Mathf.Tau, LargeEffectArcSegments, new Color(accent, building.HitPulse * 0.75f), 4, true);
-            DrawCircle(building.Position, radius * 0.72f, new Color("#ffffff", building.HitPulse * 0.08f));
-            DrawHitPunch(building.Position, radius * 0.48f, accent, building.HitPulse, 0);
+            var readability = ReadabilityFor(building.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
+            DrawArc(building.Position, radius, 0, Mathf.Tau, LargeEffectArcSegments, Readable(accent, building.HitPulse * 0.75f, readability), ReadableWidth(4, readability), true);
+            DrawCircle(building.Position, radius * 0.72f, Readable(new Color("#ffffff"), building.HitPulse * 0.08f, readability));
+            DrawHitPunch(building.Position, radius * 0.48f, accent, building.HitPulse, 0, readability);
         }
     }
 
@@ -70,13 +82,19 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
-            DrawArc(building.Position, radius, 0, Mathf.Tau, LargeEffectArcSegments, new Color(building.Accent, building.HitPulse * 0.75f), 4, true);
-            DrawCircle(building.Position, radius * 0.72f, new Color("#ffffff", building.HitPulse * 0.08f));
-            DrawHitPunch(building.Position, radius * 0.48f, building.Accent, building.HitPulse, 0);
+            var readability = ReadabilityFor(building.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
+            DrawArc(building.Position, radius, 0, Mathf.Tau, LargeEffectArcSegments, Readable(building.Accent, building.HitPulse * 0.75f, readability), ReadableWidth(4, readability), true);
+            DrawCircle(building.Position, radius * 0.72f, Readable(new Color("#ffffff"), building.HitPulse * 0.08f, readability));
+            DrawHitPunch(building.Position, radius * 0.48f, building.Accent, building.HitPulse, 0, readability);
         }
     }
 
-    private void DrawHitPunch(Vector2 position, float radius, Color accent, float pulse, float damage)
+    private void DrawHitPunch(Vector2 position, float radius, Color accent, float pulse, float damage, CombatReadabilityStyle readability)
     {
         var fade = Mathf.Clamp(pulse, 0, 1);
         var angle = NoiseAngle(Mathf.RoundToInt(position.X * 13 + position.Y * 17 + damage * 5), 3);
@@ -86,7 +104,7 @@ public partial class CombatEffectsLayer : Node2D
         var offset = direction * (1 - fade) * 8;
         var center = position + offset;
 
-        DrawLine(center - direction * length, center + direction * length, new Color("#ffffff", 0.38f * fade), 1.3f, true);
-        DrawLine(center - normal * length * 0.36f, center + normal * length * 0.36f, new Color(accent, 0.46f * fade), 1.1f, true);
+        DrawLine(center - direction * length, center + direction * length, Readable(new Color("#ffffff"), 0.38f * fade, readability), ReadableWidth(1.3f, readability), true);
+        DrawLine(center - normal * length * 0.36f, center + normal * length * 0.36f, Readable(accent, 0.46f * fade, readability), ReadableWidth(1.1f, readability), true);
     }
 }

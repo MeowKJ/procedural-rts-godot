@@ -14,15 +14,21 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
+            var readability = ReadabilityFor(effect.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
             var t = Mathf.Clamp(effect.Age / ImpactFlashLifetime, 0, 1);
             var fade = 1 - t;
             var pulse = Mathf.Sin(t * Mathf.Pi);
             var radius = effect.Radius + t * effect.Style.Expansion;
             var accent = effect.Accent;
 
-            DrawCircle(effect.Position, radius * 0.55f, new Color(accent, 0.12f * fade));
-            DrawArc(effect.Position, radius, 0, Mathf.Tau, MediumEffectArcSegments, new Color(accent, 0.66f * fade), effect.Style.LineWidth * fade + 0.7f, true);
-            DrawArc(effect.Position, radius * 0.68f, 0, Mathf.Tau, SmallEffectArcSegments, new Color(effect.Style.SecondaryColor, 0.38f * fade), 1.1f, true);
+            DrawCircle(effect.Position, radius * 0.55f, Readable(accent, 0.12f * fade, readability));
+            DrawArc(effect.Position, radius, 0, Mathf.Tau, MediumEffectArcSegments, Readable(accent, 0.66f * fade, readability), ReadableWidth(effect.Style.LineWidth * fade + 0.7f, readability), true);
+            DrawArc(effect.Position, radius * 0.68f, 0, Mathf.Tau, SmallEffectArcSegments, Readable(effect.Style.SecondaryColor, 0.38f * fade, readability), ReadableWidth(1.1f, readability), true);
 
             var sparkCount = effect.Style.SparkCount;
             for (var index = 0; index < sparkCount; index++)
@@ -31,7 +37,7 @@ public partial class CombatEffectsLayer : Node2D
                 var length = (6 + Noise01(effect.Seed, index + 19) * 12) * effect.Style.SparkScale;
                 var start = effect.Position + direction * (effect.Radius * 0.28f + pulse * 4);
                 var end = start + direction * (length + t * 12 * effect.Style.SparkScale);
-                DrawLine(start, end, new Color(accent, 0.48f * fade), 1.4f, true);
+                DrawLine(start, end, Readable(accent, 0.48f * fade, readability), ReadableWidth(1.4f, readability), true);
             }
 
             if (effect.Style.EmitsEmbers)
@@ -40,7 +46,7 @@ public partial class CombatEffectsLayer : Node2D
                 {
                     var direction = Vector2.FromAngle(NoiseAngle(effect.Seed + 73, index));
                     var center = effect.Position + direction * (effect.Radius * 0.42f + t * 18 * effect.Style.SparkScale);
-                    DrawCircle(center, 1.8f + Noise01(effect.Seed, index + 91) * 2.2f, new Color("#ffb35c", 0.34f * fade));
+                    DrawCircle(center, 1.8f + Noise01(effect.Seed, index + 91) * 2.2f, Readable(new Color("#ffb35c"), 0.34f * fade, readability));
                 }
             }
 
@@ -53,7 +59,7 @@ public partial class CombatEffectsLayer : Node2D
             {
                 var arcRadius = radius * (0.74f + index * 0.16f);
                 var startAngle = NoiseAngle(effect.Seed + 137, index) + t * 1.6f;
-                DrawArc(effect.Position, arcRadius, startAngle, startAngle + Mathf.Pi * 0.48f, 18, new Color(effect.Style.SecondaryColor, 0.36f * fade), 1.1f, true);
+                DrawArc(effect.Position, arcRadius, startAngle, startAngle + Mathf.Pi * 0.48f, 18, Readable(effect.Style.SecondaryColor, 0.36f * fade, readability), ReadableWidth(1.1f, readability), true);
             }
         }
     }

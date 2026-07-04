@@ -14,6 +14,12 @@ public partial class CombatEffectsLayer : Node2D
                 continue;
             }
 
+            var readability = ReadabilityFor(effect.Position);
+            if (!readability.Draw)
+            {
+                continue;
+            }
+
             var t = Mathf.Clamp(effect.Age / effect.Style.Lifetime, 0, 1);
             var fade = 1 - t;
             var burst = Mathf.Sin(t * Mathf.Pi);
@@ -21,19 +27,19 @@ public partial class CombatEffectsLayer : Node2D
             var outer = radius + 10 + t * 54 * effect.Style.BurstScale;
             var inner = Mathf.Max(2, radius * (0.42f + t * 0.75f));
 
-            DrawDeathScorch(effect, t, fade);
-            DrawCircle(effect.Position, radius * (1.25f + burst * 0.65f * effect.Style.BurstScale), new Color("#ffffff", 0.2f * fade));
-            DrawCircle(effect.Position, radius * (1.7f + t * 1.1f * effect.Style.BurstScale), new Color(effect.Accent, 0.2f * fade));
-            DrawArc(effect.Position, outer, 0, Mathf.Tau, LargeEffectArcSegments, new Color(effect.Accent, 0.78f * fade), effect.Style.RingWidth * fade + 0.7f, true);
-            DrawArc(effect.Position, inner, 0, Mathf.Tau, MediumEffectArcSegments, new Color("#ffffff", 0.62f * fade), 1.3f, true);
+            DrawDeathScorch(effect, t, fade, readability);
+            DrawCircle(effect.Position, radius * (1.25f + burst * 0.65f * effect.Style.BurstScale), Readable(new Color("#ffffff"), 0.2f * fade, readability));
+            DrawCircle(effect.Position, radius * (1.7f + t * 1.1f * effect.Style.BurstScale), Readable(effect.Accent, 0.2f * fade, readability));
+            DrawArc(effect.Position, outer, 0, Mathf.Tau, LargeEffectArcSegments, Readable(effect.Accent, 0.78f * fade, readability), ReadableWidth(effect.Style.RingWidth * fade + 0.7f, readability), true);
+            DrawArc(effect.Position, inner, 0, Mathf.Tau, MediumEffectArcSegments, Readable(new Color("#ffffff"), 0.62f * fade, readability), ReadableWidth(1.3f, readability), true);
 
-            DrawDeathFragments(effect, t, fade);
-            DrawDeathSmoke(effect, t, fade);
-            DrawDeathSpecials(effect, t, fade);
+            DrawDeathFragments(effect, t, fade, readability);
+            DrawDeathSmoke(effect, t, fade, readability);
+            DrawDeathSpecials(effect, t, fade, readability);
         }
     }
 
-    private void DrawDeathScorch(UnitDeathEffect effect, float t, float fade)
+    private void DrawDeathScorch(UnitDeathEffect effect, float t, float fade, CombatReadabilityStyle readability)
     {
         var scorchFade = Mathf.Clamp(1 - t * 1.18f, 0, 1) * fade;
         if (scorchFade <= 0)
@@ -42,8 +48,8 @@ public partial class CombatEffectsLayer : Node2D
         }
 
         var radius = effect.Radius * (0.74f + effect.Style.ScorchScale * 0.42f);
-        DrawCircle(effect.Position, radius, new Color("#05070a", effect.Style.ScorchAlpha * scorchFade));
-        DrawArc(effect.Position, radius * 1.12f, 0, Mathf.Tau, MediumEffectArcSegments, new Color("#10151a", effect.Style.ScorchAlpha * 0.7f * scorchFade), 1.5f, true);
+        DrawCircle(effect.Position, radius, Readable(new Color("#05070a"), effect.Style.ScorchAlpha * scorchFade, readability));
+        DrawArc(effect.Position, radius * 1.12f, 0, Mathf.Tau, MediumEffectArcSegments, Readable(new Color("#10151a"), effect.Style.ScorchAlpha * 0.7f * scorchFade, readability), ReadableWidth(1.5f, readability), true);
 
         for (var index = 0; index < 4; index++)
         {
@@ -52,11 +58,11 @@ public partial class CombatEffectsLayer : Node2D
             var normal = direction.Orthogonal();
             var length = radius * (0.34f + Noise01(effect.Seed, index + 521) * 0.34f);
             var center = effect.Position + direction * radius * (0.12f + index * 0.055f);
-            DrawLine(center - direction * length - normal * 2.2f, center + direction * length + normal * 2.2f, new Color("#02060a", 0.18f * scorchFade), 1.4f, true);
+            DrawLine(center - direction * length - normal * 2.2f, center + direction * length + normal * 2.2f, Readable(new Color("#02060a"), 0.18f * scorchFade, readability), ReadableWidth(1.4f, readability), true);
         }
     }
 
-    private void DrawDeathFragments(UnitDeathEffect effect, float t, float fade)
+    private void DrawDeathFragments(UnitDeathEffect effect, float t, float fade, CombatReadabilityStyle readability)
     {
         var count = effect.Style.FragmentCount;
         for (var index = 0; index < count; index++)
@@ -69,12 +75,12 @@ public partial class CombatEffectsLayer : Node2D
             var side = direction.Orthogonal() * (1.5f + Noise01(effect.Seed, index + 71) * 3.5f);
             var shardAlpha = fade * (0.38f + Noise01(effect.Seed, index + 83) * 0.28f);
 
-            DrawLine(center - direction * length * 0.35f - side * 0.28f, center + direction * length + side * 0.28f, new Color(effect.Accent, shardAlpha), 1.5f, true);
-            DrawLine(center - side * 0.55f, center + side * 0.55f, new Color("#ffffff", shardAlpha * 0.62f), 0.9f, true);
+            DrawLine(center - direction * length * 0.35f - side * 0.28f, center + direction * length + side * 0.28f, Readable(effect.Accent, shardAlpha, readability), ReadableWidth(1.5f, readability), true);
+            DrawLine(center - side * 0.55f, center + side * 0.55f, Readable(new Color("#ffffff"), shardAlpha * 0.62f, readability), ReadableWidth(0.9f, readability), true);
         }
     }
 
-    private void DrawDeathSmoke(UnitDeathEffect effect, float t, float fade)
+    private void DrawDeathSmoke(UnitDeathEffect effect, float t, float fade, CombatReadabilityStyle readability)
     {
         for (var index = 0; index < effect.Style.SmokeCount; index++)
         {
@@ -83,11 +89,11 @@ public partial class CombatEffectsLayer : Node2D
             var distance = effect.Radius * 0.34f + t * (16 + Noise01(effect.Seed, index + 113) * 20) * effect.Style.SmokeScale;
             var center = effect.Position + direction * distance;
             var radius = effect.Radius * (0.28f + Noise01(effect.Seed, index + 131) * 0.32f) * effect.Style.SmokeScale + t * 12;
-            DrawCircle(center, radius, new Color("#02070d", 0.22f * fade));
+            DrawCircle(center, radius, Readable(new Color("#02070d"), 0.22f * fade, readability));
         }
     }
 
-    private void DrawDeathSpecials(UnitDeathEffect effect, float t, float fade)
+    private void DrawDeathSpecials(UnitDeathEffect effect, float t, float fade, CombatReadabilityStyle readability)
     {
         if (effect.Style.EmitsEmbers)
         {
@@ -95,7 +101,7 @@ public partial class CombatEffectsLayer : Node2D
             {
                 var direction = Vector2.FromAngle(NoiseAngle(effect.Seed + 211, index));
                 var center = effect.Position + direction * (effect.Radius * 0.55f + t * (24 + index * 4) * effect.Style.BurstScale);
-                DrawCircle(center, 2.2f + Noise01(effect.Seed, index + 229) * 2.4f, new Color("#ffb35c", 0.36f * fade));
+                DrawCircle(center, 2.2f + Noise01(effect.Seed, index + 229) * 2.4f, Readable(new Color("#ffb35c"), 0.36f * fade, readability));
             }
         }
 
@@ -108,7 +114,7 @@ public partial class CombatEffectsLayer : Node2D
         {
             var radius = effect.Radius * (0.72f + index * 0.18f) + t * (18 + index * 8);
             var start = NoiseAngle(effect.Seed + 307, index) + t * 1.8f;
-            DrawArc(effect.Position, radius, start, start + Mathf.Pi * 0.62f, 32, new Color(effect.Style.SecondaryColor, 0.46f * fade), 1.3f, true);
+            DrawArc(effect.Position, radius, start, start + Mathf.Pi * 0.62f, 32, Readable(effect.Style.SecondaryColor, 0.46f * fade, readability), ReadableWidth(1.3f, readability), true);
         }
     }
 
