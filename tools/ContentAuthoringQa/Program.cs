@@ -5,6 +5,8 @@ var failures = new List<string>();
 
 ValidateUnitDesignCatalog(failures);
 ValidateDamageElementCatalog(failures);
+ValidateElementStatusCatalog(failures);
+ValidateElementReactionCatalog(failures);
 ValidateWeaponAndAmmoCatalogs(failures);
 ValidateAmmoElementMapping(failures);
 ValidateBuildingCatalog(failures);
@@ -23,7 +25,7 @@ if (failures.Count > 0)
 }
 
 Console.WriteLine(
-    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, elements {DamageElementCatalog.Definitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
+    $"ContentAuthoringQa PASSED: units {UnitDesignCatalog.Designs.Count}, weapons {WeaponCatalog.WeaponDefinitions.Count}, ammo {WeaponCatalog.AmmoDefinitions.Count}, elements {DamageElementCatalog.Definitions.Count}, statuses {ElementStatusCatalog.Definitions.Count}, reactions {ElementReactionCatalog.Definitions.Count}, build specs {BuildSpecCatalog.Definitions.Count}.");
 
 static void ValidateUnitDesignCatalog(List<string> failures)
 {
@@ -116,6 +118,58 @@ static void ValidateDamageElementCatalog(List<string> failures)
             Require(definition.DamageMultiplier > 0, $"{id} damage element must have a positive neutral/default multiplier.", failures);
         }
     }
+}
+
+static void ValidateElementStatusCatalog(List<string> failures)
+{
+    Require(ElementStatusCatalog.Definitions.Count == ElementStatusIds.All.Count, "ElementStatusCatalog must define every stable ElementStatusIds entry.", failures);
+    Require(ElementStatusIds.All.SequenceEqual(ElementStatusCatalog.Definitions.Keys), "ElementStatusIds.All must mirror discovered element status definitions in deterministic order.", failures);
+    foreach (var id in ElementStatusIds.All)
+    {
+        Require(ElementStatusCatalog.Definitions.TryGetValue(id, out var definition), $"ElementStatusCatalog missing {id}.", failures);
+        if (!ElementStatusCatalog.Definitions.TryGetValue(id, out definition))
+        {
+            continue;
+        }
+
+        Require(definition.Id == id, $"{id} element status definition id must match the catalog key.", failures);
+        Require(!string.IsNullOrWhiteSpace(definition.Label), $"{id} element status must have a label.", failures);
+        Require(DamageElementCatalog.Definitions.ContainsKey(definition.SourceElementId), $"{id} references missing source element {definition.SourceElementId}.", failures);
+        Require(definition.DurationSeconds > 0, $"{id} element status duration must be positive.", failures);
+        Require(definition.MaxStacks > 0, $"{id} element status max stacks must be positive.", failures);
+        if (definition.StackingMode != ElementStatusStackingMode.StackAndRefresh)
+        {
+            Require(definition.MaxStacks == 1, $"{id} non-stacking status must keep MaxStacks at 1.", failures);
+        }
+    }
+}
+
+static void ValidateElementReactionCatalog(List<string> failures)
+{
+    Require(ElementReactionCatalog.Definitions.Count == ElementReactionIds.All.Count, "ElementReactionCatalog must define every stable ElementReactionIds entry.", failures);
+    Require(ElementReactionIds.All.SequenceEqual(ElementReactionCatalog.Definitions.Keys), "ElementReactionIds.All must mirror discovered element reaction definitions in deterministic order.", failures);
+
+    var pairs = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var id in ElementReactionIds.All)
+    {
+        Require(ElementReactionCatalog.Definitions.TryGetValue(id, out var definition), $"ElementReactionCatalog missing {id}.", failures);
+        if (!ElementReactionCatalog.Definitions.TryGetValue(id, out definition))
+        {
+            continue;
+        }
+
+        Require(definition.ReactionId == id, $"{id} element reaction definition id must match the catalog key.", failures);
+        Require(!string.IsNullOrWhiteSpace(definition.Label), $"{id} element reaction must have a label.", failures);
+        Require(ElementStatusCatalog.Definitions.ContainsKey(definition.PrimerStatusId), $"{id} references missing primer status {definition.PrimerStatusId}.", failures);
+        Require(DamageElementCatalog.Definitions.ContainsKey(definition.TriggerElementId), $"{id} references missing trigger element {definition.TriggerElementId}.", failures);
+        Require(definition.EffectPayload.DamageMultiplier > 0, $"{id} reaction damage multiplier must be positive.", failures);
+        Require(definition.EffectPayload.SplashRadius >= 0, $"{id} reaction splash radius cannot be negative.", failures);
+        Require(definition.EffectPayload.StatusDurationMultiplier > 0, $"{id} reaction duration multiplier must be positive.", failures);
+        Require(pairs.Add($"{definition.PrimerStatusId}|{definition.TriggerElementId}"), $"{id} duplicates a primer+trigger reaction pair.", failures);
+        Require(ReferenceEquals(ElementReactionCatalog.Match(definition.PrimerStatusId, definition.TriggerElementId), definition), $"{id} must resolve through ElementReactionCatalog.Match.", failures);
+    }
+
+    Require(ElementReactionCatalog.Match(ElementStatusIds.EnergyCharge, DamageElementIds.Kinetic) is null, "Undefined element reaction pairs must resolve to no-op.", failures);
 }
 
 static void ValidateBuildingCatalog(List<string> failures)

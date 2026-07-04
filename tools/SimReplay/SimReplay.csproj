@@ -13,6 +13,7 @@
     <Compile Include="..\SimReplayCombatCommandAbilities\**\*.cs" Link="SimReplayCombatCommandAbilities\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCombatCommands\**\*.cs" Link="SimReplayCombatCommands\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCombatFieldAbilities\**\*.cs" Link="SimReplayCombatFieldAbilities\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayCombatChemistry\**\*.cs" Link="SimReplayCombatChemistry\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCombatTactics\**\*.cs" Link="SimReplayCombatTactics\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCombatTacticsPositioning\**\*.cs" Link="SimReplayCombatTacticsPositioning\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCombatTargets\**\*.cs" Link="SimReplayCombatTargets\%(RecursiveDir)%(Filename)%(Extension)" />
