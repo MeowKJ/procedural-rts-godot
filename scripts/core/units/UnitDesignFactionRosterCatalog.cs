@@ -54,25 +54,46 @@ public static class UnitDesignFactionRosterCatalog
     public static string? ProductionDesignId(UnitFactionId faction, ProductionSpec production)
     {
         var preferredArchetype = PreferredArchetype(production.Category);
-        return PlayableSpecs(faction)
-            .Where(spec => spec.Production is not null
-                && spec.Production.ProducerKind == production.ProducerKind
-                && spec.Production.Category == production.Category
-                && spec.Production.LaneIndex == production.LaneIndex)
-            .OrderBy(spec => preferredArchetype is not null && spec.Archetype != preferredArchetype ? 1 : 0)
-            .ThenBy(ProductionSortKey)
-            .Select(spec => spec.Id)
-            .FirstOrDefault();
+        UnitSpec? best = null;
+        var bestPreference = int.MaxValue;
+        foreach (var designId in For(faction).PlayableDesignIds)
+        {
+            var spec = UnitDesignCatalog.Spec(designId);
+            if (spec.Production is not { } specProduction
+                || specProduction.ProducerKind != production.ProducerKind
+                || specProduction.Category != production.Category
+                || specProduction.LaneIndex != production.LaneIndex)
+            {
+                continue;
+            }
+
+            var preference = preferredArchetype is not null && spec.Archetype != preferredArchetype ? 1 : 0;
+            if (IsBetterProductionOption(spec, best, preference, bestPreference))
+            {
+                best = spec;
+                bestPreference = preference;
+            }
+        }
+
+        return best?.Id;
     }
 
     public static string? ProductionDesignId(UnitFactionId faction, ProductionKind productionKind)
     {
         var archetype = PreferredArchetype(productionKind);
-        return PlayableSpecs(faction)
-            .Where(spec => spec.Archetype == archetype && spec.Production is not null)
-            .OrderBy(ProductionSortKey)
-            .Select(spec => spec.Id)
-            .FirstOrDefault();
+        UnitSpec? best = null;
+        foreach (var designId in For(faction).PlayableDesignIds)
+        {
+            var spec = UnitDesignCatalog.Spec(designId);
+            if (spec.Archetype == archetype
+                && spec.Production is not null
+                && IsBetterProductionOption(spec, best, 0, 0))
+            {
+                best = spec;
+            }
+        }
+
+        return best?.Id;
     }
 
     private static IReadOnlyDictionary<UnitFactionId, UnitDesignFactionRoster> BuildRosters()
@@ -95,11 +116,6 @@ public static class UnitDesignFactionRosterCatalog
                     ValidateStartingUnits(faction, startingUnits);
                     return new UnitDesignFactionRoster(faction, playableIds, startingUnits);
                 });
-    }
-
-    private static IEnumerable<UnitSpec> PlayableSpecs(UnitFactionId faction)
-    {
-        return For(faction).PlayableDesignIds.Select(UnitDesignCatalog.Spec);
     }
 
     private static void ValidateStartingUnits(UnitFactionId faction, IReadOnlyList<UnitDesignSpawn> startingUnits)
@@ -136,8 +152,16 @@ public static class UnitDesignFactionRosterCatalog
         };
     }
 
-    private static (int TechTier, string Id) ProductionSortKey(UnitSpec spec)
+    private static bool IsBetterProductionOption(UnitSpec candidate, UnitSpec? best, int candidatePreference, int bestPreference)
     {
-        return (spec.Stats.TechTier, spec.Id);
+        return best is null
+            || candidatePreference < bestPreference
+            || (candidatePreference == bestPreference && CompareProductionSortKey(candidate, best) < 0);
+    }
+
+    private static int CompareProductionSortKey(UnitSpec left, UnitSpec right)
+    {
+        var techTier = left.Stats.TechTier.CompareTo(right.Stats.TechTier);
+        return techTier != 0 ? techTier : string.CompareOrdinal(left.Id, right.Id);
     }
 }
