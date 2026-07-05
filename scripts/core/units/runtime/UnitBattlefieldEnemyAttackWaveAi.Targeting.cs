@@ -74,13 +74,6 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return false;
         }
 
-        foreach (var unit in waveUnits)
-        {
-            unit.PlayerIntentTarget = scoutPoint;
-            unit.CommandVisualTarget = scoutPoint;
-            unit.CommandPulse = 1;
-        }
-
         status = $"Enemy scout wave launched ({moved} units)";
         return true;
     }
