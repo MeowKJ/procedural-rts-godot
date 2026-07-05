@@ -125,7 +125,8 @@ public partial class BuildPlacementController : Node2D
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(GetViewport().GetMousePosition());
         var placement = UnitBattlefield.ValidateBuildingPlacement(CurrentKind(), LocalPlayerSlotId, mouseWorld);
-        var placementValid = (ShouldQueueConstructionTicket(CurrentKind()) && !HasActiveReadyTicket) || placement.IsValid;
+        var queuePreview = ShouldQueueConstructionTicket(CurrentKind()) && !HasActiveReadyTicket;
+        var placementValid = HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid);
         var accent = placementValid ? spec.Accent : new Color("#ff5d75");
         var rect = new Rect2(-spec.Footprint / 2f, spec.Footprint);
         var pulse = 0.58f + Mathf.Sin(Time.GetTicksMsec() / 110f) * 0.22f;
@@ -186,15 +187,9 @@ public partial class BuildPlacementController : Node2D
         }
     }
 
-    private BuildSpec CurrentSpec()
-    {
-        return BuildSpecCatalog.For(CurrentKind());
-    }
+    private BuildSpec CurrentSpec() => BuildSpecCatalog.For(CurrentKind());
 
-    private string CurrentKind()
-    {
-        return BuildOrder[_selectedIndex];
-    }
+    private string CurrentKind() => BuildOrder[_selectedIndex];
 
     private bool TryCycleReadyTicket(int direction)
     {
@@ -274,7 +269,18 @@ public partial class BuildPlacementController : Node2D
         var mouseWorld = ScreenToWorld(screenPoint);
         var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld);
         var snapped = new Vector2(placement.X, placement.Y);
-        if (ShouldQueueConstructionTicket(kind) && !HasActiveReadyTicket)
+        var queuePreview = ShouldQueueConstructionTicket(kind) && !HasActiveReadyTicket;
+        if (!HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid))
+        {
+            return new CommandPreviewState(
+                CommandPreviewKind.BuildInvalid,
+                PlacementStatusLabel("placement.needCredits", placement.Reason, spec).ToUpperInvariant(),
+                screenPoint,
+                snapped,
+                false);
+        }
+
+        if (queuePreview)
         {
             return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true);
         }
@@ -285,6 +291,11 @@ public partial class BuildPlacementController : Node2D
         return placement.IsValid
             ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true)
             : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false);
+    }
+
+    private bool HasEnoughCreditsForPreview(BuildSpec spec)
+    {
+        return HasActiveReadyTicket || UnitBattlefield.Credits(LocalPlayerSlotId) >= spec.Cost;
     }
 
     private static string PlacementStatusLabel(string status, string fallbackReason, BuildSpec spec)

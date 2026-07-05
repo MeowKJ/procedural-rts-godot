@@ -26,6 +26,8 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "QueueConstructionTicket(LocalPlayerSlotId, kind", "Sidebar construction mode must queue a ticket before placement.", result);
         RequireText(buildPlacement, "PlaceReadyConstructionTicket(", "Build placement must place ready construction tickets through the runtime backend.", result);
         RequireText(buildPlacement, "DefaultMethodFor(LocalFaction)", "Build placement must choose deploy-vs-sidebar behavior from faction construction policy.", result);
+        RequireText(buildPlacement, "HasEnoughCreditsForPreview(spec)", "Build placement preview must surface insufficient credits before commit.", result);
+        RequireText(buildPlacement, "PlacementStatusLabel(\"placement.needCredits\"", "Build placement preview must reuse localized need-credit feedback.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);
