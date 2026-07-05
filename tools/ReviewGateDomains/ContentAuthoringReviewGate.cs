@@ -15,10 +15,12 @@ static class ContentAuthoringReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitDesign.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitSpec.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitDesignCatalog.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitDesignFactionRosterCatalog.cs");
+        var rosterCatalog = ReviewGateSource.Read(root, "scripts", "core", "units", "UnitDesignFactionRosterCatalog.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitDesignRuntimeLoadouts.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "UnitSpecRuntimeDescriptor.cs");
         ReviewGateSource.RequireTextInFile(root, result, "OrderBy(design => design.Id", "scripts", "core", "units", "UnitDesignCatalog.cs");
+        RequireText(rosterCatalog, "foreach (var designId in For(faction).PlayableDesignIds)", "Production design lookup must scan playable ids without LINQ materialization.", result);
+        ForbidText(rosterCatalog, "PlayableSpecs(faction)", "Production design lookup must not allocate playable spec iterators.", result);
         ReviewGateSource.RequireTextInFile(root, result, "required string DesignId", "scripts", "core", "units", "UnitModel.cs");
         ReviewGateSource.RequireTextInFile(root, result, "UnitDesignCatalog.Spec", "scripts", "core", "units", "UnitModel.cs");
         var gameState = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
@@ -39,14 +41,12 @@ static class ContentAuthoringReviewGate
         ForbidText(seeding, "UnitKind.", "GameState seeding must not reference legacy UnitKind values.", result);
         RequireText(seeding, "PlayableDesignIds", "Developer sandbox faction lines must enumerate UnitDesign playable ids.", result);
         RequireText(seeding, "AddUnit(designId", "Developer sandbox faction lines must spawn directly by design id.", result);
-
         var fogQa = ReviewGateSource.Read(root, "tools", "FogOfWarQa", "Program.cs");
         ForbidText(fogQa, "UnitKind", "FogOfWarQa unit fixtures must not depend on legacy UnitKind.", result);
         ForbidText(fogQa, "UnitKindDesignBridge", "FogOfWarQa unit fixtures must not bridge through UnitKindDesignBridge.", result);
         ForbidText(fogQa, "LegacyKind", "FogOfWarQa unit fixtures must not populate LegacyKind.", result);
         RequireText(fogQa, "PlayerScoutDesignId", "FogOfWarQa must name unit fixtures by design id.", result);
         RequireText(fogQa, "UnitDesignCatalog.Spec(designId)", "FogOfWarQa must validate unit fixtures through UnitDesignCatalog.", result);
-
         var combatProgram = ReviewGateSource.Read(root, "tools", "CombatBehavior", "Program.cs");
         var skirmishAi = ReviewGateSource.Read(root, "tools", "CombatBehaviorSkirmish", "SkirmishAi.cs");
         ForbidText(combatProgram + skirmishAi, "StartingUnitKinds", "CombatBehavior skirmish start checks must not convert starting design ids back to UnitKind.", result);
