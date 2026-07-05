@@ -66,7 +66,7 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return;
         }
 
-        if (!TryFindTarget(battlefield, enemyPlayerSlotId, _profile.AggressionRadius, out var targetKind, out var targetUnit, out var targetBuilding, out var targetPosition))
+        if (!TryFindTarget(battlefield, enemyPlayerSlotId, _profile.AggressionRadius, out var targetKind, out var targetUnit, out var targetBuilding, out _))
         {
             if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds, out var scoutStatus))
             {
@@ -92,18 +92,6 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             _waveTimer = 4f;
             LastStatus = "Enemy wave has no valid weapon target";
             return;
-        }
-
-        foreach (var unit in _waveUnits)
-        {
-            if (unit.AttackTargetId is null)
-            {
-                continue;
-            }
-
-            unit.PlayerIntentTarget = targetPosition;
-            unit.CommandVisualTarget = targetPosition;
-            unit.CommandPulse = 1;
         }
 
         WavesLaunched++;
@@ -140,13 +128,6 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         if (commanded == 0)
         {
             return false;
-        }
-
-        foreach (var defender in _defenseUnits)
-        {
-            defender.PlayerIntentTarget = targetPosition;
-            defender.CommandVisualTarget = targetPosition;
-            defender.CommandPulse = 1;
         }
 
         status = $"Enemy defense ordered ({commanded} units)";

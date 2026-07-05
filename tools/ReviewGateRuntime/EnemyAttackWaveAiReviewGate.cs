@@ -41,6 +41,9 @@ static class EnemyAttackWaveAiReviewGate
         RequireText(ai, "List<UnitInstance> _defenseUnits", "Enemy attack wave AI must reuse defense unit storage.", result);
         RequireText(ai, "List<int> _defenseUnitIds", "Enemy attack wave AI must reuse defense command id storage.", result);
         RequireText(ai, "UnitDistanceComparer _unitDistanceComparer", "Enemy attack wave AI must reuse distance sort comparison state.", result);
+        RequireText(ai, "battlefield.CommandAttackUnits(", "Runtime enemy attack waves must submit attack commands through UnitBattlefield.", result);
+        RequireText(ai, "battlefield.CommandMoveUnits(", "Runtime enemy scout waves must submit move commands through UnitBattlefield.", result);
+        foreach (var stateWrite in new[] { "PlayerIntentTarget =", "CommandVisualTarget =", "CommandPulse =" }) ForbidText(ai, stateWrite, "Runtime enemy attack-wave AI must not write command presentation state directly.", result);
 
         var main = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs");
         RequireText(main, "CollectAvailableWaveUnits(", "Enemy wave selection must fill the reusable wave unit buffer.", result);
@@ -121,16 +124,9 @@ static class EnemyAttackWaveAiReviewGate
     {
         var path = Path.Combine(root, relativeFile);
         var normalized = relativeFile.Replace(Path.DirectorySeparatorChar, '/');
-        if (!File.Exists(path))
-        {
-            result.Error($"Enemy attack wave AI partial is missing: {normalized}.");
-            return;
-        }
+        if (!File.Exists(path)) { result.Error($"Enemy attack wave AI partial is missing: {normalized}."); return; }
 
         var lineCount = File.ReadAllLines(path).Length;
-        if (lineCount > 200)
-        {
-            result.Error($"Enemy attack wave AI partial exceeds 200 lines: {normalized} has {lineCount} lines.");
-        }
+        if (lineCount > 200) result.Error($"Enemy attack wave AI partial exceeds 200 lines: {normalized} has {lineCount} lines.");
     }
 }
