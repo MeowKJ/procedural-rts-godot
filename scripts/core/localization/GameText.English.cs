@@ -324,6 +324,8 @@ public static partial class GameText
         ["build.queued"] = "Queued {0}; place it when ready",
         ["build.readyTicket"] = "{0} ready to place",
         ["build.cancelled"] = "Build preview cancelled",
+        ["build.ticketCancelled"] = "{0} construction canceled +{1} credits",
+        ["build.noTicket"] = "No queued construction ticket",
         ["build.placePreview"] = "PLACE {0}",
         ["build.placeReadyPreview"] = "PLACE READY {0}",
         ["placement.outside"] = "Outside buildable area",

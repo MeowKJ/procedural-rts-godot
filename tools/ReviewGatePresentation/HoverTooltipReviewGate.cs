@@ -6,7 +6,8 @@ static class HoverTooltipReviewGate
         var tooltips = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.HoverTooltips.cs");
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
-        var buildPlacement = ReviewGateSource.Read(root, "scripts", "controllers", "BuildPlacementController.cs");
+        var buildPlacement = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "BuildPlacementController.cs"));
+        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
         var battleRootAlerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var hudPreview = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
 
@@ -25,6 +26,8 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "ReadyConstructionTickets(LocalPlayerSlotId)", "Build placement cycling must surface ready sidebar construction tickets.", result);
         RequireText(buildPlacement, "QueueConstructionTicket(LocalPlayerSlotId, kind", "Sidebar construction mode must queue a ticket before placement.", result);
         RequireText(buildPlacement, "PlaceReadyConstructionTicket(", "Build placement must place ready construction tickets through the runtime backend.", result);
+        RequireText(buildPlacement, "CancelConstructionTicket(LocalPlayerSlotId, _activeReadyTicketId", "Build placement must cancel active ready construction tickets through the runtime backend.", result);
+        RequireText(constructionTickets, "build.ticketCancelled", "Build placement must surface localized construction ticket refund feedback.", result);
         RequireText(buildPlacement, "DefaultMethodFor(LocalFaction)", "Build placement must choose deploy-vs-sidebar behavior from faction construction policy.", result);
         RequireText(buildPlacement, "HasEnoughCreditsForPreview(spec)", "Build placement preview must surface insufficient credits before commit.", result);
         RequireText(buildPlacement, "PlacementStatusLabel(\"placement.needCredits\"", "Build placement preview must reuse localized need-credit feedback.", result);
