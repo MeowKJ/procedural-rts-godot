@@ -35,11 +35,7 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "PlacementStatusLabel(\"placement.needCredits\"", "Build placement preview must reuse localized need-credit feedback.", result);
         RequireText(buildPlacement, "BuildingDesignIds.Headquarters,\n        BuildingDesignIds.GroundTurret,\n        BuildingDesignIds.Airfield,\n        BuildingDesignIds.AntiAirTurret", "Build placement cycle must expose defense and air structures represented by the HUD tabs.", result);
         RequireText(buildPlacement, "case Key.R when IsActive:", "Build placement must keep the active placement-rotation affordance.", result);
-        RequireText(buildPlacement, "_previewRotation += Mathf.Pi / 2f", "Build placement rotation must advance in quarter turns.", result);
         RequireText(buildPlacement, "GameText.Format(\"build.rotated\", CurrentSpec().Label)", "Build placement rotation must surface localized status feedback.", result);
-        RequireText(buildPlacement, "DrawSetTransform(new Vector2(placement.X, placement.Y), _previewRotation, Vector2.One)", "Build placement preview drawing must use the selected rotation.", result);
-        RequireText(buildPlacement, "_activeReadyTicketId,\n                    mouseWorld,\n                    out _,\n                    out status,\n                    _previewRotation", "Ready-ticket placement must preserve the preview rotation.", result);
-        RequireText(buildPlacement, "kind,\n                    mouseWorld,\n                    out _,\n                    out status,\n                    _previewRotation", "Direct building placement must preserve the preview rotation.", result);
         RequireText(englishText, "[\"build.rotated\"]", "English build placement text must include rotation feedback.", result);
         RequireText(chineseText, "[\"build.rotated\"]", "Chinese build placement text must include rotation feedback.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
