@@ -33,6 +33,7 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "DefaultMethodFor(LocalFaction)", "Build placement must choose deploy-vs-sidebar behavior from faction construction policy.", result);
         RequireText(buildPlacement, "HasEnoughCreditsForPreview(spec)", "Build placement preview must surface insufficient credits before commit.", result);
         RequireText(buildPlacement, "PlacementStatusLabel(\"placement.needCredits\"", "Build placement preview must reuse localized need-credit feedback.", result);
+        RequireText(buildPlacement, "BuildingDesignIds.Headquarters,\n        BuildingDesignIds.GroundTurret,\n        BuildingDesignIds.Airfield,\n        BuildingDesignIds.AntiAirTurret", "Build placement cycle must expose defense and air structures represented by the HUD tabs.", result);
         RequireText(buildPlacement, "case Key.R when IsActive:", "Build placement must keep the active placement-rotation affordance.", result);
         RequireText(buildPlacement, "_previewRotation += Mathf.Pi / 2f", "Build placement rotation must advance in quarter turns.", result);
         RequireText(buildPlacement, "GameText.Format(\"build.rotated\", CurrentSpec().Label)", "Build placement rotation must surface localized status feedback.", result);

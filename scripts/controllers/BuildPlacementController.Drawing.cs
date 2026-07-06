@@ -52,6 +52,18 @@ public partial class BuildPlacementController
                 DrawArc(Vector2.Zero, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.24f, 0, Mathf.Tau, 72, new Color(accent, 0.9f), 2.6f, true);
                 DrawLine(new Vector2(0, rect.Position.Y + 12), new Vector2(0, rect.End.Y - 12), new Color("#ffffff", 0.45f), 1.8f, true);
                 break;
+            case BuildingDesignIds.GroundTurret:
+                DrawCircle(Vector2.Zero, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.18f, new Color("#ffffff", 0.24f));
+                DrawLine(Vector2.Zero, new Vector2(rect.End.X - 14, 0), new Color("#ffffff", 0.58f), 2.4f, true);
+                break;
+            case BuildingDesignIds.Airfield:
+                DrawRect(new Rect2(new Vector2(-rect.Size.X * 0.08f, rect.Position.Y + 16), new Vector2(rect.Size.X * 0.16f, rect.Size.Y - 32)), new Color("#ffffff", 0.22f), true);
+                DrawLine(new Vector2(rect.Position.X + 18, 0), new Vector2(rect.End.X - 18, 0), new Color("#ffffff", 0.42f), 1.8f, true);
+                break;
+            case BuildingDesignIds.AntiAirTurret:
+                DrawArc(Vector2.Zero, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.24f, -Mathf.Pi * 0.15f, Mathf.Pi * 1.15f, 48, new Color("#ffffff", 0.52f), 2.2f, true);
+                DrawLine(Vector2.Zero, new Vector2(0, rect.Position.Y + 12), new Color("#ffffff", 0.58f), 2.4f, true);
+                break;
         }
     }
 
