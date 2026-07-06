@@ -60,18 +60,7 @@ public sealed class EnemyAttackWaveAi
 
     private static void CollectAvailableCombatUnits(GameState state, int maximumWaveUnits, List<UnitModel> result)
     {
-        result.Clear();
-        foreach (var unit in state.Units)
-        {
-            if (unit.Owner == Owner.Enemy
-                && unit.Hp > 0
-                && !GameState.IsHarvesterUnit(unit)
-                && (unit.AttackTargetId is null || !unit.AttackTargetIsManual))
-            {
-                result.Add(unit);
-            }
-        }
-
+        state.CollectAvailableAttackWaveUnits(Owner.Enemy, result);
         result.Sort(CompareWaveUnits);
         if (result.Count > maximumWaveUnits)
         {
@@ -81,105 +70,12 @@ public sealed class EnemyAttackWaveAi
 
     private static bool TryFindTarget(GameState state, float aggressionRadius, out CombatTargetKind targetKind, out int targetId, out Vector2 targetPosition)
     {
-        var enemyCenter = EnemyCenter(state);
-        foreach (var building in state.Buildings)
-        {
-            if (building.Kind == BuildingDesignIds.Headquarters
-                && building.Hp > 0
-                && state.IsTargetableHostile(Owner.Enemy, building)
-                && IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
-            {
-                targetKind = CombatTargetKind.Building;
-                targetId = building.Id;
-                targetPosition = building.Position;
-                return true;
-            }
-        }
-
-        BuildingModel? buildingTarget = null;
-        var buildingDistance = float.PositiveInfinity;
-        foreach (var building in state.Buildings)
-        {
-            if (!state.IsTargetableHostile(Owner.Enemy, building)
-                || building.Hp <= 0
-                || !IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
-            {
-                continue;
-            }
-
-            var distance = building.Position.DistanceSquaredTo(enemyCenter);
-            if (distance < buildingDistance)
-            {
-                buildingTarget = building;
-                buildingDistance = distance;
-            }
-        }
-
-        if (buildingTarget is not null)
-        {
-            targetKind = CombatTargetKind.Building;
-            targetId = buildingTarget.Id;
-            targetPosition = buildingTarget.Position;
-            return true;
-        }
-
-        UnitModel? unitTarget = null;
-        var unitDistance = float.PositiveInfinity;
-        foreach (var unit in state.Units)
-        {
-            if (!state.IsTargetableHostile(Owner.Enemy, unit)
-                || unit.Hp <= 0
-                || !IsInsideAggressionRadius(unit.Position, enemyCenter, aggressionRadius))
-            {
-                continue;
-            }
-
-            var distance = unit.Position.DistanceSquaredTo(enemyCenter);
-            if (distance < unitDistance)
-            {
-                unitTarget = unit;
-                unitDistance = distance;
-            }
-        }
-
-        if (unitTarget is not null)
-        {
-            targetKind = CombatTargetKind.Unit;
-            targetId = unitTarget.Id;
-            targetPosition = unitTarget.Position;
-            return true;
-        }
-
-        targetKind = CombatTargetKind.Unit;
-        targetId = 0;
-        targetPosition = Vector2.Zero;
-        return false;
+        return state.TryFindAttackWaveTarget(Owner.Enemy, EnemyFallbackCenter(state), aggressionRadius, out targetKind, out targetId, out targetPosition);
     }
 
-    private static bool IsInsideAggressionRadius(Vector2 targetPosition, Vector2 enemyCenter, float aggressionRadius)
+    private static Vector2 EnemyFallbackCenter(GameState state)
     {
-        if (float.IsPositiveInfinity(aggressionRadius))
-        {
-            return true;
-        }
-
-        return targetPosition.DistanceSquaredTo(enemyCenter) <= aggressionRadius * aggressionRadius;
-    }
-
-    private static Vector2 EnemyCenter(GameState state)
-    {
-        var sum = Vector2.Zero;
-        var count = 0;
-        foreach (var unit in state.Units)
-        {
-            if (unit.Owner == Owner.Enemy && unit.Hp > 0)
-            {
-                sum += unit.Position;
-                count++;
-            }
-        }
-
-        return count == 0 ? new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f) : sum / count;
+        return new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f);
     }
 
     private static int CompareWaveUnits(UnitModel left, UnitModel right)
