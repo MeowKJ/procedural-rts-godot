@@ -112,6 +112,11 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
+    private void OnBuildCategoryRequested(BuildCategory category)
+    {
+        _buildPlacement.SelectBuildCategory(category);
+    }
+
     private void RefreshSelectionInfo()
     {
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
