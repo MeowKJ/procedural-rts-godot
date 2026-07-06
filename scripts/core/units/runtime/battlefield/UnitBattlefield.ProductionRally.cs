@@ -101,6 +101,11 @@ public sealed partial class UnitBattlefield
 
     public bool EnqueueProduction(ProductionKind productionKind, PlayerSlotId playerSlotId, out string status)
     {
+        return CommandEnqueueProduction(productionKind, playerSlotId, out status);
+    }
+
+    public bool CommandEnqueueProduction(ProductionKind productionKind, PlayerSlotId playerSlotId, out string status)
+    {
         CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds);
         var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
         var designId = producerId is null ? FirstDesignIdFor(productionKind, playerSlotId) : ProductionDesignIdCore(producerId.Value, productionKind);
@@ -154,6 +159,11 @@ public sealed partial class UnitBattlefield
     }
 
     public bool EnqueueProductionDesign(string designId, PlayerSlotId playerSlotId, out string status)
+    {
+        return CommandEnqueueProductionDesign(designId, playerSlotId, out status);
+    }
+
+    public bool CommandEnqueueProductionDesign(string designId, PlayerSlotId playerSlotId, out string status)
     {
         UnitSpec spec;
         try

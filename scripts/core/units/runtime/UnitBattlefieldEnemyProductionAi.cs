@@ -66,7 +66,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         }
 
         var nextDesign = ChooseNextProductionDesign(battlefield, enemyPlayerSlotId);
-        if (nextDesign is not null && battlefield.EnqueueProductionDesign(nextDesign, enemyPlayerSlotId, out var designStatus))
+        if (nextDesign is not null && battlefield.CommandEnqueueProductionDesign(nextDesign, enemyPlayerSlotId, out var designStatus))
         {
             SuccessfulOrders++;
             LastStatus = designStatus;
@@ -80,7 +80,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             return;
         }
 
-        if (battlefield.EnqueueProduction(nextKind.Value, enemyPlayerSlotId, out var status))
+        if (battlefield.CommandEnqueueProduction(nextKind.Value, enemyPlayerSlotId, out var status))
         {
             SuccessfulOrders++;
         }

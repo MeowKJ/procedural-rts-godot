@@ -38,6 +38,7 @@ static class EnemyProductionAiReviewGate
 
         var production = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Production.cs");
         var productionScans = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ProductionScans.cs");
+        RequireText(ai, "CommandEnqueueProductionDesign(", "Runtime enemy production AI must submit design queueing through the UnitBattlefield command bridge.", result); RequireText(ai, "CommandEnqueueProduction(", "Runtime enemy production AI must submit kind queueing through the UnitBattlefield command bridge.", result); ForbidText(ai, "battlefield.EnqueueProductionDesign(", "Runtime enemy production AI must not bypass the design production command bridge.", result); ForbidText(ai, "battlefield.EnqueueProduction(", "Runtime enemy production AI must not bypass the production command bridge.", result);
         ForbidProductionLinq(production, "Enemy production choice", result);
         ForbidProductionLinq(productionScans, "Enemy production scan helpers", result); ForbidText(productionScans, "battlefield.Units", "Runtime enemy production scan helpers must not scan the UnitBattlefield unit list directly.", result);
     }
