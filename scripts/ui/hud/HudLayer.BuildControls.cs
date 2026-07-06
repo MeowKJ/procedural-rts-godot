@@ -129,7 +129,6 @@ public partial class HudLayer : CanvasLayer
             Glyph = glyph,
             Category = category,
             Active = active,
-            Selected = category == BuildCategory.Command,
             Position = position,
             CustomMinimumSize = new Vector2(31, 32),
             FocusMode = Control.FocusModeEnum.Click,
@@ -138,7 +137,12 @@ public partial class HudLayer : CanvasLayer
             Disabled = !active,
         };
         tab.Size = tab.CustomMinimumSize;
-        tab.Pressed += () => BuildCategoryRequested?.Invoke(category);
+        RegisterProductionTab(tab);
+        tab.Pressed += () =>
+        {
+            SelectProductionTab(category);
+            BuildCategoryRequested?.Invoke(category);
+        };
         parent.AddChild(tab);
     }
 

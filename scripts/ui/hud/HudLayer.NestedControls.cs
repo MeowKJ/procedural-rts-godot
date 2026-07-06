@@ -34,12 +34,18 @@ public partial class HudLayer : CanvasLayer
         public required IconGlyph Glyph { get; init; }
         public required BuildCategory Category { get; init; }
         public bool Active { get; init; }
-        public bool Selected { get; init; }
+        private bool _selected;
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            QueueRedraw();
+        }
 
         public override void _Draw()
         {
             var rect = new Rect2(Vector2.Zero, CustomMinimumSize);
-            var style = UiFactory.GetHudProductionTabDrawStyle(Glyph, Active, Selected, CurrentPalette);
+            var style = UiFactory.GetHudProductionTabDrawStyle(Glyph, Active, _selected, CurrentPalette);
             DrawRect(rect, style.Fill, true);
             DrawRect(rect.Grow(-2), style.AccentFill, true);
             DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
