@@ -10,6 +10,8 @@ static class HoverTooltipReviewGate
         var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
         var battleRootAlerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var hudPreview = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
+        var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
+        var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
 
         RequireText(previewKinds, "Move,\n    Attack,\n    Repair,\n    Rally,\n    Harvest,\n    BuildValid,\n    BuildInvalid", "Command preview kinds must cover move/attack/repair/rally/harvest/build states.", result);
         RequireText(preview, "RuntimeUnitAttackPreviewLabel(hoveredUnitInstance.Spec)", "Runtime hostile unit hover must surface matchup text through the command preview.", result);
@@ -31,6 +33,14 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "DefaultMethodFor(LocalFaction)", "Build placement must choose deploy-vs-sidebar behavior from faction construction policy.", result);
         RequireText(buildPlacement, "HasEnoughCreditsForPreview(spec)", "Build placement preview must surface insufficient credits before commit.", result);
         RequireText(buildPlacement, "PlacementStatusLabel(\"placement.needCredits\"", "Build placement preview must reuse localized need-credit feedback.", result);
+        RequireText(buildPlacement, "case Key.R when IsActive:", "Build placement must keep the active placement-rotation affordance.", result);
+        RequireText(buildPlacement, "_previewRotation += Mathf.Pi / 2f", "Build placement rotation must advance in quarter turns.", result);
+        RequireText(buildPlacement, "GameText.Format(\"build.rotated\", CurrentSpec().Label)", "Build placement rotation must surface localized status feedback.", result);
+        RequireText(buildPlacement, "DrawSetTransform(new Vector2(placement.X, placement.Y), _previewRotation, Vector2.One)", "Build placement preview drawing must use the selected rotation.", result);
+        RequireText(buildPlacement, "_activeReadyTicketId,\n                    mouseWorld,\n                    out _,\n                    out status,\n                    _previewRotation", "Ready-ticket placement must preserve the preview rotation.", result);
+        RequireText(buildPlacement, "kind,\n                    mouseWorld,\n                    out _,\n                    out status,\n                    _previewRotation", "Direct building placement must preserve the preview rotation.", result);
+        RequireText(englishText, "[\"build.rotated\"]", "English build placement text must include rotation feedback.", result);
+        RequireText(chineseText, "[\"build.rotated\"]", "Chinese build placement text must include rotation feedback.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);
