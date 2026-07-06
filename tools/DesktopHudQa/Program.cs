@@ -64,6 +64,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "SelectProductionTab(category);", "Build category tab clicks must update the visible selected tab before requesting placement.");
     RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "HUD production tabs must redraw selected state from the last requested build category.");
     RequireText(hudLayer, "BuildCategory.Naval, active: false", "HUD must keep the naval build tab visibly disabled until naval build specs exist.");
+    RequireText(hudLayer, "Action? RallyRequested", "HUD must expose a rally request for the command-ribbon rally button.");
+    RequireText(hudLayer, "Name = \"RibbonSetRally\"", "Command ribbon rally action must expose a stable node.");
+    RequireText(hudLayer, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.");
     ForbidText(hudLayer, "Selected = category == BuildCategory.Command", "HUD production tab selected state must not be a fixed initialization-only value.");
     ForbidText(hudLayer, "BuildGlobalSkillPanel", "Normal HUD must not build placeholder global-skill controls.");
     ForbidText(hudLayer, "GlobalSkillPanel", "Normal HUD must not include an unwired global-skill panel.");

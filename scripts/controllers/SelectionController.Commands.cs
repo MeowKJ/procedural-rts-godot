@@ -149,28 +149,11 @@ public partial class SelectionController
                     && PickResourceField(worldPoint) is { } rallyResource
                     && UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId))
                 {
-                    var accepted = CommandUnitBattlefieldSelectedBuildingRally(rallyResource, out var status);
-                    StatusChanged?.Invoke(status);
-                    AcknowledgeCommand(
-                        accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
-                        rallyResource.Position,
-                        accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
+                    FinishSelectedBuildingRallyCommand(rallyResource);
                 }
                 else
                 {
-                    var accepted = UseUnitBattlefieldInput()
-                        ? CommandUnitBattlefieldSelectedBuildingRally(worldPoint, out var status)
-                        : State.CommandSetSelectedBuildingRallyPoint(worldPoint, out status);
-                    if (accepted)
-                    {
-                        StatusChanged?.Invoke(status);
-                        AcknowledgeCommand(CommandAcknowledgementKind.Rally, worldPoint, CommandAcknowledgementAudioCue.Move);
-                    }
-                    else
-                    {
-                        StatusChanged?.Invoke(status);
-                        AcknowledgeCommand(CommandAcknowledgementKind.Invalid, worldPoint, CommandAcknowledgementAudioCue.Invalid);
-                    }
+                    FinishSelectedBuildingRallyCommand(worldPoint);
                 }
             }
         }
@@ -197,6 +180,28 @@ public partial class SelectionController
     private bool CommandUnitBattlefieldSelectedBuildingRally(ResourceFieldModel field, out string status)
     {
         return UnitBattlefield!.SetSelectedBuildingRallyPoints(LocalPlayerSlotId, field, out status);
+    }
+
+    private void FinishSelectedBuildingRallyCommand(ResourceFieldModel resourceField)
+    {
+        var accepted = CommandUnitBattlefieldSelectedBuildingRally(resourceField, out var status);
+        StatusChanged?.Invoke(status);
+        AcknowledgeCommand(
+            accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
+            resourceField.Position,
+            accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
+    }
+
+    private void FinishSelectedBuildingRallyCommand(Vector2 worldPoint)
+    {
+        var accepted = UseUnitBattlefieldInput()
+            ? CommandUnitBattlefieldSelectedBuildingRally(worldPoint, out var status)
+            : State.CommandSetSelectedBuildingRallyPoint(worldPoint, out status);
+        StatusChanged?.Invoke(status);
+        AcknowledgeCommand(
+            accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
+            worldPoint,
+            accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
     }
 
     private MoveCommandMode MoveModeFromModifiers(InputEventMouseButton mouse)
