@@ -35,6 +35,7 @@ static partial class Program
         RunEntityArcTurnCornerPathingScenario();
         RunGroupMoveScenario();
         RunMovementFeelReproductionScenario();
+        RunEntityIndependentTurretAttackMoveScenario();
         RunAnchoredGroupAttackSlottingScenario();
         RunGroupAttackScenario();
         RunFiringAnchorScenario();

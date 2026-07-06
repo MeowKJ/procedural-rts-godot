@@ -77,6 +77,7 @@ public sealed partial class MovementSystem : ISimSystem
 
             movement = ResumePatrolRouteIfNeeded(world, entity, movement);
             movement = ResumeGuardOrderIfNeeded(world, entity, movement);
+            movement = ResumeAttackMoveIntentIfNeeded(world, entity, movement);
 
             if (movement.MoveTarget is not Vector2 target
                 || !entity.Components.TryGet<MovementProfileComponentState>(out var profile))

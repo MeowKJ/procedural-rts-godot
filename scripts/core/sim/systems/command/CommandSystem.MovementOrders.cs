@@ -252,6 +252,7 @@ public sealed partial class CommandSystem
             entity.Components.Remove<GuardOrderComponentState>();
 
             ClearWeaponFocus(entity);
+            ClearCommandIntent(entity);
 
             if (hold && entity.Components.TryGet<StanceComponentState>(out var stance))
             {
@@ -277,6 +278,19 @@ public sealed partial class CommandSystem
         entity.Components.Remove<PatrolOrderComponentState>();
         entity.Components.Remove<GuardOrderComponentState>();
         entity.Components.Remove<RepairOrderComponentState>();
+    }
+
+    private static void ClearCommandIntent(EntityInstance entity)
+    {
+        var commandable = entity.Components.TryGet<CommandableComponentState>(out var existing)
+            ? existing
+            : new CommandableComponentState();
+        entity.Components.Set(commandable with
+        {
+            PlayerIntentTarget = null,
+            CommandVisualTarget = null,
+            MoveMode = MoveCommandMode.Direct,
+        });
     }
 
     private static void ClearWeaponFocus(EntityInstance entity)

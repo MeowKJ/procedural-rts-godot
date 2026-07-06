@@ -21,6 +21,7 @@ public sealed partial class CommandSystem
             }
 
             SetManualTarget(entity, attack.Target, attack.TargetKind);
+            SetAttackCommandIntent(entity, world.TryGet(attack.Target, out var target) ? target.Transform.Position : null);
         }
 
         _scalarOrderMembers.Clear();
@@ -91,6 +92,7 @@ public sealed partial class CommandSystem
             {
                 PlayerIntentTarget = target.Transform.Position,
                 CommandVisualTarget = target.Transform.Position,
+                MoveMode = MoveCommandMode.Direct,
             });
         }
 
@@ -113,6 +115,19 @@ public sealed partial class CommandSystem
             AttackTargetKind = targetKind,
             AttackTargetIsManual = true,
             AutoReacquireCooldownRemaining = 0,
+        });
+    }
+
+    private static void SetAttackCommandIntent(EntityInstance entity, Vector2? target)
+    {
+        var commandable = entity.Components.TryGet<CommandableComponentState>(out var existing)
+            ? existing
+            : new CommandableComponentState();
+        entity.Components.Set(commandable with
+        {
+            PlayerIntentTarget = target,
+            CommandVisualTarget = target,
+            MoveMode = MoveCommandMode.Direct,
         });
     }
 
