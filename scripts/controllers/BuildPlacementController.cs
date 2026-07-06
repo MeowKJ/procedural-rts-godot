@@ -20,6 +20,9 @@ public partial class BuildPlacementController : Node2D
         BuildingDesignIds.VehicleFactory,
         BuildingDesignIds.Refinery,
         BuildingDesignIds.Headquarters,
+        BuildingDesignIds.GroundTurret,
+        BuildingDesignIds.Airfield,
+        BuildingDesignIds.AntiAirTurret,
     ];
 
     private int _selectedIndex = -1;
