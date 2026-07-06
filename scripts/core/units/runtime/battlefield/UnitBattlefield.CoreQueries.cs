@@ -87,6 +87,54 @@ public sealed partial class UnitBattlefield
         return ResourceInventory(playerSlotId).Credits;
     }
 
+    public int LiveUnitDesignCount(PlayerSlotId playerSlotId, string designId)
+    {
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId && unit.Hp > 0 && unit.Spec.Id == designId)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public int LiveEconomyUnitCount(PlayerSlotId playerSlotId)
+    {
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Hp > 0
+                && unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public int LiveNonEconomyUnitsNear(PlayerSlotId playerSlotId, Vector2 center, float radius)
+    {
+        var count = 0;
+        var radiusSquared = radius * radius;
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && unit.Hp > 0
+                && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
+                && unit.Position.DistanceSquaredTo(center) <= radiusSquared)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public void SetCredits(PlayerSlotId playerSlotId, int credits)
     {
         var inventory = ResourceInventory(playerSlotId);

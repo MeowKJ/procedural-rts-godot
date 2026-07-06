@@ -76,7 +76,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             return BuildingDesignIds.Refinery;
         }
 
-        var harvesterCount = LiveHarvesterCount(battlefield, enemyPlayerSlotId);
+        var harvesterCount = battlefield.LiveEconomyUnitCount(enemyPlayerSlotId);
         var refineryCount = BuildingCount(_ownedBuildingBuffer, BuildingDesignIds.Refinery);
         if (harvesterCount >= 3 && refineryCount < 2)
         {
@@ -144,18 +144,6 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
     private int CombatUnitsNearBase(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
     {
         var center = EnemyBaseCenter(battlefield, enemyPlayerSlotId);
-        var count = 0;
-        foreach (var unit in battlefield.Units)
-        {
-            if (unit.PlayerSlotId == enemyPlayerSlotId
-                && unit.Hp > 0
-                && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
-                && unit.Position.DistanceSquaredTo(center) <= 720 * 720)
-            {
-                count++;
-            }
-        }
-
-        return count;
+        return battlefield.LiveNonEconomyUnitsNear(enemyPlayerSlotId, center, 720f);
     }
 }
