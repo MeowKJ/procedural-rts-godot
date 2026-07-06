@@ -25,6 +25,10 @@ static class UnitRenderingAllocationReviewGate
         RequireText(bodyBatch, "foreach (var unit in Units)", "Unit body batch layer must draw runtime units through one CanvasItem pass.", result);
         RequireText(bodyBatch, "UnitVisualRenderer.DrawUnitArtRecipe(", "Unit body batch layer must reuse the canonical unit art renderer.", result);
         RequireText(bodyBatch, "UnitMountFacingSource.FromRuntimeMounts(unit.WeaponMounts)", "Unit body batch layer must draw mounts from runtime mount storage.", result);
+        RequireText(bodyBatch, "HasVisibleMovingUnit()", "Unit body batch layer must bypass idle redraw throttling while visible units are moving.", result);
+        RequireText(bodyBatch, "QueueRedraw();\n            return;", "Visible moving unit bodies must redraw on the render frame instead of the idle 30 Hz cadence.", result);
+        RequireText(bodyBatch, "private static bool IsMoving(UnitInstance unit)", "Unit body batch frame pacing must use an explicit moving-unit predicate.", result);
+        RequireText(bodyBatch, "unit.MoveTarget is { } target && unit.Position.DistanceSquaredTo(target) > 1f", "Unit body batch moving predicate must not keep redrawing forever from stale formation slots.", result);
         RequireText(runtimeView, "UnitMountFacingSource.FromRuntimeMounts(Unit.WeaponMounts)", "UnitInstanceView must draw from runtime mount storage directly.", result);
         RequireText(runtimeView, "public bool DrawBodyArt { get; init; } = true", "UnitInstanceView must keep a fallback body-art switch for non-batched callers.", result);
         RequireText(runtimeView, "if (DrawBodyArt)", "UnitInstanceView body drawing must be gated so runtime overlays can avoid duplicate body draws.", result);

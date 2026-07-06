@@ -17,6 +17,13 @@ public partial class UnitBodyBatchLayer : Node2D
 
     public override void _Process(double delta)
     {
+        if (HasVisibleMovingUnit())
+        {
+            _redrawTimer = RedrawIntervalSeconds;
+            QueueRedraw();
+            return;
+        }
+
         _redrawTimer -= (float)delta;
         if (_redrawTimer > 0)
         {
@@ -56,6 +63,29 @@ public partial class UnitBodyBatchLayer : Node2D
                 UnitMountFacingSource.FromRuntimeMounts(unit.WeaponMounts),
                 environmentTone);
         }
+    }
+
+    private bool HasVisibleMovingUnit()
+    {
+        foreach (var unit in Units)
+        {
+            if (unit.Hp <= 0
+                || !CullingWorldRect.Intersects(UnitWorldRect(unit.Position, unit.Spec.Collision.Radius))
+                || !IsMoving(unit))
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsMoving(UnitInstance unit)
+    {
+        return unit.Velocity.LengthSquared() > 0.01f
+            || (unit.MoveTarget is { } target && unit.Position.DistanceSquaredTo(target) > 1f);
     }
 
     private static Rect2 UnitWorldRect(Vector2 position, float radius)
