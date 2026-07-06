@@ -255,6 +255,11 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
+    private void OnBuildCategoryRequested(BuildCategory category)
+    {
+        _buildPlacement.SelectBuildCategory(category);
+    }
+
     private void OnProductionStatusChanged(string status)
     {
         _hud.SetProductionStatus(status);

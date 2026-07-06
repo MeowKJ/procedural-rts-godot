@@ -8,6 +8,7 @@ public partial class HudLayer : CanvasLayer
     public Action<ProductionKind>? ProductionRequested { get; init; }
     public Action<string>? ProductionDesignRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
+    public Action<BuildCategory>? BuildCategoryRequested { get; init; }
     public Action<Vector2>? MinimapJumpRequested { get; init; }
     public Action<MoveCommandMode>? MoveModeRequested { get; init; }
     public Action<UnitStance>? UnitStanceRequested { get; init; }
