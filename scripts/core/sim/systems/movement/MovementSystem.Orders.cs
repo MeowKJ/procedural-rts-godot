@@ -100,6 +100,44 @@ public sealed partial class MovementSystem
         return true;
     }
 
+    private static MovementComponentState ResumeAttackMoveIntentIfNeeded(
+        EntityWorld world,
+        EntityInstance entity,
+        MovementComponentState movement)
+    {
+        if (movement.FireAnchorRemaining > 0
+            || movement.MoveTarget is not null
+            || entity.Components.Has<PatrolOrderComponentState>()
+            || entity.Components.Has<GuardOrderComponentState>()
+            || entity.Components.Has<RepairOrderComponentState>()
+            || HasActiveAttackTarget(world, entity)
+            || !entity.Components.Has<MovementProfileComponentState>()
+            || !entity.Components.TryGet<CommandableComponentState>(out var commandable)
+            || commandable.MoveMode != MoveCommandMode.Attack
+            || commandable.PlayerIntentTarget is not { } intent)
+        {
+            return movement;
+        }
+
+        var resumeTarget = movement.FormationSlot ?? intent;
+        if (entity.Transform.Position.DistanceSquaredTo(resumeTarget) <= 4f)
+        {
+            entity.Components.Set(commandable with { CommandVisualTarget = intent });
+            return movement;
+        }
+
+        entity.Components.Remove<PathfindingComponentState>();
+        var resumed = movement with { MoveTarget = resumeTarget };
+        entity.Components.Set(resumed);
+        entity.Components.Set(commandable with
+        {
+            PlayerIntentTarget = intent,
+            CommandVisualTarget = intent,
+            MoveMode = MoveCommandMode.Attack,
+        });
+        return resumed;
+    }
+
     private static Vector2 PatrolTarget(PatrolOrderComponentState patrol)
     {
         return patrol.MovingToB ? patrol.PointB : patrol.PointA;
