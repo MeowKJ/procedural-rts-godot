@@ -46,7 +46,7 @@ public sealed class EnemyProductionAi
             return;
         }
 
-        if (state.EnqueueProduction(next.Value, Owner.Enemy, out var status))
+        if (state.CommandEnqueueProduction(next.Value, Owner.Enemy, out var status))
         {
             SuccessfulOrders++;
         }
@@ -127,16 +127,7 @@ public sealed class EnemyProductionAi
     private static void SetEnemyRallyPoints(GameState state)
     {
         var rally = EnemyBaseCenter(state) + new Vector2(-250, -120);
-        foreach (var building in state.Buildings)
-        {
-            if (building.Owner != Owner.Enemy
-                || !HasPlayableProducerKind(building))
-            {
-                continue;
-            }
-
-            building.RallyPoint ??= rally;
-        }
+        state.CommandSetProducerRallyPoints(Owner.Enemy, rally);
     }
 
     private static Vector2 EnemyBaseCenter(GameState state)
@@ -185,16 +176,4 @@ public sealed class EnemyProductionAi
         return found;
     }
 
-    private static bool HasPlayableProducerKind(BuildingModel building)
-    {
-        foreach (var spec in ProductionKindDesignBridge.PlayableProductionSpecs(ProductionKindDesignBridge.UnitFactionFor(building.FactionId)))
-        {
-            if (spec.Production?.ProducerKind == building.Kind)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

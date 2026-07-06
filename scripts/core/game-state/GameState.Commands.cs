@@ -124,6 +124,32 @@ public sealed partial class GameState
         return true;
     }
 
+    public int CommandSetProducerRallyPoints(Owner owner, Vector2 target)
+    {
+        var assigned = 0;
+        var clamped = ClampInsideWorld(target, 80);
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner
+                || building.RallyPoint is not null
+                || !IsProductionBuilding(building))
+            {
+                continue;
+            }
+
+            building.RallyPoint = clamped;
+            building.RallyPulse = 1;
+            assigned++;
+        }
+
+        return assigned;
+    }
+
+    public bool CommandEnqueueProduction(ProductionKind productionKind, Owner owner, out string status)
+    {
+        return EnqueueProduction(productionKind, owner, out status);
+    }
+
     public void CommandAttackSelected(UnitModel target)
     {
         CommandAttackSelected(CombatTargetKind.Unit, target.Id);
