@@ -32,6 +32,8 @@ public static class HudLayoutMath
     public const float RailWidth = 48;
     public const float DrawerWidth = 300;
     public const float RightColumnWidth = 312;
+    public const float ProductionPanelTop = 190;
+    public const float ProductionPanelHeight = 358;
     public const float MinimumBattlefieldWidth = 920;
     public const float MinimumBattlefieldHeight = 620;
     public const float MaximumPersistentCoverage = 0.15f;
@@ -44,11 +46,11 @@ public static class HudLayoutMath
         var resource = new HudRect("resource-strip", viewportWidth / 2f - 224 * scale, 10 * scale, 448 * scale, 46 * scale);
         var minimap = new HudRect("minimap-radar", viewportWidth - rightColumnWidth, 12 * scale, 300 * scale, 166 * scale);
         var globalSkills = new HudRect("global-skills", 12 * scale, 182 * scale, 64 * scale, viewportHeight - 360 * scale);
-        var rail = new HudRect("right-rail", viewportWidth - railWidth, 190 * scale, railWidth, viewportHeight - 202 * scale);
+        var rail = new HudRect("right-rail", viewportWidth - railWidth, ProductionPanelTop * scale, railWidth, viewportHeight - 202 * scale);
         var alerts = new HudRect("alert-chips", 16 * scale, 66 * scale, 280 * scale, 42 * scale);
 
         var ribbon = new HudRect("context-command-ribbon", 96 * scale, viewportHeight - 58 * scale, viewportWidth - rightColumnWidth - 108 * scale, 46 * scale);
-        var production = new HudRect("context-production-panel", viewportWidth - rightColumnWidth, 190 * scale, 300 * scale, 342 * scale);
+        var production = new HudRect("context-production-panel", viewportWidth - rightColumnWidth, ProductionPanelTop * scale, 300 * scale, ProductionPanelHeight * scale);
         var detail = new HudRect("context-detail-panel", viewportWidth - rightColumnWidth, viewportHeight - 170 * scale, 300 * scale, 158 * scale);
 
         var rects = new List<HudRect>
