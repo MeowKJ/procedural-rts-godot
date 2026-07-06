@@ -150,7 +150,7 @@ public partial class BuildPlacementController : Node2D
                 GetViewport().SetInputAsHandled();
                 break;
             case Key.R when IsActive:
-                _previewRotation += Mathf.Pi / 2f;
+                _previewRotation = NormalizePreviewRotation(_previewRotation + Mathf.Pi / 2f);
                 StatusChanged?.Invoke(GameText.Format("build.rotated", CurrentSpec().Label));
                 GetViewport().SetInputAsHandled();
                 break;
@@ -349,5 +349,11 @@ public partial class BuildPlacementController : Node2D
     private static int PosMod(int value, int modulo)
     {
         return ((value % modulo) + modulo) % modulo;
+    }
+
+    private static float NormalizePreviewRotation(float rotation)
+    {
+        var normalized = rotation % Mathf.Tau;
+        return normalized < 0 ? normalized + Mathf.Tau : normalized;
     }
 }
