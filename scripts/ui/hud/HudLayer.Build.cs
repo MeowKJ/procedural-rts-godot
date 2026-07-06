@@ -120,7 +120,7 @@ public partial class HudLayer : CanvasLayer
         AddIconActionButton(_commandRibbon, IconGlyph.Move, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
         var ribbonCancel = AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(708, 6), new Vector2(36, 34), Danger);
         ribbonCancel.Name = "RibbonCancelProduction";
-        ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();
+        ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();
         var ribbonRally = AddIconActionButton(_commandRibbon, IconGlyph.Building, GameText.T("ui.context.rally"), new Vector2(754, 6), new Vector2(36, 34), Amber);
         ribbonRally.Name = "RibbonSetRally";
         ribbonRally.Pressed += () => RallyRequested?.Invoke();

@@ -248,6 +248,7 @@ public partial class BattleRoot
             ProductionRequested = OnProductionRequested,
             ProductionDesignRequested = OnProductionDesignRequested,
             CancelProductionRequested = OnCancelProductionRequested,
+            SellOrCancelRequested = OnSellOrCancelRequested,
             RallyRequested = OnRallyRequested,
             BuildCategoryRequested = OnBuildCategoryRequested,
             MinimapJumpRequested = OnMinimapJumpRequested,

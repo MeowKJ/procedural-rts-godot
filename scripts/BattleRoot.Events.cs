@@ -151,34 +151,6 @@ public partial class BattleRoot
         _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
     }
 
-    private void OnUnitBattlefieldBuildingsRemoved(IReadOnlyList<UnitBattlefieldBuildingDeathInfo> deaths)
-    {
-        foreach (var death in deaths)
-        {
-            var building = _state.BuildingById(death.Id);
-            if (building is not null)
-            {
-                building.Hp = 0;
-            }
-
-            if (_buildingViews.Remove(death.Id, out var view))
-            {
-                if (death.PlayerSlotId == PlayerSlotId.One)
-                {
-                    AddAlert(AlertKind.Building, GameText.Format("ui.building.destroyed", BuildSpecCatalog.For(death.Kind).Label), death.Position);
-                    if (death.Kind == BuildingDesignIds.PowerPlant)
-                    {
-                        UpdatePowerAlert(true);
-                    }
-                }
-
-                view.QueueFree();
-            }
-        }
-
-        PlayDeathCue(deaths);
-    }
-
     private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
     {
         OnOutcomeChanged(outcome);
