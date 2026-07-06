@@ -77,6 +77,7 @@ internal static partial class AiOpponentLoopQaProgram
         var resourceEvents = 0;
         var harvestAssignments = 0;
         var harvestBridgeCommands = 0;
+        var constructionBridgeCommands = 0;
         var productionBridgeCommands = 0;
         var waveBridgeCommands = 0;
         var launchedWaveUnitOrders = 0;
@@ -153,11 +154,18 @@ internal static partial class AiOpponentLoopQaProgram
             }
 
             var previousOrders = production.SuccessfulOrders;
+            var previousConstructionOrders = production.SuccessfulConstructionOrders;
             var beforeProductionCommands = battlefield.AppliedInputCommandCount;
             production.Update(battlefield, PlayerSlotId.Two, FixedDelta);
+            var productionCommandDelta = battlefield.AppliedInputCommandCount - beforeProductionCommands;
+            if (production.SuccessfulConstructionOrders > previousConstructionOrders)
+            {
+                constructionBridgeCommands += productionCommandDelta;
+            }
+
             if (production.SuccessfulOrders > previousOrders)
             {
-                productionBridgeCommands += battlefield.AppliedInputCommandCount - beforeProductionCommands;
+                productionBridgeCommands += productionCommandDelta;
             }
 
             var previousWaves = waves.WavesLaunched;
@@ -221,6 +229,7 @@ internal static partial class AiOpponentLoopQaProgram
             EnemyCreditsStart: initialEnemyCredits,
             EnemyCreditsPeak: maxEnemyCredits,
             ResourceEvents: resourceEvents,
+            ConstructionOrders: production.SuccessfulConstructionOrders,
             BuiltEnemyBuildingSpecIds: battlefield.BuildingSnapshots()
                 .Where(building => building.PlayerSlotId == PlayerSlotId.Two)
                 .Select(building => building.Kind)
@@ -242,6 +251,7 @@ internal static partial class AiOpponentLoopQaProgram
             MaxEnemyCombatUnitsAlive: maxEnemyCombatUnitsAlive,
             TotalAppliedCommands: totalCommands,
             HarvestBridgeCommands: harvestBridgeCommands,
+            ConstructionBridgeCommands: constructionBridgeCommands,
             ProductionBridgeCommands: productionBridgeCommands,
             WaveBridgeCommands: waveBridgeCommands,
             ProductionStatus: production.LastStatus,

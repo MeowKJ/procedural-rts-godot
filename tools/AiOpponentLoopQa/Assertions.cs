@@ -25,6 +25,16 @@ internal static partial class AiOpponentLoopQaProgram
             }
         }
 
+        if (report.ConstructionOrders < 2)
+        {
+            failures.Add($"AI construction should place multiple runtime buildings; construction orders {report.ConstructionOrders}.");
+        }
+
+        if (report.ConstructionBridgeCommands < report.ConstructionOrders)
+        {
+            failures.Add($"AI construction should enter through the UnitBattlefield construction command bridge; bridge/orders = {report.ConstructionBridgeCommands}/{report.ConstructionOrders}.");
+        }
+
         if (report.ProductionOrders < 5 || report.ProductionQueuedEvents < 5 || report.ProductionCompletedEvents < 3)
         {
             failures.Add($"AI production should queue and complete multiple units; orders/queued/completed = {report.ProductionOrders}/{report.ProductionQueuedEvents}/{report.ProductionCompletedEvents}.");
