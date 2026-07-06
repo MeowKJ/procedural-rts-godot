@@ -91,7 +91,7 @@ public sealed partial class UnitBattlefield
             }
 
             var distance = unit.Position.DistanceSquaredTo(baseCenter);
-            if (distance > defenseRadiusSquared && !IsNearOwnedBuilding(playerSlotId, unit.Position, defenseRadius))
+            if (distance > defenseRadiusSquared && !IsNearLiveOwnedBuilding(playerSlotId, unit.Position, defenseRadius))
             {
                 continue;
             }
@@ -150,7 +150,7 @@ public sealed partial class UnitBattlefield
             && IsVisibleTo(playerSlotId, unit);
     }
 
-    private bool IsNearOwnedBuilding(PlayerSlotId playerSlotId, Vector2 position, float radius)
+    public bool IsNearLiveOwnedBuilding(PlayerSlotId playerSlotId, Vector2 position, float radius)
     {
         var radiusSquared = radius * radius;
         foreach (var building in BuildingSnapshots())
