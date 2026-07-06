@@ -68,7 +68,7 @@ static partial class Program
 
     static void AssertConstructionCancelRefund()
     {
-        const int constructionTicks = 230;
+        const int constructionTicks = 235;
 
         EntityWorld BuildConstructionCancelWorld()
         {
@@ -97,6 +97,8 @@ static partial class Program
             new CancelConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(2) }, 31),
             new StartConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 40, BuildingDesignIds.PowerPlant, new Vector2(260, 260)),
             new CancelConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(3) }, 220),
+            new QueueConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 225, BuildingDesignIds.PowerPlant),
+            new CancelConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(4) }, 226),
         };
 
         AssertDeterministic("construction-cancel", BuildConstructionCancelWorld, constructionLog, constructionTicks, 37);
@@ -124,16 +126,20 @@ static partial class Program
         var completedConstruction = completedPower.Components.Require<ConstructionComponentState>();
         var credits = world.ResourceInventory(new OwnerId(1)).Credits;
         var expectedRefund = Mathf.RoundToInt(300 * 0.5f * (1 - (30f / 165f)));
+        var expectedTicketRefund = Mathf.RoundToInt(300 * 0.5f);
 
-        Assert(cancelled.Count == 1, $"only the under-construction building should emit cancellation, got {cancelled.Count}");
+        Assert(cancelled.Count == 2, $"under-construction and queued ticket cancels should emit cancellation, got {cancelled.Count}");
         Assert(cancelled[0].Entity.Value == 2, $"cancel event should point at cancelled entity 2, got {cancelled[0].Entity.Value}");
         Assert(cancelled[0].Refund == expectedRefund, $"cancel refund should be based on remaining progress, got {cancelled[0].Refund}, expected {expectedRefund}");
+        Assert(cancelled[1].Entity.Value == 4, $"ticket cancel event should point at queued entity 4, got {cancelled[1].Entity.Value}");
+        Assert(cancelled[1].Refund == expectedTicketRefund, $"queued ticket cancel should refund the fixed ticket ratio, got {cancelled[1].Refund}, expected {expectedTicketRefund}");
         Assert(!world.TryGet(new EntityId(2), out _), "cancelled under-construction building should be removed from EntityWorld");
+        Assert(!world.TryGet(new EntityId(4), out _), "cancelled queued construction ticket should be removed from EntityWorld");
         Assert(buildings.Count == 2, $"HQ and completed replacement power plant should remain, got {buildings.Count}");
         Assert(completedConstruction.Progress >= 1, $"replacement power plant should complete, got {completedConstruction.Progress:0.000}");
-        Assert(credits == 800 - 300 + expectedRefund - 300, $"completed construction cancel should not refund, got credits {credits}");
+        Assert(credits == 800 - 300 + expectedRefund - 300 - 300 + expectedTicketRefund, $"completed construction cancel should not refund, got credits {credits}");
 
-        Console.WriteLine($"OK [construction-cancel]: refund {cancelled[0].Refund}, credits {credits}, remaining buildings {buildings.Count}.");
+        Console.WriteLine($"OK [construction-cancel]: refund {cancelled[0].Refund}, ticket refund {cancelled[1].Refund}, credits {credits}, remaining buildings {buildings.Count}.");
     }
 
     static void AssertConstructionPausedOffline()

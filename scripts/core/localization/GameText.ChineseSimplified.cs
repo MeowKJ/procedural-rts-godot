@@ -281,6 +281,8 @@ public static partial class GameText
         ["build.queued"] = "{0} 已排队，完成后可放置",
         ["build.readyTicket"] = "{0} 已就绪，可放置",
         ["build.cancelled"] = "建造预览已取消",
+        ["build.ticketCancelled"] = "{0} 建造已取消 +{1} 资金",
+        ["build.noTicket"] = "没有排队建造票据",
         ["build.placePreview"] = "放置 {0}",
         ["build.placeReadyPreview"] = "放置就绪的 {0}",
         ["placement.outside"] = "超出可建造区域",

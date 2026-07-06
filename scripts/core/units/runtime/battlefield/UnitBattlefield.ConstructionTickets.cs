@@ -115,6 +115,45 @@ public sealed partial class UnitBattlefield
         return true;
     }
 
+    public bool CancelConstructionTicket(PlayerSlotId playerSlotId, EntityId ticketId, out string status)
+    {
+        if (ConstructionTicketSnapshot(ticketId, playerSlotId) is not { } ticket)
+        {
+            status = GameText.T("build.noTicket");
+            return false;
+        }
+
+        var owner = OwnerId.FromPlayerSlot(playerSlotId);
+        SyncOwnerRelations();
+        SyncBuildingTargetEntities();
+        _entityWorld.WorldWidth = WorldSize.X;
+        _entityWorld.WorldHeight = WorldSize.Y;
+        _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
+
+        _constructionSubjectEntityBuffer.Clear();
+        _constructionSubjectEntityBuffer.Add(ticketId);
+        var command = new CancelConstructionEntityCommand(
+            owner,
+            _constructionSubjectEntityBuffer,
+            NextInputCommandTick());
+        SubmitConstructionCommand(command);
+
+        if (DrainConstructionCancellation(command.Tick, owner, ticketId) is not { } cancellation)
+        {
+            status = GameText.T("build.noTicket");
+            NotifyCreditsChanged(playerSlotId);
+            return false;
+        }
+
+        _entityWorld.FlushQueuedRemovals();
+        status = GameText.Format(
+            "build.ticketCancelled",
+            BuildSpecCatalog.For(ticket.Kind).Label,
+            cancellation.Refund);
+        NotifyCreditsChanged(playerSlotId);
+        return true;
+    }
+
     private void CollectReadyConstructionTickets(
         PlayerSlotId playerSlotId,
         bool includeQueued,
@@ -217,6 +256,25 @@ public sealed partial class UnitBattlefield
             {
                 _simEventDrainBuffer.Clear();
                 return rejection;
+            }
+        }
+
+        _simEventDrainBuffer.Clear();
+        return null;
+    }
+
+    private ConstructionCancelledEvent? DrainConstructionCancellation(int tick, OwnerId owner, EntityId ticketId)
+    {
+        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
+        for (var index = _simEventDrainBuffer.Count - 1; index >= 0; index--)
+        {
+            if (_simEventDrainBuffer[index] is ConstructionCancelledEvent cancellation
+                && cancellation.Tick == tick
+                && cancellation.Owner == owner
+                && cancellation.Entity == ticketId)
+            {
+                _simEventDrainBuffer.Clear();
+                return cancellation;
             }
         }
 

@@ -121,15 +121,16 @@ static void AssertCatReadyTicketPlacement()
 {
     var battlefield = NewBattlefield(20000);
     var hq = AddBuilding(battlefield, 1, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Cat, new Vector2(720, 760));
+    var powerSpec = BuildSpecCatalog.For(BuildingDesignIds.PowerPlant);
     var creditsBefore = battlefield.Credits(PlayerSlotId.One);
     var ticket = battlefield.QueueConstructionTicket(PlayerSlotId.One, BuildingDesignIds.PowerPlant, out var queueStatus);
     Require(ticket is not null, $"player loop should queue cat ready-ticket construction: {queueStatus}");
     var ticketValue = ticket ?? throw new InvalidOperationException(queueStatus);
     var creditsAfterQueue = battlefield.Credits(PlayerSlotId.One);
-    Require(creditsAfterQueue == creditsBefore - BuildSpecCatalog.For(BuildingDesignIds.PowerPlant).Cost,
+    Require(creditsAfterQueue == creditsBefore - powerSpec.Cost,
         "cat ready-ticket queue should reserve cost once");
 
-    Advance(battlefield, BuildSpecCatalog.For(BuildingDesignIds.PowerPlant).BuildTime + 0.2f);
+    Advance(battlefield, powerSpec.BuildTime + 0.2f);
     var ready = battlefield.ReadyConstructionTickets(PlayerSlotId.One).SingleOrDefault(item => item.EntityId == ticketValue.EntityId);
     Require(ready.ReadyToPlace, "cat ready-ticket should become ready-to-place through the live ConstructionSystem");
 
@@ -144,6 +145,23 @@ static void AssertCatReadyTicketPlacement()
     Require(battlefield.ReadyConstructionTickets(PlayerSlotId.One).Any(item => item.EntityId == ready.EntityId),
         "invalid ready-ticket placement should leave the ticket available");
     Require(battlefield.Credits(PlayerSlotId.One) == creditsAfterQueue, "invalid ready-ticket placement should not spend again");
+    var expectedRefund = Mathf.RoundToInt(powerSpec.Cost * powerSpec.RefundRatio);
+    Require(battlefield.CancelConstructionTicket(PlayerSlotId.One, ready.EntityId, out var cancelStatus),
+        $"player loop should cancel a ready construction ticket: {cancelStatus}");
+    Require(cancelStatus.Contains($"+{expectedRefund}", StringComparison.Ordinal),
+        $"ready-ticket cancel status should show refund {expectedRefund}, got {cancelStatus}");
+    Require(!battlefield.ReadyConstructionTickets(PlayerSlotId.One).Any(item => item.EntityId == ready.EntityId),
+        "cancelled ready-ticket should be removed immediately");
+    Require(battlefield.Credits(PlayerSlotId.One) == creditsAfterQueue + expectedRefund,
+        "cancelled ready-ticket should refund according to the build spec refund ratio");
+
+    var secondTicket = battlefield.QueueConstructionTicket(PlayerSlotId.One, BuildingDesignIds.PowerPlant, out var secondQueueStatus);
+    Require(secondTicket is not null, $"player loop should queue a second cat ready-ticket after cancel: {secondQueueStatus}");
+    var secondTicketValue = secondTicket ?? throw new InvalidOperationException(secondQueueStatus);
+    var creditsAfterSecondQueue = battlefield.Credits(PlayerSlotId.One);
+    Advance(battlefield, powerSpec.BuildTime + 0.2f);
+    ready = battlefield.ReadyConstructionTickets(PlayerSlotId.One).SingleOrDefault(item => item.EntityId == secondTicketValue.EntityId);
+    Require(ready.ReadyToPlace, "second cat ready-ticket should become ready-to-place after the cancel refund path");
 
     var accepted = battlefield.PlaceReadyConstructionTicket(
         PlayerSlotId.One,
@@ -155,7 +173,7 @@ static void AssertCatReadyTicketPlacement()
     Require(accepted && placed is not null, $"player loop should place ready construction ticket: {status}");
     Require(!battlefield.ReadyConstructionTickets(PlayerSlotId.One).Any(item => item.EntityId == ready.EntityId),
         "successful ready-ticket placement should consume the ticket");
-    Require(battlefield.Credits(PlayerSlotId.One) == creditsAfterQueue, "ready-ticket placement should not spend a second time");
+    Require(battlefield.Credits(PlayerSlotId.One) == creditsAfterSecondQueue, "ready-ticket placement should not spend a second time");
     Require(battlefield.BuildingBuildProgress(placed!.Value.Id) >= 1, "ready-ticket placement should create a complete building");
 }
 

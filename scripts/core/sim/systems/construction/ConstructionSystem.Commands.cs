@@ -139,8 +139,13 @@ public sealed partial class ConstructionSystem
 
     private static int ConstructionRefund(ConstructionComponentState construction)
     {
-        var remaining = 1 - Mathf.Clamp(construction.Progress, 0, 1);
         var ratio = Math.Clamp(construction.RefundRatio, 0, 1);
+        if (construction.Phase is ConstructionPhase.Queued or ConstructionPhase.ReadyToPlace)
+        {
+            return Mathf.RoundToInt(construction.Cost * ratio);
+        }
+
+        var remaining = 1 - Mathf.Clamp(construction.Progress, 0, 1);
         return Mathf.RoundToInt(construction.Cost * ratio * remaining);
     }
 }
