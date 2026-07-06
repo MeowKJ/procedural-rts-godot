@@ -14,11 +14,15 @@ public partial class CombatEffectsLayer : Node2D
     private const int MuzzleFlashSoftLimit = 96;
     private const int MuzzleFlashHardLimit = 128;
     private const int MuzzleFlashPoolLimit = 160;
+    private const int ShotTrailSoftLimit = 96;
+    private const int ShotTrailHardLimit = 128;
+    private const int ShotTrailPoolLimit = 160;
     private const int BeamEffectSoftLimit = 48;
     private const int BeamEffectHardLimit = 64;
     private const float UnderLoadFadeSeconds = 0.35f;
     private const float ImpactFlashLifetime = 0.32f;
     private const float MuzzleFlashLifetime = 0.16f;
+    private const float ShotTrailLifetime = 0.18f;
     private const int LargeEffectArcSegments = 48;
     private const int MediumEffectArcSegments = 36;
     private const int SmallEffectArcSegments = 24;
@@ -34,12 +38,15 @@ public partial class CombatEffectsLayer : Node2D
     private readonly List<ImpactFlashEffect> _pooledImpactFlashes = [];
     private readonly List<MuzzleFlashEffect> _muzzleFlashes = [];
     private readonly List<MuzzleFlashEffect> _pooledMuzzleFlashes = [];
+    private readonly List<ShotTrailEffect> _shotTrails = [];
+    private readonly List<ShotTrailEffect> _pooledShotTrails = [];
     private readonly List<BeamEffect> _beamEffects = [];
     private readonly List<ProjectilePresentationProjection> _projectileProjections = [];
     public int ActiveEffectCount =>
         _unitDeaths.Count
         + _impactFlashes.Count
         + _muzzleFlashes.Count
+        + _shotTrails.Count
         + _beamEffects.Count
         + State.Projectiles.Count
         + State.Beams.Count
@@ -85,6 +92,7 @@ public partial class CombatEffectsLayer : Node2D
         effect.Reset(position, targetPosition, accent, weaponKind);
         _muzzleFlashes.Add(effect);
         ApplyMuzzleFlashBudget();
+        AddShotTrailIfNeeded(position, targetPosition, accent, weaponKind);
     }
 
     public void AddBeam(Vector2 start, Vector2 end, float duration, float width, Color accent)
@@ -126,6 +134,15 @@ public partial class CombatEffectsLayer : Node2D
             if (_muzzleFlashes[index].Age >= MuzzleFlashLifetime)
             {
                 ReturnAndRemoveMuzzleFlash(index);
+            }
+        }
+
+        for (var index = _shotTrails.Count - 1; index >= 0; index--)
+        {
+            _shotTrails[index].Age += dt;
+            if (_shotTrails[index].Age >= ShotTrailLifetime)
+            {
+                ReturnAndRemoveShotTrail(index);
             }
         }
 
