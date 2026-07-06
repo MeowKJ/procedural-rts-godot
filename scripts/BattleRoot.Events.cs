@@ -211,7 +211,12 @@ public partial class BattleRoot
 
     private void OnProductionRequested(ProductionKind productionKind)
     {
-        _unitBattlefield.EnqueueProduction(productionKind, PlayerSlotId.One, out var status);
+        if (_unitBattlefield.TryCreateProductionPayload(productionKind, PlayerSlotId.One, out var payload, out var status))
+        {
+            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
+            status = GatewayStatus(result, status);
+        }
+
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
         AddStatusAlert(status);
@@ -220,7 +225,12 @@ public partial class BattleRoot
 
     private void OnProductionDesignRequested(string designId)
     {
-        _unitBattlefield.EnqueueProductionDesign(designId, PlayerSlotId.One, out var status);
+        if (_unitBattlefield.TryCreateProductionDesignPayload(designId, PlayerSlotId.One, out var payload, out var status))
+        {
+            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
+            status = GatewayStatus(result, status);
+        }
+
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
         AddStatusAlert(status);
@@ -293,10 +303,13 @@ public partial class BattleRoot
     {
         if (_unitBattlefield.SelectedCount(PlayerSlotId.One) > 0)
         {
-            var changed = _unitBattlefield.CommandSetSelectedStance(PlayerSlotId.One, stance);
+            var subjects = _unitBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
+            var payload = PlayerCommandPayload.ForSubjects(subjects) with { Stance = stance };
+            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload);
+            var changed = result.AcceptedCount > 0 ? subjects.Count : 0;
             if (changed == 0)
             {
-                _hud.SetStatus(GameText.T("stance.selectRequired"));
+                _hud.SetStatus(GatewayStatus(result, GameText.T("stance.selectRequired")));
                 PlayAudioCue(TacticalAudioCue.Invalid);
                 return;
             }
@@ -319,6 +332,19 @@ public partial class BattleRoot
         _hud.SetSelectedUnitStance(stance);
         _hud.SetStatus(GameText.Format("stance.changed", selectedCount, StanceLabel(stance)));
         PlayAudioCue(TacticalAudioCue.Selection);
+    }
+
+    private static string GatewayStatus(CommandGatewayResult result, string acceptedStatus)
+    {
+        foreach (var command in result.Commands)
+        {
+            if (!command.Accepted)
+            {
+                return command.Message;
+            }
+        }
+
+        return acceptedStatus;
     }
 
     private void OnSettingsRequested()

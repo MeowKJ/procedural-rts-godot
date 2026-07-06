@@ -13,7 +13,8 @@ public readonly record struct PlayerCommandPayload(
     CombatTargetKind TargetKind,
     string SpecId,
     AbilityKind Ability,
-    UnitStance Stance)
+    UnitStance Stance,
+    MoveCommandMode MoveMode)
 {
     public static PlayerCommandPayload Empty { get; } = new(
         Array.Empty<EntityId>(),
@@ -23,7 +24,8 @@ public readonly record struct PlayerCommandPayload(
         CombatTargetKind.Unit,
         string.Empty,
         AbilityKind.Harvest,
-        UnitStance.Hold);
+        UnitStance.Hold,
+        MoveCommandMode.Direct);
 
     public IReadOnlyList<EntityId> SubjectIds => Subjects ?? Array.Empty<EntityId>();
 
@@ -32,13 +34,18 @@ public readonly record struct PlayerCommandPayload(
         return Empty with { Subjects = subjects };
     }
 
-    public static PlayerCommandPayload ForPoint(IReadOnlyList<EntityId> subjects, float x, float y)
+    public static PlayerCommandPayload ForPoint(
+        IReadOnlyList<EntityId> subjects,
+        float x,
+        float y,
+        MoveCommandMode moveMode = MoveCommandMode.Direct)
     {
         return Empty with
         {
             Subjects = subjects,
             HasTargetPoint = true,
             TargetPoint = new PlayerCommandPoint(x, y),
+            MoveMode = moveMode,
         };
     }
 

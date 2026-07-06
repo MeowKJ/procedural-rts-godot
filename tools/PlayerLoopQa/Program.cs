@@ -358,6 +358,111 @@ static void AssertVictoryAndDefeat()
         $"player loop should lose after own HQ falls; outcome {defeat.Outcome}, hq hp {playerHqAfterAttack?.Hp:0.0}, removed [{string.Join(", ", removedBuildings)}], outcome events [{string.Join(", ", outcomeEvents)}]");
 }
 
+static void AssertCommandGatewayLivePlayerLoop()
+{
+    var battlefield = NewBattlefield(20000);
+    var localUnit = battlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(480, 520));
+    battlefield.Spawn("cat.basic", PlayerSlotId.Two, new Vector2(980, 520), Mathf.Pi);
+    AddBuilding(battlefield, 20, BuildingDesignIds.Barracks, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(650, 700));
+    battlefield.SelectUnitsByIds(PlayerSlotId.One, [localUnit.Id]);
+
+    var observation = battlefield.CreateObservationView(PlayerSlotId.One, tick: 0);
+    Require(observation.IsValid, "live observation should be valid for the player slot");
+    Require(observation.KnownPlayers.Any(player => player.SlotId == PlayerSlotId.One && player.Credits == 20000),
+        "live observation should include known player credits");
+    Require(observation.VisibleEntities.Any(entity => entity.Id == localUnit.EntityId && entity.IsOwnedByViewer),
+        "live observation should include owned visible entities");
+    Require(observation.CommandAffordances.Any(affordance => affordance.Kind == PlayerCommandKind.Move && affordance.IsAvailable),
+        "live observation should expose command affordances");
+
+    var controller = new BufferedLocalPlayerController(new PlayerControllerId("qa-local-human"), [PlayerSlotId.One]);
+    var localGateway = new CommandGateway();
+    var move = new PlayerCommand(
+        PlayerSlotId.One,
+        1,
+        1,
+        PlayerCommandKind.Move,
+        PlayerCommandPayload.ForPoint([localUnit.EntityId], 720, 560, MoveCommandMode.Ignore));
+    controller.Enqueue(move);
+    var beforeAccepted = battlefield.AppliedInputCommandCount;
+    var localResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 1);
+    Require(localResult.AcceptedCount == 1 && battlefield.AppliedInputCommandCount > beforeAccepted,
+        "local buffered controller should submit live commands through CommandGateway into the battlefield sink");
+    Require(localUnit.MoveTarget is not null && localUnit.MoveMode == MoveCommandMode.Ignore,
+        "accepted live move should preserve command mode and mutate the unit through the command bridge");
+
+    var beforeRejected = battlefield.AppliedInputCommandCount;
+    controller.Enqueue(move);
+    var staleResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 2);
+    RequireRejected(staleResult, CommandGatewayValidationError.NonMonotonicSequence, "duplicate live controller sequence should reject");
+    Require(battlefield.AppliedInputCommandCount == beforeRejected, "duplicate live sequence should not mutate simulation state");
+
+    var invalidMove = new PlayerCommand(
+        PlayerSlotId.One,
+        2,
+        2,
+        PlayerCommandKind.Move,
+        PlayerCommandPayload.ForSubjects([localUnit.EntityId]));
+    controller.Enqueue(invalidMove);
+    var invalidResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 3);
+    RequireRejected(invalidResult, CommandGatewayValidationError.InvalidPayloadShape, "malformed live move should reject");
+    Require(battlefield.AppliedInputCommandCount == beforeRejected, "malformed live move should not mutate simulation state");
+
+    var unauthorizedGateway = new CommandGateway();
+    var unauthorizedSubmission = new CommandGatewaySubmission(
+        new PlayerControllerId("qa-authority"),
+        PlayerControllerKind.QaAgent,
+        [PlayerSlotId.One],
+        CurrentTick: 3);
+    var unauthorized = new PlayerCommand(
+        PlayerSlotId.Two,
+        1,
+        3,
+        PlayerCommandKind.Stop,
+        PlayerCommandPayload.ForSubjects([localUnit.EntityId]));
+    var unauthorizedResult = unauthorizedGateway.Submit(unauthorizedSubmission, [unauthorized], battlefield);
+    RequireRejected(unauthorizedResult, CommandGatewayValidationError.ControllerDoesNotOwnSlot, "unauthorized live slot should reject");
+    Require(battlefield.AppliedInputCommandCount == beforeRejected, "unauthorized live slot should not mutate simulation state");
+
+    var agentBattlefield = NewBattlefield();
+    var agentUnit = agentBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(420, 460));
+    var agentController = new AgentPlayerController(
+        new PlayerControllerId("qa-scripted-agent"),
+        new MoveFirstOwnedUnitAgent(),
+        [PlayerSlotId.One]);
+    var agentResult = agentBattlefield.SubmitPlayerController(new CommandGateway(), agentController, PlayerSlotId.One, tick: 1);
+    Require(agentResult.AcceptedCount == 1 && agentUnit.MoveTarget is not null,
+        "scripted agent should consume ObservationView and command the battlefield through the same gateway path");
+
+    var productionBattlefield = NewBattlefield(20000);
+    AddBuilding(productionBattlefield, 30, BuildingDesignIds.Barracks, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 760));
+    Require(productionBattlefield.TryCreateProductionDesignPayload("dog.infantry", PlayerSlotId.One, out var productionPayload, out var productionStatus),
+        $"live production payload should resolve producer and spec: {productionStatus}");
+    var productionResult = productionBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, productionPayload);
+    Require(productionResult.AcceptedCount == 1 && productionBattlefield.HasQueuedProduction(PlayerSlotId.One),
+        "live production command should pass through CommandGateway before queueing production");
+
+    var buildBattlefield = NewBattlefield(20000);
+    AddBuilding(buildBattlefield, 40, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 760));
+    var buildPayload = PlayerCommandPayload.ForSpec(BuildingDesignIds.PowerPlant) with
+    {
+        HasTargetPoint = true,
+        TargetPoint = new PlayerCommandPoint(940, 760),
+    };
+    var buildResult = buildBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Build, buildPayload);
+    Advance(buildBattlefield, 0.2f);
+    Require(buildResult.AcceptedCount == 1
+        && buildBattlefield.BuildingSnapshots().Any(building => building.Kind == BuildingDesignIds.PowerPlant),
+        "live build command should pass through CommandGateway before reaching ConstructionSystem");
+}
+
+static void RequireRejected(CommandGatewayResult result, CommandGatewayValidationError expected, string message)
+{
+    Require(result.RejectedCount == 1, message);
+    Require(result.Commands[0].Error == expected, $"{message}: expected {expected}, got {result.Commands[0].Error}");
+    Require(!string.IsNullOrWhiteSpace(result.Commands[0].Message), $"{message}: rejection should carry structured feedback");
+}
+
 AssertBuildInRadius();
 AssertCatReadyTicketPlacement();
 AssertHarvestAndBank();
@@ -365,5 +470,36 @@ AssertProductionRallyAndTiers();
 AssertSelectionCommandsAndStance();
 AssertLiveSharedCorridorPathing();
 AssertVictoryAndDefeat();
+AssertCommandGatewayLivePlayerLoop();
 
-Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, victory and defeat.");
+Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, victory/defeat, and live CommandGateway player loop.");
+
+sealed class MoveFirstOwnedUnitAgent : IPlayerAgent
+{
+    private int _sequence;
+
+    public PlayerAgentId Id { get; } = new("qa-move-first-owned");
+    public PlayerAgentKind Kind => PlayerAgentKind.Qa;
+
+    public PlayerControllerResult Think(in ObservationView observation)
+    {
+        foreach (var entity in observation.VisibleEntities)
+        {
+            if (entity.Kind != EntityKind.Unit || !entity.IsOwnedByViewer)
+            {
+                continue;
+            }
+
+            _sequence++;
+            var command = new PlayerCommand(
+                observation.ViewerSlotId,
+                _sequence,
+                observation.Tick + 1,
+                PlayerCommandKind.Move,
+                PlayerCommandPayload.ForPoint([entity.Id], entity.PositionX + 96, entity.PositionY));
+            return new PlayerControllerResult([command]);
+        }
+
+        return PlayerControllerResult.Empty;
+    }
+}
