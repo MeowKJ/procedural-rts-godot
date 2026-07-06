@@ -14,6 +14,54 @@ public sealed partial class GameState
         return ResourceInventory(owner).Credits;
     }
 
+    public int LiveHarvesterCount(Owner owner)
+    {
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.Owner == owner && IsHarvesterUnit(unit) && unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public int QueuedProductionCount(Owner owner)
+    {
+        return QueuedProductionCountCore(owner, null);
+    }
+
+    public int QueuedProductionCount(Owner owner, ProductionKind productionKind)
+    {
+        return QueuedProductionCountCore(owner, productionKind);
+    }
+
+    public bool CanQueueProduction(ProductionKind productionKind, Owner owner)
+    {
+        return TryFindLeastQueuedProductionProducer(owner, productionKind, out _, out var spec, out _)
+            && Credits(owner) >= spec!.Stats.Cost;
+    }
+
+    public Vector2 LiveBuildingCenter(Owner owner, Vector2 fallback)
+    {
+        var sum = Vector2.Zero;
+        var count = 0;
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner || building.Hp <= 0)
+            {
+                continue;
+            }
+
+            sum += building.Position;
+            count++;
+        }
+
+        return count == 0 ? fallback : sum / count;
+    }
+
     public IReadOnlyList<ProductionOptionState> ProductionOptionStates(Owner owner)
     {
         var credits = Credits(owner);
@@ -120,6 +168,28 @@ public sealed partial class GameState
 
         var laneOrder = left.Production.LaneIndex.CompareTo(right.Production.LaneIndex);
         return laneOrder != 0 ? laneOrder : left.Kind.CompareTo(right.Kind);
+    }
+
+    private int QueuedProductionCountCore(Owner owner, ProductionKind? productionKind)
+    {
+        var count = 0;
+        foreach (var building in Buildings)
+        {
+            if (building.Owner != owner)
+            {
+                continue;
+            }
+
+            foreach (var item in building.ProductionQueue)
+            {
+                if (productionKind is null || item.Kind == productionKind.Value)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 
     private bool TryFindLeastQueuedProductionProducer(

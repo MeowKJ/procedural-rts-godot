@@ -33,7 +33,7 @@ public sealed class EnemyProductionAi
         _decisionTimer = _profile.ProductionDecisionInterval;
         SetEnemyRallyPoints(state);
 
-        if (QueuedCount(state) >= _profile.MaxQueuedItems)
+        if (state.QueuedProductionCount(Owner.Enemy) >= _profile.MaxQueuedItems)
         {
             LastStatus = "Enemy production queue holding";
             return;
@@ -56,31 +56,8 @@ public sealed class EnemyProductionAi
 
     private ProductionKind? ChooseNextProduction(GameState state)
     {
-        var enemyHarvesters = 0;
-        foreach (var unit in state.Units)
-        {
-            if (unit.Owner == Owner.Enemy
-                && GameState.IsHarvesterUnit(unit)
-                && unit.Hp > 0)
-            {
-                enemyHarvesters++;
-            }
-        }
-
-        var queuedHarvesters = 0;
-        foreach (var building in state.Buildings)
-        {
-            if (building.Owner == Owner.Enemy)
-            {
-                foreach (var item in building.ProductionQueue)
-                {
-                    if (item.Kind == ProductionKind.Harvester)
-                    {
-                        queuedHarvesters++;
-                    }
-                }
-            }
-        }
+        var enemyHarvesters = state.LiveHarvesterCount(Owner.Enemy);
+        var queuedHarvesters = state.QueuedProductionCount(Owner.Enemy, ProductionKind.Harvester);
 
         if (enemyHarvesters + queuedHarvesters < _profile.DesiredHarvesters && CanQueue(state, ProductionKind.Harvester))
         {
@@ -106,74 +83,14 @@ public sealed class EnemyProductionAi
 
     private static bool CanQueue(GameState state, ProductionKind kind)
     {
-        return TryMinReadyProductionCost(state, kind, out var minCost)
-            && state.Credits(Owner.Enemy) >= minCost;
-    }
-
-    private static int QueuedCount(GameState state)
-    {
-        var count = 0;
-        foreach (var building in state.Buildings)
-        {
-            if (building.Owner == Owner.Enemy)
-            {
-                count += building.ProductionQueue.Count;
-            }
-        }
-
-        return count;
+        return state.CanQueueProduction(kind, Owner.Enemy);
     }
 
     private static void SetEnemyRallyPoints(GameState state)
     {
-        var rally = EnemyBaseCenter(state) + new Vector2(-250, -120);
+        var fallback = new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f);
+        var rally = state.LiveBuildingCenter(Owner.Enemy, fallback) + new Vector2(-250, -120);
         state.CommandSetProducerRallyPoints(Owner.Enemy, rally);
-    }
-
-    private static Vector2 EnemyBaseCenter(GameState state)
-    {
-        var sum = Vector2.Zero;
-        var count = 0;
-        foreach (var building in state.Buildings)
-        {
-            if (building.Owner != Owner.Enemy || building.Hp <= 0)
-            {
-                continue;
-            }
-
-            sum += building.Position;
-            count++;
-        }
-
-        return count == 0 ? new Vector2(state.WorldSize.X * 0.78f, state.WorldSize.Y * 0.62f) : sum / count;
-    }
-
-    private static bool TryMinReadyProductionCost(GameState state, ProductionKind kind, out int minCost)
-    {
-        minCost = int.MaxValue;
-        var found = false;
-        foreach (var building in state.Buildings)
-        {
-            if (!ProductionKindDesignBridge.TrySpecFor(building.FactionId, kind, out var spec)
-                || spec.Production is not { } production)
-            {
-                continue;
-            }
-
-            if (building.Owner != Owner.Enemy
-                || building.Hp <= 0
-                || !building.Powered
-                || building.BuildProgress < 1
-                || production.ProducerKind != building.Kind)
-            {
-                continue;
-            }
-
-            minCost = Math.Min(minCost, spec.Stats.Cost);
-            found = true;
-        }
-
-        return found;
     }
 
 }

@@ -90,11 +90,11 @@ static class EnemyProductionAiReviewGate
     private static void RequireLegacyProductionScans(string root, GateResult result)
     {
         var legacy = ReviewGateSource.Read(root, "scripts", "core", "ai", "EnemyProductionAi.cs"); var commands = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.Commands.cs");
-        RequireText(legacy, "TryMinReadyProductionCost(", "Legacy EnemyProductionAi must scan ready production costs without materializing spec arrays.", result);
+        RequireText(legacy, "state.LiveHarvesterCount(", "Legacy EnemyProductionAi must use the GameState harvester query bridge.", result); RequireText(legacy, "state.QueuedProductionCount(", "Legacy EnemyProductionAi must use the GameState production queue query bridge.", result);
+        RequireText(legacy, "state.CanQueueProduction(", "Legacy EnemyProductionAi must use the GameState production affordability query bridge.", result); RequireText(legacy, "state.LiveBuildingCenter(", "Legacy EnemyProductionAi must use the GameState base-center query bridge.", result);
         RequireText(legacy, "state.CommandEnqueueProduction(", "Legacy EnemyProductionAi must submit production through the GameState command bridge.", result); RequireText(legacy, "state.CommandSetProducerRallyPoints(", "Legacy EnemyProductionAi rally setup must submit through the GameState command bridge.", result);
         RequireText(commands, "public bool CommandEnqueueProduction(", "GameState must expose a legacy production command bridge.", result); RequireText(commands, "public int CommandSetProducerRallyPoints(", "GameState must expose a legacy producer-rally command bridge.", result);
-        RequireText(legacy, "sum += building.Position;", "Legacy EnemyProductionAi base center must use an explicit position sum.", result);
-        ForbidProductionLinq(legacy, "Legacy enemy production AI", result); ForbidText(legacy, "state.EnqueueProduction(", "Legacy EnemyProductionAi must not bypass the production command bridge.", result); ForbidText(legacy, "building.RallyPoint", "Legacy EnemyProductionAi must not write producer rally state directly.", result);
+        ForbidProductionLinq(legacy, "Legacy enemy production AI", result); ForbidText(legacy, "state.Units", "Legacy EnemyProductionAi must not scan units directly.", result); ForbidText(legacy, "state.Buildings", "Legacy EnemyProductionAi must not scan buildings directly.", result); ForbidText(legacy, "state.EnqueueProduction(", "Legacy EnemyProductionAi must not bypass the production command bridge.", result); ForbidText(legacy, "building.RallyPoint", "Legacy EnemyProductionAi must not write producer rally state directly.", result);
         ForbidText(legacy, "ReadyProductionSpecs(", "Legacy EnemyProductionAi must not expose allocating ready-spec iterators.", result); ForbidText(legacy, "new[] { ProductionKind", "Legacy EnemyProductionAi must not allocate combat preference arrays.", result);
     }
 
