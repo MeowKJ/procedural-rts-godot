@@ -10,7 +10,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             return null;
         }
 
-        var enemyHarvesters = LiveHarvesterCount(battlefield, enemyPlayerSlotId);
+        var enemyHarvesters = battlefield.LiveEconomyUnitCount(enemyPlayerSlotId);
         var queuedHarvesters = QueuedKindCount(battlefield, enemyPlayerSlotId, ProductionKind.Harvester);
         if (enemyHarvesters + queuedHarvesters < _profile.DesiredHarvesters)
         {
@@ -39,7 +39,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
 
     private ProductionKind? ChooseNextProduction(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
     {
-        var enemyHarvesters = LiveHarvesterCount(battlefield, enemyPlayerSlotId);
+        var enemyHarvesters = battlefield.LiveEconomyUnitCount(enemyPlayerSlotId);
         var queuedHarvesters = QueuedKindCount(battlefield, enemyPlayerSlotId, ProductionKind.Harvester);
 
         if (enemyHarvesters + queuedHarvesters < _profile.DesiredHarvesters

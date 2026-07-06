@@ -34,12 +34,12 @@ static class EnemyProductionAiReviewGate
         RequireText(ai, "CollectQueueableDesignOptions(", "Enemy production design choices must fill reusable option storage.", result);
         RequireText(ai, "FirstFallbackCombatOption(", "Enemy production fallback must use an explicit best-option scan.", result);
         RequireText(ai, "QueuedKindCount(", "Enemy production queued-kind counts must use explicit queue scans.", result);
-        RequireText(ai, "QueuedDesignCount(", "Enemy production queued-design counts must use explicit queue scans.", result);
+        RequireText(ai, "QueuedDesignCount(", "Enemy production queued-design counts must use explicit queue scans.", result); RequireText(ai, "LiveUnitDesignCount(", "Runtime enemy production AI must use UnitBattlefield design-count queries.", result); RequireText(ai, "LiveEconomyUnitCount(", "Runtime enemy production AI must use UnitBattlefield economy-unit count queries.", result);
 
         var production = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Production.cs");
         var productionScans = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ProductionScans.cs");
         ForbidProductionLinq(production, "Enemy production choice", result);
-        ForbidProductionLinq(productionScans, "Enemy production scan helpers", result);
+        ForbidProductionLinq(productionScans, "Enemy production scan helpers", result); ForbidText(productionScans, "battlefield.Units", "Runtime enemy production scan helpers must not scan the UnitBattlefield unit list directly.", result);
     }
 
     private static void RequireConstructionScans(string root, GateResult result)
@@ -48,13 +48,13 @@ static class EnemyProductionAiReviewGate
         var offsets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ConstructionOffsets.cs");
         RequireText(construction, "CollectOwnedBuildings(battlefield, enemyPlayerSlotId, _ownedBuildingBuffer", "Enemy construction requirements must reuse owned-building storage.", result);
         RequireText(construction, "battlefield.ConstructBuilding(enemyPlayerSlotId", "Enemy construction decisions must enter through the UnitBattlefield construction command bridge.", result);
-        RequireText(construction, "CandidateBuildOffsets(next)", "Enemy construction placement must iterate static build offsets.", result);
+        RequireText(construction, "CandidateBuildOffsets(next)", "Enemy construction placement must iterate static build offsets.", result); RequireText(construction, "LiveNonEconomyUnitsNear(", "Enemy construction defense decisions must use the UnitBattlefield combat-unit count query.", result);
         RequireText(offsets, "private static readonly Vector2[] PowerPlantBuildOffsets", "Enemy construction offsets must be static data.", result);
         ForbidProductionLinq(construction, "Enemy construction", result);
         ForbidText(construction, "new StartConstructionEntityCommand", "Enemy construction AI must not instantiate construction commands directly; use the UnitBattlefield gateway.", result);
         ForbidText(construction, "IEnumerable<Vector2>", "Enemy construction must not allocate iterator state for candidate positions.", result);
         ForbidText(construction, "yield return", "Enemy construction candidate positions must not use yield iterators.", result);
-        ForbidText(construction, "new[] { new Vector2", "Enemy construction must not allocate offset arrays per decision.", result);
+        ForbidText(construction, "new[] { new Vector2", "Enemy construction must not allocate offset arrays per decision.", result); ForbidText(construction, "battlefield.Units", "Runtime enemy construction choices must not scan the UnitBattlefield unit list directly.", result);
     }
 
     private static void RequireEconomyScans(string root, GateResult result)

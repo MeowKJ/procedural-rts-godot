@@ -94,32 +94,8 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
 
     private int ArmyCountForDesign(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId, string designId)
     {
-        var alive = 0;
-        foreach (var unit in battlefield.Units)
-        {
-            if (unit.PlayerSlotId == enemyPlayerSlotId && unit.Hp > 0 && unit.Spec.Id == designId)
-            {
-                alive++;
-            }
-        }
-
-        return alive + QueuedDesignCount(battlefield, enemyPlayerSlotId, designId);
-    }
-
-    private static int LiveHarvesterCount(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
-    {
-        var count = 0;
-        foreach (var unit in battlefield.Units)
-        {
-            if (unit.PlayerSlotId == enemyPlayerSlotId
-                && unit.Hp > 0
-                && unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
-            {
-                count++;
-            }
-        }
-
-        return count;
+        return battlefield.LiveUnitDesignCount(enemyPlayerSlotId, designId)
+            + QueuedDesignCount(battlefield, enemyPlayerSlotId, designId);
     }
 
     private int QueuedKindCount(UnitBattlefield battlefield, PlayerSlotId playerSlotId, ProductionKind kind)
