@@ -9,7 +9,7 @@ internal static partial class AiOpponentLoopQaProgram
         Console.WriteLine("AiOpponentLoopQa runtime loop");
         Console.WriteLine($"  duration: {report.SimulationSeconds}s, outcome: {report.Outcome}");
         Console.WriteLine($"  harvest: assignments {report.HarvestAssignments}, depleted {report.EnemyFieldDepleted}, credits start/peak {report.EnemyCreditsStart}/{report.EnemyCreditsPeak}, bridge commands {report.HarvestBridgeCommands}");
-        Console.WriteLine($"  builds present: {string.Join(", ", report.BuiltEnemyBuildingSpecIds)}");
+        Console.WriteLine($"  builds present: {string.Join(", ", report.BuiltEnemyBuildingSpecIds)}, construction orders {report.ConstructionOrders}, bridge commands {report.ConstructionBridgeCommands}");
         Console.WriteLine($"  production: orders {report.ProductionOrders}, queued {report.ProductionQueuedEvents}, completed {report.ProductionCompletedEvents}, bridge commands {report.ProductionBridgeCommands}");
         Console.WriteLine($"  produced designs: {string.Join(", ", report.ProducedDesignIds)}");
         Console.WriteLine($"  mixed combat: infantry {report.ProducedInfantry}, vehicles {report.ProducedVehicles}, max combat alive {report.MaxEnemyCombatUnitsAlive}");
@@ -44,6 +44,7 @@ internal sealed record OpponentLoopReport(
     int EnemyCreditsStart,
     int EnemyCreditsPeak,
     int ResourceEvents,
+    int ConstructionOrders,
     IReadOnlyList<string> BuiltEnemyBuildingSpecIds,
     int DefenseBuildingHits,
     int DefenseUnitHits,
@@ -60,6 +61,7 @@ internal sealed record OpponentLoopReport(
     int MaxEnemyCombatUnitsAlive,
     int TotalAppliedCommands,
     int HarvestBridgeCommands,
+    int ConstructionBridgeCommands,
     int ProductionBridgeCommands,
     int WaveBridgeCommands,
     string ProductionStatus,
