@@ -57,10 +57,10 @@ static class EnemyAttackWaveAiReviewGate
         ForbidText(main, "waveUnits.Where(unit => unit.AttackTargetId is not null)", "Enemy wave pulse updates must use an explicit loop.", result);
 
         var selection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.UnitSelection.cs");
-        RequireText(selection, "CollectAvailableWaveUnits(", "Enemy wave unit selection must use a caller-owned buffer helper.", result);
-        RequireText(selection, "CollectAvailableDefenseUnits(", "Enemy defense unit selection must use a caller-owned buffer helper.", result);
+        RequireText(selection, "CollectAvailableWaveUnits(", "Enemy wave unit selection must use a caller-owned buffer helper.", result); RequireText(selection, "battlefield.CollectAvailableCombatUnits(playerSlotId, _waveCandidateUnits)", "Enemy wave unit selection must use UnitBattlefield available-combat query helper.", result);
+        RequireText(selection, "CollectAvailableDefenseUnits(", "Enemy defense unit selection must use a caller-owned buffer helper.", result); RequireText(selection, "battlefield.CollectAvailableCombatUnitsNearEither(playerSlotId, baseCenter, targetPosition, DefenseRadius, result)", "Enemy defense unit selection must use UnitBattlefield near-combat query helper.", result);
         RequireText(selection, "CollectUnitIds(IReadOnlyList<UnitInstance> units, List<int> result)", "Enemy attack wave AI must centralize id buffer fills.", result);
-        ForbidText(selection, ".ToList()", "Enemy unit selection must not materialize LINQ lists.", result);
+        ForbidText(selection, ".ToList()", "Enemy unit selection must not materialize LINQ lists.", result); ForbidText(selection, "battlefield.Units", "Enemy unit selection must not scan the UnitBattlefield unit list directly.", result);
         ForbidText(selection, ".ToHashSet()", "Enemy wave reserve must not allocate HashSets.", result);
         ForbidText(selection, "IEnumerable<UnitInstance> Available", "Enemy unit selection helpers must not return allocating enumerables.", result);
 

@@ -13,25 +13,8 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         int maximumDefenders,
         List<UnitInstance> result)
     {
-        result.Clear();
         var baseCenter = EnemyBaseCenter(battlefield, playerSlotId);
-        var defenseRadiusSquared = DefenseRadius * DefenseRadius;
-        foreach (var unit in battlefield.Units)
-        {
-            if (!IsAvailableCombatUnit(unit, playerSlotId))
-            {
-                continue;
-            }
-
-            if (unit.Position.DistanceSquaredTo(baseCenter) > defenseRadiusSquared
-                && unit.Position.DistanceSquaredTo(targetPosition) > defenseRadiusSquared)
-            {
-                continue;
-            }
-
-            result.Add(unit);
-        }
-
+        battlefield.CollectAvailableCombatUnitsNearEither(playerSlotId, baseCenter, targetPosition, DefenseRadius, result);
         _unitDistanceComparer.Reset(targetPosition);
         result.Sort(_unitDistanceComparer);
         TrimToMax(result, maximumDefenders);
@@ -45,15 +28,8 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         List<UnitInstance> result)
     {
         result.Clear();
-        _waveCandidateUnits.Clear();
         var baseCenter = EnemyBaseCenter(battlefield, playerSlotId);
-        foreach (var unit in battlefield.Units)
-        {
-            if (IsAvailableCombatUnit(unit, playerSlotId))
-            {
-                _waveCandidateUnits.Add(unit);
-            }
-        }
+        battlefield.CollectAvailableCombatUnits(playerSlotId, _waveCandidateUnits);
 
         _unitDistanceComparer.Reset(baseCenter);
         _waveCandidateUnits.Sort(_unitDistanceComparer);
@@ -74,14 +50,6 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         {
             result.Add(unit.Id);
         }
-    }
-
-    private static bool IsAvailableCombatUnit(UnitInstance unit, PlayerSlotId playerSlotId)
-    {
-        return unit.PlayerSlotId == playerSlotId
-            && unit.Hp > 0
-            && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
-            && (unit.AttackTargetId is null || !unit.AttackTargetIsManual);
     }
 
     private static int CompareUnitsByXThenId(UnitInstance? left, UnitInstance? right)

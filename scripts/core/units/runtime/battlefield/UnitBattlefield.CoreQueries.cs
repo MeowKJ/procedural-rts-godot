@@ -135,6 +135,50 @@ public sealed partial class UnitBattlefield
         return count;
     }
 
+    public void CollectAvailableCombatUnits(PlayerSlotId playerSlotId, List<UnitInstance> result)
+    {
+        result.Clear();
+        foreach (var unit in Units)
+        {
+            if (IsAvailableCombatUnit(playerSlotId, unit))
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
+    public void CollectAvailableCombatUnitsNearEither(
+        PlayerSlotId playerSlotId,
+        Vector2 firstCenter,
+        Vector2 secondCenter,
+        float radius,
+        List<UnitInstance> result)
+    {
+        result.Clear();
+        var radiusSquared = radius * radius;
+        foreach (var unit in Units)
+        {
+            if (!IsAvailableCombatUnit(playerSlotId, unit))
+            {
+                continue;
+            }
+
+            if (unit.Position.DistanceSquaredTo(firstCenter) <= radiusSquared
+                || unit.Position.DistanceSquaredTo(secondCenter) <= radiusSquared)
+            {
+                result.Add(unit);
+            }
+        }
+    }
+
+    private static bool IsAvailableCombatUnit(PlayerSlotId playerSlotId, UnitInstance unit)
+    {
+        return unit.PlayerSlotId == playerSlotId
+            && unit.Hp > 0
+            && !unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
+            && (unit.AttackTargetId is null || !unit.AttackTargetIsManual);
+    }
+
     public void SetCredits(PlayerSlotId playerSlotId, int credits)
     {
         var inventory = ResourceInventory(playerSlotId);
