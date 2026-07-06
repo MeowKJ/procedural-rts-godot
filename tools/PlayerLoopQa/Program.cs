@@ -69,7 +69,8 @@ static UnitBattlefieldBuildingSnapshot? TryConstructInBuildRadius(
     PlayerSlotId playerSlotId,
     UnitFactionId faction,
     Vector2 anchor,
-    out string status)
+    out string status,
+    float facing = 0)
 {
     var offsets = new[]
     {
@@ -84,7 +85,7 @@ static UnitBattlefieldBuildingSnapshot? TryConstructInBuildRadius(
 
     foreach (var offset in offsets)
     {
-        if (battlefield.ConstructBuilding(playerSlotId, faction, kind, anchor + offset, out var building, out status))
+        if (battlefield.ConstructBuilding(playerSlotId, faction, kind, anchor + offset, out var building, out status, facing))
         {
             return building;
         }
@@ -100,16 +101,19 @@ static void AssertBuildInRadius()
     var hq = AddBuilding(battlefield, 1, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 760));
     AddBuilding(battlefield, 2, BuildingDesignIds.PowerPlant, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(900, 760));
     var creditsBefore = battlefield.Credits(PlayerSlotId.One);
+    var facing = Mathf.Pi * 0.5f;
     var placed = TryConstructInBuildRadius(
         battlefield,
         BuildingDesignIds.VehicleFactory,
         PlayerSlotId.One,
         UnitFactionId.Dog,
         hq.Position,
-        out var status);
+        out var status,
+        facing);
 
     Require(placed is not null, $"player loop should start construction inside build radius: {status}");
     Require(placed!.Value.PlayerSlotId == PlayerSlotId.One && placed.Value.Kind == BuildingDesignIds.VehicleFactory, "construction should preserve owner and kind");
+    Require(Mathf.IsEqualApprox(placed.Value.Facing, facing), $"direct construction should preserve requested facing {facing}, got {placed.Value.Facing}");
     Require(battlefield.Credits(PlayerSlotId.One) == creditsBefore - BuildSpecCatalog.For(BuildingDesignIds.VehicleFactory).Cost, "construction should spend credits immediately");
     Require(battlefield.BuildingBuildProgress(placed.Value.Id) < 1, "constructed building should start under construction");
 
@@ -163,14 +167,17 @@ static void AssertCatReadyTicketPlacement()
     ready = battlefield.ReadyConstructionTickets(PlayerSlotId.One).SingleOrDefault(item => item.EntityId == secondTicketValue.EntityId);
     Require(ready.ReadyToPlace, "second cat ready-ticket should become ready-to-place after the cancel refund path");
 
+    var facing = Mathf.Pi;
     var accepted = battlefield.PlaceReadyConstructionTicket(
         PlayerSlotId.One,
         UnitFactionId.Cat,
         ready.EntityId,
         hq.Position + new Vector2(280, 0),
         out var placed,
-        out var status);
+        out var status,
+        facing);
     Require(accepted && placed is not null, $"player loop should place ready construction ticket: {status}");
+    Require(Mathf.IsEqualApprox(placed!.Value.Facing, facing), $"ready-ticket placement should preserve requested facing {facing}, got {placed.Value.Facing}");
     Require(!battlefield.ReadyConstructionTickets(PlayerSlotId.One).Any(item => item.EntityId == ready.EntityId),
         "successful ready-ticket placement should consume the ticket");
     Require(battlefield.Credits(PlayerSlotId.One) == creditsAfterSecondQueue, "ready-ticket placement should not spend a second time");
