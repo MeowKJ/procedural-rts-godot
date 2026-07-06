@@ -106,6 +106,7 @@ static class EnemyAttackWaveAiReviewGate
         var legacy = ReviewGateSource.Read(root, "scripts", "core", "ai", "EnemyAttackWaveAi.cs");
         RequireText(legacy, "List<UnitModel> _waveUnits", "Legacy EnemyAttackWaveAi must reuse wave-unit storage.", result);
         RequireText(legacy, "CollectAvailableCombatUnits(state, _profile.MaximumWaveUnits, _waveUnits)", "Legacy EnemyAttackWaveAi must fill a caller-owned wave-unit buffer.", result);
+        RequireText(legacy, "state.CommandAttackUnits(_waveUnits, targetKind, targetId)", "Legacy EnemyAttackWaveAi must submit attacks through GameState command bridge.", result);
         RequireText(legacy, "result.Sort(CompareWaveUnits)", "Legacy EnemyAttackWaveAi must sort wave candidates in reusable storage.", result);
         RequireText(legacy, "BuildingModel? buildingTarget = null;", "Legacy EnemyAttackWaveAi must scan nearest building targets explicitly.", result);
         RequireText(legacy, "UnitModel? unitTarget = null;", "Legacy EnemyAttackWaveAi must scan nearest unit targets explicitly.", result);
@@ -118,6 +119,7 @@ static class EnemyAttackWaveAiReviewGate
         ForbidText(legacy, ".FirstOrDefault(", "Legacy EnemyAttackWaveAi must not allocate LINQ first queries.", result);
         ForbidText(legacy, ".Aggregate(", "Legacy EnemyAttackWaveAi must not allocate aggregate delegates.", result);
         ForbidText(legacy, "IEnumerable<UnitModel>", "Legacy EnemyAttackWaveAi selection helpers must not return allocating enumerables.", result);
+        foreach (var stateWrite in new[] { "AttackTargetId =", "AttackTargetKind =", "AttackTargetIsManual =", "AttackTargetAllowsPursuit =", "MoveTarget =", "PlayerIntentTarget =", "CommandVisualTarget =", "CommandPulse =" }) ForbidText(legacy, stateWrite, "Legacy EnemyAttackWaveAi must not write command or attack state directly.", result);
     }
 
     private static void RequireFileUnderLineBudget(string root, GateResult result, string relativeFile)

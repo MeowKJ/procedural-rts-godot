@@ -38,34 +38,24 @@ public sealed class EnemyAttackWaveAi
             return;
         }
 
-        if (!TryFindTarget(state, _profile.AggressionRadius, out var targetKind, out var targetId, out var targetPosition))
+        if (!TryFindTarget(state, _profile.AggressionRadius, out var targetKind, out var targetId, out _))
         {
             _waveTimer = 8f;
             LastStatus = "Enemy wave has no target";
             return;
         }
 
-        foreach (var unit in _waveUnits)
+        var commanded = state.CommandAttackUnits(_waveUnits, targetKind, targetId);
+        if (commanded == 0)
         {
-            unit.AttackTargetId = targetId;
-            unit.AttackTargetKind = targetKind;
-            unit.AttackTargetIsManual = true;
-            unit.AttackTargetAllowsPursuit = true;
-            unit.ReturnToAnchorAfterAttack = false;
-            unit.LastSharedThreatKey = null;
-            unit.ThreatShareCooldownRemaining = 0.9f;
-            unit.MoveTarget = null;
-            unit.Path.Clear();
-            unit.GlobalCorridor.Clear();
-            unit.PlayerIntentTarget = targetPosition;
-            unit.CommandVisualTarget = targetPosition;
-            unit.AnchorPosition = targetPosition;
-            unit.CommandPulse = 1;
+            _waveTimer = 5f;
+            LastStatus = "Enemy wave has no valid attackers";
+            return;
         }
 
         WavesLaunched++;
         _waveTimer = _profile.AttackWaveInterval;
-        LastStatus = $"Enemy wave launched ({_waveUnits.Count} units)";
+        LastStatus = $"Enemy wave launched ({commanded} units)";
     }
 
     private static void CollectAvailableCombatUnits(GameState state, int maximumWaveUnits, List<UnitModel> result)

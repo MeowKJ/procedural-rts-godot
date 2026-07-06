@@ -143,36 +143,65 @@ public sealed partial class GameState
             return;
         }
 
-        var attackSlots = CreateAttackSlots(_legacySelectedCommandUnits, targetKind, targetId, targetPosition.Value);
-        foreach (var unit in _legacySelectedCommandUnits)
+        CommandAttackUnitsCore(_legacySelectedCommandUnits, targetKind, targetId, targetPosition.Value);
+    }
+
+    public int CommandAttackUnits(IReadOnlyList<UnitModel> units, CombatTargetKind targetKind, int targetId)
+    {
+        _legacySelectedCommandUnits.Clear();
+        foreach (var unit in units)
+        {
+            if (unit.Hp > 0
+                && IsCombatTargetHostile(unit.Owner, targetKind, targetId)
+                && CanUnitTarget(unit, targetKind, targetId))
+            {
+                _legacySelectedCommandUnits.Add(unit);
+            }
+        }
+
+        var targetPosition = CombatTargetPosition(targetKind, targetId);
+        if (_legacySelectedCommandUnits.Count == 0 || targetPosition is null)
+        {
+            return 0;
+        }
+
+        return CommandAttackUnitsCore(_legacySelectedCommandUnits, targetKind, targetId, targetPosition.Value);
+    }
+
+    private int CommandAttackUnitsCore(IReadOnlyList<UnitModel> units, CombatTargetKind targetKind, int targetId, Vector2 targetPosition)
+    {
+        var attackSlots = CreateAttackSlots(units, targetKind, targetId, targetPosition);
+        foreach (var unit in units)
         {
             unit.AttackTargetId = targetId;
             unit.AttackTargetKind = targetKind;
             unit.AttackTargetIsManual = true;
             unit.AttackTargetAllowsPursuit = true;
-            RememberAttackTargetPosition(unit, targetPosition.Value);
-            unit.PlayerIntentTarget = targetPosition.Value;
-            unit.CommandVisualTarget = targetPosition.Value;
+            RememberAttackTargetPosition(unit, targetPosition);
+            unit.PlayerIntentTarget = targetPosition;
+            unit.CommandVisualTarget = targetPosition;
             unit.ReturnToAnchorAfterAttack = false;
             unit.LastSharedThreatKey = null;
             unit.ThreatShareCooldownRemaining = SharedThreatMemorySeconds;
             StopHarvesting(unit);
-            if (IsUnitAtEngagementRange(unit, targetKind, targetId, targetPosition.Value))
+            if (IsUnitAtEngagementRange(unit, targetKind, targetId, targetPosition))
             {
                 SetCombatAnchor(unit);
             }
             else if (attackSlots.TryGetValue(unit.Id, out var slot))
             {
-                AssignPath(unit, slot, targetPosition.Value);
+                AssignPath(unit, slot, targetPosition);
                 unit.AnchorPosition = slot;
             }
             else
             {
-                AssignPath(unit, targetPosition.Value, targetPosition.Value);
+                AssignPath(unit, targetPosition, targetPosition);
             }
 
             unit.CommandPulse = 1;
         }
+
+        return units.Count;
     }
 
     public void SetSelectedStance(UnitStance stance)
