@@ -61,6 +61,13 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "BuildCategoryRequested = OnBuildCategoryRequested", "BattleRoot must wire build category tab requests into build placement.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "controllers", "BuildPlacementController.cs"), "public bool SelectBuildCategory(BuildCategory category)", "Build placement controller must expose a category selection entry point for HUD build tabs.", result);
         RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon cancel action must expose a stable node.", result); RequireText(hudBuild, "ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();", "Command ribbon cancel action must route through the production cancel request path.", result);
+        RequireText(hudLayer, "Action? RallyRequested", "HudLayer must expose the command-ribbon rally request.", result);
+        RequireText(hudBuild, "RibbonSetRally", "Command ribbon rally action must expose a stable node.", result);
+        RequireText(hudBuild, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.", result);
+        RequireText(battleRoot, "RallyRequested = OnRallyRequested", "BattleRoot must wire the HUD rally request into selection commands.", result);
+        RequireText(hudSync, "_selection.ArmRallyCommand();", "BattleRoot rally request must arm the SelectionController rally command mode.", result);
+        RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "SelectionController.cs")), "public void ArmRallyCommand()", "SelectionController must expose one-shot rally command arming for the command ribbon.", result);
+        RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "SelectionController.cs")), "FinishArmedRallyCommand(mouse.Position)", "Armed rally mode must finish through the selected-building rally backend on click.", result);
         RequireText(hudState, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
         RequireText(hudBuild, "Name = \"SandboxStateHash\"", "Sandbox developer HUD must expose the state-hash readout as a stable node.", result);
         RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);

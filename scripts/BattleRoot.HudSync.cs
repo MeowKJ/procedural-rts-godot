@@ -117,6 +117,11 @@ public partial class BattleRoot
         _buildPlacement.SelectBuildCategory(category);
     }
 
+    private void OnRallyRequested()
+    {
+        _selection.ArmRallyCommand();
+    }
+
     private void RefreshSelectionInfo()
     {
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);

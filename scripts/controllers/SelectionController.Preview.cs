@@ -13,6 +13,11 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.Select, GameText.T("preview.select"), screenPosition, worldPosition, true);
         }
 
+        if (_rallyCommandArmed)
+        {
+            return ArmedRallyPreview(screenPosition, worldPosition);
+        }
+
         if (_hoveredUnitInstance is { } hoveredUnitInstance)
         {
             var relation = UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, hoveredUnitInstance.PlayerSlotId);
