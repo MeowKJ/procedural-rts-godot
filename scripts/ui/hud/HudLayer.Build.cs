@@ -118,7 +118,9 @@ public partial class HudLayer : CanvasLayer
 
         AddSeparator(_commandRibbon, new Vector2(642, 8));
         AddIconActionButton(_commandRibbon, IconGlyph.Move, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
-        AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(708, 6), new Vector2(36, 34), Danger);
+        var ribbonCancel = AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(708, 6), new Vector2(36, 34), Danger);
+        ribbonCancel.Name = "RibbonCancelProduction";
+        ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();
         AddIconActionButton(_commandRibbon, IconGlyph.Building, GameText.T("ui.context.rally"), new Vector2(754, 6), new Vector2(36, 34), Amber);
         _settingsButton = AddIconActionButton(_commandRibbon, IconGlyph.Settings, GameText.T("common.settings"), new Vector2(816, 6), new Vector2(36, 34), Cyan);
         _settingsButton.Pressed += () => SettingsRequested?.Invoke();

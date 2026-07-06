@@ -53,6 +53,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "GameText.T(\"ui.tabs.defense\")", "Production drawer tabs must expose the defense build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.air\")", "Production drawer tabs must expose the air build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.naval\")", "Production drawer tabs must expose the naval build category.", result);
+        RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon cancel action must expose a stable node.", result); RequireText(hudBuild, "ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();", "Command ribbon cancel action must route through the production cancel request path.", result);
         RequireText(hudState, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
         RequireText(hudBuild, "Name = \"SandboxStateHash\"", "Sandbox developer HUD must expose the state-hash readout as a stable node.", result);
         RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);
