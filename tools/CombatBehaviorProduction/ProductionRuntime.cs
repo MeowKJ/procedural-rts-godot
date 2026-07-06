@@ -167,6 +167,40 @@ static partial class Program
             throw new InvalidOperationException("building command preview should query selected buildings through UnitBattlefield EntityWorld projections instead of legacy GameState selections");
         }
 
+        var buildingSellBattlefield = new UnitBattlefield();
+        buildingSellBattlefield.SetCredits(PlayerSlotId.One, 500);
+        var buildingSellBarracks = buildingSellBattlefield.UpsertBuildingTarget(
+            188,
+            BuildingDesignIds.Barracks,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(240, 460),
+            0,
+            unitProductionBarracksSpec.MaxHp);
+        buildingSellBattlefield.SelectBuildingTargetAt(PlayerSlotId.One, buildingSellBarracks.Position, additive: false, pickPadding: 8);
+        var buildingSellEvents = new List<UnitBattlefieldBuildingDeathInfo>();
+        buildingSellBattlefield.BuildingsRemoved += deaths => buildingSellEvents.AddRange(deaths);
+        var creditsBeforeSell = buildingSellBattlefield.Credits(PlayerSlotId.One);
+        var expectedBuildingSellRefund = Mathf.RoundToInt(unitProductionBarracksSpec.Cost * Math.Clamp(unitProductionBarracksSpec.RefundRatio, 0, 1));
+        if (buildingSellBattlefield.SellSelectedBuildings(PlayerSlotId.One, out var buildingSellStatus) != 1
+            || !buildingSellStatus.Contains(expectedBuildingSellRefund.ToString(), StringComparison.Ordinal)
+            || buildingSellBattlefield.Credits(PlayerSlotId.One) != creditsBeforeSell + expectedBuildingSellRefund
+            || buildingSellBattlefield.EntityWorld.ResourceInventory(OwnerId.FromPlayerSlot(PlayerSlotId.One)).Credits != creditsBeforeSell + expectedBuildingSellRefund
+            || buildingSellBattlefield.BuildingSnapshot(buildingSellBarracks.Id) is not null
+            || buildingSellBattlefield.HasSelectedBuildings(PlayerSlotId.One)
+            || buildingSellEvents.Count != 1
+            || buildingSellEvents[0].Id != buildingSellBarracks.Id
+            || buildingSellEvents[0].RemovalCause != UnitBattlefieldBuildingRemovalCause.Sold)
+        {
+            throw new InvalidOperationException("selected building sell should refund by BuildSpec refund ratio, clear selection, remove the EntityWorld building, and publish a sold removal event");
+        }
+
+        if (buildingSellBattlefield.SellSelectedBuildings(PlayerSlotId.One, out var emptyBuildingSellStatus) != 0
+            || emptyBuildingSellStatus.Length == 0)
+        {
+            throw new InvalidOperationException("selected building sell should report an empty status when no player building is selected");
+        }
+
         var selectedBuildingSelectionProjection = unitProductionBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
         if (selectedBuildingSelectionProjection.Count != 1
             || selectedBuildingSelectionProjection[0].Kind != BuildingDesignIds.Barracks

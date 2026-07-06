@@ -101,6 +101,11 @@ public sealed partial class UnitBattlefield
 
         foreach (var building in removedBuildings)
         {
+            if (building.RemovalCause != UnitBattlefieldBuildingRemovalCause.Destroyed)
+            {
+                continue;
+            }
+
             if (building.Kind == BuildingDesignIds.Headquarters && Relations.CanAttack(OutcomeViewer, building.PlayerSlotId))
             {
                 Outcome = GameOutcome.Victory;
@@ -111,6 +116,11 @@ public sealed partial class UnitBattlefield
 
         foreach (var building in removedBuildings)
         {
+            if (building.RemovalCause != UnitBattlefieldBuildingRemovalCause.Destroyed)
+            {
+                continue;
+            }
+
             if (building.Kind == BuildingDesignIds.Headquarters && building.PlayerSlotId == OutcomeViewer)
             {
                 Outcome = GameOutcome.Defeat;

@@ -60,7 +60,15 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "Production drawer tabs must redraw selected state from the last requested build category.", result);
         RequireText(battleRoot, "BuildCategoryRequested = OnBuildCategoryRequested", "BattleRoot must wire build category tab requests into build placement.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "controllers", "BuildPlacementController.cs"), "public bool SelectBuildCategory(BuildCategory category)", "Build placement controller must expose a category selection entry point for HUD build tabs.", result);
-        RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon cancel action must expose a stable node.", result); RequireText(hudBuild, "ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();", "Command ribbon cancel action must route through the production cancel request path.", result);
+        RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon sell action must expose a stable node.", result);
+        RequireText(hudLayer, "Action? SellOrCancelRequested", "HudLayer must expose the command-ribbon sell-or-cancel request.", result);
+        RequireText(hudBuild, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.", result);
+        RequireText(hudBuild, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production cancel request path.", result);
+        RequireText(battleRoot, "SellOrCancelRequested = OnSellOrCancelRequested", "BattleRoot must wire the command-ribbon sell-or-cancel request.", result);
+        RequireText(battleRoot, "_unitBattlefield.SellSelectedBuildings", "BattleRoot sell-or-cancel request must sell selected buildings before falling back to production cancel.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingSell.cs"), "BuildSpecCatalog.For(identity.Kind)", "Selected building sell must refund from the build spec instead of production cancel constants.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldBuildingDeathInfo.cs"), "UnitBattlefieldBuildingRemovalCause", "Runtime building removals must expose a removal cause.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldBuildingDeathInfo.cs"), "Sold", "Runtime building removals must distinguish sold structures from destroyed structures.", result);
         RequireText(hudLayer, "Action? RallyRequested", "HudLayer must expose the command-ribbon rally request.", result);
         RequireText(hudBuild, "RibbonSetRally", "Command ribbon rally action must expose a stable node.", result);
         RequireText(hudBuild, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.", result);
