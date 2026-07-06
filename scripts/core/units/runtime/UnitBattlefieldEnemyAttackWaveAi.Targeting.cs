@@ -14,23 +14,16 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         out Vector2 targetPosition)
     {
         var enemyCenter = EnemyCenter(battlefield, enemyPlayerSlotId);
-        var buildings = battlefield.BuildingSnapshots();
-
-        foreach (var building in buildings)
+        targetBuilding = VisibleAttackableHeadquarters(battlefield, enemyPlayerSlotId, enemyCenter, aggressionRadius);
+        if (targetBuilding is { } headquarters)
         {
-            if (IsVisibleAttackableBuilding(battlefield, enemyPlayerSlotId, building)
-                && building.Kind == BuildingDesignIds.Headquarters
-                && IsInsideAggressionRadius(building.Position, enemyCenter, aggressionRadius))
-            {
-                targetKind = CombatTargetKind.Building;
-                targetUnit = null;
-                targetBuilding = building;
-                targetPosition = building.Position;
-                return true;
-            }
+            targetKind = CombatTargetKind.Building;
+            targetUnit = null;
+            targetPosition = headquarters.Position;
+            return true;
         }
 
-        targetBuilding = NearestVisibleAttackableBuilding(battlefield, enemyPlayerSlotId, buildings, enemyCenter, aggressionRadius);
+        targetBuilding = NearestVisibleAttackableBuilding(battlefield, enemyPlayerSlotId, enemyCenter, aggressionRadius);
         if (targetBuilding is { } nearestBuilding)
         {
             targetKind = CombatTargetKind.Building;
