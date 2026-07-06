@@ -63,13 +63,13 @@ static class EnemyProductionAiReviewGate
         RequireText(ai, "List<UnitInstance> _idleHarvesterBuffer", "Enemy economy must reuse idle harvester storage.", result);
         RequireText(ai, "List<int> _idleHarvesterIds", "Enemy economy must reuse harvester command id storage.", result);
 
-        var economy = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Economy.cs");
-        RequireText(economy, "CollectIdleHarvesters(", "Enemy economy must fill idle harvester storage explicitly.", result);
-        RequireText(economy, "NearestVisibleResourceField(", "Enemy economy must choose resources through an explicit nearest scan.", result);
-        RequireText(economy, "CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds)", "Enemy economy harvest commands must reuse id storage.", result);
-        RequireText(economy, "CollectOwnedBuildings(", "Enemy economy/base helpers must share owned-building collection.", result);
+        var economy = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Economy.cs"); var queries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionEconomyQueries.cs");
+        RequireText(economy, "battlefield.CollectIdleEconomyUnits(", "Enemy economy must fill idle harvester storage through the UnitBattlefield query bridge.", result); RequireText(economy, "battlefield.NearestVisibleResourceField(", "Enemy economy must choose resources through the UnitBattlefield visibility query bridge.", result);
+        RequireText(economy, "CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds)", "Enemy economy harvest commands must reuse id storage.", result); RequireText(economy, "battlefield.CollectOwnedBuildings(", "Enemy economy/base helpers must use the UnitBattlefield owned-building query bridge.", result);
+        RequireText(economy, "SetMissingProducerRallyPoints(", "Enemy economy rally setup must use the UnitBattlefield rally command bridge.", result); RequireText(economy, "LiveBuildingCenterOrFallback(", "Enemy base center must use the UnitBattlefield building-center query bridge.", result); RequireText(economy, "FirstOwnedBuildingFactionOrDefault(", "Enemy faction lookup must use the UnitBattlefield building-faction query bridge.", result);
+        RequireText(queries, "CollectIdleEconomyUnits(", "UnitBattlefield must own idle economy-unit collection.", result); RequireText(queries, "NearestVisibleResourceField(", "UnitBattlefield must own visible resource-field selection.", result);
         ForbidProductionLinq(economy, "Enemy economy", result);
-        ForbidText(economy, ".Aggregate(", "Enemy base-center calculation must not allocate aggregate delegates.", result);
+        ForbidText(economy, "battlefield.Units", "Enemy economy must not scan UnitBattlefield units directly.", result); ForbidText(economy, "battlefield.BuildingSnapshots()", "Enemy economy must not scan UnitBattlefield buildings directly.", result); ForbidText(economy, "battlefield.ResourceFields", "Enemy economy must not scan resource fields directly.", result); ForbidText(economy, "EntityWorld.Visibility", "Enemy economy must not inspect visibility directly.", result); ForbidText(economy, ".Aggregate(", "Enemy base-center calculation must not allocate aggregate delegates.", result);
         ForbidText(economy, "idleHarvesters.Select", "Enemy harvester commands must not allocate id projections.", result);
     }
 
