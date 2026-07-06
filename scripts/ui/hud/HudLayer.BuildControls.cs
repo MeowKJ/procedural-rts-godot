@@ -122,19 +122,23 @@ public partial class HudLayer : CanvasLayer
         return options[0];
     }
 
-    private static void AddProductionTab(Control parent, IconGlyph glyph, string tooltip, Vector2 position, bool active)
+    private void AddProductionTab(Control parent, IconGlyph glyph, string tooltip, Vector2 position, BuildCategory category, bool active)
     {
         var tab = new ProductionTab
         {
             Glyph = glyph,
+            Category = category,
             Active = active,
-            Selected = glyph == IconGlyph.Building,
+            Selected = category == BuildCategory.Command,
             Position = position,
             CustomMinimumSize = new Vector2(31, 32),
+            FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             TooltipText = tooltip,
+            Disabled = !active,
         };
         tab.Size = tab.CustomMinimumSize;
+        tab.Pressed += () => BuildCategoryRequested?.Invoke(category);
         parent.AddChild(tab);
     }
 

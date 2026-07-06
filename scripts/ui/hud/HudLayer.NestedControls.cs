@@ -29,9 +29,10 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
-    private partial class ProductionTab : Control
+    private partial class ProductionTab : Button
     {
         public required IconGlyph Glyph { get; init; }
+        public required BuildCategory Category { get; init; }
         public bool Active { get; init; }
         public bool Selected { get; init; }
 

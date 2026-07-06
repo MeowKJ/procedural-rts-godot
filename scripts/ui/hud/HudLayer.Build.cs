@@ -167,14 +167,14 @@ public partial class HudLayer : CanvasLayer
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
 
-        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 8), active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 8), active: false);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 8), BuildCategory.Command, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 8), BuildCategory.Power, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 8), BuildCategory.Economy, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 8), BuildCategory.Infantry, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 8), BuildCategory.Vehicle, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 8), BuildCategory.Defense, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 8), BuildCategory.Air, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 8), BuildCategory.Naval, active: false);
 
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(12, 42), new Vector2(270, 24), FontBody, Ink);
         _rightProductionPanel.AddChild(_productionValue);
