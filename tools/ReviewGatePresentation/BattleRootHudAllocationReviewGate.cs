@@ -43,6 +43,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "LiveLegacyBuildingCount()", "PerfHudCounts must use explicit legacy building counting.", result);
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
+        var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
         var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
         RequireText(hudBuild, "GameText.T(\"ui.tabs.command\")", "Production drawer tabs must expose the command build category.", result);
@@ -54,6 +55,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "GameText.T(\"ui.tabs.air\")", "Production drawer tabs must expose the air build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.naval\")", "Production drawer tabs must expose the naval build category.", result);
         RequireText(hudBuild, "BuildCategory.Defense", "Production drawer tabs must carry typed build categories into HUD actions.", result);
+        RequireText(hudLayer, "List<ProductionTab> _productionTabs", "Production drawer tabs must retain tab controls so selected state can update after clicks.", result);
+        RequireText(hudLayer, "SelectProductionTab(category);", "Production drawer tabs must update the visible selected tab before routing build placement.", result);
+        RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "Production drawer tabs must redraw selected state from the last requested build category.", result);
         RequireText(battleRoot, "BuildCategoryRequested = OnBuildCategoryRequested", "BattleRoot must wire build category tab requests into build placement.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "controllers", "BuildPlacementController.cs"), "public bool SelectBuildCategory(BuildCategory category)", "Build placement controller must expose a category selection entry point for HUD build tabs.", result);
         RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon cancel action must expose a stable node.", result); RequireText(hudBuild, "ribbonCancel.Pressed += () => CancelProductionRequested?.Invoke();", "Command ribbon cancel action must route through the production cancel request path.", result);

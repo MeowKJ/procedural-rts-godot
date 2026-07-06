@@ -59,7 +59,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "UiFactory.ApplyHudCommandButtonTheme", "HudLayer command buttons must use UiFactory.ApplyHudCommandButtonTheme.");
     RequireText(hudLayer, "UiFactory.GetHudControlGroupSlotStyle", "HudLayer control-group slot style must come from UiFactory.");
     RequireText(hudLayer, "BuildCategoryRequested?.Invoke(category)", "Build category tabs must request build placement instead of staying decorative.");
+    RequireText(hudLayer, "List<ProductionTab> _productionTabs", "HUD must retain production tab controls so selected state can update after clicks.");
+    RequireText(hudLayer, "private BuildCategory _selectedBuildCategory = BuildCategory.Command", "HUD production tabs must default to command selected before a tab click.");
+    RequireText(hudLayer, "SelectProductionTab(category);", "Build category tab clicks must update the visible selected tab before requesting placement.");
+    RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "HUD production tabs must redraw selected state from the last requested build category.");
     RequireText(hudLayer, "BuildCategory.Naval, active: false", "HUD must keep the naval build tab visibly disabled until naval build specs exist.");
+    ForbidText(hudLayer, "Selected = category == BuildCategory.Command", "HUD production tab selected state must not be a fixed initialization-only value.");
     ForbidText(hudLayer, "BuildGlobalSkillPanel", "Normal HUD must not build placeholder global-skill controls.");
     ForbidText(hudLayer, "GlobalSkillPanel", "Normal HUD must not include an unwired global-skill panel.");
     ForbidText(hudLayer, "PlaceholderBuildSlot", "Normal HUD must not keep placeholder production slot controls.");
