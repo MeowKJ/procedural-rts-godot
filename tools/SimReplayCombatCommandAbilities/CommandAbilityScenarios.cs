@@ -148,6 +148,46 @@ static partial class Program
         Console.WriteLine($"OK [live-ability-command]: accepted {result.AcceptedCount}, scan reveals {scanReveals}, cooldown {cooldown:0.00}->{tickedCooldown:0.00}.");
     }
 
+    static void AssertLiveRosterDeployAbility()
+    {
+        var battlefield = new UnitBattlefield();
+        var dogSiege = battlefield.Spawn<DogSiegeArtillery>(PlayerSlotId.One, Vector2.Zero);
+        var catSiege = battlefield.Spawn<CatCrescentArtillery>(PlayerSlotId.One, new Vector2(80, 0));
+
+        AssertRosterDeploy(battlefield, dogSiege, expectedSetup: 0.8f, expectedRangeMultiplier: 1.55f);
+        AssertRosterDeploy(battlefield, catSiege, expectedSetup: 0.55f, expectedRangeMultiplier: 1.45f);
+
+        Console.WriteLine("OK [live-roster-deploy]: dog and cat siege roster units expose Deploy with authored tuning.");
+    }
+
+    static void AssertRosterDeploy(
+        UnitBattlefield battlefield,
+        UnitInstance unit,
+        float expectedSetup,
+        float expectedRangeMultiplier)
+    {
+        Assert(unit.Spec.TryGetAbility(AbilityKind.Deploy, out var authored), $"{unit.Spec.Id} should expose Deploy in the formal roster.");
+        Assert(Math.Abs(authored.Radius - expectedSetup) < 0.001f, $"{unit.Spec.Id} Deploy setup tuning should be authored.");
+        Assert(Math.Abs(authored.Value - expectedRangeMultiplier) < 0.001f, $"{unit.Spec.Id} Deploy range tuning should be authored.");
+
+        battlefield.SelectUnitsByIds(PlayerSlotId.One, [unit.Id]);
+        var payload = PlayerCommandPayload.ForAbility(
+            battlefield.SelectedUnitEntityIds(PlayerSlotId.One),
+            AbilityKind.Deploy);
+        var result = battlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Ability, payload);
+        var entity = battlefield.UnitEntityByInstanceId(unit.Id) ?? throw new InvalidOperationException($"{unit.Spec.Id} entity missing.");
+        var deploy = entity.Components.Require<DeployComponentState>();
+        var cooldown = entity.Components.Require<AbilityRuntimeComponentState>()
+            .Cooldowns.Single(state => state.Kind == AbilityKind.Deploy)
+            .CooldownRemaining;
+
+        Assert(result.AcceptedCount == 1, $"{unit.Spec.Id} live Deploy command should be accepted once, got {result.AcceptedCount}.");
+        Assert(deploy.IsDeployed, $"{unit.Spec.Id} Deploy should set active deploy state.");
+        Assert(Math.Abs(deploy.SetupRemaining - expectedSetup) < 0.001f, $"{unit.Spec.Id} Deploy setup should match authored tuning.");
+        Assert(Math.Abs(deploy.RangeMultiplier - expectedRangeMultiplier) < 0.001f, $"{unit.Spec.Id} Deploy range multiplier should match authored tuning.");
+        Assert(cooldown > 0, $"{unit.Spec.Id} Deploy should start cooldown.");
+    }
+
     static void AssertAbilityCostAndTargetLegality()
     {
         const int ticks = 45;
