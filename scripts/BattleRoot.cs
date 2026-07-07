@@ -22,6 +22,7 @@ public partial class BattleRoot : Node2D
     private const float AlertLifetime = 8.5f;
     private const float CombatAlertCooldown = 2.6f;
     private const float IdleHarvesterAlertCooldown = 11f;
+    private const float ProductionAlertCooldown = 1.1f;
     private const float MinimapRefreshInterval = 0.2f;
     private const float ViewCullingInterval = 0.05f;
     private const float ViewCullingMargin = 320f;
