@@ -81,7 +81,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private BuildCategory _selectedBuildCategory = BuildCategory.Command", "HUD production tabs must default to command selected before a tab click.");
     RequireText(hudLayer, "SelectProductionTab(category);", "Build category tab clicks must update the visible selected tab before rendering build cards.");
     RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "HUD production tabs must redraw selected state from the last requested build category.");
-    RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind)", "Build option cards must request build placement explicitly.");
+    RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId())", "Build option cards must request build placement with the selected construction provider lane.");
     RequireText(hudLayer, "state.Category != _selectedBuildCategory", "Build option cards must filter by the selected build category.");
     RequireText(hudLayer, "_visibleBuildCardStates.Count >= 12", "Build option cards must keep the 12-slot fixed grid cap.");
     RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons.");
@@ -146,6 +146,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "96 + row * 58", "Right command panel production cells must keep fixed grid spacing below the catalog strip.");
     RequireText(hudLayer, "_visibleCommandCardStates.Count >= 12", "Right command panel must cap production cells to the 12-slot fixed grid.");
     RequireText(hudLayer, "Math.Min(_abilityCardStates.Count, 12)", "Abilities mode must use the same fixed 12-slot grid cap.");
+    RequireText(hudLayer, "private int? SelectedConstructionProviderId()", "Build provider lane selection must expose a compact selected construction-provider helper.");
+    RequireText(battleRoot, "_buildPlacement.SelectBuildKind(kind, constructionProviderId)", "BattleRoot must pass Build provider lane selection into build placement.");
+    RequireText(selectionController, "public void ArmRepairCommand()", "SelectionController must expose one-shot repair command arming for the command ribbon.");
     RequireText(hudLayer, "Action? RallyRequested", "HUD must expose a rally request for the command-ribbon rally button.");
     RequireText(hudLayer, "Action? RepairRequested", "HUD must expose a repair request for the command-ribbon repair button.");
     RequireText(hudLayer, "Action? SellOrCancelRequested", "HUD must expose a sell-or-cancel request for the command-ribbon sell button.");
@@ -153,7 +156,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "ribbonRepair.Pressed += () => RepairRequested?.Invoke();", "Command ribbon repair action must route through the repair request path.");
     RequireText(battleRoot, "RepairRequested = OnRepairRequested", "BattleRoot must wire the command-ribbon repair request.");
     RequireText(battleRoot, "_selection.ArmRepairCommand();", "BattleRoot repair request must arm SelectionController repair targeting.");
-    RequireText(selectionController, "public void ArmRepairCommand()", "SelectionController must expose one-shot repair command arming for the command ribbon.");
     RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the runtime repair command path.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
     RequireText(hudLayer, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production-cancel request path.");

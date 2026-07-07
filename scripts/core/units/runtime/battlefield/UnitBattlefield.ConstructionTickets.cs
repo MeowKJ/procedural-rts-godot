@@ -9,6 +9,15 @@ public sealed partial class UnitBattlefield
         string kind,
         out string status)
     {
+        return QueueConstructionTicket(playerSlotId, kind, constructionProviderId: null, out status);
+    }
+
+    public UnitBattlefieldConstructionTicketSnapshot? QueueConstructionTicket(
+        PlayerSlotId playerSlotId,
+        string kind,
+        int? constructionProviderId,
+        out string status)
+    {
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var spec = BuildSpecCatalog.For(kind);
         SyncOwnerRelations();
@@ -17,10 +26,18 @@ public sealed partial class UnitBattlefield
         _entityWorld.WorldHeight = WorldSize.Y;
         _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
 
+        var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
+        if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
+        {
+            status = "placement.missingProducer";
+            NotifyCreditsChanged(playerSlotId);
+            return null;
+        }
+
         CollectEntityIds(_constructionEntityIdsBefore);
         var command = new QueueConstructionEntityCommand(
             owner,
-            ConstructionSubjectEntities(playerSlotId, spec),
+            subjects,
             NextInputCommandTick(),
             kind);
         SubmitConstructionCommand(command);

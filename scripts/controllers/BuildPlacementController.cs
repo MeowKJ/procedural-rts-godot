@@ -27,13 +27,14 @@ public partial class BuildPlacementController : Node2D
 
     private int _selectedIndex = -1;
     private EntityId _activeReadyTicketId = EntityId.None;
+    private int? _selectedConstructionProviderId;
     private float _previewRotation;
 
     public bool IsActive => _selectedIndex >= 0;
     private bool HasActiveReadyTicket => _activeReadyTicketId.IsValid;
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
 
-    public bool SelectBuildKind(string kind)
+    public bool SelectBuildKind(string kind, int? constructionProviderId = null)
     {
         for (var index = 0; index < BuildOrder.Length; index++)
         {
@@ -43,6 +44,7 @@ public partial class BuildPlacementController : Node2D
             }
 
             _activeReadyTicketId = EntityId.None;
+            _selectedConstructionProviderId = constructionProviderId;
             _selectedIndex = index;
             var spec = BuildSpecCatalog.For(kind);
             var key = ShouldQueueConstructionTicket(kind) ? "build.queuePreview" : "build.preview";
@@ -116,7 +118,8 @@ public partial class BuildPlacementController : Node2D
                     mouseWorld,
                     out _,
                     out status,
-                    _previewRotation);
+                    _previewRotation,
+                    _selectedConstructionProviderId);
             }
 
             StatusChanged?.Invoke(accepted
@@ -269,7 +272,7 @@ public partial class BuildPlacementController : Node2D
 
     private bool QueueConstructionTicket(string kind, BuildSpec spec, out string status)
     {
-        var ticket = UnitBattlefield.QueueConstructionTicket(LocalPlayerSlotId, kind, out var queueStatus);
+        var ticket = UnitBattlefield.QueueConstructionTicket(LocalPlayerSlotId, kind, _selectedConstructionProviderId, out var queueStatus);
         status = ticket is null ? queueStatus : GameText.Format("build.queued", spec.Label);
         return ticket is not null;
     }
@@ -299,6 +302,7 @@ public partial class BuildPlacementController : Node2D
     {
         _selectedIndex = -1;
         _activeReadyTicketId = EntityId.None;
+        _selectedConstructionProviderId = null;
         QueueRedraw();
     }
 

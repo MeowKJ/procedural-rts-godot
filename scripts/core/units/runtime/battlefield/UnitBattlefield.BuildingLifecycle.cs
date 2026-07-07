@@ -53,7 +53,8 @@ public sealed partial class UnitBattlefield
         Vector2 position,
         out UnitBattlefieldBuildingSnapshot? building,
         out string status,
-        float facing = 0)
+        float facing = 0,
+        int? constructionProviderId = null)
     {
         building = null;
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
@@ -71,10 +72,18 @@ public sealed partial class UnitBattlefield
         _entityWorld.WorldHeight = WorldSize.Y;
         _entityWorld.ResourceInventory(owner).Credits = inventory.Credits;
 
+        var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
+        if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
+        {
+            status = "placement.missingProducer";
+            SyncCreditsFromEntityWorld(playerSlotId);
+            return false;
+        }
+
         CollectEntityIds(_constructionEntityIdsBefore);
         var command = new StartConstructionEntityCommand(
             owner,
-            ConstructionSubjectEntities(playerSlotId, spec),
+            subjects,
             NextInputCommandTick(),
             kind,
             ClampInsideWorld(position, MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 8),

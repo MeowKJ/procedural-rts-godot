@@ -224,9 +224,9 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnBuildKindRequested(string kind)
+    private void OnBuildKindRequested(string kind, int? constructionProviderId)
     {
-        _buildPlacement.SelectBuildKind(kind);
+        _buildPlacement.SelectBuildKind(kind, constructionProviderId);
     }
 
     private void OnRallyRequested()

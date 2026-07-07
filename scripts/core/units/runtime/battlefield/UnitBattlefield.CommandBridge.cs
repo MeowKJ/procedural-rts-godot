@@ -209,6 +209,25 @@ public sealed partial class UnitBattlefield
         return _constructionSubjectEntityBuffer;
     }
 
+    private IReadOnlyList<EntityId> ConstructionSubjectEntities(
+        PlayerSlotId playerSlotId,
+        BuildSpec spec,
+        int? selectedProviderBuildingId)
+    {
+        if (selectedProviderBuildingId is null)
+        {
+            return ConstructionSubjectEntities(playerSlotId, spec);
+        }
+
+        CollectConstructionSubjectEntities(
+            playerSlotId,
+            spec,
+            selectedProviderBuildingId.Value,
+            _constructionSubjectBuildingIds,
+            _constructionSubjectEntityBuffer);
+        return _constructionSubjectEntityBuffer;
+    }
+
     private void CollectConstructionSubjectEntities(
         PlayerSlotId playerSlotId,
         BuildSpec spec,
@@ -241,6 +260,35 @@ public sealed partial class UnitBattlefield
             SyncBuildingTargetEntity(buildingId);
             result.Add(_buildingTargetEntityIds[buildingId]);
         }
+    }
+
+    private void CollectConstructionSubjectEntities(
+        PlayerSlotId playerSlotId,
+        BuildSpec spec,
+        int selectedProviderBuildingId,
+        List<int> buildingIds,
+        List<EntityId> result)
+    {
+        buildingIds.Clear();
+        result.Clear();
+        if (spec.RequiredProducer is not { } requiredProducer)
+        {
+            return;
+        }
+
+        if (BuildingSnapshot(selectedProviderBuildingId) is not { } building
+            || building.PlayerSlotId != playerSlotId
+            || building.Kind != requiredProducer
+            || building.Hp <= 0
+            || BuildingBuildProgress(building.Id) < 1
+            || !BuildingPowered(building.Id))
+        {
+            return;
+        }
+
+        buildingIds.Add(building.Id);
+        SyncBuildingTargetEntity(building.Id);
+        result.Add(_buildingTargetEntityIds[building.Id]);
     }
 
     private string? EntityBuildingSpecId(EntityInstance entity)
