@@ -82,6 +82,7 @@ public static partial class GameText
         ["ui.stat.unit"] = "生命 {0}   {1}   射程 {2:0}",
         ["ui.stat.building"] = "生命 {0}   护甲 --   视野 {1:0}",
         ["ui.detail.cooldown"] = "{0}   冷却 {1:0.0}s",
+        ["ui.detail.shieldField"] = "护盾场 R{0}   吸收 {1}",
         ["ui.detail.cargo"] = "载货 {0}/{1}",
         ["ui.detail.damage"] = "伤害 {0:0}",
         ["ui.detail.building"] = "{0}   {1}",
