@@ -22,6 +22,9 @@ static class HoverTooltipReviewGate
         RequireText(preview, "CommandPreviewKind.Harvest", "Selection preview must expose harvester resource state.", result);
         RequireText(preview, "CommandPreviewKind.Rally", "Selection preview must expose producer rally state.", result);
         RequireText(preview, "CommandPreviewKind.Move", "Selection preview must expose move state.", result);
+        RequireText(preview, "MoveModeStatus(PreviewMoveModeFromModifiers())", "Selection move preview must reuse command-mode labels instead of generic move text.", result);
+        RequireText(preview, "Input.IsKeyPressed(Key.Ctrl)", "Selection move preview must expose Ctrl ignore-advance modifier feedback.", result);
+        RequireText(preview, "Input.IsKeyPressed(Key.Alt)", "Selection move preview must expose Alt attack-advance modifier feedback.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildValid", "Build placement preview must expose valid placement state.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildInvalid", "Build placement preview must expose invalid placement state.", result);
         RequireText(buildPlacement, "DrawPlacementCursor(rect, accent, placementValid)", "Build placement must draw a distinct placement cursor.", result);
