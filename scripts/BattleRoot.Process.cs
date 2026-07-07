@@ -279,8 +279,18 @@ public partial class BattleRoot
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox
-            || @event is not InputEventKey { Pressed: true, Echo: false } key)
+        if (@event is not InputEventKey { Pressed: true, Echo: false } key)
+        {
+            return;
+        }
+
+        if (key.Keycode == Key.Space && TryJumpToLatestPositionedAlert())
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
         {
             return;
         }

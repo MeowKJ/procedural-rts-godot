@@ -130,6 +130,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "_alertLineBuffer.Clear();", "RefreshAlerts must clear and reuse the alert line buffer.", result);
         RequireText(alerts, "_alertLineBuffer.Count < 4", "RefreshAlerts must cap HUD alert lines without LINQ Take.", result);
         RequireText(alerts, "_hud.SetAlerts(_alertLineBuffer)", "RefreshAlerts must pass reusable alert lines to HudLayer.", result);
+        RequireText(alerts, "private bool TryJumpToLatestPositionedAlert()", "BattleRoot alerts must expose a bounded latest-positioned-alert jump helper.", result);
+        RequireText(alerts, "OnMinimapJumpRequested(worldPosition);", "Alert hotkey jump must reuse the existing minimap camera focus path.", result);
+        RequireText(process, "key.Keycode == Key.Space && TryJumpToLatestPositionedAlert()", "BattleRoot input must route Space to the latest positioned alert before sandbox-only debug keys.", result);
         RequireText(hudState, "List<ProductionOptionState> _commandCardStates", "HudLayer command-card refresh must reuse visible state storage.", result);
         RequireText(hudState, "HashSet<string> _commandCardActiveIds", "HudLayer command-card refresh must reuse active id storage.", result);
         RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);
