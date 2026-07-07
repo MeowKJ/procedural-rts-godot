@@ -142,6 +142,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "AddAlert(\n            AlertKind.Harvester", "Idle harvester alerts must keep using the standard bounded alert insertion path.", result);
         RequireText(alerts, "firstIdleHarvesterWorldPosition);", "Idle harvester alerts must carry a world position for minimap pings and Space jump.", result);
         RequireText(alerts, "AddAlert(AlertKind.Power, powerStable ? GameText.T(\"ui.alert.powerStable\") : GameText.T(\"ui.alert.powerOffline\"), PowerAlertWorldPosition())", "Power alerts must carry a stable world position for minimap pings and Space jump.", result);
+        RequireText(alerts, "IsInsufficientCreditsStatus(status)", "Status alert routing must detect insufficient-credit command failures explicitly.", result);
+        RequireText(alerts, "TryUseAlertCooldown(\"status:insufficient-credits\", InsufficientCreditsAlertCooldown)", "Insufficient-credit alerts must be throttled by one stable key instead of the full status text.", result);
+        RequireText(alerts, "AddAlert(AlertKind.Economy, GameText.T(\"ui.alert.insufficientCredits\"))", "Insufficient-credit failures must surface a localized economy alert.", result);
+        RequireText(alerts, "ContainsLocalizedNeedCreditsPrefix(status, \"ui.needCredits\")", "Insufficient-credit detection must cover build placement credit failures.", result);
+        RequireText(alerts, "ContainsLocalizedNeedCreditsPrefix(status, \"production.needCredits\")", "Insufficient-credit detection must cover production credit failures.", result);
         RequireText(alerts, "private Vector2? PowerAlertWorldPosition()", "BattleRoot alerts must expose a power-alert position helper.", result);
         RequireText(alerts, "private Vector2? RuntimePowerAlertWorldPosition()", "Runtime power alerts must compute a live player building position.", result);
         RequireText(alerts, "private Vector2? LegacyPowerAlertWorldPosition()", "Legacy power alerts must compute a live player building position.", result);
@@ -257,6 +262,8 @@ static class BattleRootHudAllocationReviewGate
         var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
+        RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);
         RequireText(chineseText, "[\"ui.detail.shieldField\"]", "Chinese selected-unit ShieldField detail text must exist.", result);
+        RequireText(chineseText, "[\"ui.alert.insufficientCredits\"]", "Chinese insufficient-credit HUD alert text must exist.", result);
     }
 }
