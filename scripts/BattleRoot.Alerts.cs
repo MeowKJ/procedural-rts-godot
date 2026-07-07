@@ -190,11 +190,64 @@ public partial class BattleRoot
         }
 
         _powerStable = powerStable;
-        AddAlert(AlertKind.Power, powerStable ? GameText.T("ui.alert.powerStable") : GameText.T("ui.alert.powerOffline"));
+        AddAlert(AlertKind.Power, powerStable ? GameText.T("ui.alert.powerStable") : GameText.T("ui.alert.powerOffline"), PowerAlertWorldPosition());
         if (!powerStable)
         {
             PlayAudioCue(TacticalAudioCue.LowPower);
         }
+    }
+
+    private Vector2? PowerAlertWorldPosition()
+    {
+        return UseUnitDesignRuntime
+            ? RuntimePowerAlertWorldPosition()
+            : LegacyPowerAlertWorldPosition();
+    }
+
+    private Vector2? RuntimePowerAlertWorldPosition()
+    {
+        var center = Vector2.Zero;
+        var liveCount = 0;
+        foreach (var building in _unitBattlefield.BuildingSnapshots())
+        {
+            if (building.PlayerSlotId != PlayerSlotId.One || building.Hp <= 0)
+            {
+                continue;
+            }
+
+            if (building.Kind == BuildingDesignIds.PowerPlant)
+            {
+                return building.Position;
+            }
+
+            center += building.Position;
+            liveCount++;
+        }
+
+        return liveCount == 0 ? null : center / liveCount;
+    }
+
+    private Vector2? LegacyPowerAlertWorldPosition()
+    {
+        var center = Vector2.Zero;
+        var liveCount = 0;
+        foreach (var building in _state.Buildings)
+        {
+            if (building.Owner != ProceduralRts.Core.Owner.Player || building.Hp <= 0)
+            {
+                continue;
+            }
+
+            if (building.Kind == BuildingDesignIds.PowerPlant)
+            {
+                return building.Position;
+            }
+
+            center += building.Position;
+            liveCount++;
+        }
+
+        return liveCount == 0 ? null : center / liveCount;
     }
 
     private bool HasSelectedLegacyBuildings()
