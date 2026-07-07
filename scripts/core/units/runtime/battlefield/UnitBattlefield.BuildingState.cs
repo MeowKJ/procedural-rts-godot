@@ -9,6 +9,18 @@ public sealed partial class UnitBattlefield
         return BuildingProductionQueueCore(buildingId);
     }
 
+    public string? BuildingProductionRepeatOutputSpecId(int buildingId)
+    {
+        if (!_buildingTargetEntityIds.TryGetValue(buildingId, out var entityId)
+            || !_entityWorld.TryGet(entityId, out var entity)
+            || !entity.Components.TryGet<ProductionQueueComponentState>(out var queue))
+        {
+            return null;
+        }
+
+        return queue.RepeatOutputSpecId;
+    }
+
     private IReadOnlyList<UnitProductionQueueItem> BuildingProductionQueueCore(int buildingId)
     {
         if (!_buildingTargetEntityIds.TryGetValue(buildingId, out var entityId)

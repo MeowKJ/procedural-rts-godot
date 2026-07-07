@@ -39,7 +39,7 @@ public partial class HudLayer : CanvasLayer
                     constructionMode ? "ui.constructionProviderLane.tooltip" : "ui.providerLane.tooltip",
                     state.Label,
                     state.ProviderCount,
-                    state.QueueCount)
+                    state.QueueCount) + RepeatTooltipSuffix(state)
                 : LocalizedDisabledReason(state.DisabledReasonKey, 0);
             QueueRedraw();
         }
@@ -63,6 +63,32 @@ public partial class HudLayer : CanvasLayer
             {
                 DrawCircle(new Vector2(Size.X - 6, 6), 3.2f, new Color(_accent, alpha));
             }
+
+            if (!string.IsNullOrWhiteSpace(State.RepeatOutputSpecId))
+            {
+                DrawCircle(new Vector2(7, Size.Y - 7), 3.6f, new Color(Mint, Disabled ? 0.36f : 0.9f));
+                DrawArc(new Vector2(7, Size.Y - 7), 6.2f, -Mathf.Pi * 0.8f, Mathf.Pi * 1.15f, 24, new Color(Mint, Disabled ? 0.28f : 0.74f), 1.2f, true);
+            }
+        }
+
+        private static string RepeatTooltipSuffix(ProductionProviderLaneState state)
+        {
+            if (string.IsNullOrWhiteSpace(state.RepeatOutputSpecId))
+            {
+                return "";
+            }
+
+            var label = state.RepeatOutputSpecId;
+            try
+            {
+                label = UnitDesignCatalog.Spec(state.RepeatOutputSpecId).ShortCode;
+            }
+            catch (InvalidOperationException)
+            {
+                // Keep the raw spec id visible if authoring changes remove the unit.
+            }
+
+            return " - " + GameText.Format("ui.repeat.laneTooltip", label);
         }
     }
 }

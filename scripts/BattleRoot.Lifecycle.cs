@@ -247,6 +247,7 @@ public partial class BattleRoot
             Name = "Hud",
             ProductionRequested = OnProductionRequested,
             ProductionDesignRequested = OnProductionDesignRequested,
+            ProductionRepeatRequested = OnProductionRepeatRequested,
             CancelProductionRequested = OnCancelProductionRequested,
             SellOrCancelRequested = OnSellOrCancelRequested,
             RallyRequested = OnRallyRequested,

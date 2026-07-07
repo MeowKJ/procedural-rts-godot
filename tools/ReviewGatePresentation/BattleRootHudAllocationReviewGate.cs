@@ -128,6 +128,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.", result);
         RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.", result);
         RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.", result);
+        RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.", result);
+        RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.", result);
+        RequireText(hudLayer, "FocusRepeatProductionDesign(button.UnitDesignId)", "Train card hover/click must establish the repeat-production target context.", result);
+        RequireText(hudLayer, "CurrentProductionProviderLaneState() is not { Scope: ProductionProviderLaneScope.Specific", "Repeat production must require a specific provider lane.", result);
+        RequireText(hudLayer, "State.RepeatOutputSpecId", "Provider lane controls must surface the armed repeat unit state.", result);
         RequireText(battleRoot, "internal const int ShiftProductionBatchCount = 5", "BattleRoot must expose the bounded Shift production batch count.", result);
         RequireText(battleRoot, "ProductionBatchStatus(queued, attempts, status)", "BattleRoot production requests must summarize Shift batches after existing command submission.", result);
         RequireText(battleRoot, "TrySubmitProductionDesignRequest(designId, providerIdSelector(), out status)", "Train-card Shift batches must resolve provider lanes for each queued attempt.", result);
@@ -135,8 +140,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "_hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime production provider lane state into the HUD.", result);
         RequireText(hudSync, "_hud.SetConstructionProviderLaneState(_unitBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime construction provider lane state into the HUD.", result);
         RequireText(hudSync, "_buildPlacement.SelectBuildKind(kind, constructionProviderId)", "BattleRoot must hand selected Build provider lanes into build placement.", result);
+        RequireText(battleRoot, "ProductionRepeatRequested = OnProductionRepeatRequested", "BattleRoot must wire the Train repeat toggle from HUD.", result);
+        RequireText(battleRoot, "ToggleRepeatProductionForProvider", "BattleRoot must route repeat production through the UnitBattlefield provider helper.", result);
         RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs"), "public IReadOnlyList<ProductionProviderLaneState> ProductionProviderLaneStates(PlayerSlotId playerSlotId)", "UnitBattlefield must expose production provider lane read models without HUD hard-coding provider names.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs"), "BuildingProductionRepeatOutputSpecId(building.Id)", "Production provider lanes must carry armed repeat state from the runtime queue.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionRally.cs"), "SetRepeatProductionEntityCommand", "UnitBattlefield repeat toggle must reuse the deterministic repeat-production command.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionProviderLanes.cs"), "public IReadOnlyList<ProductionProviderLaneState> ConstructionProviderLaneStates(PlayerSlotId playerSlotId)", "UnitBattlefield must expose construction provider lane read models without HUD hard-coding provider names.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs"), "ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId)", "Construction ticket queuing must honor specific Build provider lane selection.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PlayerCommandPayloads.cs"), "TryCreateProductionDesignPayloadForProvider", "UnitBattlefield must expose a specific-provider production payload helper.", result);
@@ -146,11 +155,13 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English provider summary must use a rail-safe offline code.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(englishProviderText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.", result);
         ForbidText(englishProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOk\"]", "Chinese provider summary must use a rail-safe OK code.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOffline\"]", "Chinese provider summary must use a rail-safe offline code.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(chineseProviderText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.", result);
         ForbidText(chineseProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);

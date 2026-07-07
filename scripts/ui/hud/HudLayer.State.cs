@@ -56,6 +56,7 @@ public partial class HudLayer : CanvasLayer
     private Button _sandboxOverlayButton = null!;
     private Button _sandboxStressButton = null!;
     private Button _cancelProduction = null!;
+    private IconActionButton _repeatProduction = null!;
     private IconActionButton _settingsButton = null!;
     private MinimapSurface _minimapSurface = null!;
     private CommandPreviewOverlay _commandPreview = null!;
@@ -93,6 +94,12 @@ public partial class HudLayer : CanvasLayer
     private float _queueStatusPulse;
     private string _lastProductionStatus = "";
     private string _lastQueueSummary = "";
+    private string _focusedRepeatProductionDesignId = "";
+    private string _focusedRepeatProductionLabel = "";
+    private string _focusedRepeatProductionProducerKind = "";
+    private string _focusedRepeatProductionProducerLabel = "";
+    private string _lastRepeatProductionRefreshKey = "";
+    private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
 
     public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
@@ -338,6 +345,7 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshRepeatProductionControl();
     }
 
     public void SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)
@@ -351,6 +359,7 @@ public partial class HudLayer : CanvasLayer
         ValidateProductionProviderLaneSelection();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshRepeatProductionControl();
     }
 
     public void SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)
@@ -364,6 +373,7 @@ public partial class HudLayer : CanvasLayer
         ValidateConstructionProviderLaneSelection();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshRepeatProductionControl();
     }
 
     public void SetBuildCardState(IReadOnlyList<BuildOptionSnapshot> states)
@@ -449,6 +459,8 @@ public partial class HudLayer : CanvasLayer
             _commandButtons.Remove(stale);
         }
 
+        ClearRepeatFocusIfHidden();
+
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
             ClearAbilityCards();
@@ -530,6 +542,7 @@ public partial class HudLayer : CanvasLayer
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetState(state, disabledReason);
         }
+
     }
 
     private static string LocalizedDisabledReason(string disabledReasonKey, int cost)
@@ -537,33 +550,6 @@ public partial class HudLayer : CanvasLayer
         return disabledReasonKey == "ui.needCredits"
             ? GameText.Format("ui.needCredits", cost)
             : string.IsNullOrWhiteSpace(disabledReasonKey) ? "" : GameText.T(disabledReasonKey);
-    }
-
-    private void UpdateProductionFeedback(float dt)
-    {
-        if (_productionStatusPulse > 0)
-        {
-            _productionStatusPulse = Mathf.Max(0, _productionStatusPulse - dt * 2.8f);
-            var lift = _productionStatusPulse * 0.14f;
-            _productionValue.Modulate = new Color(1f + lift, 1f + lift, 1f + lift, 1);
-        }
-        else if (_productionValue is not null)
-        {
-            _productionValue.Modulate = Colors.White;
-        }
-
-        if (_queueStatusPulse > 0)
-        {
-            _queueStatusPulse = Mathf.Max(0, _queueStatusPulse - dt * 2.8f);
-            var lift = _queueStatusPulse * 0.18f;
-            _queueValue.Modulate = new Color(1f + lift, 1f + lift, 1f + lift, 1);
-            _cancelProduction.Modulate = new Color(1f + lift, 1f + lift * 0.6f, 1f + lift * 0.3f, 1);
-        }
-        else
-        {
-            _queueValue.Modulate = Colors.White;
-            _cancelProduction.Modulate = Colors.White;
-        }
     }
 
     public void SetMoveCommandMode(MoveCommandMode mode)
