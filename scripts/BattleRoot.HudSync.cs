@@ -28,6 +28,7 @@ public partial class BattleRoot
         {
             CollectSelectedProductionBuildingIds();
             _hud.SetCommandCardState(RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer));
+            _hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One));
             _hud.SetProductionQueueSummary(
                 RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
                 canCancel);
@@ -36,6 +37,7 @@ public partial class BattleRoot
         }
 
         _hud.SetCommandCardState(_unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
+        _hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One));
         _hud.SetProductionQueueSummary(
             _unitBattlefield.ProductionQueueSummary(PlayerSlotId.One),
             _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));

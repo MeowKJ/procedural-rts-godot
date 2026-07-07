@@ -247,6 +247,59 @@ static partial class Program
             throw new InvalidOperationException("new unit battlefield should reject production when no matching UnitDesign producer building is available");
         }
 
+        var providerLaneBattlefield = new UnitBattlefield();
+        providerLaneBattlefield.SetCredits(PlayerSlotId.One, 500);
+        var providerLaneBarracksA = providerLaneBattlefield.UpsertBuildingTarget(
+            288,
+            BuildingDesignIds.Barracks,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(240, 460),
+            0,
+            unitProductionBarracksSpec.MaxHp);
+        var providerLaneBarracksB = providerLaneBattlefield.UpsertBuildingTarget(
+            289,
+            BuildingDesignIds.Barracks,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(300, 460),
+            0,
+            unitProductionBarracksSpec.MaxHp);
+        var providerLaneStates = providerLaneBattlefield.ProductionProviderLaneStates(PlayerSlotId.One);
+        if (providerLaneStates.Count < 4
+            || providerLaneStates[0].Scope != ProductionProviderLaneScope.Auto
+            || providerLaneStates[1].Scope != ProductionProviderLaneScope.All
+            || providerLaneStates[2].ProducerId != providerLaneBarracksA.Id
+            || providerLaneStates[3].ProducerId != providerLaneBarracksB.Id)
+        {
+            throw new InvalidOperationException("train provider lanes should expose Auto, All, and stable specific provider lanes from UnitBattlefield production providers");
+        }
+
+        if (!providerLaneBattlefield.TryCreateProductionDesignPayloadForProvider(
+                "dog.infantry",
+                PlayerSlotId.One,
+                providerLaneBarracksB.Id,
+                out var scopedProductionPayload,
+                out _)
+            || providerLaneBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, scopedProductionPayload).AcceptedCount != 1
+            || providerLaneBattlefield.BuildingProductionQueue(providerLaneBarracksA.Id).Count != 0
+            || providerLaneBattlefield.BuildingProductionQueue(providerLaneBarracksB.Id).Count != 1)
+        {
+            throw new InvalidOperationException("specific train provider lanes should route production payloads only into the selected provider building");
+        }
+
+        if (!providerLaneBattlefield.TryCreateProductionDesignPayload(
+                "dog.infantry",
+                PlayerSlotId.One,
+                out var autoProductionPayload,
+                out _)
+            || providerLaneBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, autoProductionPayload).AcceptedCount != 1
+            || providerLaneBattlefield.BuildingProductionQueue(providerLaneBarracksA.Id).Count != 1
+            || providerLaneBattlefield.BuildingProductionQueue(providerLaneBarracksB.Id).Count != 1)
+        {
+            throw new InvalidOperationException("Auto train provider lane should keep the existing shortest-queue production routing");
+        }
+
         var unitCancelBattlefield = new UnitBattlefield();
         unitCancelBattlefield.SetCredits(PlayerSlotId.One, 500);
         var cancelBarracks = unitCancelBattlefield.UpsertBuildingTarget(

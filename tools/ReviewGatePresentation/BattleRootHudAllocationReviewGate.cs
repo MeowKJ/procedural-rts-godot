@@ -100,6 +100,16 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "_unitBattlefield.ProductionQueueSummaryForSelectedProducers", "Runtime queue summary refresh must use selected producer queues when available.", result);
         RequireText(hudSync, "_unitBattlefield.CancelFirstProductionForSelectedProducers", "Runtime cancel button must cancel selected producer queues when available.", result);
         RequireText(hudSync, "if (hasSelectedProducers)", "Runtime producer HUD sync must fall back to aggregate state only when no selected producer exists.", result);
+        RequireText(hudLayer, "List<ProductionProviderLaneState> _productionProviderLaneStates", "Train catalog provider lanes must keep reusable lane state storage.", result);
+        RequireText(hudLayer, "private partial class ProductionProviderLaneButton : Button", "Train catalog provider lanes must render through stable lane buttons.", result);
+        RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.", result);
+        RequireText(hudBuild, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.", result);
+        RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, SelectedProductionProviderId(button.UnitDesignId))", "Train cards must pass the selected provider lane into production requests.", result);
+        RequireText(hudLayer, "NextAllProductionProviderId(spec.Production.ProducerKind)", "All provider lane clicks must distribute repeated train commands across valid providers.", result);
+        RequireText(hudSync, "_hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime production provider lane state into the HUD.", result);
+        RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs"), "public IReadOnlyList<ProductionProviderLaneState> ProductionProviderLaneStates(PlayerSlotId playerSlotId)", "UnitBattlefield must expose production provider lane read models without HUD hard-coding provider names.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PlayerCommandPayloads.cs"), "TryCreateProductionDesignPayloadForProvider", "UnitBattlefield must expose a specific-provider production payload helper.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);
         RequireText(hudSync, "spec.TryGetAbility(AbilityKind.ShieldField, out var shieldField)", "Runtime selected-unit details must surface ShieldField units from authored AbilitySpec data.", result);

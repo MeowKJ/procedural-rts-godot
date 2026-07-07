@@ -156,6 +156,10 @@ public partial class HudLayer : CanvasLayer
         _rightRail.OffsetBottom = -12;
         _rightRail.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightRail);
+        for (var index = 0; index < MaxProductionProviderLaneButtons; index++)
+        {
+            AddProductionProviderLaneButton(_rightRail, index);
+        }
     }
 
     private void BuildRightDrawer(Control root)

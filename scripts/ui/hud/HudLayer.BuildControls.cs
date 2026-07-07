@@ -220,7 +220,7 @@ public partial class HudLayer : CanvasLayer
 
             if (!string.IsNullOrWhiteSpace(button.UnitDesignId))
             {
-                ProductionDesignRequested?.Invoke(button.UnitDesignId);
+                ProductionDesignRequested?.Invoke(button.UnitDesignId, SelectedProductionProviderId(button.UnitDesignId));
                 return;
             }
 
@@ -247,6 +247,28 @@ public partial class HudLayer : CanvasLayer
     {
         var hotkeys = new[] { "Q", "W", "E", "A", "S", "D", "Z", "X", "C", "R", "F", "V" };
         return index >= 0 && index < hotkeys.Length ? hotkeys[index] : (index + 1).ToString();
+    }
+
+    private void AddProductionProviderLaneButton(Control parent, int index)
+    {
+        var button = new ProductionProviderLaneButton
+        {
+            Name = $"ProductionProviderLane{index}",
+            Index = index,
+            Position = new Vector2(4, 52 + index * 28),
+            CustomMinimumSize = new Vector2(40, 24),
+            Size = new Vector2(40, 24),
+            FocusMode = Control.FocusModeEnum.Click,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+            Visible = false,
+        };
+        UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, Cyan, FontTiny);
+        button.Pressed += () =>
+        {
+            SelectProductionProviderLane(button.State);
+        };
+        _productionProviderLaneButtons.Add(button);
+        parent.AddChild(button);
     }
 
     private static Vector2 ProductionButtonPosition(int index)

@@ -50,6 +50,7 @@ static string FindRepoRoot()
 static void AssertHudFactoryExtraction(string root)
 {
     var hudLayer = ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
+    var battleRoot = ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
     var hudSync = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.HudSync.cs"));
     var uiFactory = File.ReadAllText(Path.Combine(root, "scripts", "ui", "UiFactory.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
@@ -91,6 +92,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and train cards must update the catalog inspector on hover.");
     RequireText(hudLayer, "card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);", "Ability cards must update the catalog inspector on hover.");
     RequireText(hudLayer, "private void RestoreCatalogStatusText()", "Card hover exit must restore the catalog page status text.");
+    RequireText(hudLayer, "List<ProductionProviderLaneState> _productionProviderLaneStates", "Train catalog provider lanes must keep reusable lane state storage.");
+    RequireText(hudLayer, "private partial class ProductionProviderLaneButton : Button", "Train catalog provider lanes must render through stable lane buttons.");
+    RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.");
+    RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
+    RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, SelectedProductionProviderId(button.UnitDesignId))", "Train cards must pass the selected provider lane into production requests.");
+    RequireText(hudLayer, "NextAllProductionProviderId(spec.Production.ProducerKind)", "All provider lane clicks must distribute repeated train commands across valid providers.");
+    RequireText(hudSync, "_hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime production provider lane state into the HUD.");
+    RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.");
     RequireText(hudLayer, "CompactMultiline(status, 34)", "Catalog inspector text must compact per line instead of single-line clipping.");
     RequireText(hudLayer, "BuildInspectorText(state, spec, disabledReason)", "Build cards must provide label/cost/time/disabled inspector text.");
     RequireText(hudLayer, "TrainInspectorText(state, ProducerLabel, disabledReason)", "Train cards must provide source/cost/time/queue/disabled inspector text.");
@@ -127,6 +136,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
+    RequireText(englishText, "[\"ui.providerLane.auto\"]", "English HUD provider lane Auto label must exist.");
+    RequireText(englishText, "[\"ui.providerLane.selected\"]", "English HUD provider lane selected text must exist.");
     RequireText(englishText, "\\n{2} cr  {3}s", "English catalog inspector strings must use a two-line metrics layout.");
     RequireText(englishText, "[\"ui.ability.shieldField\"]", "English ability-card ShieldField label must exist.");
     RequireText(englishText, "[\"ui.ability.armed\"]", "English ability armed status must exist.");
@@ -137,6 +148,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectAbility\"]", "Chinese HUD catalog ability inspector text must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.auto\"]", "Chinese HUD provider lane Auto label must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.selected\"]", "Chinese HUD provider lane selected text must exist.");
     RequireText(chineseText, "\\n{2} 资金", "Chinese catalog inspector strings must use a two-line metrics layout.");
     RequireText(chineseText, "[\"ui.ability.shieldField\"]", "Chinese ability-card ShieldField label must exist.");
     RequireText(chineseText, "[\"ui.ability.armed\"]", "Chinese ability armed status must exist.");
