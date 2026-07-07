@@ -1,0 +1,9 @@
+Kenney Cursor Pack
+
+Source: https://kenney.nl/assets/cursor-pack
+Itch mirror: https://kenney-assets.itch.io/cursor-pack
+License: Creative Commons CC0 1.0 Universal
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+
+This repository includes a minimal renamed PNG subset from the official
+Kenney Cursor Pack for in-game cursor states.
