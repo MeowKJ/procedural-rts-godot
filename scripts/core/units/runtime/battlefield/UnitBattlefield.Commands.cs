@@ -93,6 +93,24 @@ public sealed partial class UnitBattlefield
         return target;
     }
 
+    public int IdleHarvesterCount(PlayerSlotId playerSlotId, out Vector2? firstWorldPosition)
+    {
+        firstWorldPosition = null;
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (!IsIdleHarvester(playerSlotId, unit))
+            {
+                continue;
+            }
+
+            firstWorldPosition ??= unit.Position;
+            count++;
+        }
+
+        return count;
+    }
+
     public void CommandMoveSelected(PlayerSlotId playerSlotId, Vector2 target, Vector2 worldSize, MoveCommandMode mode = MoveCommandMode.Direct)
     {
         CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);

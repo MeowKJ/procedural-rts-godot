@@ -9,6 +9,7 @@ static class BattleRootHudAllocationReviewGate
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
+        var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
 
         RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitBuffer", "BattleRoot minimap units must use reusable storage.", result);
@@ -137,9 +138,14 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "HasSelectedLegacyBuildings()", "Command preview must use the explicit legacy building selection scan.", result);
         RequireText(alerts, "HasLegacyPlayerPowerPlant()", "Power alert must use the explicit legacy power-building scan.", result);
         RequireText(alerts, "IdleLegacyHarvesterCount()", "Idle harvester alert must use an explicit legacy harvester count scan.", result);
+        RequireText(alerts, "RuntimeIdleHarvesterCount(out firstIdleHarvesterWorldPosition)", "Runtime idle harvester alerts must count runtime harvesters and capture their first world position.", result);
+        RequireText(alerts, "AddAlert(\n            AlertKind.Harvester", "Idle harvester alerts must keep using the standard bounded alert insertion path.", result);
+        RequireText(alerts, "firstIdleHarvesterWorldPosition);", "Idle harvester alerts must carry a world position for minimap pings and Space jump.", result);
         RequireText(alerts, "private bool HasSelectedLegacyBuildings()", "BattleRoot alerts must expose the legacy selected-building scan helper.", result);
         RequireText(alerts, "private bool HasLegacyPlayerPowerPlant()", "BattleRoot alerts must expose the legacy power scan helper.", result);
         RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
+        RequireText(unitBattlefieldCommands, "public int IdleHarvesterCount(PlayerSlotId playerSlotId, out Vector2? firstWorldPosition)", "UnitBattlefield must expose an allocation-free idle harvester alert snapshot.", result);
+        RequireText(unitBattlefieldCommands, "firstWorldPosition ??= unit.Position;", "Runtime idle harvester snapshots must capture the first alert jump position.", result);
         RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds)", "Active battle perf setup must fill player attacker ids explicitly.", result);
         RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerIds)", "Active battle perf setup must fill enemy attacker ids explicitly.", result);
         RequireText(battleRoot, "var designIds = new string[count];", "BattleRoot debug design-id readout must build an explicit stable snapshot.", result);
