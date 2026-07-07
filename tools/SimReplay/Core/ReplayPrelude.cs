@@ -76,6 +76,7 @@ static partial class Program
         AssertConstructionPausedOffline();
         AssertConstructionDestroyedLifecycle();
         AssertResourceRallyProduction();
+        AssertFriendlyUnitRallyProduction();
         AssertRepeatProduction();
         AssertM5TurretEntityProjection();
         AssertPowerConsequences();

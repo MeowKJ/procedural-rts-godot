@@ -212,10 +212,20 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
         out string message)
     {
         var targetEntity = command.Payload.TargetEntity;
-        if (targetEntity.IsValid && !_entityWorld.TryGet(targetEntity, out _))
+        if (targetEntity.IsValid)
         {
-            envelope = null;
-            return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Rally target entity is not present in the live battlefield.", out error, out message);
+            if (!_entityWorld.TryGet(targetEntity, out var target))
+            {
+                envelope = null;
+                return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Rally target entity is not present in the live battlefield.", out error, out message);
+            }
+
+            if (!target.Components.Has<ResourceNodeComponentState>()
+                && _entityWorld.Relations.Relation(OwnerId.FromPlayerSlot(command.IssuerSlotId), target.OwnerId) is not (PlayerRelation.Self or PlayerRelation.Allied))
+            {
+                envelope = null;
+                return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Rally target entity must be friendly or a resource.", out error, out message);
+            }
         }
 
         error = CommandGatewayValidationError.None;

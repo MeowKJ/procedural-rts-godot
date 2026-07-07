@@ -18,6 +18,11 @@ public sealed partial class ProductionSystem
             return;
         }
 
+        if (TryApplyEntityRally(world, unit, rally))
+        {
+            return;
+        }
+
         if (rally.Target is { } target)
         {
             ApplyPointRally(unit, target);
@@ -40,6 +45,20 @@ public sealed partial class ProductionSystem
             HarvesterMode.MovingToField,
             FieldId: resource.Id.Value));
         ApplyPointRally(unit, resource.Transform.Position);
+        return true;
+    }
+
+    private static bool TryApplyEntityRally(EntityWorld world, EntityInstance unit, RallyPointComponentState rally)
+    {
+        if (rally.TargetEntityId is not int targetId
+            || !world.TryGet(new EntityId(targetId), out var target)
+            || target.Components.Has<ResourceNodeComponentState>()
+            || world.Relations.Relation(unit.OwnerId, target.OwnerId) is not (PlayerRelation.Self or PlayerRelation.Allied))
+        {
+            return false;
+        }
+
+        ApplyPointRally(unit, target.Transform.Position);
         return true;
     }
 
