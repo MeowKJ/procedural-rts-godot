@@ -66,6 +66,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(buildPlacement, "_selectedConstructionProviderId = constructionProviderId", "Build placement controller must retain the selected Build provider for ticket queuing.", result);
         RequireText(hudSync, "SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player))", "BattleRoot must feed build option snapshots into the HUD catalog.", result);
         RequireText(hudLayer, "List<BuildOptionSnapshot> _buildCardStates", "HudLayer build catalog cards must keep reusable build option state storage.", result);
+        RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
+        RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
+        RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "CatalogOverviewConstructionLaneCount()", "Build catalog overview must summarize construction provider lane count.", result);
+        RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must summarize visible provider lane count.", result);
         RequireText(hudLayer, "_selectedCatalogMode == CatalogModeKind.Build", "HudLayer command-card refresh must branch build cards from train cards by catalog mode.", result);
         RequireText(hudLayer, "state.Category != _selectedBuildCategory", "Build option cards must filter by the selected build category.", result);
         RequireText(hudLayer, "_visibleBuildCardStates.Count >= 12", "Build option cards must keep the fixed-grid cap used by the right panel.", result);

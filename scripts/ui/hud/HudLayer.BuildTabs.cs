@@ -73,6 +73,7 @@ public partial class HudLayer : CanvasLayer
 
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
     }
 
     private void SelectProductionTab(BuildCategory category)
@@ -85,6 +86,7 @@ public partial class HudLayer : CanvasLayer
         }
 
         RefreshCommandCards();
+        RefreshCatalogOverview();
     }
 
     private void SelectProductionCategory(ProductionCategory category)
@@ -99,5 +101,49 @@ public partial class HudLayer : CanvasLayer
         ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
+    }
+
+    private void RefreshCatalogOverview()
+    {
+        if (_catalogOverviewValue is null)
+        {
+            return;
+        }
+
+        _catalogOverviewValue.Text = _selectedCatalogMode switch
+        {
+            CatalogModeKind.Build => GameText.Format(
+                "ui.catalog.overview.build",
+                _visibleBuildCardStates.Count,
+                CatalogOverviewConstructionLaneCount()),
+            CatalogModeKind.Train => GameText.Format(
+                "ui.catalog.overview.train",
+                _visibleCommandCardStates.Count,
+                CatalogOverviewProductionLaneCount()),
+            CatalogModeKind.Abilities => GameText.Format(
+                "ui.catalog.overview.abilities",
+                Math.Min(_abilityCardStates.Count, 12)),
+            _ => "",
+        };
+    }
+
+    private int CatalogOverviewConstructionLaneCount()
+    {
+        return Math.Min(_constructionProviderLaneStates.Count, MaxProductionProviderLaneButtons);
+    }
+
+    private int CatalogOverviewProductionLaneCount()
+    {
+        var count = 0;
+        for (var index = 0; index < _productionProviderLaneStates.Count; index++)
+        {
+            if (ProviderLaneMatchesSelectedTrainCategory(_productionProviderLaneStates[index]))
+            {
+                count++;
+            }
+        }
+
+        return Math.Min(count, MaxProductionProviderLaneButtons);
     }
 }

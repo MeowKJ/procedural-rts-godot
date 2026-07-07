@@ -200,8 +200,12 @@ public partial class HudLayer : CanvasLayer
         AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(150, 44), ProductionCategory.Air, active: true);
         AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(185, 44), ProductionCategory.Naval, active: false);
 
-        _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 80), new Vector2(92, 16), FontTiny, InkMuted);
+        _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 76), new Vector2(92, 14), FontTiny, InkMuted);
         _rightProductionPanel.AddChild(_catalogSurfaceLabel);
+        _catalogOverviewValue = MakeSizedLabel("", new Vector2(112, 76), new Vector2(172, 14), FontTiny, InkMuted);
+        _catalogOverviewValue.Name = "CatalogOverview";
+        _catalogOverviewValue.HorizontalAlignment = HorizontalAlignment.Right;
+        _rightProductionPanel.AddChild(_catalogOverviewValue);
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);

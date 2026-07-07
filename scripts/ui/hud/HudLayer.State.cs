@@ -32,6 +32,7 @@ public partial class HudLayer : CanvasLayer
     private PortraitGlyph _drawerPortrait = null!;
     private SelectionIconSummary _drawerIconSummary = null!;
     private Label _catalogSurfaceLabel = null!;
+    private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
     private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
@@ -345,6 +346,7 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
         RefreshRepeatProductionControl();
     }
 
@@ -359,6 +361,7 @@ public partial class HudLayer : CanvasLayer
         ValidateProductionProviderLaneSelection();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
         RefreshRepeatProductionControl();
     }
 
@@ -373,6 +376,7 @@ public partial class HudLayer : CanvasLayer
         ValidateConstructionProviderLaneSelection();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
         RefreshRepeatProductionControl();
     }
 
@@ -460,6 +464,7 @@ public partial class HudLayer : CanvasLayer
         }
 
         ClearRepeatFocusIfHidden();
+        RefreshCatalogOverview();
 
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
