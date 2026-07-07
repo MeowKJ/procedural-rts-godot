@@ -321,7 +321,7 @@ public static partial class GameText
         ["hotkeys.camera"] = "镜头",
         ["hotkeys.camera.1"] = "WASD / 边缘滚动",
         ["hotkeys.camera.2"] = "滚轮缩放",
-        ["hotkeys.camera.3"] = "点击小地图跳转",
+        ["hotkeys.camera.3"] = "小地图 / Space 警报跳转",
         ["hotkeys.select"] = "选择",
         ["hotkeys.select.1"] = "左键选择 / 拖框",
         ["hotkeys.select.2"] = "Shift 追加选择",

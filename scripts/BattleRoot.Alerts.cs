@@ -76,6 +76,22 @@ public partial class BattleRoot
         }
     }
 
+    private bool TryJumpToLatestPositionedAlert()
+    {
+        for (var index = 0; index < _alerts.Count; index++)
+        {
+            if (_alerts[index].WorldPosition is not { } worldPosition)
+            {
+                continue;
+            }
+
+            OnMinimapJumpRequested(worldPosition);
+            return true;
+        }
+
+        return false;
+    }
+
     private bool TryUseAlertCooldown(string key, float cooldown)
     {
         if (_alertCooldowns.TryGetValue(key, out var lastTime) && _elapsed - lastTime < cooldown)

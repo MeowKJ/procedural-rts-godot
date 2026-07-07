@@ -364,7 +364,7 @@ public static partial class GameText
         ["hotkeys.camera"] = "CAMERA",
         ["hotkeys.camera.1"] = "WASD / EDGE scroll",
         ["hotkeys.camera.2"] = "WHEEL zoom",
-        ["hotkeys.camera.3"] = "MINIMAP click jump",
+        ["hotkeys.camera.3"] = "MINIMAP / SPACE alert jump",
         ["hotkeys.select"] = "SELECT",
         ["hotkeys.select.1"] = "LMB select / drag box",
         ["hotkeys.select.2"] = "Shift additive select",
