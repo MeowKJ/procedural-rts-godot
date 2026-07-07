@@ -42,6 +42,11 @@ public partial class BattleRoot
             }
 
             _combatEffects.AddUnitDeath(death, UnitFactionAccent(death.Faction, death.PlayerSlotId));
+
+            if (death.PlayerSlotId == PlayerSlotId.One)
+            {
+                AddAlert(AlertKind.Combat, GameText.Format("ui.unit.destroyed", UnitDesignCatalog.Spec(death.DesignId).Label), death.Position);
+            }
         }
 
         PlayDeathCue(deaths);
