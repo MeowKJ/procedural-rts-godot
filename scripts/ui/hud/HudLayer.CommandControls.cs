@@ -137,6 +137,10 @@ public partial class HudLayer : CanvasLayer
         public required int Cost { get; set; }
         public string? UnitDesignId { get; set; }
         public string? BuildKind { get; set; }
+        public string ProducerShortCode { get; private set; } = "";
+        public string ProducerLabel { get; private set; } = "";
+        public IconGlyph RoleGlyph { get; private set; }
+        public float Duration { get; private set; }
         private int _queued;
         private float _progress;
         private string _disabledReason = "";
@@ -151,6 +155,10 @@ public partial class HudLayer : CanvasLayer
             Glyph = state.Icon;
             Accent = state.Accent;
             Cost = state.Cost;
+            ProducerShortCode = BuildSpecCatalog.For(state.ProducerKind).ShortCode;
+            ProducerLabel = BuildSpecCatalog.For(state.ProducerKind).Label;
+            RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph;
+            Duration = state.Duration;
             SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason);
         }
 
@@ -159,6 +167,10 @@ public partial class HudLayer : CanvasLayer
             var spec = BuildSpecCatalog.For(state.Kind);
             UnitDesignId = null;
             BuildKind = state.Kind;
+            ProducerShortCode = "";
+            ProducerLabel = "";
+            RoleGlyph = IconGlyph.None;
+            Duration = 0;
             ShortLabel = spec.ShortCode;
             Glyph = state.Icon;
             Accent = spec.Accent;
@@ -191,8 +203,8 @@ public partial class HudLayer : CanvasLayer
                 ? UnitDesignCatalog.Spec(UnitDesignId).Label
                 : UnitPresentationCatalog.Production[Kind].ShortCode;
             TooltipText = enabled
-                ? $"{label} - {Cost}"
-                : $"{label} - {Cost} - {disabledReason}";
+                ? CommandCardTooltip(label, Cost, ProducerLabel, Duration)
+                : CommandCardTooltip(label, Cost, ProducerLabel, Duration, disabledReason);
             QueueRedraw();
         }
 
@@ -227,6 +239,12 @@ public partial class HudLayer : CanvasLayer
                     iconAccent,
                     framed: false);
             }
+
+            if (IsTrainCard)
+            {
+                DrawTrainCardMetadata(size);
+            }
+
             DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, size.X - 16, 9, style.ShortLabel);
             if (_progress > 0)
             {
@@ -249,7 +267,79 @@ public partial class HudLayer : CanvasLayer
             {
                 DrawRect(new Rect2(Vector2.Zero, size), style.DisabledFill, true);
                 DrawLine(new Vector2(8, size.Y - 8), new Vector2(size.X - 8, 8), style.DisabledStrike, 2, true);
+                if (IsTrainCard && !string.IsNullOrWhiteSpace(_disabledReason))
+                {
+                    var font = UiFontProfile.DrawFont(UiFontRole.Compact);
+                    DrawString(
+                        font,
+                        new Vector2(8, size.Y - 24),
+                        CompactCardText(_disabledReason, 11),
+                        HorizontalAlignment.Left,
+                        size.X - 16,
+                        8,
+                        new Color(CurrentPalette.Danger, 0.9f));
+                }
             }
+        }
+
+        private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId);
+
+        private void DrawTrainCardMetadata(Vector2 size)
+        {
+            var sourceCode = string.IsNullOrWhiteSpace(ProducerShortCode) ? "--" : ProducerShortCode;
+            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
+            var chip = new Rect2(new Vector2(5, 5), new Vector2(28, 13));
+            DrawRect(chip, new Color(CurrentPalette.PanelStrongFill, 0.74f), true);
+            DrawRect(chip, new Color(Accent, Disabled ? 0.22f : 0.42f), false, 1);
+            DrawString(
+                font,
+                chip.Position + new Vector2(3, 10),
+                CompactCardText(sourceCode, 4),
+                HorizontalAlignment.Left,
+                chip.Size.X - 5,
+                8,
+                new Color(Accent, Disabled ? 0.48f : 0.82f));
+
+            if (RoleGlyph != IconGlyph.None)
+            {
+                DrawIconGlyph(
+                    this,
+                    RoleGlyph,
+                    new Vector2(size.X - 14, 13),
+                    13,
+                    new Color(Accent, Disabled ? 0.38f : 0.84f));
+            }
+
+            if (Duration > 0)
+            {
+                var seconds = $"{Mathf.CeilToInt(Duration)}s";
+                DrawString(
+                    font,
+                    new Vector2(size.X - 30, size.Y - 12),
+                    seconds,
+                    HorizontalAlignment.Right,
+                    24,
+                    8,
+                    new Color(CurrentPalette.TextMuted, Disabled ? 0.46f : 0.68f));
+            }
+        }
+
+        private static string CommandCardTooltip(string label, int cost, string producerLabel, float duration, string disabledReason = "")
+        {
+            var source = string.IsNullOrWhiteSpace(producerLabel) ? "" : $" - {producerLabel}";
+            var time = duration > 0 ? $" - {Mathf.CeilToInt(duration)}s" : "";
+            var disabled = string.IsNullOrWhiteSpace(disabledReason) ? "" : $" - {disabledReason}";
+            return $"{label} - {cost}{source}{time}{disabled}";
+        }
+
+        private static string CompactCardText(string text, int maxChars)
+        {
+            if (text.Length <= maxChars)
+            {
+                return text;
+            }
+
+            return maxChars <= 1 ? text[..maxChars] : text[..(maxChars - 1)] + ".";
         }
     }
 }
