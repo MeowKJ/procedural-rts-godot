@@ -69,6 +69,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<ProductionOptionState> _commandCardStates = [];
     private readonly List<ProductionOptionState> _visibleCommandCardStates = [];
     private readonly List<ProductionProviderLaneState> _productionProviderLaneStates = [];
+    private readonly List<ProductionProviderLaneState> _constructionProviderLaneStates = [];
     private readonly List<ProductionProviderLaneButton> _productionProviderLaneButtons = [];
     private readonly Dictionary<string, int> _allProductionProviderCursorByKind = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
@@ -78,6 +79,8 @@ public partial class HudLayer : CanvasLayer
     private UnitStance? _selectedUnitStance;
     private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedProductionProviderId;
+    private ProductionProviderLaneScope _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
+    private int _selectedConstructionProviderId;
     private SandboxDeveloperContext _sandboxDeveloperContext = SandboxDeveloperContext.Default;
     private bool _hasSelection;
     private bool _hasBuildingSelection;
@@ -346,6 +349,19 @@ public partial class HudLayer : CanvasLayer
         }
 
         ValidateProductionProviderLaneSelection();
+        RefreshProductionProviderLaneSummary();
+        RefreshProductionProviderLaneButtons();
+    }
+
+    public void SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)
+    {
+        _constructionProviderLaneStates.Clear();
+        for (var index = 0; index < states.Count; index++)
+        {
+            _constructionProviderLaneStates.Add(states[index]);
+        }
+
+        ValidateConstructionProviderLaneSelection();
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
     }

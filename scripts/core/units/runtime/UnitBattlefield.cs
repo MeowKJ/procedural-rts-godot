@@ -90,6 +90,10 @@ public sealed partial class UnitBattlefield
     private readonly List<ProductionProviderLaneState> _productionProviderLaneStateBuffer = [];
     private readonly List<ProductionProviderLaneState> _specificProductionProviderLaneBuffer = [];
     private readonly Dictionary<string, int> _productionProviderLaneKindCounts = [];
+    private readonly List<ProductionProviderLaneState> _constructionProviderLaneStateBuffer = [];
+    private readonly List<ProductionProviderLaneState> _specificConstructionProviderLaneBuffer = [];
+    private readonly Dictionary<string, int> _constructionProviderLaneKindCounts = [];
+    private readonly HashSet<string> _constructionProviderKinds = [];
     private readonly List<int> _selectedProductionProducerIdBuffer = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
