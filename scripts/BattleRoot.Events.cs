@@ -198,7 +198,7 @@ public partial class BattleRoot
         var spec = UnitDesignCatalog.Spec(completed.DesignId);
         _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
         _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
-        AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
+        AddProductionCompleteAlert(completed.DesignId, spec.Label, building.Position);
         PlayAudioCue(TacticalAudioCue.Production, building.Position);
         RefreshCommandCard();
     }
@@ -209,7 +209,7 @@ public partial class BattleRoot
         var spec = UnitDesignCatalog.Spec(item.DesignId);
         _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
         _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
-        AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", spec.Label), building.Position);
+        AddProductionCompleteAlert(item.DesignId, spec.Label, building.Position);
         PlayAudioCue(TacticalAudioCue.Production, building.Position);
         RefreshCommandCard();
     }

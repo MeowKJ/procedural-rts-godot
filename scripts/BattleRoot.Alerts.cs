@@ -76,6 +76,16 @@ public partial class BattleRoot
         }
     }
 
+    private void AddProductionCompleteAlert(string designId, string label, Vector2 worldPosition)
+    {
+        if (!TryUseAlertCooldown($"production-complete:{designId}", ProductionAlertCooldown))
+        {
+            return;
+        }
+
+        AddAlert(AlertKind.Production, GameText.Format("ui.production.deployed", label), worldPosition);
+    }
+
     private bool TryJumpToLatestPositionedAlert()
     {
         for (var index = 0; index < _alerts.Count; index++)

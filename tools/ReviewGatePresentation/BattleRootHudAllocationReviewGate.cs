@@ -178,6 +178,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "key.Keycode == Key.Space && TryJumpToLatestPositionedAlert()", "BattleRoot input must route Space to the latest positioned alert before sandbox-only debug keys.", result);
         RequireText(battleRoot, "GameText.Format(\"ui.unit.destroyed\", UnitDesignCatalog.Spec(death.DesignId).Label)", "Runtime player unit deaths must add localized unit-lost alert text.", result);
         RequireText(battleRoot, "AddAlert(AlertKind.Combat, GameText.Format(\"ui.unit.destroyed\", UnitDesignCatalog.Spec(death.DesignId).Label), death.Position)", "Runtime player unit-lost alerts must carry world positions for minimap pings and Space jump.", result);
+        RequireText(battleRoot, "private const float ProductionAlertCooldown", "Production-complete alerts must expose a bounded anti-spam cooldown.", result);
+        RequireText(alerts, "private void AddProductionCompleteAlert(string designId, string label, Vector2 worldPosition)", "Production-complete alerts must use a focused positioned-alert helper.", result);
+        RequireText(alerts, "TryUseAlertCooldown($\"production-complete:{designId}\", ProductionAlertCooldown)", "Production-complete alerts must be throttled per produced design.", result);
+        RequireText(alerts, "AddAlert(AlertKind.Production, GameText.Format(\"ui.production.deployed\", label), worldPosition)", "Production-complete alerts must keep using the positioned production alert path.", result);
+        RequireText(battleRoot, "AddProductionCompleteAlert(item.DesignId, spec.Label, building.Position)", "Runtime production completion must carry the producer position into the alert stack.", result);
+        RequireText(battleRoot, "AddProductionCompleteAlert(completed.DesignId, spec.Label, building.Position)", "Legacy production completion must keep the same positioned alert path.", result);
         RequireText(hudState, "List<ProductionOptionState> _commandCardStates", "HudLayer command-card refresh must reuse visible state storage.", result);
         RequireText(hudState, "HashSet<string> _commandCardActiveIds", "HudLayer command-card refresh must reuse active id storage.", result);
         RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);
