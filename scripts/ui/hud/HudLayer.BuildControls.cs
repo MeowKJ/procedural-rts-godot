@@ -141,7 +141,6 @@ public partial class HudLayer : CanvasLayer
         tab.Pressed += () =>
         {
             SelectProductionTab(category);
-            BuildCategoryRequested?.Invoke(category);
         };
         parent.AddChild(tab);
     }
@@ -204,6 +203,12 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
         button.Pressed += () =>
         {
+            if (!string.IsNullOrWhiteSpace(button.BuildKind))
+            {
+                BuildKindRequested?.Invoke(button.BuildKind);
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(button.UnitDesignId))
             {
                 ProductionDesignRequested?.Invoke(button.UnitDesignId);
@@ -222,6 +227,11 @@ public partial class HudLayer : CanvasLayer
         return string.IsNullOrWhiteSpace(state.UnitDesignId)
             ? $"legacy.{state.Kind}"
             : $"design.{state.UnitDesignId}";
+    }
+
+    private static string BuildOptionId(BuildOptionSnapshot state)
+    {
+        return $"build.{state.Kind}";
     }
 
     private static string ProductionHotkey(int index)
