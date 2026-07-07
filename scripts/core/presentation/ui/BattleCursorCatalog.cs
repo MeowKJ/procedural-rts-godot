@@ -32,7 +32,9 @@ public readonly record struct BattleCursorDefinition(
     int HotspotX,
     int HotspotY,
     int CanvasWidth,
-    int CanvasHeight)
+    int CanvasHeight,
+    string? TexturePath = null,
+    string? Source = null)
 {
     public bool HotspotInBounds =>
         HotspotX >= 0
@@ -47,17 +49,19 @@ public static class BattleCursorCatalog
 
     public static readonly BattleCursorDefinition[] Definitions =
     [
-        new(BattleCursorState.DefaultSelect, BattleCursorShape.Arrow, 0, 0, 32, 32),
+        new(BattleCursorState.DefaultSelect, BattleCursorShape.Arrow, 0, 0, 32, 32, "res://assets/cursors/kenney/default_select.png", KenneyCursorPackSource),
         new(BattleCursorState.UiHover, BattleCursorShape.PointingHand, 8, 2, 32, 32),
-        new(BattleCursorState.MoveCommand, BattleCursorShape.Move, 16, 16, 32, 32),
-        new(BattleCursorState.AttackCommand, BattleCursorShape.Cross, 16, 16, 32, 32),
-        new(BattleCursorState.BuildValid, BattleCursorShape.CanDrop, 16, 16, 32, 32),
-        new(BattleCursorState.BuildInvalid, BattleCursorShape.Forbidden, 16, 16, 32, 32),
-        new(BattleCursorState.Forbidden, BattleCursorShape.Forbidden, 16, 16, 32, 32),
+        new(BattleCursorState.MoveCommand, BattleCursorShape.Move, 16, 16, 32, 32, "res://assets/cursors/kenney/move_command.png", KenneyCursorPackSource),
+        new(BattleCursorState.AttackCommand, BattleCursorShape.Cross, 16, 16, 32, 32, "res://assets/cursors/kenney/attack_command.png", KenneyCursorPackSource),
+        new(BattleCursorState.BuildValid, BattleCursorShape.CanDrop, 16, 16, 32, 32, "res://assets/cursors/kenney/build_valid.png", KenneyCursorPackSource),
+        new(BattleCursorState.BuildInvalid, BattleCursorShape.Forbidden, 16, 16, 32, 32, "res://assets/cursors/kenney/build_invalid.png", KenneyCursorPackSource),
+        new(BattleCursorState.Forbidden, BattleCursorShape.Forbidden, 16, 16, 32, 32, "res://assets/cursors/kenney/forbidden.png", KenneyCursorPackSource),
         new(BattleCursorState.HarvestCommand, BattleCursorShape.Drag, 16, 16, 32, 32),
         new(BattleCursorState.RepairCommand, BattleCursorShape.Help, 16, 16, 32, 32),
         new(BattleCursorState.RallyPoint, BattleCursorShape.Cross, 16, 16, 32, 32),
     ];
+
+    public const string KenneyCursorPackSource = "Kenney Cursor Pack CC0: https://kenney.nl/assets/cursor-pack";
 
     public static BattleCursorDefinition DefinitionFor(BattleCursorState state)
     {
@@ -119,6 +123,16 @@ public static class BattleCursorCatalog
             if (!definition.HotspotInBounds)
             {
                 issues.Add($"{definition.State} hotspot {definition.HotspotX},{definition.HotspotY} is outside {definition.CanvasWidth}x{definition.CanvasHeight}");
+            }
+
+            if (definition.TexturePath is { Length: > 0 } path && !path.StartsWith("res://", StringComparison.Ordinal))
+            {
+                issues.Add($"{definition.State} texture path must be res:// rooted");
+            }
+
+            if (definition.TexturePath is { Length: > 0 } && string.IsNullOrWhiteSpace(definition.Source))
+            {
+                issues.Add($"{definition.State} texture source/license provenance is missing");
             }
         }
 
