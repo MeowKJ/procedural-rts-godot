@@ -157,7 +157,7 @@ public partial class SelectionController : Node2D
                 return;
             }
 
-            if (HandleSelectionHotkey(key) || HandleMoveModeHotkey(key) || HandleStanceHotkey(key))
+            if (HandleSelectionHotkey(key) || HandleStanceHotkey(key))
             {
                 GetViewport().SetInputAsHandled();
             }

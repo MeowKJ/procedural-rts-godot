@@ -32,26 +32,6 @@ public partial class SelectionController
         return false;
     }
 
-    private bool HandleMoveModeHotkey(InputEventKey key)
-    {
-        MoveCommandMode? mode = key.Keycode switch
-        {
-            Key.F1 => MoveCommandMode.Direct,
-            Key.F2 => MoveCommandMode.Attack,
-            Key.F3 => MoveCommandMode.Ignore,
-            _ => null,
-        };
-
-        if (mode is null)
-        {
-            return false;
-        }
-
-        SetMoveCommandMode(mode.Value);
-        MoveModeRequested?.Invoke(mode.Value);
-        return true;
-    }
-
     private bool HandleStanceHotkey(InputEventKey key)
     {
         UnitStance? stance = key.Keycode switch

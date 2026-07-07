@@ -5,6 +5,8 @@ static class HoverTooltipReviewGate
         var preview = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Preview.cs");
         var tooltips = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.HoverTooltips.cs");
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
+        var selectionInput = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.cs");
+        var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
         var buildPlacement = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "BuildPlacementController.cs"));
         var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
@@ -50,6 +52,17 @@ static class HoverTooltipReviewGate
         RequireText(hotkeys, "private const float PanelHeight = 458f;", "Hotkey legend must keep a fixed 720p-safe panel height.", result);
         RequireText(hotkeys, "private const int LegendColumnCount = 2;", "Hotkey legend must use a compact two-column command reference.", result);
         RequireText(hotkeys, "var column = index % LegendColumnCount;", "Hotkey legend sections must flow into two columns instead of one tall stack.", result);
+        RequireText(englishText, "[\"hotkeys.orders.1\"] = \"Ribbon / RMB direct\"", "English hotkey legend must point move modes at visible ribbon controls and right-click modifiers.", result);
+        RequireText(englishText, "[\"hotkeys.orders.2\"] = \"Ribbon / Alt+RMB attack\"", "English hotkey legend must point attack move at visible ribbon controls and right-click modifiers.", result);
+        RequireText(englishText, "[\"hotkeys.orders.3\"] = \"Ribbon / Ctrl+RMB ignore\"", "English hotkey legend must point ignore move at visible ribbon controls and right-click modifiers.", result);
+        RequireText(chineseText, "[\"hotkeys.orders.1\"] = \"命令栏 / 右键直接\"", "Chinese hotkey legend must point move modes at visible ribbon controls and right-click modifiers.", result);
+        RequireText(chineseText, "[\"hotkeys.orders.2\"] = \"命令栏 / Alt+右键攻击\"", "Chinese hotkey legend must point attack move at visible ribbon controls and right-click modifiers.", result);
+        RequireText(chineseText, "[\"hotkeys.orders.3\"] = \"命令栏 / Ctrl+右键无视\"", "Chinese hotkey legend must point ignore move at visible ribbon controls and right-click modifiers.", result);
+        ForbidText(selectionInput, "HandleMoveModeHotkey", "Selection input must not dispatch a second move-mode hotkey path that conflicts with help/debug keys.", result);
+        ForbidText(selectionHotkeys, "HandleMoveModeHotkey", "Selection hotkeys must not keep a dead move-mode hotkey handler.", result);
+        ForbidText(selectionHotkeys, "Key.F1 => MoveCommandMode", "F1 must remain owned by the hotkey legend instead of also changing move mode.", result);
+        ForbidText(selectionHotkeys, "Key.F2 => MoveCommandMode", "F2 must remain available to sandbox time-scale controls instead of also changing move mode.", result);
+        ForbidText(selectionHotkeys, "Key.F3 => MoveCommandMode", "F3 must remain available to debug overlays instead of also changing move mode.", result);
         RequireText(hudPreview, "Preview.ScreenPosition + new Vector2(18, 18)", "Hover guidance must remain a transient cursor-side command preview instead of persistent HUD copy.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Move:", "HUD command preview must render move as a distinct mode.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Attack:", "HUD command preview must render attack as a distinct mode.", result);
