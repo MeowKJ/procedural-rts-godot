@@ -95,12 +95,12 @@ public partial class SelectionController
 
         if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
         {
-            return new CommandPreviewState(CommandPreviewKind.Move, GameText.T("preview.move"), screenPosition, worldPosition, true);
+            return MovePreviewState(screenPosition, worldPosition);
         }
 
         if (HasSelectedLegacyUnits())
         {
-            return new CommandPreviewState(CommandPreviewKind.Move, GameText.T("preview.move"), screenPosition, worldPosition, true);
+            return MovePreviewState(screenPosition, worldPosition);
         }
 
         if (HasSelectedBuildingForPreview())
@@ -109,5 +109,25 @@ public partial class SelectionController
         }
 
         return new CommandPreviewState(CommandPreviewKind.Select, GameText.T("preview.select"), screenPosition, worldPosition, true);
+    }
+
+    private CommandPreviewState MovePreviewState(Vector2 screenPosition, Vector2 worldPosition)
+    {
+        return new CommandPreviewState(
+            CommandPreviewKind.Move,
+            MoveModeStatus(PreviewMoveModeFromModifiers()),
+            screenPosition,
+            worldPosition,
+            true);
+    }
+
+    private MoveCommandMode PreviewMoveModeFromModifiers()
+    {
+        if (Input.IsKeyPressed(Key.Ctrl))
+        {
+            return MoveCommandMode.Ignore;
+        }
+
+        return Input.IsKeyPressed(Key.Alt) ? MoveCommandMode.Attack : CurrentMoveMode;
     }
 }
