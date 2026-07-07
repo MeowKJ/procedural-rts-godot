@@ -11,6 +11,7 @@ public partial class SelectionController
     public void ArmAbilityCommand(AbilityKind ability)
     {
         _rallyCommandArmed = false;
+        _repairCommandArmed = false;
         if (!UseUnitBattlefieldInput() || !SelectionHasAbility(ability))
         {
             _armedAbility = null;

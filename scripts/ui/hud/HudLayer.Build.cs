@@ -117,7 +117,9 @@ public partial class HudLayer : CanvasLayer
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Ignore, IconGlyph.IgnoreMove, GameText.T("ui.tooltip.ignoreMove"), new Vector2(366, 6));
 
         AddSeparator(_commandRibbon, new Vector2(642, 8));
-        AddIconActionButton(_commandRibbon, IconGlyph.Move, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
+        var ribbonRepair = AddIconActionButton(_commandRibbon, IconGlyph.Repair, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
+        ribbonRepair.Name = "RibbonRepair";
+        ribbonRepair.Pressed += () => RepairRequested?.Invoke();
         var ribbonCancel = AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(708, 6), new Vector2(36, 34), Danger);
         ribbonCancel.Name = "RibbonCancelProduction";
         ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();

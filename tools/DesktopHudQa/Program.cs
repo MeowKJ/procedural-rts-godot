@@ -51,6 +51,7 @@ static void AssertHudFactoryExtraction(string root)
 {
     var hudLayer = ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
     var battleRoot = ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
+    var selectionController = ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "SelectionController.cs"));
     var hudSync = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.HudSync.cs"));
     var uiFactory = File.ReadAllText(Path.Combine(root, "scripts", "ui", "UiFactory.cs"));
     var cursorCatalog = File.ReadAllText(Path.Combine(root, "scripts", "core", "presentation", "ui", "BattleCursorCatalog.cs"));
@@ -140,7 +141,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "_visibleCommandCardStates.Count >= 12", "Right command panel must cap production cells to the 12-slot fixed grid.");
     RequireText(hudLayer, "Math.Min(_abilityCardStates.Count, 12)", "Abilities mode must use the same fixed 12-slot grid cap.");
     RequireText(hudLayer, "Action? RallyRequested", "HUD must expose a rally request for the command-ribbon rally button.");
+    RequireText(hudLayer, "Action? RepairRequested", "HUD must expose a repair request for the command-ribbon repair button.");
     RequireText(hudLayer, "Action? SellOrCancelRequested", "HUD must expose a sell-or-cancel request for the command-ribbon sell button.");
+    RequireText(hudLayer, "Name = \"RibbonRepair\"", "Command ribbon repair action must expose a stable node.");
+    RequireText(hudLayer, "ribbonRepair.Pressed += () => RepairRequested?.Invoke();", "Command ribbon repair action must route through the repair request path.");
+    RequireText(battleRoot, "RepairRequested = OnRepairRequested", "BattleRoot must wire the command-ribbon repair request.");
+    RequireText(battleRoot, "_selection.ArmRepairCommand();", "BattleRoot repair request must arm SelectionController repair targeting.");
+    RequireText(selectionController, "public void ArmRepairCommand()", "SelectionController must expose one-shot repair command arming for the command ribbon.");
+    RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the runtime repair command path.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
     RequireText(hudLayer, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production-cancel request path.");
     RequireText(hudLayer, "Name = \"RibbonSetRally\"", "Command ribbon rally action must expose a stable node.");

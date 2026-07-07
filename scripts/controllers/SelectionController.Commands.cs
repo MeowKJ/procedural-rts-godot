@@ -69,30 +69,8 @@ public partial class SelectionController
                     unitInstanceBuildingEnemy.Position,
                     accepted ? CommandAcknowledgementAudioCue.Attack : CommandAcknowledgementAudioCue.Invalid);
             }
-            else if (UnitBattlefield.PickAnyUnit(worldPoint, PickPaddingWorld()) is { } repairUnit
-                && UnitBattlefield.CanRepairSelected(LocalPlayerSlotId, repairUnit))
+            else if (FinishRuntimeRepairCommand(worldPoint))
             {
-                var accepted = SubmitRuntimeCommand(
-                    PlayerCommandKind.Repair,
-                    PlayerCommandPayload.ForEntityTarget(SelectedRuntimeUnitSubjects(), repairUnit.EntityId));
-                StatusChanged?.Invoke(GameText.T("ui.context.repair"));
-                AcknowledgeCommand(
-                    accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
-                    repairUnit.Position,
-                    accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
-            }
-            else if (UnitBattlefield.PickAnyBuildingHoverProjection(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } repairBuilding
-                && UnitBattlefield.CanRepairSelectedBuilding(LocalPlayerSlotId, repairBuilding.Id))
-            {
-                var accepted = UnitBattlefield.BuildingEntityIdByTargetId(repairBuilding.Id) is { } targetEntity
-                    && SubmitRuntimeCommand(
-                        PlayerCommandKind.Repair,
-                        PlayerCommandPayload.ForEntityTarget(SelectedRuntimeUnitSubjects(), targetEntity, CombatTargetKind.Building));
-                StatusChanged?.Invoke(GameText.T("ui.context.repair"));
-                AcknowledgeCommand(
-                    accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
-                    repairBuilding.Position,
-                    accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
             }
             else if (PickResourceField(worldPoint) is { } resourceField && HasSelectedHarvester())
             {
