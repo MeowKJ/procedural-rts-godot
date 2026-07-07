@@ -105,19 +105,33 @@ public partial class BattleRoot
 
     private void UpdateIdleHarvesterAlert()
     {
+        Vector2? firstIdleHarvesterWorldPosition;
+        int idleHarvesters;
         if (UseUnitDesignRuntime)
         {
-            return;
+            idleHarvesters = RuntimeIdleHarvesterCount(out firstIdleHarvesterWorldPosition);
+        }
+        else
+        {
+            idleHarvesters = IdleLegacyHarvesterCount();
+            firstIdleHarvesterWorldPosition = FirstIdleLegacyHarvesterPosition();
         }
 
-        var idleHarvesters = IdleLegacyHarvesterCount();
         if (idleHarvesters == 0 || _elapsed - _idleHarvesterAlertAt < IdleHarvesterAlertCooldown)
         {
             return;
         }
 
         _idleHarvesterAlertAt = _elapsed;
-        AddAlert(AlertKind.Harvester, idleHarvesters == 1 ? GameText.T("ui.alert.idleHarvester.one") : GameText.Format("ui.alert.idleHarvester.many", idleHarvesters));
+        AddAlert(
+            AlertKind.Harvester,
+            idleHarvesters == 1 ? GameText.T("ui.alert.idleHarvester.one") : GameText.Format("ui.alert.idleHarvester.many", idleHarvesters),
+            firstIdleHarvesterWorldPosition);
+    }
+
+    private int RuntimeIdleHarvesterCount(out Vector2? firstWorldPosition)
+    {
+        return _unitBattlefield.IdleHarvesterCount(PlayerSlotId.One, out firstWorldPosition);
     }
 
     private int IdleLegacyHarvesterCount()
@@ -136,6 +150,23 @@ public partial class BattleRoot
         }
 
         return count;
+    }
+
+    private Vector2? FirstIdleLegacyHarvesterPosition()
+    {
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player
+                && IsHarvestWorker(unit)
+                && unit.Hp > 0
+                && unit.HarvesterMode == HarvesterMode.Idle
+                && unit.MoveTarget is null)
+            {
+                return unit.Position;
+            }
+        }
+
+        return null;
     }
 
     private void UpdatePowerAlert(bool force)
