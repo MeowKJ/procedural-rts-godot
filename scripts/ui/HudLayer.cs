@@ -9,6 +9,7 @@ public partial class HudLayer : CanvasLayer
 
     public Action<ProductionKind, int>? ProductionRequested { get; init; }
     public Action<string, Func<int?>, int>? ProductionDesignRequested { get; init; }
+    public Action<string, int>? ProductionRepeatRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
     public Action? SellOrCancelRequested { get; init; }
     public Action? RallyRequested { get; init; }

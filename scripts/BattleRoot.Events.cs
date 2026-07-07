@@ -297,6 +297,19 @@ public partial class BattleRoot
         return false;
     }
 
+    private void OnProductionRepeatRequested(string designId, int providerId)
+    {
+        var accepted = _unitBattlefield.ToggleRepeatProductionForProvider(designId, PlayerSlotId.One, providerId, out var status);
+        _hud.SetStatus(status);
+        _hud.SetProductionStatus(status);
+        if (accepted)
+        {
+            AddStatusAlert(status);
+        }
+
+        RefreshCommandCard();
+    }
+
     private static string ProductionBatchStatus(int queued, int attempts, string status)
     {
         return queued > 1

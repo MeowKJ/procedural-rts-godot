@@ -208,6 +208,7 @@ public partial class HudLayer : CanvasLayer
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
         button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.MouseEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
         button.MouseExited += RestoreCatalogStatusText;
         button.Pressed += () =>
         {
@@ -220,6 +221,7 @@ public partial class HudLayer : CanvasLayer
 
             if (!string.IsNullOrWhiteSpace(button.UnitDesignId))
             {
+                FocusRepeatProductionDesign(button.UnitDesignId);
                 ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount());
                 return;
             }

@@ -210,6 +210,63 @@ public sealed partial class UnitBattlefield
         return CommandEnqueueProductionDesign(designId, playerSlotId, out status);
     }
 
+    public bool ToggleRepeatProductionForProvider(
+        string designId,
+        PlayerSlotId playerSlotId,
+        int producerBuildingId,
+        out string status)
+    {
+        UnitSpec spec;
+        try
+        {
+            spec = UnitDesignCatalog.Spec(designId);
+        }
+        catch (InvalidOperationException)
+        {
+            status = GameText.T("ui.producerUnavailable");
+            return false;
+        }
+
+        if (spec.Production is null
+            || !ProducerSupportsSpec(producerBuildingId, playerSlotId, spec)
+            || !SyncBuildingTargetEntity(producerBuildingId))
+        {
+            status = GameText.Format(
+                "production.needProducer",
+                spec.Production is null ? GameText.T("ui.providerLane.specificFallback") : BuildSpecCatalog.For(spec.Production.ProducerKind).Label,
+                spec.Label);
+            return false;
+        }
+
+        if (BuildingSnapshot(producerBuildingId) is not { } producerSnapshot)
+        {
+            status = GameText.Format("production.needProducer", BuildSpecCatalog.For(spec.Production.ProducerKind).Label, spec.Label);
+            return false;
+        }
+
+        var currentRepeat = BuildingProductionRepeatOutputSpecId(producerBuildingId);
+        var enable = !string.Equals(currentRepeat, spec.Id, StringComparison.Ordinal);
+        if (enable && !ProducerCanQueueSpec(producerBuildingId, playerSlotId, spec))
+        {
+            status = GameText.Format("production.needProducer", BuildSpecCatalog.For(spec.Production.ProducerKind).Label, spec.Label);
+            return false;
+        }
+
+        SubmitProductionCommand(new SetRepeatProductionEntityCommand(
+            OwnerId.FromPlayerSlot(playerSlotId),
+            [_buildingTargetEntityIds[producerBuildingId]],
+            NextInputCommandTick(),
+            enable,
+            enable ? spec.Id : ""));
+
+        var producerLabel = BuildSpecCatalog.For(producerSnapshot.Kind).Label;
+        status = GameText.Format(
+            enable ? "production.repeatEnabled" : "production.repeatDisabled",
+            spec.Label,
+            producerLabel);
+        return true;
+    }
+
     public bool CommandEnqueueProductionDesign(string designId, PlayerSlotId playerSlotId, out string status)
     {
         UnitSpec spec;

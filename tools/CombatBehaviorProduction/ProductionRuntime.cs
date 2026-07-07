@@ -300,6 +300,24 @@ static partial class Program
             throw new InvalidOperationException("Auto train provider lane should keep the existing shortest-queue production routing");
         }
 
+        var repeatArmed = providerLaneBattlefield.ToggleRepeatProductionForProvider("dog.infantry", PlayerSlotId.One, providerLaneBarracksB.Id, out var repeatArmStatus);
+        var repeatAfterArm = providerLaneBattlefield.BuildingProductionRepeatOutputSpecId(providerLaneBarracksB.Id);
+        var laneRepeatAfterArm = RepeatOutputForProviderLane(providerLaneBattlefield.ProductionProviderLaneStates(PlayerSlotId.One), providerLaneBarracksB.Id);
+        var repeatCleared = providerLaneBattlefield.ToggleRepeatProductionForProvider("dog.infantry", PlayerSlotId.One, providerLaneBarracksB.Id, out var repeatClearStatus);
+        var repeatAfterClear = providerLaneBattlefield.BuildingProductionRepeatOutputSpecId(providerLaneBarracksB.Id);
+        if (!repeatArmed
+            || repeatAfterArm != "dog.infantry"
+            || laneRepeatAfterArm != "dog.infantry"
+            || !repeatCleared
+            || repeatAfterClear is not null)
+        {
+            var detail = $"armed={repeatArmed} armStatus='{repeatArmStatus}' repeatAfterArm='{repeatAfterArm}' "
+                + $"laneRepeat='{laneRepeatAfterArm}' cleared={repeatCleared} clearStatus='{repeatClearStatus}' repeatAfterClear='{repeatAfterClear}'";
+            throw new InvalidOperationException(
+                "specific train provider repeat toggle should arm and clear the selected provider's deterministic repeat production state; "
+                + detail);
+        }
+
         var constructionProviderBattlefield = new UnitBattlefield();
         constructionProviderBattlefield.SetCredits(PlayerSlotId.One, 1200);
         var constructionHeadquartersA = constructionProviderBattlefield.UpsertBuildingTarget(
@@ -477,5 +495,19 @@ static partial class Program
         {
             throw new InvalidOperationException("new enemy attack wave AI should command UnitInstance waves against UnitBattlefield building targets");
         }
+    }
+
+    private static string? RepeatOutputForProviderLane(IReadOnlyList<ProductionProviderLaneState> states, int producerId)
+    {
+        for (var index = 0; index < states.Count; index++)
+        {
+            var state = states[index];
+            if (state.Scope == ProductionProviderLaneScope.Specific && state.ProducerId == producerId)
+            {
+                return state.RepeatOutputSpecId;
+            }
+        }
+
+        return null;
     }
 }

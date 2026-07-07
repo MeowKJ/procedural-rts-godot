@@ -17,4 +17,5 @@ public sealed record ProductionProviderLaneState(
     int QueueCount,
     float ActiveProgress,
     bool Available,
-    string DisabledReasonKey);
+    string DisabledReasonKey,
+    string? RepeatOutputSpecId = null);

@@ -209,6 +209,18 @@ public partial class HudLayer : CanvasLayer
         _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);
         _rightProductionPanel.AddChild(_queueValue);
 
+        _repeatProduction = AddIconActionButton(
+            _rightProductionPanel,
+            IconGlyph.StanceReturn,
+            GameText.T("ui.repeat.needCard"),
+            new Vector2(166, 326),
+            new Vector2(28, 28),
+            Cyan);
+        _repeatProduction.Name = "RepeatProduction";
+        _repeatProduction.ToggleMode = true;
+        _repeatProduction.Disabled = true;
+        _repeatProduction.Pressed += RequestFocusedProductionRepeat;
+
         _cancelProduction = new Button
         {
             Name = "CancelProduction",

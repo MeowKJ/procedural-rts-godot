@@ -23,6 +23,179 @@ public partial class HudLayer : CanvasLayer
         return spec.Production is null ? null : NextAllProductionProviderId(spec.Production.ProducerKind);
     }
 
+    private void FocusRepeatProductionDesign(string? unitDesignId)
+    {
+        if (_selectedCatalogMode != CatalogModeKind.Train || string.IsNullOrWhiteSpace(unitDesignId))
+        {
+            return;
+        }
+
+        _focusedRepeatProductionDesignId = unitDesignId;
+        RefreshRepeatProductionControl();
+    }
+
+    private void RequestFocusedProductionRepeat()
+    {
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId)
+            || CurrentProductionProviderLaneState() is not { Scope: ProductionProviderLaneScope.Specific, ProducerId: > 0 } state
+            || !SpecificProviderSupportsFocusedRepeatDesign(state))
+        {
+            RefreshRepeatProductionControl();
+            return;
+        }
+
+        ProductionRepeatRequested?.Invoke(_focusedRepeatProductionDesignId, state.ProducerId);
+    }
+
+    private void RefreshRepeatProductionControl()
+    {
+        if (_repeatProduction is null)
+        {
+            return;
+        }
+
+        var visible = _selectedCatalogMode == CatalogModeKind.Train;
+        _repeatProduction.Visible = visible;
+        if (!visible)
+        {
+            _repeatProduction.Disabled = true;
+            _repeatProduction.ButtonPressed = false;
+            return;
+        }
+
+        var hasDesign = !string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId);
+        var laneState = CurrentProductionProviderLaneState();
+        var hasSpecificProvider = laneState is { Scope: ProductionProviderLaneScope.Specific, ProducerId: > 0 };
+        var providerSupportsDesign = hasSpecificProvider
+            && SpecificProviderSupportsFocusedRepeatDesign(laneState!);
+        var active = hasDesign
+            && hasSpecificProvider
+            && providerSupportsDesign
+            && string.Equals(laneState!.RepeatOutputSpecId, _focusedRepeatProductionDesignId, StringComparison.Ordinal);
+        var enabled = hasDesign
+            && hasSpecificProvider
+            && providerSupportsDesign
+            && (active || laneState!.Available);
+
+        _repeatProduction.Disabled = !enabled;
+        _repeatProduction.ButtonPressed = active;
+        _repeatProduction.Accent = active ? Mint : Cyan;
+        _repeatProduction.TooltipText = RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active);
+        _repeatProduction.QueueRedraw();
+    }
+
+    private string RepeatProductionTooltip(
+        ProductionProviderLaneState? laneState,
+        bool hasDesign,
+        bool hasSpecificProvider,
+        bool providerSupportsDesign,
+        bool active)
+    {
+        if (!hasDesign)
+        {
+            return GameText.T("ui.repeat.needCard");
+        }
+
+        if (!hasSpecificProvider)
+        {
+            return GameText.T("ui.repeat.needSpecific");
+        }
+
+        if (!providerSupportsDesign)
+        {
+            return GameText.Format("production.needProducer", FocusedRepeatProductionProducerLabel(), FocusedRepeatProductionLabel());
+        }
+
+        if (!active && laneState is not null && !laneState.Available)
+        {
+            return LocalizedDisabledReason(laneState.DisabledReasonKey, 0);
+        }
+
+        return GameText.Format(
+            active ? "ui.repeat.active" : "ui.repeat.available",
+            FocusedRepeatProductionLabel(),
+            laneState?.Label ?? GameText.T("ui.providerLane.specificFallback"));
+    }
+
+    private bool SpecificProviderSupportsFocusedRepeatDesign(ProductionProviderLaneState state)
+    {
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        {
+            return false;
+        }
+
+        try
+        {
+            var spec = UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId);
+            return spec.Production is not null && spec.Production.ProducerKind == state.ProducerKind;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private string FocusedRepeatProductionLabel()
+    {
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        {
+            return GameText.T("ui.catalog.train");
+        }
+
+        try
+        {
+            return UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId).Label;
+        }
+        catch (InvalidOperationException)
+        {
+            return GameText.T("ui.catalog.train");
+        }
+    }
+
+    private string FocusedRepeatProductionProducerLabel()
+    {
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        {
+            return GameText.T("ui.providerLane.specificFallback");
+        }
+
+        try
+        {
+            var spec = UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId);
+            return spec.Production is null
+                ? GameText.T("ui.providerLane.specificFallback")
+                : BuildSpecCatalog.For(spec.Production.ProducerKind).Label;
+        }
+        catch (InvalidOperationException)
+        {
+            return GameText.T("ui.providerLane.specificFallback");
+        }
+    }
+
+    private void ClearRepeatFocusIfHidden()
+    {
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        {
+            return;
+        }
+
+        if (_selectedCatalogMode != CatalogModeKind.Train)
+        {
+            _focusedRepeatProductionDesignId = "";
+            return;
+        }
+
+        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
+        {
+            if (string.Equals(_visibleCommandCardStates[index].UnitDesignId, _focusedRepeatProductionDesignId, StringComparison.Ordinal))
+            {
+                return;
+            }
+        }
+
+        _focusedRepeatProductionDesignId = "";
+    }
+
     private int? SelectedConstructionProviderId()
     {
         return _selectedConstructionProviderLaneScope == ProductionProviderLaneScope.Specific
@@ -99,6 +272,7 @@ public partial class HudLayer : CanvasLayer
             state.QueueCount));
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshRepeatProductionControl();
     }
 
     private void SelectConstructionProviderLane(ProductionProviderLaneState state)

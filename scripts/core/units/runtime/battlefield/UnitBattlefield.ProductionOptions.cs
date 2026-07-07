@@ -110,7 +110,8 @@ public sealed partial class UnitBattlefield
                 metrics.QueuedCount,
                 metrics.ActiveProgress,
                 available,
-                available ? "" : ProductionProviderLaneDisabledReason(building.Id)));
+                available ? "" : ProductionProviderLaneDisabledReason(building.Id),
+                BuildingProductionRepeatOutputSpecId(building.Id)));
         }
 
         var aggregateAvailable = availableCount > 0;

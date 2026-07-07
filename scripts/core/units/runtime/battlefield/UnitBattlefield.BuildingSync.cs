@@ -33,8 +33,11 @@ public sealed partial class UnitBattlefield
             var selectableState = existing.Components.TryGet<SelectableComponentState>(out var selectable)
                 ? selectable
                 : new SelectableComponentState(AlertPulse: pulseState.HitPulse);
-            var queueItems = existing.Components.TryGet<ProductionQueueComponentState>(out var queue)
-                ? queue.Items
+            var queueState = existing.Components.TryGet<ProductionQueueComponentState>(out var queue)
+                ? queue
+                : null;
+            var queueItems = queueState is not null
+                ? queueState.Items
                 : [];
             var existingRally = existing.Components.TryGet<RallyPointComponentState>(out var rally)
                 ? rally
@@ -78,7 +81,8 @@ public sealed partial class UnitBattlefield
                 buildProgress,
                 dockState.ReservedByEntityId,
                 dockState.DockedEntityId,
-                weaponState))
+                weaponState,
+                queueState?.RepeatOutputSpecId))
             {
                 existing.Components.Set(component);
             }

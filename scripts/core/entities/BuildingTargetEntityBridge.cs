@@ -55,7 +55,8 @@ public static class BuildingTargetEntityBridge
         float buildProgress = 1,
         int? dockReservedByEntityId = null,
         int? dockedEntityId = null,
-        WeaponUserComponentState? weaponState = null)
+        WeaponUserComponentState? weaponState = null,
+        string? repeatOutputSpecId = null)
     {
         return world.Spawn(
             spec.ToEntitySpec(),
@@ -72,7 +73,8 @@ public static class BuildingTargetEntityBridge
                 buildProgress: buildProgress,
                 dockReservedByEntityId: dockReservedByEntityId,
                 dockedEntityId: dockedEntityId,
-                weaponState: weaponState));
+                weaponState: weaponState,
+                repeatOutputSpecId: repeatOutputSpecId));
     }
 
     public static IReadOnlyList<EntityComponentState> ToEntityComponents(
@@ -89,7 +91,8 @@ public static class BuildingTargetEntityBridge
         float buildProgress = 1,
         int? dockReservedByEntityId = null,
         int? dockedEntityId = null,
-        WeaponUserComponentState? weaponState = null)
+        WeaponUserComponentState? weaponState = null,
+        string? repeatOutputSpecId = null)
     {
         return CreateBuildingComponents(
             seed,
@@ -105,7 +108,8 @@ public static class BuildingTargetEntityBridge
             buildProgress,
             dockReservedByEntityId,
             dockedEntityId,
-            weaponState);
+            weaponState,
+            repeatOutputSpecId);
     }
 
     private static EntityComponentState[] CreateBuildingComponents(
@@ -122,10 +126,11 @@ public static class BuildingTargetEntityBridge
         float buildProgress = 1,
         int? dockReservedByEntityId = null,
         int? dockedEntityId = null,
-        WeaponUserComponentState? weaponState = null)
+        WeaponUserComponentState? weaponState = null,
+        string? repeatOutputSpecId = null)
     {
         productionQueue ??= [];
-        var components = new EntityComponentState[BuildingComponentCount(seed, spec, productionQueue, rallyPoint)];
+        var components = new EntityComponentState[BuildingComponentCount(seed, spec, productionQueue, rallyPoint, repeatOutputSpecId)];
         var index = 0;
         components[index++] = new BuildingIdentityComponentState(
             seed.Id,
@@ -173,9 +178,9 @@ public static class BuildingTargetEntityBridge
             components[index++] = new DockComponentState(dockReservedByEntityId, dockedEntityId);
         }
 
-        if (productionQueue.Count > 0 || ProducesUnits(seed.Kind))
+        if (productionQueue.Count > 0 || !string.IsNullOrWhiteSpace(repeatOutputSpecId) || ProducesUnits(seed.Kind))
         {
-            components[index++] = new ProductionQueueComponentState(CreateProductionQueueItems(productionQueue));
+            components[index++] = new ProductionQueueComponentState(CreateProductionQueueItems(productionQueue), RepeatOutputSpecId: repeatOutputSpecId);
         }
 
         if (spec.BuildRadius > 0)
@@ -190,7 +195,8 @@ public static class BuildingTargetEntityBridge
         BuildingEntitySeed seed,
         BuildSpec spec,
         IReadOnlyList<UnitProductionQueueItem> productionQueue,
-        Vector2? rallyPoint)
+        Vector2? rallyPoint,
+        string? repeatOutputSpecId)
     {
         var count = 9;
         if (rallyPoint is not null)
@@ -208,7 +214,7 @@ public static class BuildingTargetEntityBridge
             count++;
         }
 
-        if (productionQueue.Count > 0 || ProducesUnits(seed.Kind))
+        if (productionQueue.Count > 0 || !string.IsNullOrWhiteSpace(repeatOutputSpecId) || ProducesUnits(seed.Kind))
         {
             count++;
         }
