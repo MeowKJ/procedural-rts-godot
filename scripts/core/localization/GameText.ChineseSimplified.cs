@@ -118,6 +118,7 @@ public static partial class GameText
         ["ui.alert.idleHarvester.many"] = "{0} 辆采集车闲置",
         ["ui.alert.powerStable"] = "基地电力稳定",
         ["ui.alert.powerOffline"] = "基地电力离线",
+        ["ui.alert.insufficientCredits"] = "资金不足",
         ["ui.stat.unit"] = "生命 {0}   {1}   射程 {2:0}",
         ["ui.stat.building"] = "生命 {0}   护甲 --   视野 {1:0}",
         ["ui.detail.cooldown"] = "{0}   冷却 {1:0.0}s",

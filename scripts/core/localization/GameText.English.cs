@@ -143,6 +143,7 @@ public static partial class GameText
         ["ui.alert.idleHarvester.many"] = "{0} idle harvesters",
         ["ui.alert.powerStable"] = "Base power stable",
         ["ui.alert.powerOffline"] = "Base power offline",
+        ["ui.alert.insufficientCredits"] = "Insufficient credits",
         ["ui.stat.unit"] = "HP {0}   {1}   RNG {2:0}",
         ["ui.stat.building"] = "HP {0}   ARM --   SIGHT {1:0}",
         ["ui.detail.cooldown"] = "{0}   CD {1:0.0}s",

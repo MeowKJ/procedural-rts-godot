@@ -65,6 +65,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "ApplyCommandCursor(preview);", "HudLayer command preview updates must route cursor state through the cursor catalog.");
     RequireText(hudLayer, "BattleCursorCatalog.StateForPreview(preview)", "HudLayer must derive in-game cursor state from command preview state.");
     RequireText(uiFactory, "BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover)", "HUD/UI buttons must use the shared cursor catalog for hover cursors.");
+    RequireText(battleRoot, "IsInsufficientCreditsStatus(status)", "BattleRoot status alerts must detect insufficient-credit failures through a focused helper.");
+    RequireText(battleRoot, "TryUseAlertCooldown(\"status:insufficient-credits\", InsufficientCreditsAlertCooldown)", "Insufficient-credit HUD alerts must use one shared cooldown key instead of per-status spam.");
+    RequireText(battleRoot, "AddAlert(AlertKind.Economy, GameText.T(\"ui.alert.insufficientCredits\"))", "Insufficient-credit failures must surface a localized economy alert.");
+    RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit alert text must exist.");
+    RequireText(chineseText, "[\"ui.alert.insufficientCredits\"]", "Chinese insufficient-credit alert text must exist.");
     RequireText(hudLayer, "UiFactory.MakeHudPanel", "HudLayer panel creation must use UiFactory.MakeHudPanel.");
     RequireText(hudLayer, "UiFactory.MakeHudSizedLabel", "HudLayer sized labels must use UiFactory.MakeHudSizedLabel.");
     RequireText(hudLayer, "UiFactory.ApplyNamedHudPanelTheme", "HudLayer panel refresh must use UiFactory.ApplyNamedHudPanelTheme.");

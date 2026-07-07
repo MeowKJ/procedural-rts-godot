@@ -49,22 +49,46 @@ public partial class BattleRoot
 
     private void AddStatusAlert(string status)
     {
-        if (!TryUseAlertCooldown($"status:{status}", 1.2f))
+        if (IsInsufficientCreditsStatus(status))
+        {
+            AddInsufficientCreditsAlert();
+            return;
+        }
+    }
+
+    private void AddInsufficientCreditsAlert()
+    {
+        if (!TryUseAlertCooldown("status:insufficient-credits", InsufficientCreditsAlertCooldown))
         {
             return;
         }
 
+        AddAlert(AlertKind.Economy, GameText.T("ui.alert.insufficientCredits"));
+    }
+
+    private static bool IsInsufficientCreditsStatus(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return false;
+        }
+
         var mentionsCredits = status.Contains("credits", StringComparison.OrdinalIgnoreCase)
             || status.Contains(GameText.T("ui.top.credits"), StringComparison.OrdinalIgnoreCase);
-        var looksLikeActionableEconomyStatus = status.StartsWith("Need ", StringComparison.OrdinalIgnoreCase)
-            || status.Contains("available", StringComparison.OrdinalIgnoreCase)
-            || status.Contains(GameText.T("ui.producerUnavailable"), StringComparison.OrdinalIgnoreCase)
-            || status.Contains(GameText.T("production.needCredits").Split('{')[0].Trim(), StringComparison.OrdinalIgnoreCase);
-
-        if (mentionsCredits && looksLikeActionableEconomyStatus)
+        if (!mentionsCredits)
         {
-            AddAlert(AlertKind.Economy, status);
+            return false;
         }
+
+        return ContainsLocalizedNeedCreditsPrefix(status, "ui.needCredits")
+            || ContainsLocalizedNeedCreditsPrefix(status, "production.needCredits");
+    }
+
+    private static bool ContainsLocalizedNeedCreditsPrefix(string status, string key)
+    {
+        var prefix = GameText.T(key).Split('{')[0].Trim();
+        return !string.IsNullOrWhiteSpace(prefix)
+            && status.Contains(prefix, StringComparison.OrdinalIgnoreCase);
     }
 
     private void AddAlert(AlertKind kind, string text, Vector2? worldPosition = null)
