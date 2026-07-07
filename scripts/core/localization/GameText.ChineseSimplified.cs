@@ -354,6 +354,7 @@ public static partial class GameText
         ["production.needProducer"] = "需要 {0} 才能生产 {1}",
         ["production.needCredits"] = "生产 {1} 需要 {0} 资金（当前 {2}）",
         ["production.queued"] = "{0} 已在 {1} 排队 -{2}（剩余 {3} 资金）",
+        ["production.batchQueued"] = "已排队 {0}/{1}；{2}",
         ["production.noneQueued"] = "没有生产队列",
         ["production.cancelled"] = "{0} 已取消 +{1} 资金",
         ["hotkeys.hint.open"] = "F1 帮助",

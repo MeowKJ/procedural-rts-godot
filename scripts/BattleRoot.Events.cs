@@ -214,24 +214,60 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnProductionRequested(ProductionKind productionKind)
+    private void OnProductionRequested(ProductionKind productionKind, int requestCount = 1)
     {
-        if (_unitBattlefield.TryCreateProductionPayload(productionKind, PlayerSlotId.One, out var payload, out var status))
+        var status = "";
+        var queued = 0;
+        var attempts = Math.Max(1, requestCount);
+        for (var attempt = 0; attempt < attempts; attempt++)
         {
+            if (!_unitBattlefield.TryCreateProductionPayload(productionKind, PlayerSlotId.One, out var payload, out status))
+            {
+                break;
+            }
+
             var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
             status = GatewayStatus(result, status);
+            if (result.AcceptedCount == 0)
+            {
+                break;
+            }
+
+            queued++;
         }
 
+        status = ProductionBatchStatus(queued, attempts, status);
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
         AddStatusAlert(status);
         RefreshCommandCard();
     }
 
-    private void OnProductionDesignRequested(string designId, int? providerId)
+    private void OnProductionDesignRequested(string designId, Func<int?> providerIdSelector, int requestCount = 1)
+    {
+        var status = "";
+        var queued = 0;
+        var attempts = Math.Max(1, requestCount);
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            if (!TrySubmitProductionDesignRequest(designId, providerIdSelector(), out status))
+            {
+                break;
+            }
+
+            queued++;
+        }
+
+        status = ProductionBatchStatus(queued, attempts, status);
+        _hud.SetStatus(status);
+        _hud.SetProductionStatus(status);
+        AddStatusAlert(status);
+        RefreshCommandCard();
+    }
+
+    private bool TrySubmitProductionDesignRequest(string designId, int? providerId, out string status)
     {
         PlayerCommandPayload payload;
-        string status;
         bool canSubmit;
         if (providerId is { } specificProviderId)
         {
@@ -255,12 +291,17 @@ public partial class BattleRoot
         {
             var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
             status = GatewayStatus(result, status);
+            return result.AcceptedCount > 0;
         }
 
-        _hud.SetStatus(status);
-        _hud.SetProductionStatus(status);
-        AddStatusAlert(status);
-        RefreshCommandCard();
+        return false;
+    }
+
+    private static string ProductionBatchStatus(int queued, int attempts, string status)
+    {
+        return queued > 1
+            ? GameText.Format("production.batchQueued", queued, attempts, status)
+            : status;
     }
 
     private void OnProductionStatusChanged(string status)

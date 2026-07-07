@@ -6,7 +6,7 @@ namespace ProceduralRts.Controllers;
 public partial class ProductionController : Node
 {
     public required GameState State { get; init; }
-    public Action<ProductionKind>? ProductionRequested { get; init; }
+    public Action<ProductionKind, int>? ProductionRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
     public Action<string>? StatusChanged { get; init; }
     public Action<string>? ProductionStatusChanged { get; init; }
@@ -49,7 +49,7 @@ public partial class ProductionController : Node
 
         if (ProductionRequested is not null)
         {
-            ProductionRequested.Invoke(productionKind.Value);
+            ProductionRequested.Invoke(productionKind.Value, key.ShiftPressed ? BattleRoot.ShiftProductionBatchCount : 1);
             GetViewport().SetInputAsHandled();
             return;
         }

@@ -220,11 +220,11 @@ public partial class HudLayer : CanvasLayer
 
             if (!string.IsNullOrWhiteSpace(button.UnitDesignId))
             {
-                ProductionDesignRequested?.Invoke(button.UnitDesignId, SelectedProductionProviderId(button.UnitDesignId));
+                ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount());
                 return;
             }
 
-            ProductionRequested?.Invoke(button.Kind);
+            ProductionRequested?.Invoke(button.Kind, ProductionRequestCount());
         };
         _commandButtons[optionId] = button;
         parent.AddChild(button);
@@ -247,6 +247,11 @@ public partial class HudLayer : CanvasLayer
     {
         var hotkeys = new[] { "Q", "W", "E", "A", "S", "D", "Z", "X", "C", "R", "F", "V" };
         return index >= 0 && index < hotkeys.Length ? hotkeys[index] : (index + 1).ToString();
+    }
+
+    private static int ProductionRequestCount()
+    {
+        return Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1;
     }
 
     private void AddProductionProviderLaneButton(Control parent, int index)
