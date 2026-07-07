@@ -233,6 +233,24 @@ static partial class Program
             throw new InvalidOperationException("smart right-click resource rally branch should keep production-building resource rally on SetRallyPointEntityCommand with a ResourceNode target entity");
         }
 
+        var smartClickBeforeFriendlyRally = smartClickBattlefield.AppliedInputCommandCount;
+        var smartClickBarracksSubjects = smartClickBattlefield.SelectedBuildingEntityIds(PlayerSlotId.One);
+        var hostileRallyPayload = PlayerCommandPayload.ForPoint(smartClickBarracksSubjects, smartClickEnemy.Position.X, smartClickEnemy.Position.Y) with { TargetEntity = smartClickEnemy.EntityId };
+        var hostileRallyResult = smartClickBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Rally, hostileRallyPayload);
+        var hostileRallyRejectedWithoutCommand = hostileRallyResult.AcceptedCount == 0
+            && smartClickBattlefield.AppliedInputCommandCount == smartClickBeforeFriendlyRally;
+        var friendlyRallyAccepted = smartClickBattlefield.SetSelectedBuildingRallyPoints(PlayerSlotId.One, smartClickAlly, out _);
+        var friendlyRallyState = BuildingEntityForTargetId(smartClickBattlefield, smartClickBarracks.Id)?.Components.Require<RallyPointComponentState>();
+        if (!hostileRallyRejectedWithoutCommand
+            || !friendlyRallyAccepted
+            || smartClickBattlefield.AppliedInputCommandCount != smartClickBeforeFriendlyRally + 1
+            || friendlyRallyState?.TargetEntityId != smartClickAlly.EntityId.Value
+            || friendlyRallyState?.Target != smartClickAlly.Position
+            || smartClickBattlefield.SetSelectedBuildingRallyPoints(PlayerSlotId.One, smartClickEnemy, out _))
+        {
+            throw new InvalidOperationException("smart right-click friendly-unit rally branch should accept friendly runtime unit targets and reject hostile unit targets through the live rally gateway");
+        }
+
         for (var step = 0; step < 420; step++)
         {
             runtimeHarvestBattlefield.Update(1 / 30.0);

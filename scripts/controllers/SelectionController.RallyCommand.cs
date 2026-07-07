@@ -66,7 +66,8 @@ public partial class SelectionController
 
     private CommandPreviewState ArmedRallyPreview(Vector2 screenPosition, Vector2 worldPosition)
     {
-        var target = _hoveredResourceField?.Position ?? worldPosition;
+        var target = PickResourceField(worldPosition)?.Position
+            ?? (_hoveredUnitInstance is { } unit && IsFriendlyRuntimeRallyTarget(unit) ? unit.Position : worldPosition);
         return new CommandPreviewState(CommandPreviewKind.Rally, GameText.T("preview.setRally"), screenPosition, target, true);
     }
 
@@ -78,6 +79,13 @@ public partial class SelectionController
             && UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId))
         {
             FinishSelectedBuildingRallyCommand(rallyResource);
+        }
+        else if (UseUnitBattlefieldInput()
+            && UnitBattlefield!.PickAnyUnit(worldPoint, PickPaddingWorld()) is { } rallyUnit
+            && IsFriendlyRuntimeRallyTarget(rallyUnit)
+            && UnitBattlefield.HasSelectedBuildings(LocalPlayerSlotId))
+        {
+            FinishSelectedBuildingRallyCommand(rallyUnit);
         }
         else
         {
@@ -93,5 +101,11 @@ public partial class SelectionController
         _rallyCommandArmed = false;
         ClearDrag();
         StatusChanged?.Invoke(GameText.T("ui.status.ready"));
+    }
+
+    private bool IsFriendlyRuntimeRallyTarget(UnitInstance unit)
+    {
+        return UseUnitBattlefieldInput()
+            && UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, unit.PlayerSlotId) is PlayerRelation.Self or PlayerRelation.Allied;
     }
 }

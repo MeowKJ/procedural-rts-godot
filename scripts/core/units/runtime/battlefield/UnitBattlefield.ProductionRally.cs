@@ -15,6 +15,19 @@ public sealed partial class UnitBattlefield
         return SetRallyPoint(buildingId, field.Position, _resourceFieldEntityIds[field.Id], out status);
     }
 
+    public bool SetRallyPoint(int buildingId, UnitInstance unit, out string status)
+    {
+        if (BuildingIdentity(buildingId)?.PlayerSlotId is not { } playerSlotId
+            || Relations.Relation(playerSlotId, unit.PlayerSlotId) is not (PlayerRelation.Self or PlayerRelation.Allied)
+            || !_entityWorld.TryGet(unit.EntityId, out _))
+        {
+            status = GameText.T("rally.selectProducer");
+            return false;
+        }
+
+        return SetRallyPoint(buildingId, unit.Position, unit.EntityId, out status);
+    }
+
     private bool SetRallyPoint(int buildingId, Vector2 target, EntityId rallyTargetEntity, out string status)
     {
         if (BuildingEntityByTargetId(buildingId) is not { } buildingEntity
@@ -91,6 +104,40 @@ public sealed partial class UnitBattlefield
         foreach (var producerId in _selectedBuildingRallyProducerIds)
         {
             SetRallyPoint(producerId, clamped, targetEntity, out _);
+        }
+
+        status = _selectedBuildingRallyProducerIds.Count == 1
+            ? GameText.Format("rally.singleSet", BuildSpecCatalog.For(BuildingIdentity(_selectedBuildingRallyProducerIds[0])!.Kind).Label)
+            : GameText.Format("rally.multiSet", _selectedBuildingRallyProducerIds.Count);
+        return true;
+    }
+
+    public bool SetSelectedBuildingRallyPoints(PlayerSlotId playerSlotId, UnitInstance unit, out string status)
+    {
+        if (Relations.Relation(playerSlotId, unit.PlayerSlotId) is not (PlayerRelation.Self or PlayerRelation.Allied)
+            || !_entityWorld.TryGet(unit.EntityId, out _))
+        {
+            status = GameText.T("rally.selectProducer");
+            return false;
+        }
+
+        var hasSelected = CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds);
+        if (!hasSelected)
+        {
+            status = GameText.T("rally.selectProducer");
+            return false;
+        }
+
+        if (_selectedBuildingRallyProducerIds.Count == 0)
+        {
+            status = GameText.T("rally.unsupported");
+            return false;
+        }
+
+        var clamped = ClampInsideWorld(unit.Position, 80);
+        foreach (var producerId in _selectedBuildingRallyProducerIds)
+        {
+            SetRallyPoint(producerId, clamped, unit.EntityId, out _);
         }
 
         status = _selectedBuildingRallyProducerIds.Count == 1

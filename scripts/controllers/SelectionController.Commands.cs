@@ -218,6 +218,16 @@ public partial class SelectionController
         return accepted;
     }
 
+    private bool CommandUnitBattlefieldSelectedBuildingRally(UnitInstance unit, out string status)
+    {
+        var subjects = UnitBattlefield!.SelectedBuildingEntityIds(LocalPlayerSlotId);
+        var accepted = SubmitRuntimeCommand(
+            PlayerCommandKind.Rally,
+            PlayerCommandPayload.ForPoint(subjects, unit.Position.X, unit.Position.Y) with { TargetEntity = unit.EntityId });
+        status = accepted ? GameText.T("rally.set") : GatewayRejectedStatus(GameText.T("rally.selectProducer"));
+        return accepted;
+    }
+
     private void FinishSelectedBuildingRallyCommand(ResourceFieldModel resourceField)
     {
         var accepted = CommandUnitBattlefieldSelectedBuildingRally(resourceField, out var status);
@@ -225,6 +235,16 @@ public partial class SelectionController
         AcknowledgeCommand(
             accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
             resourceField.Position,
+            accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
+    }
+
+    private void FinishSelectedBuildingRallyCommand(UnitInstance unit)
+    {
+        var accepted = CommandUnitBattlefieldSelectedBuildingRally(unit, out var status);
+        StatusChanged?.Invoke(status);
+        AcknowledgeCommand(
+            accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
+            unit.Position,
             accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
     }
 

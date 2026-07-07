@@ -219,6 +219,107 @@ static partial class Program
         Console.WriteLine($"OK [resource-rally-production]: mode {harvesterState.Mode}, field {harvesterState.FieldId}, resource {resource.Amount}, cargo {cargo.Cargo}.");
     }
 
+    static void AssertFriendlyUnitRallyProduction()
+    {
+        const int ticks = 260;
+        var staleRallyPoint = new Vector2(680, 500);
+        var friendlyCurrentPosition = new Vector2(980, 540);
+
+        EntitySpec ProducerSpec()
+        {
+            return new EntitySpec
+            {
+                Id = "replay.friendly_rally_barracks",
+                Kind = EntityKind.Building,
+                Display = new EntityDisplaySpec("Barracks", "barracks.name", "barracks.role", "BAR", IconGlyph.Building),
+                Authoring = new EntityAuthoringMetadata(BuildingSpecId: BuildingDesignIds.Barracks, TechTier: 1),
+            };
+        }
+
+        EntityWorld BuildFriendlyUnitRallyWorld()
+        {
+            var world = new EntityWorld(seed: 6464) { WorldWidth = 1800, WorldHeight = 1200 };
+            world.AddSystem(new ProductionSystem());
+            world.ResourceInventory(new OwnerId(1)).Credits = 300;
+
+            world.Spawn(ProducerSpec(), new OwnerId(1), EntityTransform.At(new Vector2(360, 500)), new EntityComponentState[]
+            {
+                new HealthComponentState(1000, 1000),
+                new FootprintComponentState(new Vector2(96, 86)),
+                new ConstructionComponentState(Progress: 1),
+                new PowerComponentState(Provided: 0, Used: 2, Powered: true),
+                new ProductionQueueComponentState(Array.Empty<UnitProductionQueueItem>()),
+                new CollisionComponentState(54, 8, 100, BlocksMovement: true),
+            });
+            world.SpawnUnit(UnitDesignCatalog.Spec("dog.guard_tank"), new OwnerId(1), friendlyCurrentPosition);
+            return world;
+        }
+
+        var log = new List<EntityCommand>
+        {
+            new SetRallyPointEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 1, staleRallyPoint, new EntityId(2)),
+            new ProduceEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 2, "dog.infantry"),
+        };
+        AssertDeterministic("friendly-unit-rally-production", BuildFriendlyUnitRallyWorld, log, ticks, 26);
+
+        var world = BuildFriendlyUnitRallyWorld();
+        var clock = new SimClock();
+        var buffer = new EntityCommandBuffer();
+        foreach (var command in log)
+        {
+            buffer.Enqueue(command);
+        }
+
+        EntityInstance? produced = null;
+        for (var tick = 1; tick <= ticks; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, buffer.DrainUpToTick(tick));
+            produced = world.OrderedEntities.FirstOrDefault(entity => entity.SpecId == "dog.infantry");
+            if (produced is not null)
+            {
+                break;
+            }
+        }
+
+        var producerRally = world.OrderedEntities.Single(entity => entity.Id.Value == 1).Components.Require<RallyPointComponentState>();
+        var friendlyTarget = world.OrderedEntities.Single(entity => entity.Id.Value == 2);
+        var commandable = produced?.Components.Require<CommandableComponentState>();
+        var movement = produced?.Components.Require<MovementComponentState>();
+
+        Assert(producerRally.Target == staleRallyPoint, "friendly-unit rally should retain the clicked point on the producer for deterministic command echo");
+        Assert(producerRally.TargetEntityId == 2, $"friendly-unit rally should retain target entity id 2, got {producerRally.TargetEntityId}");
+        Assert(produced is not null, "friendly-unit rally should still produce the queued infantry");
+        Assert(commandable?.PlayerIntentTarget == friendlyTarget.Transform.Position, $"produced unit should rally to the friendly unit's current position {friendlyTarget.Transform.Position}, got {commandable?.PlayerIntentTarget}");
+        Assert(commandable?.CommandVisualTarget == friendlyTarget.Transform.Position, "friendly-unit rally command visual should use the target unit's current position");
+        Assert(movement?.MoveTarget == friendlyTarget.Transform.Position, "friendly-unit rally movement target should use the target unit's current position");
+        Assert(commandable?.PlayerIntentTarget != staleRallyPoint, "friendly-unit rally should not fall back to the stale clicked point while the target entity is live");
+        Console.WriteLine($"OK [friendly-unit-rally-production]: targetEntity {producerRally.TargetEntityId}, stale {staleRallyPoint}, current {friendlyTarget.Transform.Position}.");
+
+        var hostileWorld = BuildFriendlyUnitRallyWorld();
+        hostileWorld.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        hostileWorld.OrderedEntities.Single(entity => entity.Id.Value == 2).OwnerId = new OwnerId(2);
+        var hostileBuffer = new EntityCommandBuffer();
+        foreach (var command in log)
+        {
+            hostileBuffer.Enqueue(command);
+        }
+
+        var hostileClock = new SimClock();
+        EntityInstance? hostileRallyProduced = null;
+        for (var tick = 1; tick <= ticks; tick++)
+        {
+            hostileWorld.Step(tick, hostileClock.FixedDelta, hostileBuffer.DrainUpToTick(tick));
+            hostileRallyProduced = hostileWorld.OrderedEntities.FirstOrDefault(entity => entity.SpecId == "dog.infantry");
+            if (hostileRallyProduced is not null)
+            {
+                break;
+            }
+        }
+
+        var hostileCommandable = hostileRallyProduced?.Components.Require<CommandableComponentState>();
+        Assert(hostileCommandable?.PlayerIntentTarget == staleRallyPoint, "hostile entity rally must fall back to the static clicked rally point instead of dynamic target tracking");
+    }
+
     static void AssertRepeatProduction()
     {
         const int ticks = 370;
