@@ -33,6 +33,7 @@ public partial class HudLayer : CanvasLayer
     private SelectionIconSummary _drawerIconSummary = null!;
     private Label _catalogSurfaceLabel = null!;
     private Label _statusValue = null!;
+    private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _alertValue = null!;
@@ -331,6 +332,7 @@ public partial class HudLayer : CanvasLayer
 
         ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
+        RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
     }
 
@@ -343,6 +345,7 @@ public partial class HudLayer : CanvasLayer
         }
 
         ValidateProductionProviderLaneSelection();
+        RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
     }
 
@@ -432,6 +435,7 @@ public partial class HudLayer : CanvasLayer
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
             ClearAbilityCards();
+            RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
             RefreshBuildCards();
             return;
@@ -440,11 +444,13 @@ public partial class HudLayer : CanvasLayer
         if (_selectedCatalogMode == CatalogModeKind.Train)
         {
             ClearAbilityCards();
+            RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
             RefreshProductionCards();
             return;
         }
 
+        RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
         RefreshAbilityCards();
     }

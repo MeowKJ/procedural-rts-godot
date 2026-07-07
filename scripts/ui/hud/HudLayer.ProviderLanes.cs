@@ -78,6 +78,7 @@ public partial class HudLayer : CanvasLayer
             state.Label,
             state.ProviderCount,
             state.QueueCount));
+        RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
     }
 
@@ -129,6 +130,74 @@ public partial class HudLayer : CanvasLayer
         {
             _productionProviderLaneButtons[index].Visible = false;
         }
+    }
+
+    private void RefreshProductionProviderLaneSummary()
+    {
+        if (_providerLaneSummaryValue is null)
+        {
+            return;
+        }
+
+        if (_selectedCatalogMode != CatalogModeKind.Train)
+        {
+            _providerLaneSummaryValue.Visible = false;
+            return;
+        }
+
+        var state = CurrentProductionProviderLaneState();
+        _providerLaneSummaryValue.Visible = true;
+        _providerLaneSummaryValue.Text = state is null
+            ? GameText.T("ui.providerLane.empty")
+            : ProviderLaneSummaryText(state);
+        SetLabelColor(_providerLaneSummaryValue, state is null || !state.Available ? InkMuted : Ink);
+    }
+
+    private ProductionProviderLaneState? CurrentProductionProviderLaneState()
+    {
+        for (var index = 0; index < _productionProviderLaneStates.Count; index++)
+        {
+            var state = _productionProviderLaneStates[index];
+            if (!ProviderLaneMatchesSelectedTrainCategory(state)
+                || state.Scope != _selectedProductionProviderLaneScope)
+            {
+                continue;
+            }
+
+            if (state.Scope != ProductionProviderLaneScope.Specific
+                || state.ProducerId == _selectedProductionProviderId)
+            {
+                return state;
+            }
+        }
+
+        return null;
+    }
+
+    private static string ProviderLaneSummaryText(ProductionProviderLaneState state)
+    {
+        var availability = state.Available
+            ? GameText.T("ui.providerLane.summaryOk")
+            : ProviderLaneSummaryDisabledReason(state.DisabledReasonKey);
+        var progress = state.ActiveProgress > 0 ? Mathf.RoundToInt(state.ActiveProgress * 100) : 0;
+        return GameText.Format(
+            "ui.providerLane.summary",
+            state.ShortLabel,
+            state.ProviderCount,
+            state.QueueCount,
+            progress,
+            availability);
+    }
+
+    private static string ProviderLaneSummaryDisabledReason(string disabledReasonKey)
+    {
+        return disabledReasonKey switch
+        {
+            "ui.providerLane.offline" => GameText.T("ui.providerLane.summaryOffline"),
+            "ui.providerLane.incomplete" => GameText.T("ui.providerLane.summaryIncomplete"),
+            "ui.producerUnavailable" => GameText.T("ui.providerLane.summaryNone"),
+            _ => GameText.T("ui.providerLane.summaryLocked"),
+        };
     }
 
     private bool IsProductionProviderLaneSelected(ProductionProviderLaneState state)

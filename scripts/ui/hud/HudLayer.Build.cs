@@ -160,6 +160,11 @@ public partial class HudLayer : CanvasLayer
         {
             AddProductionProviderLaneButton(_rightRail, index);
         }
+
+        _providerLaneSummaryValue = MakeSizedLabel(GameText.T("ui.providerLane.empty"), new Vector2(4, 284), new Vector2(40, 92), FontTiny, InkMuted);
+        _providerLaneSummaryValue.Name = "ProviderLaneSummary";
+        _providerLaneSummaryValue.VerticalAlignment = VerticalAlignment.Top;
+        _rightRail.AddChild(_providerLaneSummaryValue);
     }
 
     private void BuildRightDrawer(Control root)
