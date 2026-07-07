@@ -62,6 +62,12 @@ public partial class HudLayer : CanvasLayer
             button.QueueRedraw();
         }
 
+        foreach (var button in _abilityCards.Values)
+        {
+            UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
+            button.QueueRedraw();
+        }
+
         foreach (var button in FindControls<IconActionButton>(this))
         {
             button.Accent = UiFactory.HudActionAccent(button.Glyph, CurrentPalette);

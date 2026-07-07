@@ -9,6 +9,29 @@ public partial class HudLayer : CanvasLayer
     {
         Build,
         Train,
+        Abilities,
+    }
+
+    private static Color CatalogModeAccent(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => Cyan,
+            CatalogModeKind.Train => Mint,
+            CatalogModeKind.Abilities => Amber,
+            _ => InkMuted,
+        };
+    }
+
+    private static IconGlyph CatalogModeGlyph(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => IconGlyph.Building,
+            CatalogModeKind.Train => IconGlyph.Infantry,
+            CatalogModeKind.Abilities => IconGlyph.Ability,
+            _ => IconGlyph.None,
+        };
     }
 
     private partial class SeparatorLine : Control
@@ -51,13 +74,13 @@ public partial class HudLayer : CanvasLayer
         public override void _Draw()
         {
             var rect = new Rect2(Vector2.Zero, Size);
-            var accent = Mode == CatalogModeKind.Build ? Cyan : Mint;
+            var accent = CatalogModeAccent(Mode);
             var fill = _selected ? new Color(accent, 0.16f) : new Color(CurrentPalette.PanelSubtleFill, 0.82f);
             DrawRect(rect, fill, true);
             DrawRect(rect.Grow(-1), new Color(accent, _selected ? 0.84f : 0.42f), false, _selected ? 1.8f : 1.2f, true);
             DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected ? 0.78f : 0.46f), true);
 
-            var glyph = Mode == CatalogModeKind.Build ? IconGlyph.Building : IconGlyph.Infantry;
+            var glyph = CatalogModeGlyph(Mode);
             DrawIconGlyph(this, glyph, new Vector2(14, rect.Size.Y * 0.5f), 15, new Color(accent, _selected ? 1f : 0.72f));
 
             var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);

@@ -50,6 +50,7 @@ static string FindRepoRoot()
 static void AssertHudFactoryExtraction(string root)
 {
     var hudLayer = ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
+    var hudSync = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.HudSync.cs"));
     var uiFactory = File.ReadAllText(Path.Combine(root, "scripts", "ui", "UiFactory.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
     var chineseText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"));
@@ -72,18 +73,27 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "BuildCategory.Naval, active: false", "HUD must keep the naval build tab visibly disabled until naval build specs exist.");
     RequireText(hudLayer, "\"CatalogModeBuild\"", "Right command panel must expose a stable Build catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeTrain\"", "Right command panel must expose a stable Train catalog mode node.");
+    RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "CatalogModeButton", "Right command panel mode controls must be clickable buttons, not decorative labels.");
     RequireText(hudLayer, "button.Pressed += () => SelectCatalogMode(mode);", "Build/Train mode buttons must switch catalog pages.");
     RequireText(hudLayer, "tab.Pressed += () => SelectProductionCategory(category);", "Train category tabs must update the production category page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Build;", "Build category tabs must only be visible on the Build catalog page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Train;", "Train category tabs must only be visible on the Train catalog page.");
     RequireText(hudLayer, "state.Category != _selectedProductionCategory", "Train command grid must filter by the selected production category.");
+    RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");
+    RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
+    RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
+    RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated presentation-only cards.");
+    RequireText(hudLayer, "Name = $\"AbilityCard{kind}\"", "Ability cards must expose stable node names for structure/screenshot QA.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.build\")", "Right command panel Build mode label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.buildSurface\")", "Right command panel Build surface label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.train\")", "Right command panel Train mode label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.trainSurface\")", "Right command panel train grid section label must be i18n-backed.");
+    RequireText(hudLayer, "GameText.T(\"ui.catalog.abilities\")", "Right command panel Abilities mode label must be i18n-backed.");
+    RequireText(hudLayer, "GameText.T(\"ui.catalog.abilitiesEmpty\")", "Abilities mode empty state must be i18n-backed.");
     RequireText(hudLayer, "96 + row * 58", "Right command panel production cells must keep fixed grid spacing below the catalog strip.");
     RequireText(hudLayer, "_visibleCommandCardStates.Count >= 12", "Right command panel must cap production cells to the 12-slot fixed grid.");
+    RequireText(hudLayer, "Math.Min(_abilityCardStates.Count, 12)", "Abilities mode must use the same fixed 12-slot grid cap.");
     RequireText(hudLayer, "Action? RallyRequested", "HUD must expose a rally request for the command-ribbon rally button.");
     RequireText(hudLayer, "Action? SellOrCancelRequested", "HUD must expose a sell-or-cancel request for the command-ribbon sell button.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
@@ -102,9 +112,16 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.build\"]", "English HUD catalog Build label must exist.");
     RequireText(englishText, "[\"ui.catalog.buildSurface\"]", "English HUD catalog Build surface label must exist.");
     RequireText(englishText, "[\"ui.catalog.train\"]", "English HUD catalog Train label must exist.");
+    RequireText(englishText, "[\"ui.catalog.abilities\"]", "English HUD catalog Abilities label must exist.");
+    RequireText(englishText, "[\"ui.ability.shieldField\"]", "English ability-card ShieldField label must exist.");
     RequireText(chineseText, "[\"ui.catalog.build\"]", "Chinese HUD catalog Build label must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildSurface\"]", "Chinese HUD catalog Build surface label must exist.");
     RequireText(chineseText, "[\"ui.catalog.train\"]", "Chinese HUD catalog Train label must exist.");
+    RequireText(chineseText, "[\"ui.catalog.abilities\"]", "Chinese HUD catalog Abilities label must exist.");
+    RequireText(chineseText, "[\"ui.ability.shieldField\"]", "Chinese ability-card ShieldField label must exist.");
+    RequireText(hudSync, "_hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates())", "BattleRoot must feed selected-unit ability cards into the HUD.");
+    RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
+    RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");
 
     if (hudLayer.Contains("AddThemeStyleboxOverride(\"panel\"", StringComparison.Ordinal))
     {
