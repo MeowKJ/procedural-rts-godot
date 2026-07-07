@@ -207,8 +207,11 @@ public partial class HudLayer : CanvasLayer
         };
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
+        button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.MouseExited += RestoreCatalogStatusText;
         button.Pressed += () =>
         {
+            SetCatalogStatusText(button.InspectorText);
             if (!string.IsNullOrWhiteSpace(button.BuildKind))
             {
                 BuildKindRequested?.Invoke(button.BuildKind);

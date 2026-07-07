@@ -191,7 +191,8 @@ public partial class HudLayer : CanvasLayer
 
         _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 80), new Vector2(92, 16), FontTiny, InkMuted);
         _rightProductionPanel.AddChild(_catalogSurfaceLabel);
-        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(86, 76), new Vector2(196, 22), FontBody, Ink);
+        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
+        _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
 
         _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);

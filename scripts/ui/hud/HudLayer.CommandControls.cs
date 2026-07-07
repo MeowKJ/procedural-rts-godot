@@ -146,6 +146,7 @@ public partial class HudLayer : CanvasLayer
         private string _disabledReason = "";
         private float _feedbackPulse;
         private bool _hasState;
+        public string InspectorText { get; private set; } = "";
 
         public void SetState(ProductionOptionState state, string disabledReason)
         {
@@ -159,6 +160,7 @@ public partial class HudLayer : CanvasLayer
             ProducerLabel = BuildSpecCatalog.For(state.ProducerKind).Label;
             RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph;
             Duration = state.Duration;
+            InspectorText = TrainInspectorText(state, ProducerLabel, disabledReason);
             SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason);
         }
 
@@ -175,6 +177,7 @@ public partial class HudLayer : CanvasLayer
             Glyph = state.Icon;
             Accent = spec.Accent;
             Cost = state.Cost;
+            InspectorText = BuildInspectorText(state, spec, disabledReason);
             SetState(state.CanStart, 0, 0, disabledReason);
         }
 
@@ -332,6 +335,35 @@ public partial class HudLayer : CanvasLayer
             return $"{label} - {cost}{source}{time}{disabled}";
         }
 
+        private static string BuildInspectorText(BuildOptionSnapshot state, BuildSpec spec, string disabledReason)
+        {
+            var category = GameText.T($"build.category.{state.Category}");
+            var status = string.IsNullOrWhiteSpace(disabledReason) ? GameText.T("ui.catalog.inspectReady") : disabledReason;
+            return GameText.Format(
+                "ui.catalog.inspectBuild",
+                spec.Label,
+                category,
+                state.Cost,
+                Mathf.CeilToInt(state.BuildTime),
+                status);
+        }
+
+        private static string TrainInspectorText(ProductionOptionState state, string producerLabel, string disabledReason)
+        {
+            var label = !string.IsNullOrWhiteSpace(state.UnitDesignId)
+                ? UnitDesignCatalog.Spec(state.UnitDesignId).Label
+                : UnitPresentationCatalog.Production[state.Kind].ShortCode;
+            var status = string.IsNullOrWhiteSpace(disabledReason) ? GameText.T("ui.catalog.inspectReady") : disabledReason;
+            return GameText.Format(
+                "ui.catalog.inspectTrain",
+                label,
+                producerLabel,
+                state.Cost,
+                Mathf.CeilToInt(state.Duration),
+                state.QueuedCount,
+                status);
+        }
+
         private static string CompactCardText(string text, int maxChars)
         {
             if (text.Length <= maxChars)
@@ -347,11 +379,13 @@ public partial class HudLayer : CanvasLayer
     {
         public required AbilityKind Kind { get; init; }
         private AbilityCardState _state;
+        public string InspectorText { get; private set; } = "";
 
         public void SetState(AbilityCardState state)
         {
             _state = state;
             Disabled = state.CooldownRemaining > 0.01f && !state.IsActive;
+            InspectorText = AbilityInspectorText(state);
             Text = $"\n\n{AbilityStatusText(state)}";
             TooltipText = AbilityTooltip(state);
             QueueRedraw();
@@ -410,6 +444,23 @@ public partial class HudLayer : CanvasLayer
         private static string AbilityTooltip(AbilityCardState state)
         {
             return $"{AbilityLabel(state.Ability.Kind)} - {AbilityStatusText(state)} - {AbilityMetricLine(state.Ability)}";
+        }
+
+        private static string AbilityInspectorText(AbilityCardState state)
+        {
+            var target = state.Ability.Kind switch
+            {
+                AbilityKind.Deploy => GameText.T("ui.catalog.inspectSelf"),
+                _ => GameText.T("ui.catalog.inspectTargeted"),
+            };
+            var metric = AbilityMetricLine(state.Ability);
+            var status = AbilityStatusText(state);
+            return GameText.Format(
+                "ui.catalog.inspectAbility",
+                AbilityLabel(state.Ability.Kind),
+                target,
+                string.IsNullOrWhiteSpace(metric) ? "--" : metric,
+                status);
         }
 
         private static string AbilityStatusText(AbilityCardState state)
