@@ -18,6 +18,11 @@ public partial class SelectionController
             return ArmedRallyPreview(screenPosition, worldPosition);
         }
 
+        if (_repairCommandArmed)
+        {
+            return ArmedRepairPreview(screenPosition, worldPosition);
+        }
+
         if (_armedAbility is not null)
         {
             return ArmedAbilityPreview(screenPosition, worldPosition);

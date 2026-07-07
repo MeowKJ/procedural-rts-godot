@@ -21,6 +21,12 @@ public partial class BattleRoot
     {
         _hud.SetControlGroups(_controlGroups.Snapshots());
     }
+
+    private void OnRepairRequested()
+    {
+        _selection.ArmRepairCommand();
+    }
+
     private void RefreshCommandCard()
     {
         _hud.SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player));
