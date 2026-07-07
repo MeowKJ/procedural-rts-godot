@@ -136,6 +136,7 @@ public partial class HudLayer : CanvasLayer
         public required Color Accent { get; set; }
         public required int Cost { get; set; }
         public string? UnitDesignId { get; set; }
+        public string? BuildKind { get; set; }
         private int _queued;
         private float _progress;
         private string _disabledReason = "";
@@ -144,12 +145,25 @@ public partial class HudLayer : CanvasLayer
 
         public void SetState(ProductionOptionState state, string disabledReason)
         {
+            BuildKind = null;
             UnitDesignId = state.UnitDesignId;
             ShortLabel = state.ShortCode;
             Glyph = state.Icon;
             Accent = state.Accent;
             Cost = state.Cost;
             SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason);
+        }
+
+        public void SetBuildState(BuildOptionSnapshot state, string disabledReason)
+        {
+            var spec = BuildSpecCatalog.For(state.Kind);
+            UnitDesignId = null;
+            BuildKind = state.Kind;
+            ShortLabel = spec.ShortCode;
+            Glyph = state.Icon;
+            Accent = spec.Accent;
+            Cost = state.Cost;
+            SetState(state.CanStart, 0, 0, disabledReason);
         }
 
         public void SetState(bool enabled, int queued, float progress, string disabledReason)
@@ -171,7 +185,9 @@ public partial class HudLayer : CanvasLayer
             Text = queued > 0
                 ? $"{Hotkey}\n\n{Cost}  x{queued}"
                 : $"{Hotkey}\n\n{Cost}";
-            var label = !string.IsNullOrWhiteSpace(UnitDesignId)
+            var label = !string.IsNullOrWhiteSpace(BuildKind)
+                ? BuildSpecCatalog.For(BuildKind).Label
+                : !string.IsNullOrWhiteSpace(UnitDesignId)
                 ? UnitDesignCatalog.Spec(UnitDesignId).Label
                 : UnitPresentationCatalog.Production[Kind].ShortCode;
             TooltipText = enabled

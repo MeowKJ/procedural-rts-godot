@@ -33,19 +33,19 @@ public partial class BuildPlacementController : Node2D
     private bool HasActiveReadyTicket => _activeReadyTicketId.IsValid;
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
 
-    public bool SelectBuildCategory(BuildCategory category)
+    public bool SelectBuildKind(string kind)
     {
         for (var index = 0; index < BuildOrder.Length; index++)
         {
-            var spec = BuildSpecCatalog.For(BuildOrder[index]);
-            if (spec.Category != category)
+            if (!string.Equals(BuildOrder[index], kind, StringComparison.Ordinal))
             {
                 continue;
             }
 
             _activeReadyTicketId = EntityId.None;
             _selectedIndex = index;
-            var key = ShouldQueueConstructionTicket(spec.Kind) ? "build.queuePreview" : "build.preview";
+            var spec = BuildSpecCatalog.For(kind);
+            var key = ShouldQueueConstructionTicket(kind) ? "build.queuePreview" : "build.preview";
             StatusChanged?.Invoke(GameText.Format(key, spec.Label));
             QueueRedraw();
             return true;

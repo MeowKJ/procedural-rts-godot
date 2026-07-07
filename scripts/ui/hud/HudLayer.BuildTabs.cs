@@ -71,6 +71,8 @@ public partial class HudLayer : CanvasLayer
             var tab = _productionTabs[index];
             tab.SetSelected(tab.Category == category);
         }
+
+        RefreshCommandCards();
     }
 
     private void SelectProductionCategory(ProductionCategory category)

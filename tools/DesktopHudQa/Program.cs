@@ -60,11 +60,15 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "UiFactory.ApplyHudActionButtonTheme", "HudLayer icon actions must use UiFactory.ApplyHudActionButtonTheme.");
     RequireText(hudLayer, "UiFactory.ApplyHudCommandButtonTheme", "HudLayer command buttons must use UiFactory.ApplyHudCommandButtonTheme.");
     RequireText(hudLayer, "UiFactory.GetHudControlGroupSlotStyle", "HudLayer control-group slot style must come from UiFactory.");
-    RequireText(hudLayer, "BuildCategoryRequested?.Invoke(category)", "Build category tabs must request build placement instead of staying decorative.");
     RequireText(hudLayer, "List<ProductionTab> _productionTabs", "HUD must retain production tab controls so selected state can update after clicks.");
     RequireText(hudLayer, "private BuildCategory _selectedBuildCategory = BuildCategory.Command", "HUD production tabs must default to command selected before a tab click.");
-    RequireText(hudLayer, "SelectProductionTab(category);", "Build category tab clicks must update the visible selected tab before requesting placement.");
+    RequireText(hudLayer, "SelectProductionTab(category);", "Build category tab clicks must update the visible selected tab before rendering build cards.");
     RequireText(hudLayer, "tab.SetSelected(tab.Category == category);", "HUD production tabs must redraw selected state from the last requested build category.");
+    RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind)", "Build option cards must request build placement explicitly.");
+    RequireText(hudLayer, "state.Category != _selectedBuildCategory", "Build option cards must filter by the selected build category.");
+    RequireText(hudLayer, "_visibleBuildCardStates.Count >= 12", "Build option cards must keep the 12-slot fixed grid cap.");
+    RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons.");
+    ForbidText(hudLayer, "BuildCategoryRequested", "Build category tabs must filter cards without arming placement.");
     RequireText(hudLayer, "BuildCategory.Naval, active: false", "HUD must keep the naval build tab visibly disabled until naval build specs exist.");
     RequireText(hudLayer, "\"CatalogModeBuild\"", "Right command panel must expose a stable Build catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeTrain\"", "Right command panel must expose a stable Train catalog mode node.");

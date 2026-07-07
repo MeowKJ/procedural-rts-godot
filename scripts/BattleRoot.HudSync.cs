@@ -23,6 +23,7 @@ public partial class BattleRoot
     }
     private void RefreshCommandCard()
     {
+        _hud.SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player));
         if (UseUnitDesignRuntime)
         {
             CollectSelectedProductionBuildingIds();
@@ -112,9 +113,9 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnBuildCategoryRequested(BuildCategory category)
+    private void OnBuildKindRequested(string kind)
     {
-        _buildPlacement.SelectBuildCategory(category);
+        _buildPlacement.SelectBuildKind(kind);
     }
 
     private void OnRallyRequested()

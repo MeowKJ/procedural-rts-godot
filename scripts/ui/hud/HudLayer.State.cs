@@ -62,6 +62,8 @@ public partial class HudLayer : CanvasLayer
     private readonly List<MoveModeButton> _moveModeButtons = [];
     private readonly List<StanceModeButton> _stanceModeButtons = [];
     private readonly Dictionary<string, CommandButton> _commandButtons = [];
+    private readonly List<BuildOptionSnapshot> _buildCardStates = [];
+    private readonly List<BuildOptionSnapshot> _visibleBuildCardStates = [];
     private readonly List<ProductionOptionState> _commandCardStates = [];
     private readonly List<ProductionOptionState> _visibleCommandCardStates = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
@@ -320,10 +322,40 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
     }
 
+    public void SetBuildCardState(IReadOnlyList<BuildOptionSnapshot> states)
+    {
+        _buildCardStates.Clear();
+        for (var index = 0; index < states.Count; index++)
+        {
+            _buildCardStates.Add(states[index]);
+        }
+
+        RefreshCommandCards();
+    }
+
     private void RefreshCommandCards()
     {
+        _visibleBuildCardStates.Clear();
         _visibleCommandCardStates.Clear();
-        if (_selectedCatalogMode == CatalogModeKind.Train)
+        if (_selectedCatalogMode == CatalogModeKind.Build)
+        {
+            for (var index = 0; index < _buildCardStates.Count; index++)
+            {
+                var state = _buildCardStates[index];
+                if (state.Category != _selectedBuildCategory)
+                {
+                    continue;
+                }
+
+                if (_visibleBuildCardStates.Count >= 12)
+                {
+                    break;
+                }
+
+                _visibleBuildCardStates.Add(state);
+            }
+        }
+        else
         {
             for (var index = 0; index < _commandCardStates.Count; index++)
             {
@@ -344,10 +376,19 @@ public partial class HudLayer : CanvasLayer
 
         _commandCardActiveIds.Clear();
         _commandCardStaleIds.Clear();
-        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
+        if (_selectedCatalogMode == CatalogModeKind.Build)
         {
-            var state = _visibleCommandCardStates[index];
-            _commandCardActiveIds.Add(ProductionOptionId(state));
+            for (var index = 0; index < _visibleBuildCardStates.Count; index++)
+            {
+                _commandCardActiveIds.Add(BuildOptionId(_visibleBuildCardStates[index]));
+            }
+        }
+        else
+        {
+            for (var index = 0; index < _visibleCommandCardStates.Count; index++)
+            {
+                _commandCardActiveIds.Add(ProductionOptionId(_visibleCommandCardStates[index]));
+            }
         }
 
         foreach (var key in _commandButtons.Keys)
@@ -364,6 +405,36 @@ public partial class HudLayer : CanvasLayer
             _commandButtons.Remove(stale);
         }
 
+        if (_selectedCatalogMode == CatalogModeKind.Build)
+        {
+            RefreshBuildCards();
+            return;
+        }
+
+        RefreshProductionCards();
+    }
+
+    private void RefreshBuildCards()
+    {
+        for (var index = 0; index < _visibleBuildCardStates.Count; index++)
+        {
+            var state = _visibleBuildCardStates[index];
+            var optionId = BuildOptionId(state);
+            if (!_commandButtons.TryGetValue(optionId, out var button))
+            {
+                button = AddCommandButton(_rightProductionPanel, optionId);
+            }
+
+            button.Hotkey = ProductionHotkey(index);
+            button.Position = ProductionButtonPosition(index);
+
+            var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
+            button.SetBuildState(state, disabledReason);
+        }
+    }
+
+    private void RefreshProductionCards()
+    {
         for (var index = 0; index < _visibleCommandCardStates.Count; index++)
         {
             var state = _visibleCommandCardStates[index];
@@ -378,11 +449,16 @@ public partial class HudLayer : CanvasLayer
             button.Kind = state.Kind;
             button.UnitDesignId = state.UnitDesignId;
 
-            var disabledReason = state.DisabledReasonKey == "ui.needCredits"
-                ? GameText.Format("ui.needCredits", state.Cost)
-                : string.IsNullOrWhiteSpace(state.DisabledReasonKey) ? "" : GameText.T(state.DisabledReasonKey);
+            var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetState(state, disabledReason);
         }
+    }
+
+    private static string LocalizedDisabledReason(string disabledReasonKey, int cost)
+    {
+        return disabledReasonKey == "ui.needCredits"
+            ? GameText.Format("ui.needCredits", cost)
+            : string.IsNullOrWhiteSpace(disabledReasonKey) ? "" : GameText.T(disabledReasonKey);
     }
 
     private void UpdateProductionFeedback(float dt)
