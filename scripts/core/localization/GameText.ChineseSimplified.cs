@@ -73,6 +73,7 @@ public static partial class GameText
         ["ui.production.deployedFrom"] = "{0} 从 {1} 部署",
         ["ui.building.online"] = "{0} 已上线",
         ["ui.building.destroyed"] = "{0} 已摧毁",
+        ["ui.unit.destroyed"] = "{0} 已损失",
         ["ui.alert.underAttack"] = "{0} 遭到攻击",
         ["ui.alert.idleHarvester.one"] = "采集车闲置",
         ["ui.alert.idleHarvester.many"] = "{0} 辆采集车闲置",

@@ -98,6 +98,7 @@ public static partial class GameText
         ["ui.production.deployedFrom"] = "{0} deployed from {1}",
         ["ui.building.online"] = "{0} online",
         ["ui.building.destroyed"] = "{0} destroyed",
+        ["ui.unit.destroyed"] = "{0} lost",
         ["ui.alert.underAttack"] = "{0} under attack",
         ["ui.alert.idleHarvester.one"] = "Idle harvester",
         ["ui.alert.idleHarvester.many"] = "{0} idle harvesters",

@@ -145,6 +145,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "private bool TryJumpToLatestPositionedAlert()", "BattleRoot alerts must expose a bounded latest-positioned-alert jump helper.", result);
         RequireText(alerts, "OnMinimapJumpRequested(worldPosition);", "Alert hotkey jump must reuse the existing minimap camera focus path.", result);
         RequireText(process, "key.Keycode == Key.Space && TryJumpToLatestPositionedAlert()", "BattleRoot input must route Space to the latest positioned alert before sandbox-only debug keys.", result);
+        RequireText(battleRoot, "GameText.Format(\"ui.unit.destroyed\", UnitDesignCatalog.Spec(death.DesignId).Label)", "Runtime player unit deaths must add localized unit-lost alert text.", result);
+        RequireText(battleRoot, "AddAlert(AlertKind.Combat, GameText.Format(\"ui.unit.destroyed\", UnitDesignCatalog.Spec(death.DesignId).Label), death.Position)", "Runtime player unit-lost alerts must carry world positions for minimap pings and Space jump.", result);
         RequireText(hudState, "List<ProductionOptionState> _commandCardStates", "HudLayer command-card refresh must reuse visible state storage.", result);
         RequireText(hudState, "HashSet<string> _commandCardActiveIds", "HudLayer command-card refresh must reuse active id storage.", result);
         RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);
