@@ -27,6 +27,8 @@ public partial class HudLayer : CanvasLayer
     public void SetVisualTheme(WorldVisualThemeState state)
     {
         CurrentPalette = SoftOldCityTheme.For(state);
+        _lastRepeatProductionRefreshKey = "";
+        _repeatProductionStateCached = false;
         ApplySoftOldCityPanelStyles();
     }
 

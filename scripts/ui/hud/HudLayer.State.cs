@@ -95,6 +95,11 @@ public partial class HudLayer : CanvasLayer
     private string _lastProductionStatus = "";
     private string _lastQueueSummary = "";
     private string _focusedRepeatProductionDesignId = "";
+    private string _focusedRepeatProductionLabel = "";
+    private string _focusedRepeatProductionProducerKind = "";
+    private string _focusedRepeatProductionProducerLabel = "";
+    private string _lastRepeatProductionRefreshKey = "";
+    private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
 
     public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
@@ -255,7 +260,6 @@ public partial class HudLayer : CanvasLayer
         _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
         _cancelProduction.TooltipText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
-        RefreshRepeatProductionControl();
     }
 
     public void SetResourceCredits(int credits)
@@ -462,7 +466,6 @@ public partial class HudLayer : CanvasLayer
             ClearAbilityCards();
             RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
-            RefreshRepeatProductionControl();
             RefreshBuildCards();
             return;
         }
@@ -472,14 +475,12 @@ public partial class HudLayer : CanvasLayer
             ClearAbilityCards();
             RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
-            RefreshRepeatProductionControl();
             RefreshProductionCards();
             return;
         }
 
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
-        RefreshRepeatProductionControl();
         RefreshAbilityCards();
     }
 
@@ -542,7 +543,6 @@ public partial class HudLayer : CanvasLayer
             button.SetState(state, disabledReason);
         }
 
-        RefreshRepeatProductionControl();
     }
 
     private static string LocalizedDisabledReason(string disabledReasonKey, int cost)

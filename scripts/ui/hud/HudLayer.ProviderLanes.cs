@@ -30,7 +30,32 @@ public partial class HudLayer : CanvasLayer
             return;
         }
 
+        if (string.Equals(_focusedRepeatProductionDesignId, unitDesignId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
         _focusedRepeatProductionDesignId = unitDesignId;
+        _focusedRepeatProductionLabel = "";
+        _focusedRepeatProductionProducerKind = "";
+        _focusedRepeatProductionProducerLabel = "";
+        try
+        {
+            var spec = UnitDesignCatalog.Spec(unitDesignId);
+            _focusedRepeatProductionLabel = spec.Label;
+            if (spec.Production is not null)
+            {
+                _focusedRepeatProductionProducerKind = spec.Production.ProducerKind;
+                _focusedRepeatProductionProducerLabel = BuildSpecCatalog.For(spec.Production.ProducerKind).Label;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            _focusedRepeatProductionLabel = GameText.T("ui.catalog.train");
+            _focusedRepeatProductionProducerLabel = GameText.T("ui.providerLane.specificFallback");
+        }
+
+        _lastRepeatProductionRefreshKey = "";
         RefreshRepeatProductionControl();
     }
 
@@ -55,11 +80,21 @@ public partial class HudLayer : CanvasLayer
         }
 
         var visible = _selectedCatalogMode == CatalogModeKind.Train;
-        _repeatProduction.Visible = visible;
         if (!visible)
         {
-            _repeatProduction.Disabled = true;
-            _repeatProduction.ButtonPressed = false;
+            if (_repeatProductionStateCached
+                && string.Equals(_lastRepeatProductionRefreshKey, "hidden", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            ApplyRepeatProductionControlState(
+                visible: false,
+                disabled: true,
+                active: false,
+                accent: Cyan,
+                tooltip: GameText.T("ui.repeat.needCard"),
+                refreshKey: "hidden");
             return;
         }
 
@@ -76,11 +111,47 @@ public partial class HudLayer : CanvasLayer
             && hasSpecificProvider
             && providerSupportsDesign
             && (active || laneState!.Available);
+        var refreshKey = string.Join(
+            "|",
+            _focusedRepeatProductionDesignId,
+            _focusedRepeatProductionProducerKind,
+            laneState?.Scope.ToString() ?? "",
+            laneState?.ProducerId.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
+            laneState?.ProducerKind ?? "",
+            laneState?.RepeatOutputSpecId ?? "",
+            laneState?.Available.ToString() ?? "",
+            laneState?.DisabledReasonKey ?? "",
+            laneState?.Label ?? "");
+        if (_repeatProductionStateCached
+            && string.Equals(_lastRepeatProductionRefreshKey, refreshKey, StringComparison.Ordinal))
+        {
+            return;
+        }
 
-        _repeatProduction.Disabled = !enabled;
+        ApplyRepeatProductionControlState(
+            visible: true,
+            disabled: !enabled,
+            active: active,
+            accent: active ? Mint : Cyan,
+            tooltip: RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
+            refreshKey: refreshKey);
+    }
+
+    private void ApplyRepeatProductionControlState(
+        bool visible,
+        bool disabled,
+        bool active,
+        Color accent,
+        string tooltip,
+        string refreshKey)
+    {
+        _repeatProduction.Visible = visible;
+        _repeatProduction.Disabled = disabled;
         _repeatProduction.ButtonPressed = active;
-        _repeatProduction.Accent = active ? Mint : Cyan;
-        _repeatProduction.TooltipText = RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active);
+        _repeatProduction.Accent = accent;
+        _repeatProduction.TooltipText = tooltip;
+        _lastRepeatProductionRefreshKey = refreshKey;
+        _repeatProductionStateCached = true;
         _repeatProduction.QueueRedraw();
     }
 
@@ -119,57 +190,33 @@ public partial class HudLayer : CanvasLayer
 
     private bool SpecificProviderSupportsFocusedRepeatDesign(ProductionProviderLaneState state)
     {
-        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId)
+            || string.IsNullOrWhiteSpace(_focusedRepeatProductionProducerKind))
         {
             return false;
         }
 
-        try
-        {
-            var spec = UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId);
-            return spec.Production is not null && spec.Production.ProducerKind == state.ProducerKind;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
+        return string.Equals(_focusedRepeatProductionProducerKind, state.ProducerKind, StringComparison.Ordinal);
     }
 
     private string FocusedRepeatProductionLabel()
     {
-        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionLabel))
         {
             return GameText.T("ui.catalog.train");
         }
 
-        try
-        {
-            return UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId).Label;
-        }
-        catch (InvalidOperationException)
-        {
-            return GameText.T("ui.catalog.train");
-        }
+        return _focusedRepeatProductionLabel;
     }
 
     private string FocusedRepeatProductionProducerLabel()
     {
-        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionDesignId))
+        if (string.IsNullOrWhiteSpace(_focusedRepeatProductionProducerLabel))
         {
             return GameText.T("ui.providerLane.specificFallback");
         }
 
-        try
-        {
-            var spec = UnitDesignCatalog.Spec(_focusedRepeatProductionDesignId);
-            return spec.Production is null
-                ? GameText.T("ui.providerLane.specificFallback")
-                : BuildSpecCatalog.For(spec.Production.ProducerKind).Label;
-        }
-        catch (InvalidOperationException)
-        {
-            return GameText.T("ui.providerLane.specificFallback");
-        }
+        return _focusedRepeatProductionProducerLabel;
     }
 
     private void ClearRepeatFocusIfHidden()
@@ -181,7 +228,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Train)
         {
-            _focusedRepeatProductionDesignId = "";
+            ClearFocusedRepeatProductionDesign();
             return;
         }
 
@@ -193,7 +240,16 @@ public partial class HudLayer : CanvasLayer
             }
         }
 
+        ClearFocusedRepeatProductionDesign();
+    }
+
+    private void ClearFocusedRepeatProductionDesign()
+    {
         _focusedRepeatProductionDesignId = "";
+        _focusedRepeatProductionLabel = "";
+        _focusedRepeatProductionProducerKind = "";
+        _focusedRepeatProductionProducerLabel = "";
+        _lastRepeatProductionRefreshKey = "";
     }
 
     private int? SelectedConstructionProviderId()
