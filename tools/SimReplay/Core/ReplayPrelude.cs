@@ -84,6 +84,7 @@ static partial class Program
         AssertShieldFieldAbility();
         AssertScanAbility();
         AssertDeployAbility();
+        AssertLiveAbilityPlayerCommandBridge();
         AssertAbilityCostAndTargetLegality();
         AssertTargetedRepairCommand();
         AssertPatrolCommandCore();

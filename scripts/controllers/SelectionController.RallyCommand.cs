@@ -10,6 +10,7 @@ public partial class SelectionController
 
     public void ArmRallyCommand()
     {
+        _armedAbility = null;
         if (!HasSelectedBuildingForPreview())
         {
             _rallyCommandArmed = false;

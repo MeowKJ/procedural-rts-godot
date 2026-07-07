@@ -29,6 +29,55 @@ public sealed partial class UnitBattlefield
         AdoptUnmappedConstructedBuildings();
     }
 
+    private void UpdateAbilitiesFromEntityWorld(float dt)
+    {
+        if (!HasAbilityRuntimeWork())
+        {
+            return;
+        }
+
+        SyncOwnerRelations();
+        SyncUnitEntities();
+        var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
+        _abilitySystem.Step(context);
+        _entityWorld.FlushQueuedSpawns();
+        _entityWorld.FlushQueuedRemovals();
+        SyncUnitRuntimeStateFromEntities();
+    }
+
+    private bool HasAbilityRuntimeWork()
+    {
+        foreach (var entity in _entityWorld.OrderedEntities)
+        {
+            if (entity.Components.Has<ShieldComponentState>()
+                || entity.Components.Has<ScanRevealComponentState>())
+            {
+                return true;
+            }
+
+            if (entity.Components.TryGet<DeployComponentState>(out var deploy)
+                && deploy is { IsDeployed: true, SetupRemaining: > 0 })
+            {
+                return true;
+            }
+
+            if (!entity.Components.TryGet<AbilityRuntimeComponentState>(out var runtime))
+            {
+                continue;
+            }
+
+            foreach (var cooldown in runtime.Cooldowns)
+            {
+                if (cooldown.CooldownRemaining > 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private bool HasActiveConstructionWork()
     {
         foreach (var entity in _entityWorld.OrderedEntities)

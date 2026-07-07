@@ -93,7 +93,12 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        _inputCommandSystem.Step(new SimContext(_entityWorld, command.Tick, 0, due));
+        var context = new SimContext(_entityWorld, command.Tick, 0, due);
+        _inputCommandSystem.Step(context);
+        _abilitySystem.Step(context);
+        _entityWorld.FlushQueuedSpawns();
+        _entityWorld.FlushQueuedRemovals();
+        SyncUnitRuntimeStateFromEntities();
         AppliedInputCommandCount += due.Count;
         ApplyInputCommandResults(due);
     }

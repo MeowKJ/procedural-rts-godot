@@ -96,6 +96,7 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
             PlayerCommandKind.Rally => TryApplyRallyCommand(command, out envelope, out error, out message),
             PlayerCommandKind.Produce => TryApplyProduceCommand(command, out envelope, out error, out message),
             PlayerCommandKind.Build => TryApplyBuildCommand(command, out envelope, out error, out message),
+            PlayerCommandKind.Ability => TryApplyAbilityCommand(command, out envelope, out error, out message),
             PlayerCommandKind.SetStance => ApplyInputEntityCommand(
                 new SetStanceEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), command.Payload.Stance),
                 out envelope),
@@ -145,6 +146,39 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
             command.Payload.SubjectIds,
             NextInputCommandTick(),
             command.Payload.TargetEntity);
+    }
+
+    private bool TryApplyAbilityCommand(
+        PlayerCommand command,
+        out SequencedCommandEnvelope? envelope,
+        out CommandGatewayValidationError error,
+        out string message)
+    {
+        var targetEntity = command.Payload.TargetEntity;
+        if (targetEntity.IsValid && !_entityWorld.TryGet(targetEntity, out _))
+        {
+            envelope = null;
+            return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Ability target entity is not present in the live battlefield.", out error, out message);
+        }
+
+        if (command.Payload.HasTargetPoint && !command.Payload.TargetPoint.IsFinite)
+        {
+            envelope = null;
+            return RejectGatewaySink(CommandGatewayValidationError.InvalidPayloadShape, "Ability target point must be finite.", out error, out message);
+        }
+
+        error = CommandGatewayValidationError.None;
+        message = string.Empty;
+        var targetPoint = command.Payload.HasTargetPoint ? ToVector2(command.Payload.TargetPoint) : (Vector2?)null;
+        return ApplyInputEntityCommand(
+            new AbilityEntityCommand(
+                OwnerId.FromPlayerSlot(command.IssuerSlotId),
+                command.Payload.SubjectIds,
+                NextInputCommandTick(),
+                command.Payload.Ability,
+                targetEntity,
+                targetPoint),
+            out envelope);
     }
 
     private bool TryApplyResourceCommand(
