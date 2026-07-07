@@ -199,6 +199,13 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudSync, "_hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates())", "BattleRoot must feed selected-unit ability cards into the HUD.");
     RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
     RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");
+    RequireText(hudSync, "AddOrMergeSelectedAbilityCard(", "BattleRoot must aggregate HUD ability cards across multi-selected support units.");
+    RequireText(hudSync, "MathF.Min(existing.CooldownRemaining, cooldownRemaining)", "Multi-selected ability cards must expose the shortest selected caster cooldown.");
+    RequireText(hudSync, "MergedAbilityActiveState(ability.Kind, existing.IsActive, isActive)", "Multi-selected ability cards must merge active state through ability-specific semantics.");
+    RequireText(hudSync, "kind == AbilityKind.Deploy", "Deploy ability cards must keep toggle-specific multi-selection active semantics.");
+    RequireText(hudSync, "? existingActive && candidateActive", "Deploy ability cards must only show active when all selected deploy casters are active.");
+    RequireText(hudSync, ": existingActive || candidateActive", "Non-toggle ability cards must stay active if any selected caster is active.");
+    ForbidText(hudSync, "_selectedUnitInstanceBuffer.Count != 1", "Selected support ability cards must not disappear for multi-selection.");
 
     if (hudLayer.Contains("AddThemeStyleboxOverride(\"panel\"", StringComparison.Ordinal))
     {

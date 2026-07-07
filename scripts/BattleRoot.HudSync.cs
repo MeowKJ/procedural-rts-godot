@@ -63,27 +63,65 @@ public partial class BattleRoot
     {
         _selectedAbilityCardBuffer.Clear();
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
-        if (_selectedUnitInstanceBuffer.Count != 1)
+        foreach (var unit in _selectedUnitInstanceBuffer)
         {
-            return _selectedAbilityCardBuffer;
-        }
-
-        var unit = _selectedUnitInstanceBuffer[0];
-        var entity = _unitBattlefield.UnitEntityByInstanceId(unit.Id);
-        foreach (var ability in unit.Spec.Abilities)
-        {
-            if (!IsHudAbility(ability.Kind))
+            if (unit.Hp <= 0)
             {
                 continue;
             }
 
-            _selectedAbilityCardBuffer.Add(new HudLayer.AbilityCardState(
-                ability,
-                AbilityCooldownRemaining(entity, ability.Kind),
-                IsAbilityActive(entity, ability.Kind)));
+            var entity = _unitBattlefield.UnitEntityByInstanceId(unit.Id);
+            foreach (var ability in unit.Spec.Abilities)
+            {
+                if (!IsHudAbility(ability.Kind))
+                {
+                    continue;
+                }
+
+                AddOrMergeSelectedAbilityCard(
+                    ability,
+                    AbilityCooldownRemaining(entity, ability.Kind),
+                    IsAbilityActive(entity, ability.Kind));
+            }
         }
 
         return _selectedAbilityCardBuffer;
+    }
+
+    private void AddOrMergeSelectedAbilityCard(AbilitySpec ability, float cooldownRemaining, bool isActive)
+    {
+        var existingIndex = SelectedAbilityCardIndex(ability.Kind);
+        if (existingIndex < 0)
+        {
+            _selectedAbilityCardBuffer.Add(new HudLayer.AbilityCardState(ability, cooldownRemaining, isActive));
+            return;
+        }
+
+        var existing = _selectedAbilityCardBuffer[existingIndex];
+        _selectedAbilityCardBuffer[existingIndex] = new HudLayer.AbilityCardState(
+            cooldownRemaining < existing.CooldownRemaining ? ability : existing.Ability,
+            MathF.Min(existing.CooldownRemaining, cooldownRemaining),
+            MergedAbilityActiveState(ability.Kind, existing.IsActive, isActive));
+    }
+
+    private int SelectedAbilityCardIndex(AbilityKind kind)
+    {
+        for (var index = 0; index < _selectedAbilityCardBuffer.Count; index++)
+        {
+            if (_selectedAbilityCardBuffer[index].Ability.Kind == kind)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool MergedAbilityActiveState(AbilityKind kind, bool existingActive, bool candidateActive)
+    {
+        return kind == AbilityKind.Deploy
+            ? existingActive && candidateActive
+            : existingActive || candidateActive;
     }
 
     private static bool IsHudAbility(AbilityKind kind)
