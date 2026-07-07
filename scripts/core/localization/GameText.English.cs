@@ -59,6 +59,7 @@ public static partial class GameText
         ["ui.credits"] = "CREDITS",
         ["ui.catalog.build"] = "BUILD",
         ["ui.catalog.buildDetail"] = "categories",
+        ["ui.catalog.buildSurface"] = "BUILD CATEGORIES",
         ["ui.catalog.train"] = "TRAIN",
         ["ui.catalog.trainDetail"] = "fixed grid",
         ["ui.catalog.trainSurface"] = "TRAIN GRID",
