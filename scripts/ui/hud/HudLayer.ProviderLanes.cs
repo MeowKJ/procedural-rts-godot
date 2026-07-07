@@ -23,6 +23,14 @@ public partial class HudLayer : CanvasLayer
         return spec.Production is null ? null : NextAllProductionProviderId(spec.Production.ProducerKind);
     }
 
+    private int? SelectedConstructionProviderId()
+    {
+        return _selectedConstructionProviderLaneScope == ProductionProviderLaneScope.Specific
+            && _selectedConstructionProviderId > 0
+            ? _selectedConstructionProviderId
+            : null;
+    }
+
     private int? NextAllProductionProviderId(string producerKind)
     {
         var matchingCount = 0;

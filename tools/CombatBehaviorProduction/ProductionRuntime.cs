@@ -328,18 +328,41 @@ static partial class Program
             throw new InvalidOperationException("Build provider lanes should expose Auto, All, and stable specific construction source lanes from UnitBattlefield construction providers");
         }
 
-        if (constructionProviderBattlefield.QueueConstructionTicket(PlayerSlotId.One, BuildingDesignIds.PowerPlant, out _) is null)
+        var specificConstructionTicket = constructionProviderBattlefield.QueueConstructionTicket(
+            PlayerSlotId.One,
+            BuildingDesignIds.PowerPlant,
+            constructionHeadquartersB.Id,
+            out _);
+        if (specificConstructionTicket is null
+            || specificConstructionTicket.Value.Position != constructionHeadquartersB.Position)
         {
-            throw new InvalidOperationException("construction provider lane QA setup should be able to queue a power plant construction ticket");
+            throw new InvalidOperationException("specific Build provider lanes should queue construction tickets from the selected construction provider only");
+        }
+
+        var autoConstructionTicket = constructionProviderBattlefield.QueueConstructionTicket(PlayerSlotId.One, BuildingDesignIds.PowerPlant, out _);
+        if (autoConstructionTicket is null
+            || autoConstructionTicket.Value.Position != constructionHeadquartersA.Position)
+        {
+            throw new InvalidOperationException("Auto Build provider lane should preserve the existing first-valid construction provider routing");
         }
 
         constructionProviderLanes = constructionProviderBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One);
-        if (constructionProviderLanes[0].QueueCount != 1
+        if (constructionProviderLanes[0].QueueCount != 2
             || constructionProviderLanes[0].ActiveProgress < 0
             || constructionProviderLanes[2].QueueCount != 0
             || constructionProviderLanes[3].QueueCount != 0)
         {
-            throw new InvalidOperationException("Build provider lanes should summarize construction tickets only on aggregate lanes until tickets carry specific source attribution");
+            throw new InvalidOperationException("Build provider lanes should keep construction-ticket queue totals on aggregate lanes while ticket source selection remains command-scoped");
+        }
+
+        if (constructionProviderBattlefield.QueueConstructionTicket(
+                PlayerSlotId.One,
+                BuildingDesignIds.PowerPlant,
+                constructionProviderId: 999_999,
+                out var invalidConstructionProviderStatus) is not null
+            || invalidConstructionProviderStatus != "placement.missingProducer")
+        {
+            throw new InvalidOperationException("stale specific Build provider lanes should reject instead of falling back to Auto construction routing");
         }
 
         var unitCancelBattlefield = new UnitBattlefield();

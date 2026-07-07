@@ -14,7 +14,7 @@ public partial class HudLayer : CanvasLayer
     public Action? RallyRequested { get; init; }
     public Action? RepairRequested { get; init; }
     public Action<AbilityKind>? AbilityRequested { get; init; }
-    public Action<string>? BuildKindRequested { get; init; }
+    public Action<string, int?>? BuildKindRequested { get; init; }
     public Action<Vector2>? MinimapJumpRequested { get; init; }
     public Action<MoveCommandMode>? MoveModeRequested { get; init; }
     public Action<UnitStance>? UnitStanceRequested { get; init; }
