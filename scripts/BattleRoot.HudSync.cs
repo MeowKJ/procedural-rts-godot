@@ -186,6 +186,11 @@ public partial class BattleRoot
         _selection.ArmRallyCommand();
     }
 
+    private void OnAbilityRequested(AbilityKind ability)
+    {
+        _selection.ArmAbilityCommand(ability);
+    }
+
     private void RefreshSelectionInfo()
     {
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);

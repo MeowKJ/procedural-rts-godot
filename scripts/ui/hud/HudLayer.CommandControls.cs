@@ -351,7 +351,7 @@ public partial class HudLayer : CanvasLayer
         public void SetState(AbilityCardState state)
         {
             _state = state;
-            Disabled = false;
+            Disabled = state.CooldownRemaining > 0.01f && !state.IsActive;
             Text = $"\n\n{AbilityStatusText(state)}";
             TooltipText = AbilityTooltip(state);
             QueueRedraw();
@@ -361,7 +361,7 @@ public partial class HudLayer : CanvasLayer
         {
             base._Draw();
             var size = Size;
-            var style = UiFactory.GetHudCommandButtonOverlayStyle(false, CurrentPalette);
+            var style = UiFactory.GetHudCommandButtonOverlayStyle(Disabled, CurrentPalette);
             var accent = AbilityAccent(_state.Ability.Kind);
             var ready = _state.CooldownRemaining <= 0.01f;
             var iconAccent = new Color(accent, ready || _state.IsActive ? 0.96f : 0.48f);

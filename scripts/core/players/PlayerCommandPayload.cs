@@ -62,6 +62,43 @@ public readonly record struct PlayerCommandPayload(
         };
     }
 
+    public static PlayerCommandPayload ForAbility(IReadOnlyList<EntityId> subjects, AbilityKind ability)
+    {
+        return Empty with
+        {
+            Subjects = subjects,
+            Ability = ability,
+        };
+    }
+
+    public static PlayerCommandPayload ForAbilityPoint(
+        IReadOnlyList<EntityId> subjects,
+        AbilityKind ability,
+        float x,
+        float y)
+    {
+        return Empty with
+        {
+            Subjects = subjects,
+            Ability = ability,
+            HasTargetPoint = true,
+            TargetPoint = new PlayerCommandPoint(x, y),
+        };
+    }
+
+    public static PlayerCommandPayload ForAbilityEntityTarget(
+        IReadOnlyList<EntityId> subjects,
+        AbilityKind ability,
+        EntityId target)
+    {
+        return Empty with
+        {
+            Subjects = subjects,
+            Ability = ability,
+            TargetEntity = target,
+        };
+    }
+
     public static PlayerCommandPayload ForSpec(string specId, IReadOnlyList<EntityId>? subjects = null)
     {
         return Empty with

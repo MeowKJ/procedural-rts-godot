@@ -89,6 +89,11 @@ public partial class SelectionController : Node2D
                 return;
             }
 
+            if (HandleArmedAbilityMouse(mouse))
+            {
+                return;
+            }
+
             if (mouse.ButtonIndex == MouseButton.Left)
             {
                 if (mouse.Pressed)
@@ -130,6 +135,12 @@ public partial class SelectionController : Node2D
         else if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
             if (HandleArmedRallyKey(key))
+            {
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+
+            if (HandleArmedAbilityKey(key))
             {
                 GetViewport().SetInputAsHandled();
                 return;

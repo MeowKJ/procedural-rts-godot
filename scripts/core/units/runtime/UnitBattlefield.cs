@@ -17,6 +17,7 @@ public sealed partial class UnitBattlefield
     private readonly EntityWorld _entityWorld = new();
     private readonly EntityCommandBuffer _inputCommands = new();
     private readonly CommandSystem _inputCommandSystem = new();
+    private readonly AbilitySystem _abilitySystem = new();
     private readonly ResourceSystem _resourceSystem = new();
     private readonly ProductionSystem _productionSystem = new();
     private readonly ConstructionSystem _constructionSystem = new();
@@ -180,6 +181,7 @@ public sealed partial class UnitBattlefield
         }
 
         UpdateConstructionFromEntityWorld(dt);
+        UpdateAbilitiesFromEntityWorld(dt);
         UpdateBuildingTargetCombatFromEntityWorld(dt);
         UpdateBuildingCombatFromEntityWorld(dt);
         UpdateResourceHarvestersFromEntityWorld(dt);

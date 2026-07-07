@@ -92,6 +92,7 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
         _abilityCards[kind] = card;
         parent.AddChild(card);
+        card.Pressed += () => AbilityRequested?.Invoke(kind);
         return card;
     }
 }

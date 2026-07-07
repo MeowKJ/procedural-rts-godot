@@ -118,6 +118,36 @@ static partial class Program
         Console.WriteLine($"OK [deploy]: setup shots {shotsBeforeSetup}, deployed shots {shotsAfterSetupBeforeUndeploy}, undeployed shots {shotsAfterUndeploy}, target hp {targetHp:0.0}.");
     }
 
+    static void AssertLiveAbilityPlayerCommandBridge()
+    {
+        var battlefield = new UnitBattlefield();
+        var scout = battlefield.Spawn<CatSpecial>(PlayerSlotId.One, Vector2.Zero);
+        battlefield.SelectUnitsByIds(PlayerSlotId.One, [scout.Id]);
+
+        var payload = PlayerCommandPayload.ForAbilityPoint(
+            battlefield.SelectedUnitEntityIds(PlayerSlotId.One),
+            AbilityKind.Scan,
+            120,
+            0);
+        var result = battlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Ability, payload);
+        var caster = battlefield.UnitEntityByInstanceId(scout.Id) ?? throw new InvalidOperationException("Live ability caster entity missing.");
+        var cooldown = caster.Components.Require<AbilityRuntimeComponentState>()
+            .Cooldowns.Single(state => state.Kind == AbilityKind.Scan)
+            .CooldownRemaining;
+        var scanReveals = battlefield.EntityWorld.OrderedEntities.Count(entity => entity.Components.Has<ScanRevealComponentState>());
+
+        battlefield.Update(0.5);
+        var tickedCooldown = caster.Components.Require<AbilityRuntimeComponentState>()
+            .Cooldowns.Single(state => state.Kind == AbilityKind.Scan)
+            .CooldownRemaining;
+
+        Assert(result.AcceptedCount == 1, $"live PlayerCommandKind.Ability should be accepted once, got {result.AcceptedCount}");
+        Assert(scanReveals == 1, $"live Scan ability should spawn one reveal entity, got {scanReveals}");
+        Assert(cooldown > 0, $"live Scan ability should set cooldown, got {cooldown:0.000}");
+        Assert(tickedCooldown < cooldown, $"live ability cooldown should tick in UnitBattlefield.Update, got {tickedCooldown:0.000} >= {cooldown:0.000}");
+        Console.WriteLine($"OK [live-ability-command]: accepted {result.AcceptedCount}, scan reveals {scanReveals}, cooldown {cooldown:0.00}->{tickedCooldown:0.00}.");
+    }
+
     static void AssertAbilityCostAndTargetLegality()
     {
         const int ticks = 45;

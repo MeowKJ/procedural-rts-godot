@@ -18,6 +18,11 @@ public partial class SelectionController
             return ArmedRallyPreview(screenPosition, worldPosition);
         }
 
+        if (_armedAbility is not null)
+        {
+            return ArmedAbilityPreview(screenPosition, worldPosition);
+        }
+
         if (_hoveredUnitInstance is { } hoveredUnitInstance)
         {
             var relation = UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, hoveredUnitInstance.PlayerSlotId);
