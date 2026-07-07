@@ -274,10 +274,7 @@ public partial class BattleRoot
         var weapon = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind];
         var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(spec.Stats.MaxHp)}";
         var role = GameText.T(spec.RoleKey);
-        var cargo = GameText.Format("ui.detail.cargo", unit.Cargo, 700);
-        var detail = spec.RoleTags.Contains(UnitRoleTag.Economy)
-            ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
-            : GameText.Format("ui.detail.cooldown", weapon.Label, weapon.Cooldown);
+        var detail = UnitInstanceDetail(unit, weapon);
 
         _hud.SetSelectionInfo(
             spec.Label.ToUpperInvariant(),
@@ -289,6 +286,38 @@ public partial class BattleRoot
             [],
             PlayerSlotAccent(unit.PlayerSlotId),
             spec.Id);
+    }
+
+    private static string UnitInstanceDetail(UnitInstance unit, WeaponDefinition weapon)
+    {
+        var spec = unit.Spec;
+        if (spec.RoleTags.Contains(UnitRoleTag.Economy))
+        {
+            var cargo = GameText.Format("ui.detail.cargo", unit.Cargo, 700);
+            return $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}";
+        }
+
+        if (spec.TryGetAbility(AbilityKind.ShieldField, out var shieldField))
+        {
+            return GameText.Format(
+                "ui.detail.shieldField",
+                Mathf.RoundToInt(shieldField.Radius),
+                ShieldFieldAbsorbLabel(shieldField.Value));
+        }
+
+        return GameText.Format("ui.detail.cooldown", weapon.Label, weapon.Cooldown);
+    }
+
+    private static string ShieldFieldAbsorbLabel(float value)
+    {
+        if (value <= 0)
+        {
+            return "0";
+        }
+
+        return value <= 1
+            ? $"{Mathf.RoundToInt(value * 100)}%"
+            : Mathf.CeilToInt(value).ToString();
     }
 
     private void SetUnitInstanceGroupSelectionInfo(IReadOnlyList<UnitInstance> units)

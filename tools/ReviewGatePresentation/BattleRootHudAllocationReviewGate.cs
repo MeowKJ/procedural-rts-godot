@@ -102,6 +102,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "if (hasSelectedProducers)", "Runtime producer HUD sync must fall back to aggregate state only when no selected producer exists.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);
+        RequireText(hudSync, "spec.TryGetAbility(AbilityKind.ShieldField, out var shieldField)", "Runtime selected-unit details must surface ShieldField units from authored AbilitySpec data.", result);
+        RequireText(hudSync, "GameText.Format(\n                \"ui.detail.shieldField\"", "Runtime selected-unit details must render localized ShieldField radius and absorb text.", result);
+        RequireText(hudSync, "ShieldFieldAbsorbLabel(shieldField.Value)", "Runtime selected-unit details must derive ShieldField absorb presentation from ability values.", result);
         RequireText(hudSync, "CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer)", "Legacy selection HUD sync must fill the reusable selected-unit buffer.", result);
         RequireText(hudSync, "CollectSelectedLegacyBuildings(_selectedLegacyBuildingBuffer)", "Legacy selection HUD sync must fill the reusable selected-building buffer.", result);
         RequireText(hudSync, "foreach (var unit in units)", "Runtime selection HUD group stats must use explicit loops.", result);
@@ -211,5 +214,10 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(hudState, "states.Take(12).ToArray()", "HudLayer command-card refresh must not allocate an ordered state array.", result);
         ForbidText(hudState, "orderedStates.Select(ProductionOptionId).ToHashSet()", "HudLayer command-card refresh must not allocate active id sets.", result);
         ForbidText(hudState, "_commandButtons.Keys.Where(key => !activeIds.Contains(key)).ToArray()", "HudLayer command-card refresh must not allocate stale key arrays.", result);
+
+        var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
+        var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
+        RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
+        RequireText(chineseText, "[\"ui.detail.shieldField\"]", "Chinese selected-unit ShieldField detail text must exist.", result);
     }
 }
