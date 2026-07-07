@@ -5,8 +5,10 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
-    public Action<ProductionKind>? ProductionRequested { get; init; }
-    public Action<string, int?>? ProductionDesignRequested { get; init; }
+    private const int ShiftProductionBatchCount = 5;
+
+    public Action<ProductionKind, int>? ProductionRequested { get; init; }
+    public Action<string, Func<int?>, int>? ProductionDesignRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
     public Action? SellOrCancelRequested { get; init; }
     public Action? RallyRequested { get; init; }

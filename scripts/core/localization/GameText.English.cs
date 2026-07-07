@@ -397,6 +397,7 @@ public static partial class GameText
         ["production.needProducer"] = "Need {0} for {1}",
         ["production.needCredits"] = "Need {0} credits for {1} ({2} available)",
         ["production.queued"] = "{0} queued at {1} -{2} ({3} credits)",
+        ["production.batchQueued"] = "{0}/{1} queued; {2}",
         ["production.noneQueued"] = "No production queued",
         ["production.cancelled"] = "{0} canceled +{1} credits",
         ["hotkeys.hint.open"] = "F1 HELP",
