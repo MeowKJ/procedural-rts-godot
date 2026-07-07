@@ -152,6 +152,14 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);
         RequireText(hudState, "_commandCardStates.Add(state)", "HudLayer command-card refresh must fill reusable state storage.", result);
         RequireText(hudState, "_commandCardStaleIds.Add(key)", "HudLayer command-card refresh must collect stale keys before removing buttons.", result);
+        var hudCommandControls = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
+        RequireText(hudCommandControls, "ProducerShortCode = BuildSpecCatalog.For(state.ProducerKind).ShortCode", "Train catalog cards must surface the source producer as compact metadata.", result);
+        RequireText(hudCommandControls, "RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph", "Train catalog cards must surface unit role glyphs separately from the main unit icon.", result);
+        RequireText(hudCommandControls, "private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId)", "Train catalog card metadata must stay scoped to unit production cards.", result);
+        RequireText(hudCommandControls, "DrawTrainCardMetadata(size)", "Train catalog cards must render source/role metadata in the card surface.", result);
+        RequireText(hudCommandControls, "ProducerShortCode = \"\";", "Build cards must clear train-only producer metadata.", result);
+        RequireText(hudCommandControls, "Duration = 0;", "Build cards must clear train-only duration metadata.", result);
+        RequireText(hudCommandControls, "CompactCardText(_disabledReason, 11)", "Train catalog cards must surface compact disabled reasons without expanding the layout.", result);
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);
