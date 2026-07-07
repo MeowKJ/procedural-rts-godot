@@ -194,7 +194,7 @@ public partial class HudLayer : CanvasLayer
     {
         var column = index % 3;
         var row = index / 3;
-        return new Vector2(14 + column * 94, 76 + row * 58);
+        return new Vector2(14 + column * 94, 96 + row * 58);
     }
 
     private void AddMoveModeButton(Control parent, MoveCommandMode mode, IconGlyph glyph, string tooltip, Vector2 position)

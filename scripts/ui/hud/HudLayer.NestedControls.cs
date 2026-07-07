@@ -5,6 +5,12 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
+    private enum CatalogModeKind
+    {
+        Build,
+        Train,
+    }
+
     private partial class SeparatorLine : Control
     {
         public override void _Draw()
@@ -26,6 +32,29 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
             DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+        }
+    }
+
+    private partial class CatalogModePill : Control
+    {
+        public required CatalogModeKind Mode { get; init; }
+        public required string Label { get; init; }
+        public required string Detail { get; init; }
+
+        public override void _Draw()
+        {
+            var rect = new Rect2(Vector2.Zero, Size);
+            var accent = Mode == CatalogModeKind.Build ? Cyan : Mint;
+            DrawRect(rect, new Color(CurrentPalette.PanelSubtleFill, 0.82f), true);
+            DrawRect(rect.Grow(-1), new Color(accent, 0.42f), false, 1.2f, true);
+            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, 0.46f), true);
+
+            var glyph = Mode == CatalogModeKind.Build ? IconGlyph.Building : IconGlyph.Infantry;
+            DrawIconGlyph(this, glyph, new Vector2(14, rect.Size.Y * 0.5f), 15, new Color(accent, 0.9f));
+
+            var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);
+            DrawString(labelFont, new Vector2(28, 12), Label, HorizontalAlignment.Left, rect.Size.X - 34, 10, new Color(Ink, 0.9f));
+            DrawString(labelFont, new Vector2(28, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 34, 8, new Color(InkMuted, 0.82f));
         }
     }
 
