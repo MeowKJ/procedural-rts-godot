@@ -89,6 +89,7 @@ public static partial class EntityStateHash
             MovementProfileComponentState movementProfile => AddMovementProfile(hash, movementProfile),
             PatrolOrderComponentState patrol => AddPatrolOrder(hash, patrol),
             GuardOrderComponentState guard => AddGuardOrder(hash, guard),
+            AttackGroundOrderComponentState attackGround => Add(hash, attackGround.Target),
             PathfindingComponentState pathfinding => AddPathfinding(hash, pathfinding),
             CollisionComponentState collision => AddCollision(hash, collision),
             VisionComponentState vision => Add(hash, vision.SightRange),

@@ -43,6 +43,10 @@ public sealed partial class CommandSystem : ISimSystem
                     ApplyGroupAttack(context.World, groupAttack);
                     break;
 
+                case AttackGroundEntityCommand attackGround:
+                    ApplyAttackGround(context.World, attackGround);
+                    break;
+
                 case MoveEntityCommand move:
                     ApplyMove(context.World, move.Issuer, move.Subjects, move.Target, move.Mode, manualAttack: false);
                     break;

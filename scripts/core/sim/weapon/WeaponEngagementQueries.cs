@@ -23,4 +23,26 @@ static class WeaponEngagementQueries
 
         return false;
     }
+
+    public static bool CanAnyMountAttackGround(EntityWorld world, WeaponUserComponentState weapon)
+    {
+        foreach (var mount in weapon.Mounts)
+        {
+            if (world.TryGetWeaponDefinition(mount.WeaponId, out var weaponDef)
+                && world.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
+                && CanAttackGround(weaponDef, ammo))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool CanAttackGround(WeaponDefinition weaponDef, AmmoDefinition ammo)
+    {
+        return ammo.SplashRadius > 0
+            && ammo.Behavior != ProjectileBehavior.Tracking
+            && !weaponDef.CanInterceptProjectiles;
+    }
 }

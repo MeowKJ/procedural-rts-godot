@@ -44,6 +44,38 @@ static class WeaponEngagementResolution
         }
     }
 
+    public static void FireAtGround(
+        SimContext context,
+        EntityInstance attacker,
+        Vector2 targetPoint,
+        WeaponMountRuntimeState mount,
+        WeaponDefinition weaponDef)
+    {
+        context.World.Events.Raise(new WeaponFiredEvent(
+            context.Tick,
+            attacker.Id,
+            mount.MountId,
+            mount.WeaponId,
+            MuzzlePosition(context.World, attacker, mount),
+            targetPoint));
+
+        if (!context.World.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
+            || !WeaponEngagementQueries.CanAttackGround(weaponDef, ammo))
+        {
+            return;
+        }
+
+        ApplySplashDamage(
+            context,
+            EntityId.None,
+            attacker,
+            attacker.OwnerId,
+            weaponDef,
+            ammo,
+            targetPoint,
+            recordRetaliation: true);
+    }
+
     public static Vector2 MuzzlePosition(EntityWorld world, EntityInstance source, WeaponMountRuntimeState mount)
     {
         if (!world.TryGetSpec(source.SpecId, out var spec))

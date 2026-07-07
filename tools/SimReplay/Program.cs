@@ -27,6 +27,7 @@ static partial class Program
         RunProjectileTrackingScenario();
         RunProjectileInterceptScenario();
         RunProjectileSplashScenario();
+        RunAttackGroundScenario();
         RunWeaponStateMachineScenario();
         RunElementReactionScenario();
         RunAuthoredContentScenario();

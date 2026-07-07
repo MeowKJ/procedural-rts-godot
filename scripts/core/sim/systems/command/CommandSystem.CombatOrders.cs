@@ -102,6 +102,42 @@ public sealed partial class CommandSystem
         _groupAttackAssignments.Clear();
     }
 
+    private void ApplyAttackGround(EntityWorld world, AttackGroundEntityCommand command)
+    {
+        if (!float.IsFinite(command.Target.X) || !float.IsFinite(command.Target.Y))
+        {
+            return;
+        }
+
+        CollectOwnedSubjects(world, command.Issuer, command.Subjects, _scalarOrderMembers);
+        foreach (var entity in _scalarOrderMembers)
+        {
+            if (!entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
+                || !WeaponEngagementQueries.CanAnyMountAttackGround(world, weapon))
+            {
+                continue;
+            }
+
+            ClearReplacedOrders(entity);
+            ClearWeaponFocus(entity);
+            entity.Components.Set(new AttackGroundOrderComponentState(command.Target));
+
+            if (entity.Components.TryGet<MovementComponentState>(out var movement))
+            {
+                entity.Components.Set(movement with
+                {
+                    MoveTarget = null,
+                    FormationSlot = null,
+                    FireAnchorRemaining = 0,
+                });
+            }
+
+            SetAttackCommandIntent(entity, command.Target);
+        }
+
+        _scalarOrderMembers.Clear();
+    }
+
     private static void SetManualTarget(EntityInstance entity, EntityId target, CombatTargetKind targetKind)
     {
         if (!entity.Components.TryGet<WeaponUserComponentState>(out var weapon))

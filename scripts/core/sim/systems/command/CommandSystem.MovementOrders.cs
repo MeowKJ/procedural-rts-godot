@@ -250,6 +250,7 @@ public sealed partial class CommandSystem
             entity.Components.Remove<PathfindingComponentState>();
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
+            entity.Components.Remove<AttackGroundOrderComponentState>();
 
             ClearWeaponFocus(entity);
             ClearCommandIntent(entity);
@@ -278,6 +279,7 @@ public sealed partial class CommandSystem
         entity.Components.Remove<PatrolOrderComponentState>();
         entity.Components.Remove<GuardOrderComponentState>();
         entity.Components.Remove<RepairOrderComponentState>();
+        entity.Components.Remove<AttackGroundOrderComponentState>();
     }
 
     private static void ClearCommandIntent(EntityInstance entity)

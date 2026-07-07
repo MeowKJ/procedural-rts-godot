@@ -81,6 +81,9 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
             PlayerCommandKind.AttackMove => ApplyInputEntityCommand(
                 new GroupMoveEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint), MoveCommandMode.Attack),
                 out envelope),
+            PlayerCommandKind.AttackGround => ApplyInputEntityCommand(
+                new AttackGroundEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint)),
+                out envelope),
             PlayerCommandKind.Attack => TryApplyTargetedCommand(command, ApplyAttackCommand, out envelope, out error, out message),
             PlayerCommandKind.Stop => ApplyInputEntityCommand(
                 new StopEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick()),

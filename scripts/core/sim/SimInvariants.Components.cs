@@ -17,6 +17,14 @@ public static partial class SimInvariants
         }
     }
 
+    private static void ValidateAttackGroundOrder(
+        EntityInstance entity,
+        AttackGroundOrderComponentState attackGround,
+        List<SimInvariantViolation> violations)
+    {
+        CheckFinite(entity, "AttackGround.Target", attackGround.Target, violations);
+    }
+
     private static void ValidateWeaponUser(
         EntityWorld world,
         EntityInstance entity,

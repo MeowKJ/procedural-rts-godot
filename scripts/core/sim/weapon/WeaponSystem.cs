@@ -79,6 +79,80 @@ static class WeaponSystem
         return fired;
     }
 
+    public static int TickGround(
+        SimContext context,
+        EntityInstance attacker,
+        Vector2 targetPoint,
+        IList<WeaponMountRuntimeState> mounts,
+        float desiredFacing,
+        float dt,
+        WeaponSystemOptions options)
+    {
+        var fired = 0;
+        for (var index = 0; index < mounts.Count; index++)
+        {
+            var mount = TickRecovery(mounts[index], dt);
+            var facing = WeaponEngagementMath.RotateToward(
+                mount.Facing,
+                desiredFacing,
+                WeaponEngagementMath.MountTurnRate(context.World, attacker, mount) * dt);
+
+            if (!CanEngageGround(context.World, mount, fired, options, out var weaponDef))
+            {
+                mounts[index] = mount with { Facing = facing, Phase = WeaponMountPhase.Acquire, WarmupRemaining = 0 };
+                continue;
+            }
+
+            if (!WeaponEngagementMath.IsAimed(facing, desiredFacing))
+            {
+                mounts[index] = mount with { Facing = facing, Phase = WeaponMountPhase.Rotate, WarmupRemaining = 0 };
+                continue;
+            }
+
+            if (IsRecovering(mount))
+            {
+                mounts[index] = mount with { Facing = facing };
+                continue;
+            }
+
+            if (weaponDef.Warmup > 0 && mount.Phase != WeaponMountPhase.Warmup)
+            {
+                mounts[index] = mount with
+                {
+                    Facing = facing,
+                    Phase = WeaponMountPhase.Warmup,
+                    WarmupRemaining = weaponDef.Warmup,
+                };
+                continue;
+            }
+
+            if (mount.Phase == WeaponMountPhase.Warmup)
+            {
+                var warmup = WeaponEngagementMath.TickCooldown(mount.WarmupRemaining, dt);
+                if (warmup > 0)
+                {
+                    mounts[index] = mount with { Facing = facing, WarmupRemaining = warmup };
+                    continue;
+                }
+
+                mount = mount with { WarmupRemaining = 0 };
+            }
+
+            WeaponEngagementResolution.FireAtGround(context, attacker, targetPoint, mount, weaponDef);
+            fired++;
+
+            mount = BeginRecovery(mount, weaponDef) with { Facing = facing };
+            if (options.AnchorMovementOnFire)
+            {
+                AnchorMovement(attacker);
+            }
+
+            mounts[index] = mount;
+        }
+
+        return fired;
+    }
+
     public static bool IsRecovering(WeaponMountRuntimeState mount)
     {
         return mount.Phase == WeaponMountPhase.Fire
@@ -172,6 +246,31 @@ static class WeaponSystem
         return options.RequirePositivePriority
             ? WeaponMath.TargetPriority(world, weaponDef, target, options.UseStructureTargetDefaults) > 0
             : WeaponMath.CanTarget(world, weaponDef, target, options.UseStructureTargetDefaults);
+    }
+
+    private static bool CanEngageGround(
+        EntityWorld world,
+        WeaponMountRuntimeState mount,
+        int fired,
+        WeaponSystemOptions options,
+        out WeaponDefinition weaponDef)
+    {
+        weaponDef = null!;
+        if (!options.InRange
+            || (options.FireOnlyOneMount && fired > 0)
+            || !world.TryGetWeaponDefinition(mount.WeaponId, out weaponDef))
+        {
+            return false;
+        }
+
+        if (options.RespectMinimumRange
+            && WeaponMath.InsideMinRange(weaponDef, options.CenterDistance, options.TargetRadius))
+        {
+            return false;
+        }
+
+        return world.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
+            && WeaponEngagementQueries.CanAttackGround(weaponDef, ammo);
     }
 
     private static float Damage(
