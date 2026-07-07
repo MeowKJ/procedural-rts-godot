@@ -146,6 +146,46 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(tab);
     }
 
+    private void AddCatalogModeButton(Control parent, CatalogModeKind mode, string label, string detail, Vector2 position)
+    {
+        var button = new CatalogModeButton
+        {
+            Name = mode == CatalogModeKind.Build ? "CatalogModeBuild" : "CatalogModeTrain",
+            Mode = mode,
+            Label = label,
+            Detail = detail,
+            Position = position,
+            CustomMinimumSize = new Vector2(132, 28),
+            Size = new Vector2(132, 28),
+            FocusMode = Control.FocusModeEnum.Click,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+            TooltipText = label,
+        };
+        RegisterCatalogModeButton(button);
+        button.Pressed += () => SelectCatalogMode(mode);
+        parent.AddChild(button);
+    }
+
+    private void AddTrainCategoryTab(Control parent, IconGlyph glyph, string tooltip, Vector2 position, ProductionCategory category, bool active)
+    {
+        var tab = new ProductionCategoryTab
+        {
+            Glyph = glyph,
+            Category = category,
+            Active = active,
+            Position = position,
+            CustomMinimumSize = new Vector2(31, 32),
+            FocusMode = Control.FocusModeEnum.Click,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+            TooltipText = tooltip,
+            Disabled = !active,
+        };
+        tab.Size = tab.CustomMinimumSize;
+        RegisterTrainCategoryTab(tab);
+        tab.Pressed += () => SelectProductionCategory(category);
+        parent.AddChild(tab);
+    }
+
     private CommandButton AddCommandButton(Control parent, string optionId)
     {
         var button = new CommandButton

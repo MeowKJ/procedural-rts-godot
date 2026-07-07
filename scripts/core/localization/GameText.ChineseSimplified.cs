@@ -34,6 +34,7 @@ public static partial class GameText
         ["ui.credits"] = "资金",
         ["ui.catalog.build"] = "建造",
         ["ui.catalog.buildDetail"] = "分类",
+        ["ui.catalog.buildSurface"] = "建造分类",
         ["ui.catalog.train"] = "训练",
         ["ui.catalog.trainDetail"] = "固定格",
         ["ui.catalog.trainSurface"] = "训练格",

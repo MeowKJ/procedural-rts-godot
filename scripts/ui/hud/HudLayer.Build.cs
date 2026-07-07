@@ -169,28 +169,8 @@ public partial class HudLayer : CanvasLayer
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
 
-        _rightProductionPanel.AddChild(new CatalogModePill
-        {
-            Name = "CatalogModeBuild",
-            Mode = CatalogModeKind.Build,
-            Label = GameText.T("ui.catalog.build"),
-            Detail = GameText.T("ui.catalog.buildDetail"),
-            Position = new Vector2(12, 8),
-            CustomMinimumSize = new Vector2(132, 28),
-            Size = new Vector2(132, 28),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        });
-        _rightProductionPanel.AddChild(new CatalogModePill
-        {
-            Name = "CatalogModeTrain",
-            Mode = CatalogModeKind.Train,
-            Label = GameText.T("ui.catalog.train"),
-            Detail = GameText.T("ui.catalog.trainDetail"),
-            Position = new Vector2(154, 8),
-            CustomMinimumSize = new Vector2(132, 28),
-            Size = new Vector2(132, 28),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        });
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), new Vector2(12, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), new Vector2(154, 8));
 
         AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 44), BuildCategory.Command, active: true);
         AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 44), BuildCategory.Power, active: true);
@@ -201,7 +181,15 @@ public partial class HudLayer : CanvasLayer
         AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 44), BuildCategory.Air, active: true);
         AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 44), BuildCategory.Naval, active: false);
 
-        _rightProductionPanel.AddChild(MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 80), new Vector2(72, 16), FontTiny, InkMuted));
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(10, 44), ProductionCategory.Infantry, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(45, 44), ProductionCategory.Vehicle, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 44), ProductionCategory.Economy, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(115, 44), ProductionCategory.Defense, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(150, 44), ProductionCategory.Air, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(185, 44), ProductionCategory.Naval, active: false);
+
+        _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 80), new Vector2(92, 16), FontTiny, InkMuted);
+        _rightProductionPanel.AddChild(_catalogSurfaceLabel);
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(86, 76), new Vector2(196, 22), FontBody, Ink);
         _rightProductionPanel.AddChild(_productionValue);
 
@@ -222,6 +210,7 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCancelButtonTheme(_cancelProduction, CurrentPalette, FontSmall);
         _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
         _rightProductionPanel.AddChild(_cancelProduction);
+        SelectCatalogMode(_selectedCatalogMode);
 
         _rightDetailPanel = MakePanel("UnitDetailPanel", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorder);
         _rightDetailPanel.SetAnchorsPreset(Control.LayoutPreset.BottomRight);

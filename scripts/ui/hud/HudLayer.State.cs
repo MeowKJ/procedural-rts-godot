@@ -30,6 +30,7 @@ public partial class HudLayer : CanvasLayer
     private Label _drawerSelectedDetail = null!;
     private PortraitGlyph _drawerPortrait = null!;
     private SelectionIconSummary _drawerIconSummary = null!;
+    private Label _catalogSurfaceLabel = null!;
     private Label _statusValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
@@ -62,6 +63,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<StanceModeButton> _stanceModeButtons = [];
     private readonly Dictionary<string, CommandButton> _commandButtons = [];
     private readonly List<ProductionOptionState> _commandCardStates = [];
+    private readonly List<ProductionOptionState> _visibleCommandCardStates = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
     private readonly List<string> _commandCardStaleIds = [];
     private readonly List<Button> _sandboxDeveloperButtons = [];
@@ -309,13 +311,42 @@ public partial class HudLayer : CanvasLayer
     public void SetCommandCardState(IReadOnlyList<ProductionOptionState> states)
     {
         _commandCardStates.Clear();
-        _commandCardActiveIds.Clear();
-        _commandCardStaleIds.Clear();
-        var visibleCount = Math.Min(states.Count, 12);
-        for (var index = 0; index < visibleCount; index++)
+        for (var index = 0; index < states.Count; index++)
         {
             var state = states[index];
             _commandCardStates.Add(state);
+        }
+
+        RefreshCommandCards();
+    }
+
+    private void RefreshCommandCards()
+    {
+        _visibleCommandCardStates.Clear();
+        if (_selectedCatalogMode == CatalogModeKind.Train)
+        {
+            for (var index = 0; index < _commandCardStates.Count; index++)
+            {
+                var state = _commandCardStates[index];
+                if (state.Category != _selectedProductionCategory)
+                {
+                    continue;
+                }
+
+                if (_visibleCommandCardStates.Count >= 12)
+                {
+                    break;
+                }
+
+                _visibleCommandCardStates.Add(state);
+            }
+        }
+
+        _commandCardActiveIds.Clear();
+        _commandCardStaleIds.Clear();
+        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
+        {
+            var state = _visibleCommandCardStates[index];
             _commandCardActiveIds.Add(ProductionOptionId(state));
         }
 
@@ -333,9 +364,9 @@ public partial class HudLayer : CanvasLayer
             _commandButtons.Remove(stale);
         }
 
-        for (var index = 0; index < _commandCardStates.Count; index++)
+        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
         {
-            var state = _commandCardStates[index];
+            var state = _visibleCommandCardStates[index];
             var optionId = ProductionOptionId(state);
             if (!_commandButtons.TryGetValue(optionId, out var button))
             {
@@ -351,14 +382,6 @@ public partial class HudLayer : CanvasLayer
                 ? GameText.Format("ui.needCredits", state.Cost)
                 : string.IsNullOrWhiteSpace(state.DisabledReasonKey) ? "" : GameText.T(state.DisabledReasonKey);
             button.SetState(state, disabledReason);
-        }
-
-        if (_commandCardStates.Count == 0)
-        {
-            foreach (var button in _commandButtons.Values)
-            {
-                button.SetState(false, 0, 0, GameText.T("ui.producerUnavailable"));
-            }
         }
     }
 

@@ -35,25 +35,33 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
-    private partial class CatalogModePill : Control
+    private partial class CatalogModeButton : Button
     {
         public required CatalogModeKind Mode { get; init; }
         public required string Label { get; init; }
         public required string Detail { get; init; }
+        private bool _selected;
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            QueueRedraw();
+        }
 
         public override void _Draw()
         {
             var rect = new Rect2(Vector2.Zero, Size);
             var accent = Mode == CatalogModeKind.Build ? Cyan : Mint;
-            DrawRect(rect, new Color(CurrentPalette.PanelSubtleFill, 0.82f), true);
-            DrawRect(rect.Grow(-1), new Color(accent, 0.42f), false, 1.2f, true);
-            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, 0.46f), true);
+            var fill = _selected ? new Color(accent, 0.16f) : new Color(CurrentPalette.PanelSubtleFill, 0.82f);
+            DrawRect(rect, fill, true);
+            DrawRect(rect.Grow(-1), new Color(accent, _selected ? 0.84f : 0.42f), false, _selected ? 1.8f : 1.2f, true);
+            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected ? 0.78f : 0.46f), true);
 
             var glyph = Mode == CatalogModeKind.Build ? IconGlyph.Building : IconGlyph.Infantry;
-            DrawIconGlyph(this, glyph, new Vector2(14, rect.Size.Y * 0.5f), 15, new Color(accent, 0.9f));
+            DrawIconGlyph(this, glyph, new Vector2(14, rect.Size.Y * 0.5f), 15, new Color(accent, _selected ? 1f : 0.72f));
 
             var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);
-            DrawString(labelFont, new Vector2(28, 12), Label, HorizontalAlignment.Left, rect.Size.X - 34, 10, new Color(Ink, 0.9f));
+            DrawString(labelFont, new Vector2(28, 12), Label, HorizontalAlignment.Left, rect.Size.X - 34, 10, new Color(Ink, _selected ? 1f : 0.82f));
             DrawString(labelFont, new Vector2(28, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 34, 8, new Color(InkMuted, 0.82f));
         }
     }
@@ -62,6 +70,30 @@ public partial class HudLayer : CanvasLayer
     {
         public required IconGlyph Glyph { get; init; }
         public required BuildCategory Category { get; init; }
+        public bool Active { get; init; }
+        private bool _selected;
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            var rect = new Rect2(Vector2.Zero, CustomMinimumSize);
+            var style = UiFactory.GetHudProductionTabDrawStyle(Glyph, Active, _selected, CurrentPalette);
+            DrawRect(rect, style.Fill, true);
+            DrawRect(rect.Grow(-2), style.AccentFill, true);
+            DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
+            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+        }
+    }
+
+    private partial class ProductionCategoryTab : Button
+    {
+        public required IconGlyph Glyph { get; init; }
+        public required ProductionCategory Category { get; init; }
         public bool Active { get; init; }
         private bool _selected;
 
