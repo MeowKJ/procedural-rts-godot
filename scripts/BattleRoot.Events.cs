@@ -228,9 +228,30 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnProductionDesignRequested(string designId)
+    private void OnProductionDesignRequested(string designId, int? providerId)
     {
-        if (_unitBattlefield.TryCreateProductionDesignPayload(designId, PlayerSlotId.One, out var payload, out var status))
+        PlayerCommandPayload payload;
+        string status;
+        bool canSubmit;
+        if (providerId is { } specificProviderId)
+        {
+            canSubmit = _unitBattlefield.TryCreateProductionDesignPayloadForProvider(
+                designId,
+                PlayerSlotId.One,
+                specificProviderId,
+                out payload,
+                out status);
+        }
+        else
+        {
+            canSubmit = _unitBattlefield.TryCreateProductionDesignPayload(
+                designId,
+                PlayerSlotId.One,
+                out payload,
+                out status);
+        }
+
+        if (canSubmit)
         {
             var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
             status = GatewayStatus(result, status);

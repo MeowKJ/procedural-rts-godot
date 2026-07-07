@@ -13,6 +13,7 @@ public partial class HudLayer : CanvasLayer
     private const int FontMeta = 13;
     private const int FontValue = 15;
     private const int FontTitle = 18;
+    private const int MaxProductionProviderLaneButtons = 8;
 
     private static SoftOldCityHudPalette CurrentPalette = SoftOldCityTheme.Day;
     private static Color Ink => CurrentPalette.Text;
@@ -66,11 +67,16 @@ public partial class HudLayer : CanvasLayer
     private readonly List<BuildOptionSnapshot> _visibleBuildCardStates = [];
     private readonly List<ProductionOptionState> _commandCardStates = [];
     private readonly List<ProductionOptionState> _visibleCommandCardStates = [];
+    private readonly List<ProductionProviderLaneState> _productionProviderLaneStates = [];
+    private readonly List<ProductionProviderLaneButton> _productionProviderLaneButtons = [];
+    private readonly Dictionary<string, int> _allProductionProviderCursorByKind = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
     private readonly List<string> _commandCardStaleIds = [];
     private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
+    private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
+    private int _selectedProductionProviderId;
     private SandboxDeveloperContext _sandboxDeveloperContext = SandboxDeveloperContext.Default;
     private bool _hasSelection;
     private bool _hasBuildingSelection;
@@ -323,7 +329,21 @@ public partial class HudLayer : CanvasLayer
             _commandCardStates.Add(state);
         }
 
+        ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
+        RefreshProductionProviderLaneButtons();
+    }
+
+    public void SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)
+    {
+        _productionProviderLaneStates.Clear();
+        for (var index = 0; index < states.Count; index++)
+        {
+            _productionProviderLaneStates.Add(states[index]);
+        }
+
+        ValidateProductionProviderLaneSelection();
+        RefreshProductionProviderLaneButtons();
     }
 
     public void SetBuildCardState(IReadOnlyList<BuildOptionSnapshot> states)
@@ -412,6 +432,7 @@ public partial class HudLayer : CanvasLayer
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
             ClearAbilityCards();
+            RefreshProductionProviderLaneButtons();
             RefreshBuildCards();
             return;
         }
@@ -419,10 +440,12 @@ public partial class HudLayer : CanvasLayer
         if (_selectedCatalogMode == CatalogModeKind.Train)
         {
             ClearAbilityCards();
+            RefreshProductionProviderLaneButtons();
             RefreshProductionCards();
             return;
         }
 
+        RefreshProductionProviderLaneButtons();
         RefreshAbilityCards();
     }
 

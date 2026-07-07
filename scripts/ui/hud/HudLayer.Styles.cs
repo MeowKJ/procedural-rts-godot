@@ -62,6 +62,12 @@ public partial class HudLayer : CanvasLayer
             button.QueueRedraw();
         }
 
+        foreach (var button in _productionProviderLaneButtons)
+        {
+            UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, Cyan, FontTiny);
+            button.QueueRedraw();
+        }
+
         foreach (var button in _abilityCards.Values)
         {
             UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);

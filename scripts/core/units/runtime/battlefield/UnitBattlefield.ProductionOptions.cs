@@ -67,6 +67,84 @@ public sealed partial class UnitBattlefield
         return ProductionDesignOptionStates(playerSlotId, _selectedProductionProducerIdBuffer);
     }
 
+    public IReadOnlyList<ProductionProviderLaneState> ProductionProviderLaneStates(PlayerSlotId playerSlotId)
+    {
+        _productionProviderLaneStateBuffer.Clear();
+        _specificProductionProviderLaneBuffer.Clear();
+        _productionProviderLaneKindCounts.Clear();
+        CollectBuildingTargetIds(_buildingTargetIdBuffer);
+        var providerCount = 0;
+        var availableCount = 0;
+        var queueCount = 0;
+        var activeProgress = 0f;
+        for (var index = 0; index < _buildingTargetIdBuffer.Count; index++)
+        {
+            var buildingId = _buildingTargetIdBuffer[index];
+            if (BuildingSnapshot(buildingId) is not { } building
+                || building.PlayerSlotId != playerSlotId
+                || building.Hp <= 0
+                || !HasAnyProductionForCore(building.Id))
+            {
+                continue;
+            }
+
+            providerCount++;
+            var available = BuildingPowered(building.Id) && BuildingBuildProgress(building.Id) >= 1;
+            if (available)
+            {
+                availableCount++;
+            }
+
+            var metrics = ProductionProviderQueueMetrics(building.Id);
+            queueCount += metrics.QueuedCount;
+            activeProgress = MathF.Max(activeProgress, metrics.ActiveProgress);
+            var spec = BuildSpecCatalog.For(building.Kind);
+            var ordinal = NextProductionProviderLaneOrdinal(building.Kind);
+            _specificProductionProviderLaneBuffer.Add(new ProductionProviderLaneState(
+                ProductionProviderLaneScope.Specific,
+                building.Id,
+                building.Kind,
+                GameText.Format("ui.providerLane.specific", spec.Label, ordinal),
+                $"{spec.ShortCode}{ordinal}",
+                1,
+                metrics.QueuedCount,
+                metrics.ActiveProgress,
+                available,
+                available ? "" : ProductionProviderLaneDisabledReason(building.Id)));
+        }
+
+        var aggregateAvailable = availableCount > 0;
+        var aggregateDisabledReason = aggregateAvailable ? "" : "ui.producerUnavailable";
+        _productionProviderLaneStateBuffer.Add(new ProductionProviderLaneState(
+            ProductionProviderLaneScope.Auto,
+            0,
+            "",
+            GameText.T("ui.providerLane.auto"),
+            "AUTO",
+            providerCount,
+            queueCount,
+            activeProgress,
+            aggregateAvailable,
+            aggregateDisabledReason));
+        _productionProviderLaneStateBuffer.Add(new ProductionProviderLaneState(
+            ProductionProviderLaneScope.All,
+            0,
+            "",
+            GameText.T("ui.providerLane.all"),
+            "ALL",
+            providerCount,
+            queueCount,
+            activeProgress,
+            aggregateAvailable,
+            aggregateDisabledReason));
+        for (var index = 0; index < _specificProductionProviderLaneBuffer.Count; index++)
+        {
+            _productionProviderLaneStateBuffer.Add(_specificProductionProviderLaneBuffer[index]);
+        }
+
+        return _productionProviderLaneStateBuffer;
+    }
+
     private IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(
         PlayerSlotId playerSlotId,
         IReadOnlyList<int> selectedProducerBuildingIds)
@@ -183,6 +261,40 @@ public sealed partial class UnitBattlefield
             && building.Hp > 0
             && building.Kind == spec.Production.ProducerKind
             && ProducerTechTier(building.Kind) >= spec.Stats.TechTier;
+    }
+
+    private int NextProductionProviderLaneOrdinal(string producerKind)
+    {
+        _productionProviderLaneKindCounts.TryGetValue(producerKind, out var current);
+        var next = current + 1;
+        _productionProviderLaneKindCounts[producerKind] = next;
+        return next;
+    }
+
+    private (int QueuedCount, float ActiveProgress) ProductionProviderQueueMetrics(int buildingId)
+    {
+        var queue = BuildingProductionQueue(buildingId);
+        var progress = 0f;
+        if (queue.Count > 0)
+        {
+            var spec = UnitDesignCatalog.Spec(queue[0].DesignId);
+            if (spec.Production is not null)
+            {
+                progress = Mathf.Clamp(queue[0].Progress / spec.Production.Duration, 0, 1);
+            }
+        }
+
+        return (queue.Count, progress);
+    }
+
+    private string ProductionProviderLaneDisabledReason(int buildingId)
+    {
+        if (BuildingBuildProgress(buildingId) < 1)
+        {
+            return "ui.providerLane.incomplete";
+        }
+
+        return BuildingPowered(buildingId) ? "" : "ui.providerLane.offline";
     }
 
     private void CollectProductionDesignSpecs(PlayerSlotId playerSlotId, List<UnitSpec> result)

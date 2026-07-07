@@ -72,6 +72,7 @@ public partial class HudLayer : CanvasLayer
         }
 
         RefreshCommandCards();
+        RefreshProductionProviderLaneButtons();
     }
 
     private void SelectProductionTab(BuildCategory category)
@@ -95,6 +96,8 @@ public partial class HudLayer : CanvasLayer
             tab.SetSelected(tab.Category == category);
         }
 
+        ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
+        RefreshProductionProviderLaneButtons();
     }
 }
