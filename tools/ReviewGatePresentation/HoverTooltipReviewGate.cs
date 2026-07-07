@@ -43,6 +43,10 @@ static class HoverTooltipReviewGate
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);
         RequireText(hotkeys, "_hint.Visible = false", "Closed hotkey legend must not leave persistent instructional HUD copy.", result);
         RequireText(hotkeys, "_hint.Visible = _open", "Hotkey legend hint may appear only while the transient legend panel is open.", result);
+        RequireText(hotkeys, "_panel.SetAnchorsPreset(Control.LayoutPreset.TopRight)", "Hotkey legend panel must use a fixed top-right frame instead of viewport-height stretching.", result);
+        RequireText(hotkeys, "private const float PanelHeight = 458f;", "Hotkey legend must keep a fixed 720p-safe panel height.", result);
+        RequireText(hotkeys, "private const int LegendColumnCount = 2;", "Hotkey legend must use a compact two-column command reference.", result);
+        RequireText(hotkeys, "var column = index % LegendColumnCount;", "Hotkey legend sections must flow into two columns instead of one tall stack.", result);
         RequireText(hudPreview, "Preview.ScreenPosition + new Vector2(18, 18)", "Hover guidance must remain a transient cursor-side command preview instead of persistent HUD copy.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Move:", "HUD command preview must render move as a distinct mode.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Attack:", "HUD command preview must render attack as a distinct mode.", result);
