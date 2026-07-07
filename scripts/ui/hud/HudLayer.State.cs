@@ -304,6 +304,7 @@ public partial class HudLayer : CanvasLayer
     public void SetCommandPreview(CommandPreviewState preview)
     {
         _commandPreview.Preview = preview;
+        ApplyCommandCursor(preview);
         _commandPreview.QueueRedraw();
     }
 
