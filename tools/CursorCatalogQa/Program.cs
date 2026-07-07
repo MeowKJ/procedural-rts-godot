@@ -3,15 +3,7 @@ using ProceduralRts.Core;
 
 var failures = new List<string>(BattleCursorCatalog.Validate());
 var root = FindRepoRoot();
-BattleCursorState[] requiredTextureStates =
-[
-    BattleCursorState.DefaultSelect,
-    BattleCursorState.MoveCommand,
-    BattleCursorState.AttackCommand,
-    BattleCursorState.BuildValid,
-    BattleCursorState.BuildInvalid,
-    BattleCursorState.Forbidden,
-];
+var requiredTextureStates = Enum.GetValues<BattleCursorState>();
 
 Require(BattleCursorCatalog.StateForPreview(CommandPreviewState.None) == BattleCursorState.DefaultSelect, "None preview should use DefaultSelect.", failures);
 Require(StateFor(CommandPreviewKind.Select, true) == BattleCursorState.DefaultSelect, "Select preview should use DefaultSelect.", failures);
