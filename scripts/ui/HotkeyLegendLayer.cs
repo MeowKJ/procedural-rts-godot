@@ -5,6 +5,9 @@ namespace ProceduralRts.Ui;
 
 public partial class HotkeyLegendLayer : CanvasLayer
 {
+    private const float PanelWidth = 460f;
+    private const float PanelHeight = 458f;
+    private const float PanelRightMargin = 318f;
     private static readonly Color Ink = new("#d8f7ff");
     private static readonly Color InkMuted = new("#8095aa");
     private static readonly Color Cyan = new("#59f1ff");
@@ -35,11 +38,11 @@ public partial class HotkeyLegendLayer : CanvasLayer
             Visible = false,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        _panel.SetAnchorsPreset(Control.LayoutPreset.RightWide);
-        _panel.OffsetLeft = -616;
+        _panel.SetAnchorsPreset(Control.LayoutPreset.TopRight);
+        _panel.OffsetLeft = -(PanelRightMargin + PanelWidth);
         _panel.OffsetTop = 72;
-        _panel.OffsetRight = -318;
-        _panel.OffsetBottom = -82;
+        _panel.OffsetRight = -PanelRightMargin;
+        _panel.OffsetBottom = _panel.OffsetTop + PanelHeight;
         _root.AddChild(_panel);
 
         _hint = MakeLabel(GameText.T("hotkeys.hint.open"), 11, InkMuted);
@@ -84,6 +87,16 @@ public partial class HotkeyLegendLayer : CanvasLayer
 
     private partial class LegendPanel : Control
     {
+        private const int LegendColumnCount = 2;
+        private const float PanelPadding = 14f;
+        private const float HeaderHeight = 52f;
+        private const float ColumnGap = 10f;
+        private const float SectionTopGap = 14f;
+        private const float SectionGap = 8f;
+        private const float SectionHeaderHeight = 22f;
+        private const float RowHeight = 14f;
+        private readonly float[] _columnY = new float[LegendColumnCount];
+
         private readonly (string Section, string[] Rows, Color Accent)[] _sections =
         [
             (GameText.T("hotkeys.camera"), [GameText.T("hotkeys.camera.1"), GameText.T("hotkeys.camera.2"), GameText.T("hotkeys.camera.3")], Cyan),
@@ -102,11 +115,20 @@ public partial class HotkeyLegendLayer : CanvasLayer
             DrawRect(rect, new Color("#59f1ff", 0.34f), false, 1.2f);
             DrawHeader();
 
-            var y = 58f;
-            foreach (var (section, rows, accent) in _sections)
+            var columnWidth = (Size.X - PanelPadding * 2 - ColumnGap) / LegendColumnCount;
+            for (var column = 0; column < LegendColumnCount; column++)
             {
-                DrawSection(section, rows, accent, y);
-                y += 52 + rows.Length * 15;
+                _columnY[column] = HeaderHeight + SectionTopGap;
+            }
+
+            for (var index = 0; index < _sections.Length; index++)
+            {
+                var (section, rows, accent) = _sections[index];
+                var column = index % LegendColumnCount;
+                var x = PanelPadding + column * (columnWidth + ColumnGap);
+                var y = _columnY[column];
+                DrawSection(section, rows, accent, new Vector2(x, y), columnWidth);
+                _columnY[column] += SectionHeight(rows.Length) + SectionGap;
             }
         }
 
@@ -117,16 +139,36 @@ public partial class HotkeyLegendLayer : CanvasLayer
             DrawLine(new Vector2(14, 52), new Vector2(Size.X - 14, 52), new Color("#59f1ff", 0.24f), 1, true);
         }
 
-        private void DrawSection(string section, string[] rows, Color accent, float y)
+        private void DrawSection(string section, string[] rows, Color accent, Vector2 position, float width)
         {
-            DrawRect(new Rect2(14, y - 14, Size.X - 28, 20 + rows.Length * 15), new Color("#071019", 0.72f), true);
-            DrawRect(new Rect2(14, y - 14, 4, 20 + rows.Length * 15), new Color(accent, 0.78f), true);
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(26, y), section, HorizontalAlignment.Left, 92, 11, new Color(accent, 0.96f));
+            var sectionHeight = SectionHeight(rows.Length);
+            DrawRect(new Rect2(position, new Vector2(width, sectionHeight)), new Color("#071019", 0.72f), true);
+            DrawRect(new Rect2(position, new Vector2(4, sectionHeight)), new Color(accent, 0.78f), true);
+            DrawString(
+                UiFontProfile.DrawFont(UiFontRole.Compact),
+                position + new Vector2(12, 14),
+                section,
+                HorizontalAlignment.Left,
+                width - 24,
+                11,
+                new Color(accent, 0.96f));
 
             for (var index = 0; index < rows.Length; index++)
             {
-                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(116, y + index * 15), rows[index], HorizontalAlignment.Left, Size.X - 132, 11, Ink);
+                DrawString(
+                    UiFontProfile.DrawFont(UiFontRole.Compact),
+                    position + new Vector2(12, SectionHeaderHeight + 10 + index * RowHeight),
+                    rows[index],
+                    HorizontalAlignment.Left,
+                    width - 24,
+                    11,
+                    Ink);
             }
+        }
+
+        private static float SectionHeight(int rowCount)
+        {
+            return SectionHeaderHeight + rowCount * RowHeight + 10f;
         }
     }
 }
