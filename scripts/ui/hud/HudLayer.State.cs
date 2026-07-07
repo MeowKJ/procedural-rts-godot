@@ -217,7 +217,11 @@ public partial class HudLayer : CanvasLayer
             _lastProductionStatus = status;
         }
 
-        _productionValue.Text = CompactText(status, 54);
+        if (_selectedCatalogMode != CatalogModeKind.Abilities)
+        {
+            SetCatalogStatusText(status);
+        }
+
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
             _drawerInactivity = 0;
@@ -355,7 +359,7 @@ public partial class HudLayer : CanvasLayer
                 _visibleBuildCardStates.Add(state);
             }
         }
-        else
+        else if (_selectedCatalogMode == CatalogModeKind.Train)
         {
             for (var index = 0; index < _commandCardStates.Count; index++)
             {
@@ -383,7 +387,7 @@ public partial class HudLayer : CanvasLayer
                 _commandCardActiveIds.Add(BuildOptionId(_visibleBuildCardStates[index]));
             }
         }
-        else
+        else if (_selectedCatalogMode == CatalogModeKind.Train)
         {
             for (var index = 0; index < _visibleCommandCardStates.Count; index++)
             {
@@ -407,11 +411,24 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
+            ClearAbilityCards();
             RefreshBuildCards();
             return;
         }
 
-        RefreshProductionCards();
+        if (_selectedCatalogMode == CatalogModeKind.Train)
+        {
+            ClearAbilityCards();
+            RefreshProductionCards();
+            return;
+        }
+
+        RefreshAbilityCards();
+    }
+
+    private void SetCatalogStatusText(string status)
+    {
+        _productionValue.Text = CompactText(status, 54);
     }
 
     private void RefreshBuildCards()
@@ -514,6 +531,8 @@ public partial class HudLayer : CanvasLayer
     public readonly record struct MinimapAlertPing(Vector2 Position, AlertKind Kind, float RemainingRatio);
 
     public readonly record struct AlertLine(AlertKind Kind, FactionId? FactionId, string Text, float RemainingRatio);
+
+    public readonly record struct AbilityCardState(AbilitySpec Ability, float CooldownRemaining, bool IsActive);
 
     public readonly record struct SelectionIconItem(FactionId? FactionId, IconGlyph Glyph, string Label, int Count, Color Accent, string? UnitDesignId = null);
 }

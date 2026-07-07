@@ -152,6 +152,44 @@ public partial class HudLayer : CanvasLayer
                     canvas.DrawLine(from, to, color, 1.7f, true);
                 }
                 break;
+            case IconGlyph.Ability:
+                canvas.DrawArc(center, r * 0.82f, -Mathf.Pi * 0.18f, Mathf.Pi * 1.18f, 54, color, 2.1f, true);
+                canvas.DrawCircle(center, r * 0.28f, new Color(color, 0.34f));
+                canvas.DrawLine(center + new Vector2(-r * 0.7f, r * 0.56f), center + new Vector2(r * 0.7f, -r * 0.56f), new Color("#ffffff", color.A * 0.58f), 1.6f, true);
+                break;
+            case IconGlyph.Repair:
+                canvas.DrawArc(center, r * 0.78f, 0, Mathf.Tau, 48, color, 1.8f, true);
+                canvas.DrawLine(center + new Vector2(-r * 0.58f, 0), center + new Vector2(r * 0.58f, 0), color, 2.5f, true);
+                canvas.DrawLine(center + new Vector2(0, -r * 0.58f), center + new Vector2(0, r * 0.58f), color, 2.5f, true);
+                break;
+            case IconGlyph.Shield:
+                Vector2[] shield =
+                [
+                    center + new Vector2(0, -r * 0.88f),
+                    center + new Vector2(r * 0.7f, -r * 0.48f),
+                    center + new Vector2(r * 0.52f, r * 0.36f),
+                    center + new Vector2(0, r * 0.86f),
+                    center + new Vector2(-r * 0.52f, r * 0.36f),
+                    center + new Vector2(-r * 0.7f, -r * 0.48f),
+                ];
+                canvas.DrawColoredPolygon(shield, new Color(color, 0.16f));
+                canvas.DrawPolyline([.. shield, shield[0]], color, 2, true);
+                canvas.DrawLine(center + new Vector2(-r * 0.32f, -r * 0.1f), center + new Vector2(r * 0.32f, -r * 0.1f), new Color("#ffffff", color.A * 0.58f), 1.5f, true);
+                break;
+            case IconGlyph.Scan:
+                canvas.DrawArc(center, r * 0.78f, 0, Mathf.Tau, 54, color, 1.8f, true);
+                canvas.DrawArc(center, r * 0.48f, 0, Mathf.Tau, 42, new Color(color, 0.48f), 1.4f, true);
+                canvas.DrawLine(center, center + new Vector2(r * 0.82f, -r * 0.22f), color, 2.1f, true);
+                canvas.DrawCircle(center, r * 0.11f, new Color("#ffffff", color.A * 0.7f));
+                break;
+            case IconGlyph.Deploy:
+                canvas.DrawRect(new Rect2(center - new Vector2(r * 0.64f, r * 0.46f), new Vector2(r * 1.28f, r * 0.92f)), new Color(color, 0.14f), true);
+                canvas.DrawRect(new Rect2(center - new Vector2(r * 0.64f, r * 0.46f), new Vector2(r * 1.28f, r * 0.92f)), color, false, 1.8f, true);
+                canvas.DrawLine(center + new Vector2(-r * 0.86f, r * 0.68f), center + new Vector2(-r * 0.38f, r * 0.32f), color, 2, true);
+                canvas.DrawLine(center + new Vector2(r * 0.86f, r * 0.68f), center + new Vector2(r * 0.38f, r * 0.32f), color, 2, true);
+                canvas.DrawLine(center + new Vector2(-r * 0.86f, -r * 0.68f), center + new Vector2(-r * 0.38f, -r * 0.32f), color, 2, true);
+                canvas.DrawLine(center + new Vector2(r * 0.86f, -r * 0.68f), center + new Vector2(r * 0.38f, -r * 0.32f), color, 2, true);
+                break;
             default:
                 canvas.DrawLine(center + new Vector2(-r * 0.72f, r * 0.72f), center + new Vector2(r * 0.72f, -r * 0.72f), new Color(color, 0.54f), 2, true);
                 break;

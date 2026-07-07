@@ -60,6 +60,7 @@ public partial class BattleRoot : Node2D
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
     private readonly List<UnitModel> _selectedLegacyUnitBuffer = [];
     private readonly List<BuildingModel> _selectedLegacyBuildingBuffer = [];
+    private readonly List<HudLayer.AbilityCardState> _selectedAbilityCardBuffer = [];
     private readonly List<int> _selectedProductionBuildingIdBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
     private readonly List<int> _sandboxLaunchUnitIdBuffer = [];

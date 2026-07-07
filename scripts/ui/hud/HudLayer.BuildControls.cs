@@ -149,13 +149,19 @@ public partial class HudLayer : CanvasLayer
     {
         var button = new CatalogModeButton
         {
-            Name = mode == CatalogModeKind.Build ? "CatalogModeBuild" : "CatalogModeTrain",
+            Name = mode switch
+            {
+                CatalogModeKind.Build => "CatalogModeBuild",
+                CatalogModeKind.Train => "CatalogModeTrain",
+                CatalogModeKind.Abilities => "CatalogModeAbilities",
+                _ => "CatalogMode",
+            },
             Mode = mode,
             Label = label,
             Detail = detail,
             Position = position,
-            CustomMinimumSize = new Vector2(132, 28),
-            Size = new Vector2(132, 28),
+            CustomMinimumSize = new Vector2(84, 28),
+            Size = new Vector2(84, 28),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             TooltipText = label,

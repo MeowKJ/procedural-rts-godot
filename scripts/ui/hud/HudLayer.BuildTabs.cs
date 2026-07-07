@@ -55,9 +55,20 @@ public partial class HudLayer : CanvasLayer
 
         if (_catalogSurfaceLabel is not null)
         {
-            _catalogSurfaceLabel.Text = mode == CatalogModeKind.Build
-                ? GameText.T("ui.catalog.buildSurface")
-                : GameText.T("ui.catalog.trainSurface");
+            _catalogSurfaceLabel.Text = mode switch
+            {
+                CatalogModeKind.Build => GameText.T("ui.catalog.buildSurface"),
+                CatalogModeKind.Train => GameText.T("ui.catalog.trainSurface"),
+                CatalogModeKind.Abilities => GameText.T("ui.catalog.abilitiesSurface"),
+                _ => "",
+            };
+        }
+
+        if (mode != CatalogModeKind.Abilities && _productionValue is not null)
+        {
+            SetCatalogStatusText(string.IsNullOrWhiteSpace(_lastProductionStatus)
+                ? GameText.T("ui.status.ready")
+                : _lastProductionStatus);
         }
 
         RefreshCommandCards();

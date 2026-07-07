@@ -31,6 +31,7 @@ public partial class BattleRoot
             _hud.SetProductionQueueSummary(
                 RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
                 canCancel);
+            _hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates());
             return;
         }
 
@@ -38,6 +39,7 @@ public partial class BattleRoot
         _hud.SetProductionQueueSummary(
             _unitBattlefield.ProductionQueueSummary(PlayerSlotId.One),
             _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
+        _hud.SetAbilityCardState([]);
     }
 
     private void CollectSelectedProductionBuildingIds()
@@ -47,6 +49,67 @@ public partial class BattleRoot
         {
             _selectedProductionBuildingIdBuffer.Add(building.Id);
         }
+    }
+
+    private IReadOnlyList<HudLayer.AbilityCardState> RuntimeSelectedAbilityCardStates()
+    {
+        _selectedAbilityCardBuffer.Clear();
+        CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
+        if (_selectedUnitInstanceBuffer.Count != 1)
+        {
+            return _selectedAbilityCardBuffer;
+        }
+
+        var unit = _selectedUnitInstanceBuffer[0];
+        var entity = _unitBattlefield.UnitEntityByInstanceId(unit.Id);
+        foreach (var ability in unit.Spec.Abilities)
+        {
+            if (!IsHudAbility(ability.Kind))
+            {
+                continue;
+            }
+
+            _selectedAbilityCardBuffer.Add(new HudLayer.AbilityCardState(
+                ability,
+                AbilityCooldownRemaining(entity, ability.Kind),
+                IsAbilityActive(entity, ability.Kind)));
+        }
+
+        return _selectedAbilityCardBuffer;
+    }
+
+    private static bool IsHudAbility(AbilityKind kind)
+    {
+        return kind is AbilityKind.Deploy
+            or AbilityKind.RepairField
+            or AbilityKind.ShieldField
+            or AbilityKind.Scan;
+    }
+
+    private static float AbilityCooldownRemaining(EntityInstance? entity, AbilityKind kind)
+    {
+        if (entity is null || !entity.Components.TryGet<AbilityRuntimeComponentState>(out var runtime))
+        {
+            return 0;
+        }
+
+        foreach (var cooldown in runtime.Cooldowns)
+        {
+            if (cooldown.Kind == kind)
+            {
+                return MathF.Max(0, cooldown.CooldownRemaining);
+            }
+        }
+
+        return 0;
+    }
+
+    private static bool IsAbilityActive(EntityInstance? entity, AbilityKind kind)
+    {
+        return kind == AbilityKind.Deploy
+            && entity is not null
+            && entity.Components.TryGet<DeployComponentState>(out var deploy)
+            && deploy.IsDeployed;
     }
 
     private IReadOnlyList<ProductionOptionState> RuntimeProductionCommandCardStates(IReadOnlyList<int> selectedBuildingIds)

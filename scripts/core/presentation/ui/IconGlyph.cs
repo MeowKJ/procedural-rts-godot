@@ -21,5 +21,10 @@ public enum IconGlyph
     StanceIgnore,
     Cancel,
     Credits,
-    Settings
+    Settings,
+    Ability,
+    Repair,
+    Shield,
+    Scan,
+    Deploy
 }
