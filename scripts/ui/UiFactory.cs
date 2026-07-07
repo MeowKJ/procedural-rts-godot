@@ -59,7 +59,7 @@ public static class UiFactory
         {
             Text = text,
             FocusMode = Control.FocusModeEnum.All,
-            MouseDefaultCursorShape = Control.CursorShape.PointingHand,
+            MouseDefaultCursorShape = BattleCursorGodotShapes.ToControlShape(BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover).Shape),
             TooltipText = text,
         };
         StyleButton(button, accent);
@@ -206,6 +206,7 @@ public static class UiFactory
         Color accent,
         int fontSize)
     {
+        button.MouseDefaultCursorShape = BattleCursorGodotShapes.ToControlShape(BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover).Shape);
         button.AddThemeStyleboxOverride("normal", HudPanelStyle(fill, border));
         button.AddThemeStyleboxOverride("hover", HudPanelStyle(new Color(fill.Lightened(0.08f), fill.A), new Color(accent, 0.68f)));
         button.AddThemeStyleboxOverride("pressed", HudPanelStyle(new Color(fill.Lightened(0.14f), fill.A), new Color(palette.Text, 0.48f)));
