@@ -22,7 +22,7 @@ public partial class HudLayer : CanvasLayer
         private Color _accent = Cyan;
         private bool _selected;
 
-        public void SetState(ProductionProviderLaneState state, bool selected, bool enabled)
+        public void SetState(ProductionProviderLaneState state, bool selected, bool enabled, bool constructionMode)
         {
             State = state;
             _selected = selected;
@@ -35,7 +35,11 @@ public partial class HudLayer : CanvasLayer
             Text = state.ShortLabel;
             Disabled = !enabled;
             TooltipText = enabled
-                ? GameText.Format("ui.providerLane.tooltip", state.Label, state.ProviderCount, state.QueueCount)
+                ? GameText.Format(
+                    constructionMode ? "ui.constructionProviderLane.tooltip" : "ui.providerLane.tooltip",
+                    state.Label,
+                    state.ProviderCount,
+                    state.QueueCount)
                 : LocalizedDisabledReason(state.DisabledReasonKey, 0);
             QueueRedraw();
         }

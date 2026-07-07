@@ -300,6 +300,48 @@ static partial class Program
             throw new InvalidOperationException("Auto train provider lane should keep the existing shortest-queue production routing");
         }
 
+        var constructionProviderBattlefield = new UnitBattlefield();
+        constructionProviderBattlefield.SetCredits(PlayerSlotId.One, 1200);
+        var constructionHeadquartersA = constructionProviderBattlefield.UpsertBuildingTarget(
+            388,
+            BuildingDesignIds.Headquarters,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(240, 520),
+            0,
+            BuildSpecCatalog.For(BuildingDesignIds.Headquarters).MaxHp);
+        var constructionHeadquartersB = constructionProviderBattlefield.UpsertBuildingTarget(
+            389,
+            BuildingDesignIds.Headquarters,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(360, 520),
+            0,
+            BuildSpecCatalog.For(BuildingDesignIds.Headquarters).MaxHp);
+        var constructionProviderLanes = constructionProviderBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One);
+        if (constructionProviderLanes.Count < 4
+            || constructionProviderLanes[0].Scope != ProductionProviderLaneScope.Auto
+            || constructionProviderLanes[1].Scope != ProductionProviderLaneScope.All
+            || constructionProviderLanes[2].ProducerId != constructionHeadquartersA.Id
+            || constructionProviderLanes[3].ProducerId != constructionHeadquartersB.Id)
+        {
+            throw new InvalidOperationException("Build provider lanes should expose Auto, All, and stable specific construction source lanes from UnitBattlefield construction providers");
+        }
+
+        if (constructionProviderBattlefield.QueueConstructionTicket(PlayerSlotId.One, BuildingDesignIds.PowerPlant, out _) is null)
+        {
+            throw new InvalidOperationException("construction provider lane QA setup should be able to queue a power plant construction ticket");
+        }
+
+        constructionProviderLanes = constructionProviderBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One);
+        if (constructionProviderLanes[0].QueueCount != 1
+            || constructionProviderLanes[0].ActiveProgress < 0
+            || constructionProviderLanes[2].QueueCount != 0
+            || constructionProviderLanes[3].QueueCount != 0)
+        {
+            throw new InvalidOperationException("Build provider lanes should summarize construction tickets only on aggregate lanes until tickets carry specific source attribution");
+        }
+
         var unitCancelBattlefield = new UnitBattlefield();
         unitCancelBattlefield.SetCredits(PlayerSlotId.One, 500);
         var cancelBarracks = unitCancelBattlefield.UpsertBuildingTarget(

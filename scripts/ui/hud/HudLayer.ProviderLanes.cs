@@ -69,12 +69,36 @@ public partial class HudLayer : CanvasLayer
             && state.ProducerKind == producerKind;
     }
 
+    private void SelectProviderLane(ProductionProviderLaneState state)
+    {
+        if (_selectedCatalogMode == CatalogModeKind.Build)
+        {
+            SelectConstructionProviderLane(state);
+            return;
+        }
+
+        SelectProductionProviderLane(state);
+    }
+
     private void SelectProductionProviderLane(ProductionProviderLaneState state)
     {
         _selectedProductionProviderLaneScope = state.Scope;
         _selectedProductionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
         SetCatalogStatusText(GameText.Format(
             "ui.providerLane.selected",
+            state.Label,
+            state.ProviderCount,
+            state.QueueCount));
+        RefreshProductionProviderLaneSummary();
+        RefreshProductionProviderLaneButtons();
+    }
+
+    private void SelectConstructionProviderLane(ProductionProviderLaneState state)
+    {
+        _selectedConstructionProviderLaneScope = state.Scope;
+        _selectedConstructionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
+        SetCatalogStatusText(GameText.Format(
+            "ui.constructionProviderLane.selected",
             state.Label,
             state.ProviderCount,
             state.QueueCount));
@@ -104,10 +128,48 @@ public partial class HudLayer : CanvasLayer
         _selectedProductionProviderId = 0;
     }
 
+    private void ValidateConstructionProviderLaneSelection()
+    {
+        if (_selectedConstructionProviderLaneScope != ProductionProviderLaneScope.Specific)
+        {
+            return;
+        }
+
+        for (var index = 0; index < _constructionProviderLaneStates.Count; index++)
+        {
+            var state = _constructionProviderLaneStates[index];
+            if (state.Scope == ProductionProviderLaneScope.Specific
+                && state.ProducerId == _selectedConstructionProviderId)
+            {
+                return;
+            }
+        }
+
+        _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
+        _selectedConstructionProviderId = 0;
+    }
+
     private void RefreshProductionProviderLaneButtons()
     {
         var visibleIndex = 0;
-        if (_selectedCatalogMode == CatalogModeKind.Train)
+        if (_selectedCatalogMode == CatalogModeKind.Build)
+        {
+            for (var index = 0; index < _constructionProviderLaneStates.Count; index++)
+            {
+                var state = _constructionProviderLaneStates[index];
+                if (visibleIndex >= _productionProviderLaneButtons.Count)
+                {
+                    continue;
+                }
+
+                var button = _productionProviderLaneButtons[visibleIndex];
+                button.Position = new Vector2(4, 52 + visibleIndex * 28);
+                button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true);
+                button.Visible = true;
+                visibleIndex++;
+            }
+        }
+        else if (_selectedCatalogMode == CatalogModeKind.Train)
         {
             for (var index = 0; index < _productionProviderLaneStates.Count; index++)
             {
@@ -120,7 +182,7 @@ public partial class HudLayer : CanvasLayer
 
                 var button = _productionProviderLaneButtons[visibleIndex];
                 button.Position = new Vector2(4, 52 + visibleIndex * 28);
-                button.SetState(state, IsProductionProviderLaneSelected(state), IsProductionProviderLaneEnabled(state));
+                button.SetState(state, IsProductionProviderLaneSelected(state), IsProductionProviderLaneEnabled(state), constructionMode: false);
                 button.Visible = true;
                 visibleIndex++;
             }
@@ -139,18 +201,25 @@ public partial class HudLayer : CanvasLayer
             return;
         }
 
-        if (_selectedCatalogMode != CatalogModeKind.Train)
+        if (_selectedCatalogMode is not (CatalogModeKind.Build or CatalogModeKind.Train))
         {
             _providerLaneSummaryValue.Visible = false;
             return;
         }
 
-        var state = CurrentProductionProviderLaneState();
+        var state = CurrentProviderLaneState();
         _providerLaneSummaryValue.Visible = true;
         _providerLaneSummaryValue.Text = state is null
-            ? GameText.T("ui.providerLane.empty")
+            ? CurrentProviderLaneEmptyText()
             : ProviderLaneSummaryText(state);
         SetLabelColor(_providerLaneSummaryValue, state is null || !state.Available ? InkMuted : Ink);
+    }
+
+    private ProductionProviderLaneState? CurrentProviderLaneState()
+    {
+        return _selectedCatalogMode == CatalogModeKind.Build
+            ? CurrentConstructionProviderLaneState()
+            : CurrentProductionProviderLaneState();
     }
 
     private ProductionProviderLaneState? CurrentProductionProviderLaneState()
@@ -174,6 +243,33 @@ public partial class HudLayer : CanvasLayer
         return null;
     }
 
+    private ProductionProviderLaneState? CurrentConstructionProviderLaneState()
+    {
+        for (var index = 0; index < _constructionProviderLaneStates.Count; index++)
+        {
+            var state = _constructionProviderLaneStates[index];
+            if (state.Scope != _selectedConstructionProviderLaneScope)
+            {
+                continue;
+            }
+
+            if (state.Scope != ProductionProviderLaneScope.Specific
+                || state.ProducerId == _selectedConstructionProviderId)
+            {
+                return state;
+            }
+        }
+
+        return null;
+    }
+
+    private string CurrentProviderLaneEmptyText()
+    {
+        return _selectedCatalogMode == CatalogModeKind.Build
+            ? GameText.T("ui.constructionProviderLane.empty")
+            : GameText.T("ui.providerLane.empty");
+    }
+
     private static string ProviderLaneSummaryText(ProductionProviderLaneState state)
     {
         var availability = state.Available
@@ -195,6 +291,9 @@ public partial class HudLayer : CanvasLayer
         {
             "ui.providerLane.offline" => GameText.T("ui.providerLane.summaryOffline"),
             "ui.providerLane.incomplete" => GameText.T("ui.providerLane.summaryIncomplete"),
+            "ui.constructionProviderLane.offline" => GameText.T("ui.providerLane.summaryOffline"),
+            "ui.constructionProviderLane.incomplete" => GameText.T("ui.providerLane.summaryIncomplete"),
+            "ui.constructionProviderLane.none" => GameText.T("ui.providerLane.summaryNone"),
             "ui.producerUnavailable" => GameText.T("ui.providerLane.summaryNone"),
             _ => GameText.T("ui.providerLane.summaryLocked"),
         };
@@ -204,6 +303,12 @@ public partial class HudLayer : CanvasLayer
     {
         return state.Scope == _selectedProductionProviderLaneScope
             && (state.Scope != ProductionProviderLaneScope.Specific || state.ProducerId == _selectedProductionProviderId);
+    }
+
+    private bool IsConstructionProviderLaneSelected(ProductionProviderLaneState state)
+    {
+        return state.Scope == _selectedConstructionProviderLaneScope
+            && (state.Scope != ProductionProviderLaneScope.Specific || state.ProducerId == _selectedConstructionProviderId);
     }
 
     private bool IsProductionProviderLaneEnabled(ProductionProviderLaneState state)

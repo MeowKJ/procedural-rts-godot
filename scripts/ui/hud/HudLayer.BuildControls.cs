@@ -270,7 +270,7 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, Cyan, FontTiny);
         button.Pressed += () =>
         {
-            SelectProductionProviderLane(button.State);
+            SelectProviderLane(button.State);
         };
         _productionProviderLaneButtons.Add(button);
         parent.AddChild(button);
