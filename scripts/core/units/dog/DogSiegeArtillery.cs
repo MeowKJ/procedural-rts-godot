@@ -21,6 +21,7 @@ public sealed class DogSiegeArtillery : UnitDesign
         WeaponMountSpec.Independent("main", WeaponKind.VectorCannon, Vector2.Zero, new Vector2(32, 0), 0.34f, 5.5f, false),
     ];
 
+    public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Deploy, Radius: 0.8f, Value: 1.55f)];
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 13.0f, 3, "production.lane.vehicle", IconGlyph.AttackMove);
     public override UnitArtRecipe Art => DogUnitArt.Vehicle("art.dog.siege_artillery", IconGlyph.AttackMove);
 }

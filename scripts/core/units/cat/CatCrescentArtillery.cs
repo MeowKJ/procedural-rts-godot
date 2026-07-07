@@ -21,6 +21,7 @@ public sealed class CatCrescentArtillery : UnitDesign
         WeaponMountSpec.Independent("main", WeaponKind.RocketPod, Vector2.Zero, new Vector2(31, 0), 0.36f, 5.8f, false),
     ];
 
+    public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Deploy, Radius: 0.55f, Value: 1.45f)];
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 13.0f, 3, "production.lane.vehicle", IconGlyph.AttackMove);
     public override UnitArtRecipe Art => CatUnitArt.Vehicle("art.cat.crescent_artillery", IconGlyph.AttackMove);
 }
