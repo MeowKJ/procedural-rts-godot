@@ -141,6 +141,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "RuntimeIdleHarvesterCount(out firstIdleHarvesterWorldPosition)", "Runtime idle harvester alerts must count runtime harvesters and capture their first world position.", result);
         RequireText(alerts, "AddAlert(\n            AlertKind.Harvester", "Idle harvester alerts must keep using the standard bounded alert insertion path.", result);
         RequireText(alerts, "firstIdleHarvesterWorldPosition);", "Idle harvester alerts must carry a world position for minimap pings and Space jump.", result);
+        RequireText(alerts, "AddAlert(AlertKind.Power, powerStable ? GameText.T(\"ui.alert.powerStable\") : GameText.T(\"ui.alert.powerOffline\"), PowerAlertWorldPosition())", "Power alerts must carry a stable world position for minimap pings and Space jump.", result);
+        RequireText(alerts, "private Vector2? PowerAlertWorldPosition()", "BattleRoot alerts must expose a power-alert position helper.", result);
+        RequireText(alerts, "private Vector2? RuntimePowerAlertWorldPosition()", "Runtime power alerts must compute a live player building position.", result);
+        RequireText(alerts, "private Vector2? LegacyPowerAlertWorldPosition()", "Legacy power alerts must compute a live player building position.", result);
+        RequireText(alerts, "building.Kind == BuildingDesignIds.PowerPlant", "Power alert position must prefer a live player PowerPlant.", result);
         RequireText(alerts, "private bool HasSelectedLegacyBuildings()", "BattleRoot alerts must expose the legacy selected-building scan helper.", result);
         RequireText(alerts, "private bool HasLegacyPlayerPowerPlant()", "BattleRoot alerts must expose the legacy power scan helper.", result);
         RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
