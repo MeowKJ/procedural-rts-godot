@@ -47,6 +47,7 @@ public enum PlayerCommandKind
     Select,
     Move,
     Attack,
+    AttackGround,
     AttackMove,
     Stop,
     HoldPosition,

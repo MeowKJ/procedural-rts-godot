@@ -65,6 +65,20 @@ public sealed partial class CombatSystem : ISimSystem
                 continue;
             }
 
+            if (entity.Components.TryGet<AttackGroundOrderComponentState>(out var attackGround))
+            {
+                world.Metrics.ClearAttackTarget(entity.Id.Value);
+                if (!WeaponEngagementQueries.CanAnyMountAttackGround(world, weapon))
+                {
+                    entity.Components.Remove<AttackGroundOrderComponentState>();
+                    CoolMounts(entity, weapon, dt);
+                    continue;
+                }
+
+                EngageGround(context, entity, weapon, attackGround.Target, dt);
+                continue;
+            }
+
             var target = ResolveTarget(context, entity, weapon);
             if (target is null)
             {

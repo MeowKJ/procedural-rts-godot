@@ -87,6 +87,89 @@ public sealed partial class CombatSystem
                 DamageVariance: DamageVariance));
     }
 
+    private static void EngageGround(
+        SimContext context,
+        EntityInstance attacker,
+        WeaponUserComponentState weapon,
+        Vector2 targetPoint,
+        float dt)
+    {
+        var world = context.World;
+        var weaponRange = AttackGroundRange(world, attacker, weapon);
+        if (weaponRange <= 0)
+        {
+            CoolMounts(attacker, weapon, dt);
+            return;
+        }
+
+        var origin = attacker.Transform.Position;
+        var toTarget = targetPoint - origin;
+        var distance = toTarget.Length();
+        var inRange = distance <= weaponRange;
+
+        if (attacker.Components.TryGet<MovementComponentState>(out var movement))
+        {
+            var canMove = attacker.Components.Has<MovementProfileComponentState>();
+            var shouldHoldAnchor = inRange && (movement.FireAnchorRemaining > 0 || WeaponEngagementState.HasCoolingMount(weapon));
+            if (!inRange && canMove && distance > 0.001f)
+            {
+                var direction = toTarget / distance;
+                var standoff = targetPoint - (direction * AttackSlotMath.StandoffRadius(weaponRange, targetRadius: 0));
+                attacker.Components.Set(movement with { MoveTarget = standoff, FormationSlot = null });
+            }
+            else if ((inRange || !canMove || shouldHoldAnchor) && movement.MoveTarget is not null)
+            {
+                attacker.Components.Set(movement with { Velocity = Vector2.Zero, MoveTarget = null, FormationSlot = null });
+            }
+        }
+
+        var desiredFacing = distance <= 0.001f ? attacker.Transform.Facing : toTarget.Angle();
+        var mounts = WeaponEngagementState.WritableMounts(attacker, weapon);
+        WeaponSystem.TickGround(
+            context,
+            attacker,
+            targetPoint,
+            mounts,
+            desiredFacing,
+            dt,
+            new WeaponSystemOptions(
+                InRange: inRange,
+                CenterDistance: distance,
+                TargetRadius: 0,
+                RespectMinimumRange: true,
+                UseStructureTargetDefaults: false,
+                RequirePositivePriority: false,
+                FireOnlyOneMount: false,
+                AnchorMovementOnFire: true,
+                DamageVariance: DamageVariance));
+    }
+
+    private static float AttackGroundRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)
+    {
+        var range = 0f;
+        foreach (var mount in weapon.Mounts)
+        {
+            if (!world.TryGetWeaponDefinition(mount.WeaponId, out var weaponDef)
+                || !world.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
+                || !WeaponEngagementQueries.CanAttackGround(weaponDef, ammo))
+            {
+                continue;
+            }
+
+            range = MathF.Max(range, weaponDef.Range);
+        }
+
+        if (attacker.Components.TryGet<DeployComponentState>(out var deploy)
+            && deploy.IsDeployed
+            && deploy.SetupRemaining <= 0
+            && deploy.RangeMultiplier > 0)
+        {
+            range *= deploy.RangeMultiplier;
+        }
+
+        return UpgradeResolver.WeaponRange(world, attacker, range);
+    }
+
     private static bool TryGetAttackFormationSlot(
         MovementComponentState movement,
         EntityInstance target,

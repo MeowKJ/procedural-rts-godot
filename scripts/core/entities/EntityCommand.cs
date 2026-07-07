@@ -6,6 +6,7 @@ public enum EntityCommandKind
 {
     Move,
     Attack,
+    AttackGround,
     AttackMove,
     Select,
     Stop,
@@ -44,6 +45,12 @@ public sealed record AttackEntityCommand(
     int Tick,
     EntityId Target,
     CombatTargetKind TargetKind) : EntityCommand(EntityCommandKind.Attack, Issuer, Subjects, Tick);
+
+public sealed record AttackGroundEntityCommand(
+    OwnerId Issuer,
+    IReadOnlyList<EntityId> Subjects,
+    int Tick,
+    Vector2 Target) : EntityCommand(EntityCommandKind.AttackGround, Issuer, Subjects, Tick);
 
 public sealed record SetSelectionEntityCommand(
     OwnerId Issuer,

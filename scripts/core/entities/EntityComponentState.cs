@@ -29,6 +29,8 @@ public sealed record GuardOrderComponentState(
     Vector2 GuardPoint,
     float Radius) : EntityComponentState;
 
+public sealed record AttackGroundOrderComponentState(Vector2 Target) : EntityComponentState;
+
 public sealed record PathfindingComponentState(
     PathPoint Goal,
     IReadOnlyList<PathPoint> Waypoints,

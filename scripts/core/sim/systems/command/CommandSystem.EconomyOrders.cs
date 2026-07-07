@@ -94,6 +94,7 @@ public sealed partial class CommandSystem
 
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
+            entity.Components.Remove<AttackGroundOrderComponentState>();
             entity.Components.Set(new RepairOrderComponentState(
                 TargetId: command.Target.Value,
                 Range: repairAbility.Radius > 0 ? repairAbility.Radius : 96,
@@ -120,6 +121,7 @@ public sealed partial class CommandSystem
             FieldId: resource.Id.Value));
         entity.Components.Remove<PatrolOrderComponentState>();
         entity.Components.Remove<GuardOrderComponentState>();
+        entity.Components.Remove<AttackGroundOrderComponentState>();
 
         var movement = entity.Components.TryGet<MovementComponentState>(out var existingMovement)
             ? existingMovement

@@ -22,7 +22,7 @@ public sealed partial class CommandGateway
         return command.Kind switch
         {
             PlayerCommandKind.Select => Accept(out error, out message),
-            PlayerCommandKind.Move or PlayerCommandKind.AttackMove => RequireSubjectsAndPoint(payload, out error, out message),
+            PlayerCommandKind.Move or PlayerCommandKind.AttackMove or PlayerCommandKind.AttackGround => RequireSubjectsAndPoint(payload, out error, out message),
             PlayerCommandKind.Attack or PlayerCommandKind.Harvest or PlayerCommandKind.Repair => RequireSubjectsAndTarget(payload, out error, out message),
             PlayerCommandKind.Stop or PlayerCommandKind.HoldPosition => RequireSubjects(payload, out error, out message),
             PlayerCommandKind.Build => RequireSpecAndPoint(payload, out error, out message),

@@ -53,6 +53,11 @@ public static partial class SimInvariants
             ValidateGuardOrder(entity, guard, violations);
         }
 
+        if (entity.Components.TryGet<AttackGroundOrderComponentState>(out var attackGround))
+        {
+            ValidateAttackGroundOrder(entity, attackGround, violations);
+        }
+
         if (entity.Components.TryGet<PathfindingComponentState>(out var pathfinding))
         {
             ValidatePathfinding(entity, pathfinding, violations);

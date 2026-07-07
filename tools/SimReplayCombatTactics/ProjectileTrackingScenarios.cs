@@ -95,6 +95,86 @@ static partial class Program
         Console.WriteLine($"OK [projectile-splash]: primary {primary:0.0}, nearby hostile {nearbyHostile:0.0}, ally/far untouched.");
     }
 
+    static void RunAttackGroundScenario()
+    {
+        const int Ticks = 4;
+        var attackGroundLog = new List<EntityCommand>
+        {
+            new AttackGroundEntityCommand(new OwnerId(1), [new EntityId(1)], 1, new Vector2(260, 220)),
+        };
+        AssertDeterministic("attack-ground-splash", BuildAttackGroundSplashWorld, attackGroundLog, Ticks, 2);
+
+        var world = BuildAttackGroundSplashWorld();
+        var clock = new SimClock();
+        var buffer = new EntityCommandBuffer();
+        foreach (var command in attackGroundLog)
+        {
+            buffer.Enqueue(command);
+        }
+
+        var firedAtGround = false;
+        for (var tick = 1; tick <= Ticks; tick++)
+        {
+            world.Step(tick, clock.FixedDelta, buffer.DrainUpToTick(tick));
+            foreach (var simEvent in world.Events.Drain())
+            {
+                firedAtGround |= simEvent is WeaponFiredEvent fired
+                    && fired.TargetPosition.DistanceSquaredTo(new Vector2(260, 220)) <= 1f;
+            }
+        }
+
+        var nearbyHostile = HealthOf(world, "replay.attack_ground.nearby_hostile");
+        var nearbyAlly = HealthOf(world, "replay.attack_ground.nearby_ally");
+        var farHostile = HealthOf(world, "replay.attack_ground.far_hostile");
+        Assert(firedAtGround, "attack-ground should raise a weapon fire event at the requested point.");
+        Assert(nearbyHostile < 160, $"attack-ground splash should damage nearby hostile, got {nearbyHostile:0.0} hp.");
+        Assert(MathF.Abs(nearbyAlly - 160) <= 0.001f, $"attack-ground splash should not damage nearby ally, got {nearbyAlly:0.0} hp.");
+        Assert(MathF.Abs(farHostile - 160) <= 0.001f, $"attack-ground far hostile should stay outside splash radius, got {farHostile:0.0} hp.");
+
+        var noSplashWorld = BuildAttackGroundNoSplashWorld();
+        var noSplashClock = new SimClock();
+        var noSplashBuffer = new EntityCommandBuffer();
+        noSplashBuffer.Enqueue(new AttackGroundEntityCommand(new OwnerId(1), [new EntityId(1)], 1, new Vector2(520, 220)));
+        var noSplashFired = false;
+        for (var tick = 1; tick <= Ticks; tick++)
+        {
+            noSplashWorld.Step(tick, noSplashClock.FixedDelta, noSplashBuffer.DrainUpToTick(tick));
+            noSplashFired |= noSplashWorld.Events.Drain().Any(simEvent => simEvent is WeaponFiredEvent);
+        }
+
+        var noSplashTargetHp = HealthOf(noSplashWorld, "replay.attack_ground.no_splash_target");
+        var noSplashShooter = noSplashWorld.OrderedEntities.Single(entity => entity.SpecId == "replay.attack_ground.no_splash_shooter");
+        Assert(!noSplashFired, "non-splash weapon should not fire at ground.");
+        Assert(!noSplashShooter.Components.Has<AttackGroundOrderComponentState>(), "non-splash weapon should not retain an attack-ground order.");
+        Assert(MathF.Abs(noSplashTargetHp - 160) <= 0.001f, $"non-splash attack-ground should leave target hp unchanged, got {noSplashTargetHp:0.0}.");
+
+        var movingWorld = BuildAttackGroundMoveIntoRangeWorld();
+        var movingClock = new SimClock();
+        var movingBuffer = new EntityCommandBuffer();
+        movingBuffer.Enqueue(new AttackGroundEntityCommand(new OwnerId(1), [new EntityId(1)], 1, new Vector2(620, 220)));
+        var movedBeforeFire = false;
+        var movingFired = false;
+        for (var tick = 1; tick <= 90; tick++)
+        {
+            movingWorld.Step(tick, movingClock.FixedDelta, movingBuffer.DrainUpToTick(tick));
+            var shooter = movingWorld.OrderedEntities.Single(entity => entity.SpecId == "replay.attack_ground.moving_shooter");
+            if (!movingFired && shooter.Transform.Position.X > 170)
+            {
+                movedBeforeFire = true;
+            }
+
+            movingFired |= movingWorld.Events.Drain().Any(simEvent => simEvent is WeaponFiredEvent);
+        }
+
+        var movingTargetHp = HealthOf(movingWorld, "replay.attack_ground.moving_target");
+        var finalMovingShooter = movingWorld.OrderedEntities.Single(entity => entity.SpecId == "replay.attack_ground.moving_shooter");
+        Assert(movedBeforeFire, $"out-of-range attack-ground should move toward range before firing, shooter ended at {finalMovingShooter.Transform.Position.X:0.0}.");
+        Assert(movingFired, "out-of-range attack-ground should fire after moving into range.");
+        Assert(movingTargetHp < 160, $"out-of-range attack-ground should eventually splash the target point, got {movingTargetHp:0.0} hp.");
+
+        Console.WriteLine($"OK [attack-ground-splash]: ground fire damaged hostile {nearbyHostile:0.0}, moved into range, left ally/far/no-splash untouched.");
+    }
+
     static void RunWeaponStateMachineScenario()
     {
         const int Ticks = 8;
@@ -171,6 +251,52 @@ static partial class Program
         return world;
     }
 
+    private static EntityWorld BuildAttackGroundSplashWorld()
+    {
+        var world = new EntityWorld(seed: 8181) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.Relations.Set(new OwnerId(1), new OwnerId(3), PlayerRelation.Allied);
+        world.AddSystem(new CommandSystem());
+        world.AddSystem(new CombatSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.attack_ground.shooter", WeaponKind.VectorCannon, 160);
+        var targetSpec = ProjectileUnitSpec("replay.attack_ground.target", null, 160);
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, EntityId.None, WeaponKind.VectorCannon));
+        world.Spawn(targetSpec with { Id = "replay.attack_ground.nearby_hostile" }, new OwnerId(2), EntityTransform.At(new Vector2(280, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec with { Id = "replay.attack_ground.nearby_ally" }, new OwnerId(3), EntityTransform.At(new Vector2(286, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec with { Id = "replay.attack_ground.far_hostile" }, new OwnerId(2), EntityTransform.At(new Vector2(340, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        return world;
+    }
+
+    private static EntityWorld BuildAttackGroundNoSplashWorld()
+    {
+        var world = new EntityWorld(seed: 8282) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.AddSystem(new CommandSystem());
+        world.AddSystem(new CombatSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.attack_ground.no_splash_shooter", WeaponKind.NeedleRifle, 160);
+        var targetSpec = ProjectileUnitSpec("replay.attack_ground.no_splash_target", null, 160);
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, EntityId.None, WeaponKind.NeedleRifle));
+        world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(520, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        return world;
+    }
+
+    private static EntityWorld BuildAttackGroundMoveIntoRangeWorld()
+    {
+        var world = new EntityWorld(seed: 8383) { WorldWidth = 900, WorldHeight = 600 };
+        world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
+        world.AddSystem(new CommandSystem());
+        world.AddSystem(new CombatSystem());
+        world.AddSystem(new MovementSystem());
+
+        var shooterSpec = ProjectileUnitSpec("replay.attack_ground.moving_shooter", WeaponKind.VectorCannon, 160);
+        var targetSpec = ProjectileUnitSpec("replay.attack_ground.moving_target", null, 160);
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), MovingAttackGroundState(shooterSpec, WeaponKind.VectorCannon));
+        world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(620, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
+        return world;
+    }
+
     private static EntityWorld BuildWeaponStateMachineWorld()
     {
         var world = new EntityWorld(seed: 6161) { WorldWidth = 900, WorldHeight = 600 };
@@ -243,6 +369,14 @@ static partial class Program
                 AttackTargetIsManual: target.IsValid));
         }
 
+        return states.ToArray();
+    }
+
+    private static EntityComponentState[] MovingAttackGroundState(EntitySpec spec, WeaponKind weapon)
+    {
+        var states = ProjectileUnitState(spec, EntityId.None, weapon).ToList();
+        states.Add(new MovementComponentState(Vector2.Zero));
+        states.Add(new MovementProfileComponentState(MaxSpeed: 180, ArriveRadius: 2, TurnRate: 12));
         return states.ToArray();
     }
 }
