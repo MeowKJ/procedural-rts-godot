@@ -99,6 +99,7 @@ public sealed partial class GameState
         WorldVisualTheme.DayCommand,
         1,
         "default");
+    public ResourceAtmosphere ResourceAtmosphere { get; private set; } = ResourceAtmosphere.Day;
     public Dictionary<Owner, ResourceInventory> ResourceInventories { get; } = [];
     public event Action<IReadOnlyList<UnitDeathInfo>>? UnitsRemoved;
     public event Action<UnitModel>? UnitAdded;
@@ -119,6 +120,7 @@ public sealed partial class GameState
     private int _nextProductionId = 1;
     private int _nextResourceFieldId = 1;
     private float _fogRefreshTimer;
+    private ResourceAtmosphere? _visualThemeAtmosphereOverride;
 
     public static IReadOnlyDictionary<WeaponKind, WeaponDefinition> WeaponDefinitions => WeaponCatalog.Weapons;
     public static IReadOnlyDictionary<AmmoKind, AmmoDefinition> AmmoDefinitions => WeaponCatalog.Ammo;

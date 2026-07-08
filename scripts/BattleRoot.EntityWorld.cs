@@ -10,6 +10,8 @@ public partial class BattleRoot
 {
     private void ConfigureEntityWorld()
     {
+        SyncEntityWorldResourceAtmosphere(_state.VisualTheme);
+
         if (!RunEntityWorldShadow)
         {
             return;
@@ -25,6 +27,13 @@ public partial class BattleRoot
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             OwnerId.FromPlayerSlot(PlayerSlotId.Two),
             PlayerRelation.Hostile);
+    }
+
+    private void SyncEntityWorldResourceAtmosphere(WorldVisualThemeState _)
+    {
+        var atmosphere = _state.ResourceAtmosphere;
+        _entityWorld.ResourceAtmosphere = atmosphere;
+        _unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;
     }
 
     private void StepEntityWorld(double delta)

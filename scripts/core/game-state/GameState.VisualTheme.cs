@@ -7,11 +7,10 @@ public sealed partial class GameState
     public void SetVisualTheme(WorldVisualTheme target, string driver = "script", float transitionProgress = 1)
     {
         transitionProgress = Mathf.Clamp(transitionProgress, 0, 1);
-        VisualTheme = transitionProgress >= 1
+        var nextTheme = transitionProgress >= 1
             ? new WorldVisualThemeState(target, target, 1, driver)
             : new WorldVisualThemeState(VisualTheme.Current, target, transitionProgress, driver);
-        VisualThemeChanged?.Invoke(VisualTheme);
-        UpdateFogOfWar();
+        ApplyVisualThemeState(nextTheme);
     }
 
     public void ApplySandboxAtmosphere(SandboxAtmospherePreset preset)
@@ -36,16 +35,26 @@ public sealed partial class GameState
                 break;
             case SandboxAtmospherePreset.Corruption:
                 SetSignalNetworkPowered(false);
-                SetVisualThemeTransition(WorldVisualTheme.DayCommand, WorldVisualTheme.DuskDefense, 0.24f, "sandbox-corruption");
+                SetVisualThemeTransition(
+                    WorldVisualTheme.DayCommand,
+                    WorldVisualTheme.DuskDefense,
+                    0.24f,
+                    "sandbox-corruption",
+                    ResourceAtmosphere.Corruption);
                 break;
         }
     }
 
-    private void SetVisualThemeTransition(WorldVisualTheme current, WorldVisualTheme target, float progress, string driver)
+    private void SetVisualThemeTransition(
+        WorldVisualTheme current,
+        WorldVisualTheme target,
+        float progress,
+        string driver,
+        ResourceAtmosphere? atmosphereOverride = null)
     {
-        VisualTheme = new WorldVisualThemeState(current, target, Mathf.Clamp(progress, 0, 1), driver);
-        VisualThemeChanged?.Invoke(VisualTheme);
-        UpdateFogOfWar();
+        ApplyVisualThemeState(
+            new WorldVisualThemeState(current, target, Mathf.Clamp(progress, 0, 1), driver),
+            atmosphereOverride);
     }
 
     public void SetSignalNetworkPowered(bool powered)
@@ -70,7 +79,19 @@ public sealed partial class GameState
         VisualTheme = progress >= 1
             ? new WorldVisualThemeState(VisualTheme.Target, VisualTheme.Target, 1, VisualTheme.Driver)
             : VisualTheme with { TransitionProgress = progress };
+        ResourceAtmosphere = _visualThemeAtmosphereOverride ?? WorldThemeMath.ResourceAtmosphereFor(VisualTheme);
         VisualThemeChanged?.Invoke(VisualTheme);
+    }
+
+    private void ApplyVisualThemeState(
+        WorldVisualThemeState visualTheme,
+        ResourceAtmosphere? atmosphereOverride = null)
+    {
+        VisualTheme = visualTheme;
+        _visualThemeAtmosphereOverride = atmosphereOverride;
+        ResourceAtmosphere = atmosphereOverride ?? WorldThemeMath.ResourceAtmosphereFor(VisualTheme);
+        VisualThemeChanged?.Invoke(VisualTheme);
+        UpdateFogOfWar();
     }
 
     private void UpdateVisualThemeTransition(float dt)

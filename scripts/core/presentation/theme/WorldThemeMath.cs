@@ -36,6 +36,26 @@ public static class WorldThemeMath
         return Lerp(current, Profile(state.Target), Mathf.Clamp(state.TransitionProgress, 0, 1));
     }
 
+    public static ResourceAtmosphere ResourceAtmosphereFor(WorldVisualThemeState state)
+    {
+        var effectiveTheme = state.Current != state.Target && state.TransitionProgress >= 1
+            ? state.Target
+            : state.Current;
+        return ResourceAtmosphereFor(effectiveTheme);
+    }
+
+    public static ResourceAtmosphere ResourceAtmosphereFor(WorldVisualTheme theme)
+    {
+        return theme switch
+        {
+            WorldVisualTheme.DayCommand => ResourceAtmosphere.Day,
+            WorldVisualTheme.FogMorning => ResourceAtmosphere.Fog,
+            WorldVisualTheme.DuskDefense => ResourceAtmosphere.Night,
+            WorldVisualTheme.NightRadar => ResourceAtmosphere.Night,
+            _ => ResourceAtmosphere.Day,
+        };
+    }
+
     public static WorldThemePalette Palette(WorldVisualTheme theme)
     {
         return theme switch
