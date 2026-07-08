@@ -7,6 +7,7 @@ static class HoverTooltipReviewGate
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
         var controlBindingCatalog = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs");
         var selectionInput = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.cs");
+        var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RallyCommand.cs");
         var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
         var buildPlacement = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "BuildPlacementController.cs"));
@@ -24,6 +25,9 @@ static class HoverTooltipReviewGate
         RequireText(preview, "CommandPreviewKind.Repair", "Selection preview must expose repair affordance state.", result);
         RequireText(preview, "CommandPreviewKind.Harvest", "Selection preview must expose harvester resource state.", result);
         RequireText(preview, "CommandPreviewKind.Rally", "Selection preview must expose producer rally state.", result);
+        RequireText(rallyCommand, "GameText.T(\"preview.rally.point\")", "Armed rally preview must label point targets distinctly.", result);
+        RequireText(rallyCommand, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must label resource targets distinctly.", result);
+        RequireText(rallyCommand, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must label friendly-unit targets distinctly.", result);
         RequireText(preview, "CommandPreviewKind.Move", "Selection preview must expose move state.", result);
         RequireText(preview, "MoveModeStatus(PreviewMoveModeFromModifiers())", "Selection move preview must reuse command-mode labels instead of generic move text.", result);
         RequireText(preview, "Input.IsKeyPressed(Key.Ctrl)", "Selection move preview must expose Ctrl ignore-advance modifier feedback.", result);
@@ -44,6 +48,12 @@ static class HoverTooltipReviewGate
         RequireText(buildPlacement, "GameText.Format(\"build.rotated\", CurrentSpec().Label)", "Build placement rotation must surface localized status feedback.", result);
         RequireText(englishText, "[\"build.rotated\"]", "English build placement text must include rotation feedback.", result);
         RequireText(chineseText, "[\"build.rotated\"]", "Chinese build placement text must include rotation feedback.", result);
+        RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.", result);
+        RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.", result);
+        RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.", result);
+        RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.", result);
+        RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.", result);
+        RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);

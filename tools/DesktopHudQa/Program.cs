@@ -221,6 +221,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "RepairRequested = OnRepairRequested", "BattleRoot must wire the command-ribbon repair request.");
     RequireText(battleRoot, "_selection.ArmRepairCommand();", "BattleRoot repair request must arm SelectionController repair targeting.");
     RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the runtime repair command path.");
+    RequireText(selectionController, "GameText.T(\"preview.rally.point\")", "Armed rally preview must distinguish point targets.");
+    RequireText(selectionController, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must distinguish resource targets.");
+    RequireText(selectionController, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must distinguish friendly-unit targets.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
     RequireText(hudLayer, "_sellOrCancelAction = ribbonCancel;", "Command ribbon sell action must keep a stable control reference for context affordance.");
     RequireText(hudLayer, "RefreshSellOrCancelAction()", "Command ribbon sell action must refresh context from selection and queue state.");
@@ -309,6 +312,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.ability.armed\"]", "English ability armed status must exist.");
     RequireText(englishText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.");
     RequireText(englishText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.");
+    RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.");
+    RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.");
+    RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.");
     RequireText(englishText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.");
     RequireText(chineseText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.");
     RequireText(chineseText, "[\"ui.catalog.build\"]", "Chinese HUD catalog Build label must exist.");
@@ -371,6 +377,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.ability.armed\"]", "Chinese ability armed status must exist.");
     RequireText(chineseText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.");
     RequireText(chineseText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.");
+    RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
+    RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");
+    RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.");
     RequireText(hudSync, "_hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates())", "BattleRoot must feed selected-unit ability cards into the HUD.");
     RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
     RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");

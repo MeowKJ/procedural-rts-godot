@@ -67,9 +67,32 @@ public partial class SelectionController
 
     private CommandPreviewState ArmedRallyPreview(Vector2 screenPosition, Vector2 worldPosition)
     {
-        var target = PickResourceField(worldPosition)?.Position
-            ?? (_hoveredUnitInstance is { } unit && IsFriendlyRuntimeRallyTarget(unit) ? unit.Position : worldPosition);
-        return new CommandPreviewState(CommandPreviewKind.Rally, GameText.T("preview.setRally"), screenPosition, target, true);
+        if (PickResourceField(worldPosition) is { } resourceField)
+        {
+            return new CommandPreviewState(
+                CommandPreviewKind.Rally,
+                GameText.T("preview.rally.resource"),
+                screenPosition,
+                resourceField.Position,
+                true);
+        }
+
+        if (_hoveredUnitInstance is { } unit && IsFriendlyRuntimeRallyTarget(unit))
+        {
+            return new CommandPreviewState(
+                CommandPreviewKind.Rally,
+                GameText.T("preview.rally.friendly"),
+                screenPosition,
+                unit.Position,
+                true);
+        }
+
+        return new CommandPreviewState(
+            CommandPreviewKind.Rally,
+            GameText.T("preview.rally.point"),
+            screenPosition,
+            worldPosition,
+            true);
     }
 
     private void FinishArmedRallyCommand(Vector2 screenPoint)
