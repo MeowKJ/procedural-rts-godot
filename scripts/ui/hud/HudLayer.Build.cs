@@ -225,6 +225,11 @@ public partial class HudLayer : CanvasLayer
         _repeatProduction.Disabled = true;
         _repeatProduction.Pressed += RequestFocusedProductionRepeat;
 
+        _repeatProductionStateValue = MakeSizedLabel(GameText.T("ui.repeat.state.needCard"), new Vector2(156, 306), new Vector2(48, 14), FontTiny, InkMuted);
+        _repeatProductionStateValue.Name = "RepeatProductionState";
+        _repeatProductionStateValue.HorizontalAlignment = HorizontalAlignment.Center;
+        _rightProductionPanel.AddChild(_repeatProductionStateValue);
+
         _cancelProduction = new Button
         {
             Name = "CancelProduction",

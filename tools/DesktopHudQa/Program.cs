@@ -135,8 +135,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");
     RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.");
     RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.");
+    RequireText(hudLayer, "Name = \"RepeatProductionState\"", "Right Train controls must expose a stable repeat-production state label.");
     RequireText(hudLayer, "FocusRepeatProductionDesign(button.UnitDesignId)", "Train card hover/click must establish the repeat-production target context.");
     RequireText(hudLayer, "CurrentProductionProviderLaneState() is not { Scope: ProductionProviderLaneScope.Specific", "Repeat production must require a specific provider lane.");
+    RequireText(hudLayer, "_repeatProductionStateValue.Text = statusText;", "Repeat production must surface visible state text beside the toggle.");
+    RequireText(hudLayer, "RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active)", "Repeat production state text must derive from focus, provider lane, availability, and active state.");
+    RequireText(hudLayer, "RefreshRepeatProductionControl();", "Theme refresh and provider-lane changes must reapply repeat-production visual state.");
     RequireText(hudLayer, "State.RepeatOutputSpecId", "Provider lane controls must surface the armed repeat unit state.");
     RequireText(battleRoot, "ProductionRepeatRequested = OnProductionRepeatRequested", "BattleRoot must wire the Train repeat toggle from HUD.");
     RequireText(battleRoot, "ToggleRepeatProductionForProvider", "BattleRoot must route repeat production through the UnitBattlefield provider helper.");
@@ -144,7 +148,13 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "ProductionBatchStatus(queued, attempts, status)", "BattleRoot production requests must summarize Shift batches after existing command submission.");
     RequireText(battleRoot, "TrySubmitProductionDesignRequest(designId, providerIdSelector(), out status)", "Train-card Shift batches must resolve provider lanes for each queued attempt.");
     RequireText(englishText, "[\"production.batchQueued\"]", "English Shift production batch status text must exist.");
+    RequireText(englishText, "[\"ui.repeat.state.available\"]", "English repeat-production available state badge text must exist.");
+    RequireText(englishText, "[\"ui.repeat.state.active\"]", "English repeat-production active state badge text must exist.");
+    RequireText(englishText, "[\"ui.repeat.state.blocked\"]", "English repeat-production blocked state badge text must exist.");
     RequireText(chineseText, "[\"production.batchQueued\"]", "Chinese Shift production batch status text must exist.");
+    RequireText(chineseText, "[\"ui.repeat.state.available\"]", "Chinese repeat-production available state badge text must exist.");
+    RequireText(chineseText, "[\"ui.repeat.state.active\"]", "Chinese repeat-production active state badge text must exist.");
+    RequireText(chineseText, "[\"ui.repeat.state.blocked\"]", "Chinese repeat-production blocked state badge text must exist.");
     RequireText(hudLayer, "NextAllProductionProviderId(spec.Production.ProducerKind)", "All provider lane clicks must distribute repeated train commands across valid providers.");
     RequireText(hudSync, "_hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime production provider lane state into the HUD.");
     RequireText(hudSync, "_hud.SetConstructionProviderLaneState(_unitBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime construction provider lane state into the HUD.");

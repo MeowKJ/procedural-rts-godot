@@ -93,6 +93,8 @@ public partial class HudLayer : CanvasLayer
                 disabled: true,
                 active: false,
                 accent: Cyan,
+                statusText: "",
+                statusColor: InkMuted,
                 tooltip: GameText.T("ui.repeat.needCard"),
                 refreshKey: "hidden");
             return;
@@ -133,27 +135,37 @@ public partial class HudLayer : CanvasLayer
             disabled: !enabled,
             active: active,
             accent: active ? Mint : Cyan,
+            statusText: RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
+            statusColor: active ? Mint : enabled ? Cyan : InkMuted,
             tooltip: RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
             refreshKey: refreshKey);
     }
 
-    private void ApplyRepeatProductionControlState(
-        bool visible,
-        bool disabled,
-        bool active,
-        Color accent,
-        string tooltip,
-        string refreshKey)
+    private void ApplyRepeatProductionControlState(bool visible, bool disabled, bool active, Color accent, string statusText, Color statusColor, string tooltip, string refreshKey)
     {
         _repeatProduction.Visible = visible;
         _repeatProduction.Disabled = disabled;
         _repeatProduction.ButtonPressed = active;
         _repeatProduction.Accent = accent;
+        _repeatProductionStateValue.Visible = visible;
+        _repeatProductionStateValue.Text = statusText;
+        SetLabelColor(_repeatProductionStateValue, statusColor);
         _repeatProduction.TooltipText = tooltip;
         _lastRepeatProductionRefreshKey = refreshKey;
         _repeatProductionStateCached = true;
         _repeatProduction.QueueRedraw();
     }
+
+    private static string RepeatProductionStateText(
+        ProductionProviderLaneState? laneState,
+        bool hasDesign,
+        bool hasSpecificProvider,
+        bool providerSupportsDesign, bool active) =>
+        !hasDesign ? GameText.T("ui.repeat.state.needCard") :
+        !hasSpecificProvider ? GameText.T("ui.repeat.state.needLane") :
+        !providerSupportsDesign ? GameText.T("ui.repeat.state.noProvider") :
+        active ? GameText.T("ui.repeat.state.active") :
+        laneState is { Available: true } ? GameText.T("ui.repeat.state.available") : GameText.T("ui.repeat.state.blocked");
 
     private string RepeatProductionTooltip(
         ProductionProviderLaneState? laneState,

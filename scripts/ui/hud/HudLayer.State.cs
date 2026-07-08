@@ -37,6 +37,7 @@ public partial class HudLayer : CanvasLayer
     private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
+    private Label _repeatProductionStateValue = null!;
     private Label _alertValue = null!;
     private Label _outcomeTitle = null!;
     private Label _outcomeDetail = null!;

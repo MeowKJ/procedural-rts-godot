@@ -30,6 +30,7 @@ public partial class HudLayer : CanvasLayer
         _lastRepeatProductionRefreshKey = "";
         _repeatProductionStateCached = false;
         ApplySoftOldCityPanelStyles();
+        RefreshRepeatProductionControl();
     }
 
     public void SetSandboxDeveloperControlsVisible(bool visible)

@@ -139,8 +139,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.", result);
         RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.", result);
         RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.", result);
+        RequireText(hudLayer, "Name = \"RepeatProductionState\"", "Right Train controls must expose a stable repeat-production state label.", result);
         RequireText(hudLayer, "FocusRepeatProductionDesign(button.UnitDesignId)", "Train card hover/click must establish the repeat-production target context.", result);
         RequireText(hudLayer, "CurrentProductionProviderLaneState() is not { Scope: ProductionProviderLaneScope.Specific", "Repeat production must require a specific provider lane.", result);
+        RequireText(hudLayer, "_repeatProductionStateValue.Text = statusText;", "Repeat production must surface visible state text beside the toggle.", result);
+        RequireText(hudLayer, "RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active)", "Repeat production state text must derive from focus, provider lane, availability, and active state.", result);
+        RequireText(hudLayer, "RefreshRepeatProductionControl();", "Theme refresh and provider-lane changes must reapply repeat-production visual state.", result);
         RequireText(hudLayer, "State.RepeatOutputSpecId", "Provider lane controls must surface the armed repeat unit state.", result);
         RequireText(battleRoot, "internal const int ShiftProductionBatchCount = 5", "BattleRoot must expose the bounded Shift production batch count.", result);
         RequireText(battleRoot, "ProductionBatchStatus(queued, attempts, status)", "BattleRoot production requests must summarize Shift batches after existing command submission.", result);
