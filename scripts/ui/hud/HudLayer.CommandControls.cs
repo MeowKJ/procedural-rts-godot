@@ -144,6 +144,8 @@ public partial class HudLayer : CanvasLayer
         private int _queued;
         private float _progress;
         private string _disabledReason = "";
+        private string _statusBadgeText = "";
+        private Color _statusBadgeAccent = Mint;
         private float _feedbackPulse;
         private bool _hasState;
         public string InspectorText { get; private set; } = "";
@@ -161,7 +163,7 @@ public partial class HudLayer : CanvasLayer
             RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph;
             Duration = state.Duration;
             InspectorText = TrainInspectorText(state, ProducerLabel, disabledReason);
-            SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason);
+            SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason, state.DisabledReasonKey);
         }
 
         public void SetBuildState(BuildOptionSnapshot state, string disabledReason)
@@ -178,10 +180,10 @@ public partial class HudLayer : CanvasLayer
             Accent = spec.Accent;
             Cost = state.Cost;
             InspectorText = BuildInspectorText(state, spec, disabledReason);
-            SetState(state.CanStart, 0, 0, disabledReason);
+            SetState(state.CanStart, 0, 0, disabledReason, state.DisabledReasonKey);
         }
 
-        public void SetState(bool enabled, int queued, float progress, string disabledReason)
+        public void SetState(bool enabled, int queued, float progress, string disabledReason, string disabledReasonKey)
         {
             var wasEnabled = !Disabled;
             if (_hasState
@@ -197,6 +199,8 @@ public partial class HudLayer : CanvasLayer
             _queued = queued;
             _progress = Mathf.Clamp(progress, 0, 1);
             _disabledReason = disabledReason;
+            _statusBadgeText = CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey);
+            _statusBadgeAccent = CommandCardStatusBadgeAccent(enabled, queued, _progress, disabledReasonKey);
             Text = queued > 0
                 ? $"{Hotkey}\n\n{Cost}  x{queued}"
                 : $"{Hotkey}\n\n{Cost}";
@@ -283,6 +287,8 @@ public partial class HudLayer : CanvasLayer
                         new Color(CurrentPalette.Danger, 0.9f));
                 }
             }
+
+            DrawStatusBadge(size);
         }
 
         private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId);
@@ -327,6 +333,29 @@ public partial class HudLayer : CanvasLayer
             }
         }
 
+        private void DrawStatusBadge(Vector2 size)
+        {
+            if (string.IsNullOrWhiteSpace(_statusBadgeText))
+            {
+                return;
+            }
+
+            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
+            var badge = IsTrainCard
+                ? new Rect2(new Vector2(5, 21), new Vector2(36, 12))
+                : new Rect2(new Vector2(size.X - 42, 20), new Vector2(36, 12));
+            DrawRect(badge, new Color(_statusBadgeAccent, Disabled ? 0.26f : 0.18f), true);
+            DrawRect(badge, new Color(_statusBadgeAccent, Disabled ? 0.58f : 0.72f), false, 1);
+            DrawString(
+                font,
+                badge.Position + new Vector2(3, 9),
+                CompactCardText(_statusBadgeText, 6),
+                HorizontalAlignment.Center,
+                badge.Size.X - 6,
+                8,
+                new Color(_statusBadgeAccent, Disabled ? 0.9f : 0.98f));
+        }
+
         private static string CommandCardTooltip(string label, int cost, string producerLabel, float duration, string disabledReason = "")
         {
             var source = string.IsNullOrWhiteSpace(producerLabel) ? "" : $" - {producerLabel}";
@@ -334,6 +363,27 @@ public partial class HudLayer : CanvasLayer
             var disabled = string.IsNullOrWhiteSpace(disabledReason) ? "" : $" - {disabledReason}";
             return $"{label} - {cost}{source}{time}{disabled}";
         }
+
+        private static string CommandCardStatusBadgeText(bool enabled, int queued, float progress, string disabledReasonKey) =>
+            progress > 0 ? GameText.T("ui.catalog.badge.active") :
+            queued > 0 ? GameText.T("ui.catalog.badge.queued") :
+            enabled ? GameText.T("ui.catalog.badge.ready") :
+            disabledReasonKey switch
+            {
+                "ui.needCredits" => GameText.T("ui.catalog.badge.noCredits"),
+                "ui.producerUnavailable" => GameText.T("ui.catalog.badge.noProvider"),
+                _ => GameText.T("ui.catalog.badge.locked"),
+            };
+
+        private static Color CommandCardStatusBadgeAccent(bool enabled, int queued, float progress, string disabledReasonKey) =>
+            progress > 0 || queued > 0 ? Amber :
+            enabled ? Mint :
+            disabledReasonKey switch
+            {
+                "ui.needCredits" => CurrentPalette.DogCommand,
+                "ui.producerUnavailable" => InkMuted,
+                _ => Danger,
+            };
 
         private static string BuildInspectorText(BuildOptionSnapshot state, BuildSpec spec, string disabledReason)
         {

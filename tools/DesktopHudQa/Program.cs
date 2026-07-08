@@ -105,6 +105,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Build;", "Build category tabs must only be visible on the Build catalog page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Train;", "Train category tabs must only be visible on the Train catalog page.");
     RequireText(hudLayer, "state.Category != _selectedProductionCategory", "Train command grid must filter by the selected production category.");
+    RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train command cards must render compact availability badges.");
+    RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card status badges must derive from enabled, queue, progress, and disabled-reason state.");
+    RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.");
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
     RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
@@ -196,6 +199,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.overview.build\"]", "English HUD catalog build overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.train\"]", "English HUD catalog train overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.abilities\"]", "English HUD catalog ability overview text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.ready\"]", "English HUD catalog ready badge text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.queued\"]", "English HUD catalog queued badge text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.active\"]", "English HUD catalog active badge text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.noCredits\"]", "English HUD catalog credit badge text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.noProvider\"]", "English HUD catalog provider badge text must exist.");
+    RequireText(englishText, "[\"ui.catalog.badge.locked\"]", "English HUD catalog locked badge text must exist.");
     RequireText(englishText, "[\"ui.providerLane.auto\"]", "English HUD provider lane Auto label must exist.");
     RequireText(englishText, "[\"ui.providerLane.selected\"]", "English HUD provider lane selected text must exist.");
     RequireText(englishText, "[\"ui.providerLane.summary\"]", "English HUD provider lane summary text must exist.");
@@ -218,6 +227,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.overview.build\"]", "Chinese HUD catalog build overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"]", "Chinese HUD catalog train overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.abilities\"]", "Chinese HUD catalog ability overview text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.ready\"]", "Chinese HUD catalog ready badge text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.queued\"]", "Chinese HUD catalog queued badge text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.active\"]", "Chinese HUD catalog active badge text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.noCredits\"]", "Chinese HUD catalog credit badge text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.noProvider\"]", "Chinese HUD catalog provider badge text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.badge.locked\"]", "Chinese HUD catalog locked badge text must exist.");
     RequireText(chineseText, "[\"ui.providerLane.auto\"]", "Chinese HUD provider lane Auto label must exist.");
     RequireText(chineseText, "[\"ui.providerLane.selected\"]", "Chinese HUD provider lane selected text must exist.");
     RequireText(chineseText, "[\"ui.providerLane.summary\"]", "Chinese HUD provider lane summary text must exist.");
