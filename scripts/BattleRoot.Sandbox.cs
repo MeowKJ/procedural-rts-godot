@@ -25,6 +25,7 @@ public partial class BattleRoot
         _hud.SetSandboxDeveloperControlsVisible(true);
         _hud.SetSandboxDeveloperContext(_sandboxContext);
         RefreshSandboxStateHash();
+        RefreshSandboxCommandLog();
         _hud.SetStatus("Developer sandbox ready: context panel, F2-F4 time, F6-F10 atmosphere");
         AddAlert(AlertKind.Production, "Sandbox loaded: context panel plus stress spawn", new Vector2(980, 940));
     }
@@ -79,6 +80,7 @@ public partial class BattleRoot
         _state.ApplySandboxAtmosphere(_sandboxContext.Environment);
         _hud.SetSandboxDeveloperContext(_sandboxContext);
         RefreshSandboxStateHash();
+        RefreshSandboxCommandLog();
         _hud.SetStatus(statusOverride ?? _sandboxContext.FormatStatus());
         RefreshCommandPreview();
         RefreshMinimap();
@@ -94,6 +96,13 @@ public partial class BattleRoot
         }
 
         _hud.SetSandboxStateHash(_unitBattlefield.EntityWorld.DeterministicStateHash());
+    }
+
+    private void RefreshSandboxCommandLog()
+    {
+        var visible = _state.Options.LaunchMode == LaunchMode.Sandbox
+            && _sandboxContext.DebugOverlay.IsEnabled(SandboxDebugOverlayFlag.CommandLog);
+        _hud.SetSandboxCommandLog(_sandboxCommandLogLines, visible);
     }
 
     private void ApplySandboxRelationsFromContext()

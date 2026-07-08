@@ -9,6 +9,7 @@ static class BattleRootHudAllocationReviewGate
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
+        var hudSandbox = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Sandbox.cs");
         var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
 
         RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
@@ -148,11 +149,19 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "_selection.ArmRallyCommand();", "BattleRoot rally request must arm the SelectionController rally command mode.", result);
         RequireText(selectionController, "public void ArmRallyCommand()", "SelectionController must expose one-shot rally command arming for the command ribbon.", result);
         RequireText(selectionController, "FinishArmedRallyCommand(mouse.Position)", "Armed rally mode must finish through the selected-building rally backend on click.", result);
-        RequireText(hudState, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
+        RequireText(hudSandbox, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
+        RequireText(hudSandbox, "Label _sandboxCommandLogValue", "Sandbox developer HUD must own a command-log readout label.", result);
         RequireText(hudBuild, "Name = \"SandboxStateHash\"", "Sandbox developer HUD must expose the state-hash readout as a stable node.", result);
+        RequireText(hudBuild, "Name = \"SandboxCommandLog\"", "Sandbox developer HUD must expose the command-log readout as a stable node.", result);
         RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);
+        RequireText(sandbox, "SandboxDebugOverlayFlag.CommandLog", "Sandbox command-log readout must be gated by the debug overlay flag.", result);
         RequireText(sandbox, "_unitBattlefield.EntityWorld.DeterministicStateHash()", "Sandbox state-hash readout must use the live runtime EntityWorld hash.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.CommandAcknowledgementEvents.cs"), "RecordSandboxCommandLog(acknowledgement);", "Sandbox command-log readout must drain existing command acknowledgement events.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.CommandAcknowledgementEvents.cs"), "_state.Options.LaunchMode != LaunchMode.Sandbox", "Sandbox command-log readout must not record Skirmish command acknowledgements.", result);
+        RequireText(battleRoot, "List<string> _sandboxCommandLogLines", "Sandbox command-log readout must keep a bounded reusable line buffer.", result);
+        RequireText(battleRoot, "SandboxCommandLogLimit = 4", "Sandbox command-log readout must stay capped to a compact fixed buffer.", result);
         RequireText(process, "RefreshSandboxStateHash();", "BattleRoot process must refresh sandbox state-hash overlay state.", result);
+        RequireText(process, "RefreshSandboxCommandLog();", "BattleRoot process must refresh sandbox command-log overlay visibility.", result);
         RequireText(hudSync, "CollectSelectedProductionBuildingIds();", "Runtime command-card refresh must collect selected building ids once for command-card and queue sync.", result);
         RequireText(hudSync, "RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer)", "Runtime command-card refresh must route through selected-producer state selection.", result);
         RequireText(hudSync, "_unitBattlefield.ProductionDesignOptionStatesForSelectedProducers", "Runtime command-card refresh must use selected producer production options when available.", result);

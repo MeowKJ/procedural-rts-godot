@@ -32,8 +32,45 @@ public partial class BattleRoot
             {
                 _commandAcknowledgements.Add(acknowledgement.Kind, acknowledgement.Position);
                 PlayCommandAcknowledgementAudio(acknowledgement.AudioCue, acknowledgement.Position);
+                RecordSandboxCommandLog(acknowledgement);
             }
         }
+    }
+
+    private void RecordSandboxCommandLog(CommandAcknowledgedEvent acknowledgement)
+    {
+        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
+        {
+            return;
+        }
+
+        _sandboxCommandLogSequence++;
+        _sandboxCommandLogLines.Insert(0, FormatSandboxCommandLogLine(_sandboxCommandLogSequence, acknowledgement));
+        while (_sandboxCommandLogLines.Count > SandboxCommandLogLimit)
+        {
+            _sandboxCommandLogLines.RemoveAt(_sandboxCommandLogLines.Count - 1);
+        }
+
+        RefreshSandboxCommandLog();
+    }
+
+    private static string FormatSandboxCommandLogLine(int sequence, CommandAcknowledgedEvent acknowledgement)
+    {
+        var status = acknowledgement.Kind == CommandAcknowledgementKind.Invalid ? "BAD" : "OK";
+        return $"{sequence:000} T{acknowledgement.Tick} {status} {SandboxCommandKindCode(acknowledgement.Kind)} @{Mathf.RoundToInt(acknowledgement.Position.X)},{Mathf.RoundToInt(acknowledgement.Position.Y)}";
+    }
+
+    private static string SandboxCommandKindCode(CommandAcknowledgementKind kind)
+    {
+        return kind switch
+        {
+            CommandAcknowledgementKind.Attack => "ATK",
+            CommandAcknowledgementKind.Repair => "REP",
+            CommandAcknowledgementKind.Harvest => "HAR",
+            CommandAcknowledgementKind.Rally => "RLY",
+            CommandAcknowledgementKind.Invalid => "INV",
+            _ => "MOV",
+        };
     }
 
     private void PlayCommandAcknowledgementAudio(CommandAcknowledgementAudioCue audioCue, Vector2 position)

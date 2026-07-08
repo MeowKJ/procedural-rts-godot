@@ -35,7 +35,7 @@ public partial class HudLayer : CanvasLayer
         _sandboxDeveloperPanel.OffsetLeft = 86;
         _sandboxDeveloperPanel.OffsetTop = 182;
         _sandboxDeveloperPanel.OffsetRight = 330;
-        _sandboxDeveloperPanel.OffsetBottom = 390;
+        _sandboxDeveloperPanel.OffsetBottom = 438;
         _sandboxDeveloperPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         _sandboxDeveloperPanel.Visible = false;
         root.AddChild(_sandboxDeveloperPanel);
@@ -67,6 +67,12 @@ public partial class HudLayer : CanvasLayer
         _sandboxStateHashValue.Name = "SandboxStateHash";
         _sandboxStateHashValue.Visible = false;
         _sandboxDeveloperPanel.AddChild(_sandboxStateHashValue);
+
+        _sandboxCommandLogValue = MakeSizedLabel("", new Vector2(12, 176), new Vector2(218, 50), FontTiny, InkMuted);
+        _sandboxCommandLogValue.Name = "SandboxCommandLog";
+        _sandboxCommandLogValue.Visible = false;
+        _sandboxCommandLogValue.VerticalAlignment = VerticalAlignment.Top;
+        _sandboxDeveloperPanel.AddChild(_sandboxCommandLogValue);
 
         SetSandboxDeveloperContext(_sandboxDeveloperContext);
     }

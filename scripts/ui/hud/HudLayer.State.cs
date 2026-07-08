@@ -43,20 +43,9 @@ public partial class HudLayer : CanvasLayer
     private Label _outcomeDetail = null!;
     private Panel _outcomeBanner = null!;
     private Panel _commandRibbon = null!;
-    private Panel _sandboxDeveloperPanel = null!;
     private Panel _rightRail = null!;
     private Panel _rightProductionPanel = null!;
     private Panel _rightDetailPanel = null!;
-    private Label _sandboxDeveloperStatus = null!;
-    private Label _sandboxStateHashValue = null!;
-    private Button _sandboxOwnerButton = null!;
-    private Button _sandboxFactionButton = null!;
-    private Button _sandboxTeamButton = null!;
-    private Button _sandboxRelationButton = null!;
-    private Button _sandboxTimeButton = null!;
-    private Button _sandboxAtmosphereButton = null!;
-    private Button _sandboxOverlayButton = null!;
-    private Button _sandboxStressButton = null!;
     private Button _cancelProduction = null!;
     private IconActionButton _repeatProduction = null!;
     private IconActionButton _settingsButton = null!;
@@ -78,14 +67,12 @@ public partial class HudLayer : CanvasLayer
     private readonly Dictionary<string, int> _allConstructionProviderCursorByKind = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
     private readonly List<string> _commandCardStaleIds = [];
-    private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
     private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedProductionProviderId;
     private ProductionProviderLaneScope _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedConstructionProviderId;
-    private SandboxDeveloperContext _sandboxDeveloperContext = SandboxDeveloperContext.Default;
     private bool _hasSelection;
     private bool _hasBuildingSelection;
     private bool _buildModeActive;
@@ -104,53 +91,6 @@ public partial class HudLayer : CanvasLayer
     private string _lastRepeatProductionRefreshKey = "";
     private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
-
-    public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
-    {
-        _sandboxDeveloperContext = context;
-        if (_sandboxDeveloperPanel is null)
-        {
-            return;
-        }
-
-        var owner = SandboxDeveloperContextOptions.OwnerOption(context.OwnerId);
-        var faction = SandboxDeveloperContextOptions.FactionOption(context.Faction);
-        var team = SandboxDeveloperContextOptions.TeamOption(context.TeamId);
-        var relation = SandboxDeveloperContextOptions.RelationOption(context.Relation);
-        var environment = SandboxDeveloperContextOptions.EnvironmentOption(context.Environment);
-        var overlay = context.DebugOverlay.FormatStatus();
-
-        _sandboxDeveloperStatus.Text = CompactText($"{faction.Label} / {SandboxTimeScaleMath.Format(context.TimeScale)}", 36);
-        _sandboxOwnerButton.Text = $"Own {owner.OwnerId.Value}";
-        _sandboxFactionButton.Text = faction.CanSpawn ? faction.Label : "Locked";
-        _sandboxTeamButton.Text = $"Team {team.TeamId}";
-        _sandboxRelationButton.Text = relation.Label;
-        _sandboxTimeButton.Text = SandboxTimeScaleMath.Format(context.TimeScale).Replace("Sandbox time ", "", StringComparison.Ordinal);
-        _sandboxAtmosphereButton.Text = CompactText(environment.Label, 12);
-        _sandboxOverlayButton.Text = overlay == "Sandbox overlays: off" ? "Overlay off" : "Overlay on";
-        _sandboxStressButton.Text = context.CanSpawnCurrentFaction ? "Stress spawn" : "Locked";
-        _sandboxStressButton.Disabled = !context.CanSpawnCurrentFaction;
-        if (!context.DebugOverlay.IsEnabled(SandboxDebugOverlayFlag.StateHash))
-        {
-            SetSandboxStateHash(null);
-        }
-
-        foreach (var button in _sandboxDeveloperButtons)
-        {
-            button.QueueRedraw();
-        }
-    }
-
-    public void SetSandboxStateHash(ulong? hash)
-    {
-        if (_sandboxStateHashValue is null)
-        {
-            return;
-        }
-
-        _sandboxStateHashValue.Visible = hash is not null;
-        _sandboxStateHashValue.Text = hash is null ? "" : $"HASH {hash.Value:X16}";
-    }
 
     public void SetSelectedCount(int count)
     {
