@@ -196,6 +196,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CompactMultiline(status, 34)", "Catalog inspector text must compact per line instead of single-line clipping.");
     RequireText(hudLayer, "BuildInspectorText(state, spec, disabledReason)", "Build cards must provide label/cost/time/disabled inspector text.");
     RequireText(hudLayer, "TrainInspectorText(state, ProducerLabel, disabledReason)", "Train cards must provide source/cost/time/queue/disabled inspector text.");
+    RequireText(hudLayer, "GameText.T(\"ui.catalog.inputHint.build\")", "Build cards must append compact input hints to inspector text.");
+    RequireText(hudLayer, "GameText.T(\"ui.catalog.inputHint.train\")", "Train cards must append compact input hints to inspector text.");
     RequireText(hudLayer, "AbilityInspectorText(state)", "Ability cards must provide target/cooldown/active inspector text.");
     RequireText(hudLayer, "AbilityCommandGrammar(state.Ability)", "Ability cards must expose compact command grammar on the card and inspector.");
     RequireText(hudLayer, "AbilityTargetRuleFor(AbilitySpec ability)", "Ability cards must derive target grammar from ability target rules.");
@@ -260,6 +262,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
+    RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
+    RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.abilitiesEmpty\"] = \"Select support unit\\nno ability source\"", "English Abilities empty state must explain the missing selected-unit ability source.");
     RequireText(englishText, "[\"ui.ability.grammar.self\"] = \"SELF\"", "English ability cards must expose self-target grammar.");
@@ -330,6 +334,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese HUD catalog Abilities help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");
+    RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectAbility\"]", "Chinese HUD catalog ability inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.abilitiesEmpty\"] = \"选择支援单位\\n无能力来源\"", "Chinese Abilities empty state must explain the missing selected-unit ability source.");
     RequireText(chineseText, "[\"ui.ability.grammar.self\"] = \"自身\"", "Chinese ability cards must expose self-target grammar.");

@@ -395,7 +395,8 @@ public partial class HudLayer : CanvasLayer
                 category,
                 state.Cost,
                 Mathf.CeilToInt(state.BuildTime),
-                status);
+                status,
+                GameText.T("ui.catalog.inputHint.build"));
         }
 
         private static string TrainInspectorText(ProductionOptionState state, string producerLabel, string disabledReason)
@@ -411,7 +412,8 @@ public partial class HudLayer : CanvasLayer
                 state.Cost,
                 Mathf.CeilToInt(state.Duration),
                 state.QueuedCount,
-                status);
+                status,
+                GameText.T("ui.catalog.inputHint.train"));
         }
 
         private static string CompactCardText(string text, int maxChars)
