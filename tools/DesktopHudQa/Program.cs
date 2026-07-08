@@ -56,6 +56,7 @@ static void AssertHudFactoryExtraction(string root)
     var uiFactory = File.ReadAllText(Path.Combine(root, "scripts", "ui", "UiFactory.cs"));
     var cursorCatalog = File.ReadAllText(Path.Combine(root, "scripts", "core", "presentation", "ui", "BattleCursorCatalog.cs"));
     var hotkeys = File.ReadAllText(Path.Combine(root, "scripts", "ui", "HotkeyLegendLayer.cs"));
+    var settingsOverlay = File.ReadAllText(Path.Combine(root, "scripts", "ui", "SettingsOverlayLayer.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
     var chineseText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"));
 
@@ -245,10 +246,17 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
     RequireText(hotkeys, "GameText.T(\"hotkeys.catalog\")", "Hotkey legend must include a right-catalog control section.");
+    RequireText(settingsOverlay, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.");
+    RequireText(settingsOverlay, "GameText.T(\"settings.controlsOverview\")", "Settings overlay controls overview must use localized copy.");
+    RequireText(settingsOverlay, "GameText.T(\"settings.controls.tooltip\")", "Settings overlay controls overview must explain its read-only remap staging state.");
+    RequireText(settingsOverlay, "_controlsOverview.Text = GameText.T(\"settings.controlsOverview\")", "Settings overlay language refresh must update the controls binding overview.");
     RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.");
     RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.");
     RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"Build / Train / UPG / ABIL pages\"", "English hotkey legend must expose right catalog page switching.");
     RequireText(englishText, "[\"hotkeys.catalog.3\"] = \"Click cards / provider lanes\"", "English hotkey legend must expose right catalog card and provider interactions.");
+    RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
+    RequireText(englishText, "[\"settings.controls.tooltip\"]", "English settings controls tooltip must exist.");
+    RequireText(englishText, "[\"settings.controlsOverview\"]", "English settings controls overview must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.build\"]", "English HUD catalog build overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.train\"]", "English HUD catalog train overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.abilities\"]", "English HUD catalog ability overview text must exist.");
@@ -293,6 +301,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"hotkeys.catalog.1\"] = \"Tab 右侧目录抽屉\"", "Chinese hotkey legend must expose the right catalog drawer toggle.");
     RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"建造/训练/升级/能力页\"", "Chinese hotkey legend must expose right catalog page switching.");
     RequireText(chineseText, "[\"hotkeys.catalog.3\"] = \"点击卡片/来源通道\"", "Chinese hotkey legend must expose right catalog card and provider interactions.");
+    RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");
+    RequireText(chineseText, "[\"settings.controls.tooltip\"]", "Chinese settings controls tooltip must exist.");
+    RequireText(chineseText, "[\"settings.controlsOverview\"]", "Chinese settings controls overview must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.build\"]", "Chinese HUD catalog build overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"]", "Chinese HUD catalog train overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.abilities\"]", "Chinese HUD catalog ability overview text must exist.");
