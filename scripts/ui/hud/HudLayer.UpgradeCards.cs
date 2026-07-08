@@ -1,3 +1,4 @@
+using System.Text;
 using Godot;
 using ProceduralRts.Core;
 
@@ -9,6 +10,7 @@ public partial class HudLayer : CanvasLayer
     [
         new(
             "focusedMunitions",
+            UpgradeIds.FocusedMunitions,
             IconGlyph.Ability,
             UpgradeProjectAccentKind.Combat,
             "ui.upgrade.project.focusedMunitions",
@@ -22,6 +24,7 @@ public partial class HudLayer : CanvasLayer
             40),
         new(
             "opticArray",
+            UpgradeIds.OpticArray,
             IconGlyph.Scan,
             UpgradeProjectAccentKind.Vision,
             "ui.upgrade.project.opticArray",
@@ -35,6 +38,7 @@ public partial class HudLayer : CanvasLayer
             35),
         new(
             "fieldRepairs",
+            UpgradeIds.FieldRepairs,
             IconGlyph.Repair,
             UpgradeProjectAccentKind.Support,
             "ui.upgrade.project.fieldRepairs",
@@ -130,6 +134,7 @@ public partial class HudLayer : CanvasLayer
 
     private readonly record struct UpgradeProjectCardState(
         string Id,
+        string UpgradeId,
         IconGlyph Icon,
         UpgradeProjectAccentKind Accent,
         string LabelKey,
@@ -155,6 +160,54 @@ public partial class HudLayer : CanvasLayer
             "ui.catalog.upgradesCount",
             Math.Min(DefaultUpgradeProjectShellStates.Length, 12),
             GameText.T("ui.upgrade.source.researchBuilding"));
+    }
+
+    public static bool TrySelectedResearchBuildingProjectDetail(
+        string buildingKind,
+        UpgradeState? upgradeState,
+        out string detail)
+    {
+        detail = "";
+        if (!IsResearchProjectSourceBuilding(buildingKind))
+        {
+            return false;
+        }
+
+        var builder = new StringBuilder(GameText.T("ui.catalog.upgrades"));
+        builder.Append(' ');
+        var appended = 0;
+        foreach (var state in DefaultUpgradeProjectShellStates)
+        {
+            if (appended > 0)
+            {
+                builder.Append(appended % 2 == 0 ? '\n' : " / ");
+            }
+
+            builder.Append(GameText.T(state.ShortKey));
+            builder.Append(' ');
+            builder.Append(SelectedResearchProjectStatusText(state, upgradeState));
+            appended++;
+        }
+
+        detail = builder.ToString();
+        return appended > 0;
+    }
+
+    public static bool IsResearchProjectSourceBuilding(string buildingKind)
+    {
+        return BuildSpecCatalog.For(buildingKind).Category == BuildCategory.Command;
+    }
+
+    private static string SelectedResearchProjectStatusText(UpgradeProjectCardState state, UpgradeState? upgradeState)
+    {
+        if (upgradeState?.Has(state.UpgradeId) == true)
+        {
+            return GameText.T("ui.upgrade.badge.completed");
+        }
+
+        return state.StatusKey == "ui.upgrade.status.campaignGate"
+            ? GameText.T("ui.catalog.badge.locked")
+            : GameText.T("ui.catalog.badge.ready");
     }
 
     private static string UpgradeProjectCardMetricText(UpgradeProjectCardState state)

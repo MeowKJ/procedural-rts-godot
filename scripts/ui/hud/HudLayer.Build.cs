@@ -278,7 +278,7 @@ public partial class HudLayer : CanvasLayer
         _drawerSelectedTitle = MakeSizedLabel(GameText.T("ui.noSelection.title"), new Vector2(104, 40), new Vector2(170, 20), FontMeta, Ink);
         _drawerSelectedMeta = MakeSizedLabel(GameText.T("ui.noSelection.meta"), new Vector2(104, 64), new Vector2(170, 18), FontSmall, Mint);
         _drawerSelectedStats = MakeSizedLabel(GameText.T("ui.noSelection.stats"), new Vector2(104, 86), new Vector2(170, 18), FontSmall, Ink);
-        _drawerSelectedDetail = MakeSizedLabel(GameText.T("ui.noSelection.detail"), new Vector2(104, 108), new Vector2(170, 34), FontTiny, InkMuted);
+        _drawerSelectedDetail = MakeSizedLabel(GameText.T("ui.noSelection.detail"), new Vector2(104, 108), new Vector2(170, 48), FontTiny, InkMuted);
         _rightDetailPanel.AddChild(_drawerSelectedTitle);
         _rightDetailPanel.AddChild(_drawerSelectedMeta);
         _rightDetailPanel.AddChild(_drawerSelectedStats);

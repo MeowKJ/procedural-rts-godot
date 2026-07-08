@@ -95,6 +95,15 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "card.Pressed += () => SetCatalogStatusText(card.InspectorText);", "Upgrades project-shell cards must update the inspector without emitting research commands.", result);
         ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.", result);
         ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.", result);
+        RequireText(hudLayer, "TrySelectedResearchBuildingProjectDetail(", "Selected research buildings must expose a read-only project detail helper.", result);
+        RequireText(hudLayer, "IsResearchProjectSourceBuilding(string buildingKind)", "Selected research project detail must be gated to research-capable buildings.", result);
+        RequireText(hudLayer, "BuildSpecCatalog.For(buildingKind).Category == BuildCategory.Command", "Research-capable building detection must stay explicit and non-production until a dedicated research spec exists.", result);
+        RequireText(hudLayer, "builder.Append(appended % 2 == 0 ? '\\n' : \" / \")", "Selected research project detail must wrap project states before compacting the right detail label.", result);
+        RequireText(hudLayer, "new Vector2(104, 108), new Vector2(170, 48), FontTiny", "Selected-building detail label must reserve enough height for project summary plus sell refund.", result);
+        RequireText(hudLayer, "SelectedResearchProjectStatusText(state, upgradeState)", "Selected research project detail must derive visible project state from UpgradeState.", result);
+        RequireText(hudSync, "HudLayer.TrySelectedResearchBuildingProjectDetail(building.Kind, upgradeState, out var projectDetail)", "Runtime selected building detail must use the research project panel when a source building is selected.", result);
+        RequireText(hudSync, "? $\"{projectDetail}\\n{sellRefund}\"", "Research building detail must replace production queue copy with a compact project panel while preserving sell refund.", result);
+        RequireText(hudSync, "GameText.Format(\"ui.detail.building\", queue, rally, sellRefund)", "Non-research selected buildings must keep normal queue/rally/sell detail text.", result);
         RequireText(hudLayer, "CatalogOverviewConstructionLaneCount()", "Build catalog overview must summarize construction provider lane count.", result);
         RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must summarize visible provider lane count.", result);
         RequireText(hudLayer, "CatalogOverviewBuildStartableCount()", "Build catalog overview must summarize startable card count.", result);
@@ -217,6 +226,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.catalog.upgradesCount\"] = \"{0} project shells\\nsource: {1}; read-only\"", "English Upgrades status must explain read-only selected-source project shells.", result);
         RequireText(englishProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}cr {1}s\"", "English upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(englishProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English upgrade inspector text must include source context.", result);
+        RequireText(englishProviderText, "[\"ui.upgrade.badge.completed\"] = \"DONE\"", "English selected research-building project detail must expose completed upgrade state.", result);
         RequireText(englishProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(englishProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"Select support unit\\nno ability source\"", "English Abilities empty state must explain the missing selected-unit ability source.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.self\"] = \"SELF\"", "English ability cards must expose self-target grammar.", result);
@@ -241,6 +251,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese Upgrades status must explain read-only selected-source project shells.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}资 {1}s\"", "Chinese upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] 来源 {2}", "Chinese upgrade inspector text must include source context.", result);
+        RequireText(chineseProviderText, "[\"ui.upgrade.badge.completed\"] = \"完成\"", "Chinese selected research-building project detail must expose completed upgrade state.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"选择支援单位\\n无能力来源\"", "Chinese Abilities empty state must explain the missing selected-unit ability source.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.self\"] = \"自身\"", "Chinese ability cards must expose self-target grammar.", result);

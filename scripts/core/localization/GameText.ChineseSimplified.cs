@@ -106,6 +106,7 @@ public static partial class GameText
         ["ui.upgrade.status.campaignGate"] = "战役门槛",
         ["ui.upgrade.badge.sourceNeeded"] = "来源",
         ["ui.upgrade.badge.campaignGate"] = "门槛",
+        ["ui.upgrade.badge.completed"] = "完成",
         ["ui.providerLane.auto"] = "自动生产者",
         ["ui.providerLane.all"] = "全部生产者",
         ["ui.providerLane.specific"] = "{0} {1}",

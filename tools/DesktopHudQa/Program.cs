@@ -282,6 +282,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}cr {1}s\"", "English upgrade shell cards must expose compact visible cost/time metrics.");
     RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English HUD catalog upgrade inspector text must include source context.");
     RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.");
+    RequireText(englishText, "[\"ui.upgrade.badge.completed\"] = \"DONE\"", "English selected research-building project detail must expose completed upgrade state.");
     RequireText(englishText, "[\"ui.catalog.abilities\"]", "English HUD catalog Abilities label must exist.");
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
@@ -353,6 +354,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.");
     RequireText(englishText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "English selected-building detail must reserve a sell-refund row.");
     RequireText(englishText, "[\"ui.detail.sellRefund\"] = \"SELL refund {0} credits\"", "English selected-building detail must preview sell refund.");
+    RequireText(hudLayer, "TrySelectedResearchBuildingProjectDetail(", "Selected research buildings must expose a read-only project detail helper.");
+    RequireText(hudLayer, "IsResearchProjectSourceBuilding(string buildingKind)", "Selected research project detail must be gated to research-capable buildings.");
+    RequireText(hudLayer, "BuildSpecCatalog.For(buildingKind).Category == BuildCategory.Command", "Research-capable building detection must stay explicit and non-production until a dedicated research spec exists.");
+    RequireText(hudLayer, "builder.Append(appended % 2 == 0 ? '\\n' : \" / \")", "Selected research project detail must wrap project states before compacting the right detail label.");
+    RequireText(hudLayer, "new Vector2(104, 108), new Vector2(170, 48), FontTiny", "Selected-building detail label must reserve enough height for project summary plus sell refund.");
+    RequireText(battleRoot, "HudLayer.TrySelectedResearchBuildingProjectDetail(building.Kind, upgradeState, out var projectDetail)", "Runtime selected building detail must use the research project panel when a source building is selected.");
+    RequireText(battleRoot, "? $\"{projectDetail}\\n{sellRefund}\"", "Research building detail must replace production queue copy with a compact project panel while preserving sell refund.");
+    RequireText(battleRoot, "GameText.Format(\"ui.detail.building\", queue, rally, sellRefund)", "Non-research selected buildings must keep normal queue/rally/sell detail text.");
     RequireText(chineseText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.");
     RequireText(chineseText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "Chinese selected-building detail must reserve a sell-refund row.");
     RequireText(chineseText, "[\"ui.detail.sellRefund\"] = \"出售返还 {0} 资金\"", "Chinese selected-building detail must preview sell refund.");
@@ -364,6 +373,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.upgrades\"]", "Chinese HUD catalog Upgrades label must exist.");
     RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"] = \"研究项目\\n选择科研建筑\"", "Chinese HUD catalog Upgrades help must frame research as selected-building contextual.");
     RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese HUD catalog Upgrades count must explain read-only selected-source project shells.");
+    RequireText(chineseText, "[\"ui.upgrade.badge.completed\"] = \"完成\"", "Chinese selected research-building project detail must expose completed upgrade state.");
     RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"] = \"选择科研建筑\\n项目无生产通道\"", "Chinese HUD catalog Upgrades empty text must reject provider lanes.");
     RequireText(chineseText, "[\"ui.catalog.overview.build\"] = \"{0}/{1}可 | {2}线 | {3}\"", "Chinese Build overview must summarize actionable cards, lanes, and provider scope.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"] = \"{0}/{1}可 | {2}线 | {3}\"", "Chinese Train overview must summarize queueable cards, lanes, and provider scope.");

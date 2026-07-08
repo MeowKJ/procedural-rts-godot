@@ -131,6 +131,7 @@ public static partial class GameText
         ["ui.upgrade.status.campaignGate"] = "campaign gate",
         ["ui.upgrade.badge.sourceNeeded"] = "SRC",
         ["ui.upgrade.badge.campaignGate"] = "GATE",
+        ["ui.upgrade.badge.completed"] = "DONE",
         ["ui.providerLane.auto"] = "Auto provider",
         ["ui.providerLane.all"] = "All providers",
         ["ui.providerLane.specific"] = "{0} {1}",
