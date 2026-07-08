@@ -75,6 +75,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "state.Category != _selectedBuildCategory", "Build option cards must filter by the selected build category.", result);
         RequireText(hudLayer, "_visibleBuildCardStates.Count >= 12", "Build option cards must keep the fixed-grid cap used by the right panel.", result);
         RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons explicitly.", result);
+        RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train cards must render compact availability badges.", result);
+        RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card badges must derive from enabled, queue, progress, and disabled-reason state.", result);
+        RequireText(hudLayer, "new Rect2(new Vector2(5, 21), new Vector2(36, 12))", "Train card status badges must avoid the right-side role glyph lane.", result);
+        RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.", result);
         RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId())", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
         ForbidText(hudLayer, "BuildCategoryRequested?.Invoke(category);", "Build category tabs must filter build cards without arming placement.", result);
         ForbidText(hudLayer, "Action<BuildCategory>? BuildCategoryRequested", "HudLayer must not expose a stale build-category placement intent.", result);
