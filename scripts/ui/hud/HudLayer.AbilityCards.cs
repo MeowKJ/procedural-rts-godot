@@ -94,6 +94,8 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(card);
         card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);
         card.MouseExited += RestoreCatalogStatusText;
+        card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);
+        card.FocusExited += RestoreCatalogStatusText;
         card.Pressed += () =>
         {
             SetCatalogStatusText(card.InspectorText);
