@@ -112,9 +112,29 @@ static partial class Program
             PlayerCommandPayload.ForPoint(subjects, 544, 352, MoveCommandMode.Attack));
         AssertAccepted(gateway.Submit(submission, new[] { attackGround }, sink), "gateway should accept attack-ground payloads with subjects and a point target");
 
-        var attackGroundMissingPoint = new PlayerCommand(
+        var queuedMove = new PlayerCommand(
             PlayerSlotId.One,
             5,
+            12,
+            PlayerCommandKind.Move,
+            PlayerCommandPayload.ForPoint(subjects, 640, 384, MoveCommandMode.Direct, PlayerCommandQueueMode.Append));
+        AssertAccepted(gateway.Submit(submission, new[] { queuedMove }, sink), "gateway should accept queued movement payloads");
+        Assert(sink.Accepted[^1].Payload.QueueMode == PlayerCommandQueueMode.Append, "gateway should preserve queued movement intent to the sink");
+
+        var queuedAttack = new PlayerCommand(
+            PlayerSlotId.One,
+            6,
+            12,
+            PlayerCommandKind.Attack,
+            PlayerCommandPayload.ForEntityTarget(subjects, new EntityId(99)) with { QueueMode = PlayerCommandQueueMode.Append });
+        AssertRejected(
+            gateway.Submit(submission, new[] { queuedAttack }, sink),
+            CommandGatewayValidationError.InvalidPayloadShape,
+            "gateway should reject append queue mode for targeted attack until full queue semantics exist");
+
+        var attackGroundMissingPoint = new PlayerCommand(
+            PlayerSlotId.One,
+            7,
             12,
             PlayerCommandKind.AttackGround,
             PlayerCommandPayload.ForSubjects(subjects));
@@ -125,7 +145,7 @@ static partial class Program
 
         var invalidSubject = new PlayerCommand(
             PlayerSlotId.One,
-            6,
+            8,
             12,
             PlayerCommandKind.Stop,
             PlayerCommandPayload.ForSubjects(new[] { default(EntityId) }));
@@ -137,7 +157,7 @@ static partial class Program
         var rejectingSink = new RecordingGatewaySink(reject: true);
         var sinkRejected = new PlayerCommand(
             PlayerSlotId.One,
-            7,
+            9,
             12,
             PlayerCommandKind.Stop,
             PlayerCommandPayload.ForSubjects(subjects));

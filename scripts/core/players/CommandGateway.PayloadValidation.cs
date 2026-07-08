@@ -19,6 +19,11 @@ public sealed partial class CommandGateway
             return Reject(CommandGatewayValidationError.InvalidSubject, "Subject ids must be valid entity ids.", out error, out message);
         }
 
+        if (!ValidateQueueMode(command, out error, out message))
+        {
+            return false;
+        }
+
         return command.Kind switch
         {
             PlayerCommandKind.Select => Accept(out error, out message),
@@ -31,6 +36,17 @@ public sealed partial class CommandGateway
             PlayerCommandKind.Ability or PlayerCommandKind.SetStance or PlayerCommandKind.ControlGroup => RequireSubjects(payload, out error, out message),
             PlayerCommandKind.DebugSandbox => Accept(out error, out message),
             _ => Reject(CommandGatewayValidationError.InvalidCommandKind, "Command kind is not supported.", out error, out message),
+        };
+    }
+
+    private static bool ValidateQueueMode(PlayerCommand command, out CommandGatewayValidationError error, out string message)
+    {
+        return command.Payload.QueueMode switch
+        {
+            PlayerCommandQueueMode.Replace => Accept(out error, out message),
+            PlayerCommandQueueMode.Append when command.Kind is PlayerCommandKind.Move or PlayerCommandKind.AttackMove => Accept(out error, out message),
+            PlayerCommandQueueMode.Append => Reject(CommandGatewayValidationError.InvalidPayloadShape, "Append queue mode is only supported for movement commands.", out error, out message),
+            _ => Reject(CommandGatewayValidationError.InvalidPayloadShape, "Command queue mode is not supported.", out error, out message),
         };
     }
 

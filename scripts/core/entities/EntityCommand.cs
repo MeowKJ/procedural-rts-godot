@@ -37,7 +37,8 @@ public sealed record MoveEntityCommand(
     IReadOnlyList<EntityId> Subjects,
     int Tick,
     Vector2 Target,
-    MoveCommandMode Mode) : EntityCommand(EntityCommandKind.Move, Issuer, Subjects, Tick);
+    MoveCommandMode Mode,
+    PlayerCommandQueueMode QueueMode = PlayerCommandQueueMode.Replace) : EntityCommand(EntityCommandKind.Move, Issuer, Subjects, Tick);
 
 public sealed record AttackEntityCommand(
     OwnerId Issuer,
@@ -133,7 +134,8 @@ public sealed record AttackMoveEntityCommand(
     IReadOnlyList<EntityId> Subjects,
     int Tick,
     Vector2 Target,
-    MoveCommandMode Mode) : EntityCommand(EntityCommandKind.AttackMove, Issuer, Subjects, Tick);
+    MoveCommandMode Mode,
+    PlayerCommandQueueMode QueueMode = PlayerCommandQueueMode.Replace) : EntityCommand(EntityCommandKind.AttackMove, Issuer, Subjects, Tick);
 
 public sealed record PatrolEntityCommand(
     OwnerId Issuer,
@@ -177,7 +179,8 @@ public sealed record GroupMoveEntityCommand(
     IReadOnlyList<EntityId> Subjects,
     int Tick,
     Vector2 Target,
-    MoveCommandMode Mode) : EntityCommand(EntityCommandKind.Move, Issuer, Subjects, Tick);
+    MoveCommandMode Mode,
+    PlayerCommandQueueMode QueueMode = PlayerCommandQueueMode.Replace) : EntityCommand(EntityCommandKind.Move, Issuer, Subjects, Tick);
 
 /// <summary>
 /// Group attack on one target. Attackers already in weapon range become firing

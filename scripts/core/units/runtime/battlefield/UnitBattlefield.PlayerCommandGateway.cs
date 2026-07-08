@@ -76,10 +76,10 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
                 new SetSelectionEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick()),
                 out envelope),
             PlayerCommandKind.Move => ApplyInputEntityCommand(
-                new GroupMoveEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint), command.Payload.MoveMode),
+                new GroupMoveEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint), command.Payload.MoveMode, command.Payload.QueueMode),
                 out envelope),
             PlayerCommandKind.AttackMove => ApplyInputEntityCommand(
-                new GroupMoveEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint), MoveCommandMode.Attack),
+                new GroupMoveEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint), MoveCommandMode.Attack, command.Payload.QueueMode),
                 out envelope),
             PlayerCommandKind.AttackGround => ApplyInputEntityCommand(
                 new AttackGroundEntityCommand(OwnerId.FromPlayerSlot(command.IssuerSlotId), command.Payload.SubjectIds, NextInputCommandTick(), ToVector2(command.Payload.TargetPoint)),

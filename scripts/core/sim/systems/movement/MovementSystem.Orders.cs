@@ -100,6 +100,48 @@ public sealed partial class MovementSystem
         return true;
     }
 
+    private static bool TryAdvanceQueuedMovementOrder(
+        EntityInstance entity,
+        MovementComponentState movement,
+        Vector2 arrivedTarget,
+        out MovementComponentState nextMovement)
+    {
+        nextMovement = movement;
+        if (!IsFinalMovementArrival(entity, arrivedTarget)
+            || !entity.Components.TryGet<CommandQueueComponentState>(out var commandQueue)
+            || commandQueue.Items.Count == 0
+            || commandQueue.Items[0] is not MoveEntityCommand nextMove)
+        {
+            return false;
+        }
+
+        if (commandQueue.Items.Count == 1)
+        {
+            entity.Components.Remove<CommandQueueComponentState>();
+        }
+        else
+        {
+            var remaining = new EntityCommand[commandQueue.Items.Count - 1];
+            for (var index = 1; index < commandQueue.Items.Count; index++)
+            {
+                remaining[index - 1] = commandQueue.Items[index];
+            }
+
+            entity.Components.Set(new CommandQueueComponentState(remaining));
+        }
+
+        entity.Components.Remove<PathfindingComponentState>();
+        UpdateQueuedMovementCommandable(entity, nextMove.Target, nextMove.Mode);
+        nextMovement = movement with
+        {
+            Velocity = Vector2.Zero,
+            MoveTarget = nextMove.Target,
+            FormationSlot = null,
+            FireAnchorRemaining = 0,
+        };
+        return true;
+    }
+
     private static MovementComponentState ResumeAttackMoveIntentIfNeeded(
         EntityWorld world,
         EntityInstance entity,
@@ -136,6 +178,30 @@ public sealed partial class MovementSystem
             MoveMode = MoveCommandMode.Attack,
         });
         return resumed;
+    }
+
+    private static bool IsFinalMovementArrival(EntityInstance entity, Vector2 arrivedTarget)
+    {
+        if (!entity.Components.TryGet<PathfindingComponentState>(out var path))
+        {
+            return true;
+        }
+
+        return path.NextWaypointIndex >= path.Waypoints.Count
+            && SamePatrolPoint(arrivedTarget, new Vector2(path.Goal.X, path.Goal.Y));
+    }
+
+    private static void UpdateQueuedMovementCommandable(EntityInstance entity, Vector2 target, MoveCommandMode mode)
+    {
+        var commandable = entity.Components.TryGet<CommandableComponentState>(out var existing)
+            ? existing
+            : new CommandableComponentState();
+        entity.Components.Set(commandable with
+        {
+            PlayerIntentTarget = target,
+            CommandVisualTarget = target,
+            MoveMode = mode,
+        });
     }
 
     private static Vector2 PatrolTarget(PatrolOrderComponentState patrol)

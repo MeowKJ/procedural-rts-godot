@@ -42,7 +42,7 @@ public partial class SelectionController
             : UnitBattlefield!.SelectRect(LocalPlayerSlotId, RectFromPoints(startWorld, worldPoint), additive);
     }
 
-    private void FinishRightClickCommand(Vector2 screenPoint, MoveCommandMode moveMode)
+    private void FinishRightClickCommand(Vector2 screenPoint, MoveCommandMode moveMode, PlayerCommandQueueMode queueMode)
     {
         var worldPoint = ScreenToWorld(screenPoint);
         if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
@@ -91,7 +91,7 @@ public partial class SelectionController
             {
                 var subjects = SelectedRuntimeUnitSubjects();
                 var commandKind = moveMode == MoveCommandMode.Attack ? PlayerCommandKind.AttackMove : PlayerCommandKind.Move;
-                var accepted = SubmitRuntimeCommand(commandKind, PlayerCommandPayload.ForPoint(subjects, worldPoint.X, worldPoint.Y, moveMode));
+                var accepted = SubmitRuntimeCommand(commandKind, PlayerCommandPayload.ForPoint(subjects, worldPoint.X, worldPoint.Y, moveMode, queueMode));
                 StatusChanged?.Invoke(accepted ? MoveModeStatus(moveMode) : GatewayRejectedStatus(MoveModeStatus(moveMode)));
                 AcknowledgeCommand(
                     accepted ? CommandAcknowledgementKind.Move : CommandAcknowledgementKind.Invalid,
@@ -246,6 +246,11 @@ public partial class SelectionController
         }
 
         return mouse.AltPressed ? MoveCommandMode.Attack : CurrentMoveMode;
+    }
+
+    private static PlayerCommandQueueMode QueueModeFromModifiers(InputEventMouseButton mouse)
+    {
+        return mouse.ShiftPressed ? PlayerCommandQueueMode.Append : PlayerCommandQueueMode.Replace;
     }
 
     private static string MoveModeStatus(MoveCommandMode mode)

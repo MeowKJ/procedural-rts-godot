@@ -11,6 +11,7 @@ namespace ProceduralRts.Core;
 /// </summary>
 public sealed partial class CommandSystem : ISimSystem
 {
+    private const int MaxQueuedMovementOrders = 4;
     private readonly List<EntityInstance> _scalarOrderMembers = [];
     private readonly HashSet<int> _selectionSubjectIds = [];
     private readonly List<EntityInstance> _groupOrderMembers = [];
@@ -48,11 +49,11 @@ public sealed partial class CommandSystem : ISimSystem
                     break;
 
                 case MoveEntityCommand move:
-                    ApplyMove(context.World, move.Issuer, move.Subjects, move.Target, move.Mode, manualAttack: false);
+                    ApplyMove(context.World, move.Issuer, move.Subjects, move.Target, move.Mode, move.QueueMode, manualAttack: false);
                     break;
 
                 case AttackMoveEntityCommand attackMove:
-                    ApplyMove(context.World, attackMove.Issuer, attackMove.Subjects, attackMove.Target, attackMove.Mode, manualAttack: false);
+                    ApplyMove(context.World, attackMove.Issuer, attackMove.Subjects, attackMove.Target, attackMove.Mode, attackMove.QueueMode, manualAttack: false);
                     break;
 
                 case PatrolEntityCommand patrol:

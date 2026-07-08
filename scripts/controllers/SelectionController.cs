@@ -127,7 +127,7 @@ public partial class SelectionController : Node2D
                     }
                     else
                     {
-                        FinishRightClickCommand(mouse.Position, MoveModeFromModifiers(mouse));
+                        FinishRightClickCommand(mouse.Position, MoveModeFromModifiers(mouse), QueueModeFromModifiers(mouse));
                     }
                 }
             }

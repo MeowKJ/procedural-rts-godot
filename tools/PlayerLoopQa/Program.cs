@@ -391,20 +391,81 @@ static void AssertCommandGatewayLivePlayerLoop()
     Require(localUnit.MoveTarget is not null && localUnit.MoveMode == MoveCommandMode.Ignore,
         "accepted live move should preserve command mode and mutate the unit through the command bridge");
 
+    var queuedMove = new PlayerCommand(
+        PlayerSlotId.One,
+        2,
+        2,
+        PlayerCommandKind.Move,
+        PlayerCommandPayload.ForPoint([localUnit.EntityId], 860, 560, MoveCommandMode.Direct, PlayerCommandQueueMode.Append));
+    controller.Enqueue(queuedMove);
+    var queuedResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 2);
+    Require(queuedResult.AcceptedCount == 1, "queued live move should pass through CommandGateway");
+    Require(
+        battlefield.EntityWorld.TryGet(localUnit.EntityId, out var queuedEntity)
+        && queuedEntity.Components.TryGet<CommandQueueComponentState>(out var queuedCommands)
+        && queuedCommands.Items.Count == 1
+        && queuedCommands.Items[0] is MoveEntityCommand queuedMoveCommand
+        && queuedMoveCommand.Target.DistanceTo(new Vector2(860, 560)) <= 1f,
+        "shift-queued live move should append a movement waypoint instead of replacing the active target");
+
+    Advance(battlefield, 5);
+    Require(
+        !queuedEntity.Components.Has<CommandQueueComponentState>()
+        && localUnit.Position.DistanceTo(new Vector2(860, 560)) < 90,
+        "queued live move should advance after the current movement order completes");
+
+    var replaceBattlefield = NewBattlefield();
+    var replaceUnit = replaceBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(420, 420));
+    replaceBattlefield.SelectUnitsByIds(PlayerSlotId.One, [replaceUnit.Id]);
+    var firstReplaceMove = PlayerCommandPayload.ForPoint([replaceUnit.EntityId], 620, 420);
+    var appendReplaceMove = PlayerCommandPayload.ForPoint([replaceUnit.EntityId], 820, 420, MoveCommandMode.Direct, PlayerCommandQueueMode.Append);
+    var finalReplaceMove = PlayerCommandPayload.ForPoint([replaceUnit.EntityId], 520, 520);
+    Require(replaceBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Move, firstReplaceMove).AcceptedCount == 1,
+        "replace-boundary setup move should be accepted");
+    Require(replaceBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Move, appendReplaceMove).AcceptedCount == 1,
+        "replace-boundary queued move should be accepted");
+    Require(
+        replaceBattlefield.EntityWorld.TryGet(replaceUnit.EntityId, out var replaceEntity)
+        && replaceEntity.Components.Has<CommandQueueComponentState>(),
+        "replace-boundary setup should create a queued move");
+    for (var index = 0; index < 6; index++)
+    {
+        var target = PlayerCommandPayload.ForPoint(
+            [replaceUnit.EntityId],
+            840 + index * 20,
+            440,
+            MoveCommandMode.Direct,
+            PlayerCommandQueueMode.Append);
+        Require(replaceBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Move, target).AcceptedCount == 1,
+            "extra queued move should remain a valid player command even when the short movement queue is full");
+    }
+
+    Require(
+        replaceEntity.Components.TryGet<CommandQueueComponentState>(out var cappedQueue)
+        && cappedQueue.Items.Count == 4,
+        "shift-move waypoint queue should stay capped at four movement orders");
+    Require(replaceBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Move, finalReplaceMove).AcceptedCount == 1,
+        "normal follow-up move should be accepted");
+    Require(
+        !replaceEntity.Components.Has<CommandQueueComponentState>()
+        && replaceUnit.MoveTarget is not null
+        && replaceUnit.MoveTarget.Value.DistanceTo(new Vector2(520, 520)) < 160,
+        "normal move should replace active movement and clear queued movement waypoints");
+
     var beforeRejected = battlefield.AppliedInputCommandCount;
     controller.Enqueue(move);
-    var staleResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 2);
+    var staleResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 3);
     RequireRejected(staleResult, CommandGatewayValidationError.NonMonotonicSequence, "duplicate live controller sequence should reject");
     Require(battlefield.AppliedInputCommandCount == beforeRejected, "duplicate live sequence should not mutate simulation state");
 
     var invalidMove = new PlayerCommand(
         PlayerSlotId.One,
-        2,
-        2,
+        3,
+        3,
         PlayerCommandKind.Move,
         PlayerCommandPayload.ForSubjects([localUnit.EntityId]));
     controller.Enqueue(invalidMove);
-    var invalidResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 3);
+    var invalidResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 4);
     RequireRejected(invalidResult, CommandGatewayValidationError.InvalidPayloadShape, "malformed live move should reject");
     Require(battlefield.AppliedInputCommandCount == beforeRejected, "malformed live move should not mutate simulation state");
 

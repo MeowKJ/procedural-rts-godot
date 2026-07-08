@@ -120,6 +120,10 @@ public sealed partial class MovementSystem : ISimSystem
                 {
                     arrivedMovement = patrolMovement;
                 }
+                else if (TryAdvanceQueuedMovementOrder(entity, movement, target, out var queuedMovement))
+                {
+                    arrivedMovement = queuedMovement;
+                }
 
                 entity.Components.Set(arrivedMovement);
                 world.Metrics.RecordMovementSample(entity.Id.Value, position, stopPosition, target, dt);

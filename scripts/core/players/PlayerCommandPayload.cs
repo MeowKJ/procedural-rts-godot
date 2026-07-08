@@ -5,6 +5,12 @@ public readonly record struct PlayerCommandPoint(float X, float Y)
     public bool IsFinite => float.IsFinite(X) && float.IsFinite(Y);
 }
 
+public enum PlayerCommandQueueMode
+{
+    Replace,
+    Append
+}
+
 public readonly record struct PlayerCommandPayload(
     IReadOnlyList<EntityId>? Subjects,
     bool HasTargetPoint,
@@ -14,7 +20,8 @@ public readonly record struct PlayerCommandPayload(
     string SpecId,
     AbilityKind Ability,
     UnitStance Stance,
-    MoveCommandMode MoveMode)
+    MoveCommandMode MoveMode,
+    PlayerCommandQueueMode QueueMode)
 {
     public static PlayerCommandPayload Empty { get; } = new(
         Array.Empty<EntityId>(),
@@ -25,7 +32,8 @@ public readonly record struct PlayerCommandPayload(
         string.Empty,
         AbilityKind.Harvest,
         UnitStance.Hold,
-        MoveCommandMode.Direct);
+        MoveCommandMode.Direct,
+        PlayerCommandQueueMode.Replace);
 
     public IReadOnlyList<EntityId> SubjectIds => Subjects ?? Array.Empty<EntityId>();
 
@@ -38,7 +46,8 @@ public readonly record struct PlayerCommandPayload(
         IReadOnlyList<EntityId> subjects,
         float x,
         float y,
-        MoveCommandMode moveMode = MoveCommandMode.Direct)
+        MoveCommandMode moveMode = MoveCommandMode.Direct,
+        PlayerCommandQueueMode queueMode = PlayerCommandQueueMode.Replace)
     {
         return Empty with
         {
@@ -46,6 +55,7 @@ public readonly record struct PlayerCommandPayload(
             HasTargetPoint = true,
             TargetPoint = new PlayerCommandPoint(x, y),
             MoveMode = moveMode,
+            QueueMode = queueMode,
         };
     }
 

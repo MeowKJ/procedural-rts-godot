@@ -10,11 +10,18 @@ public sealed partial class CommandSystem
         IReadOnlyList<EntityId> subjects,
         Vector2 target,
         MoveCommandMode mode,
+        PlayerCommandQueueMode queueMode,
         bool manualAttack)
     {
         CollectOwnedSubjects(world, issuer, subjects, _scalarOrderMembers);
         foreach (var entity in _scalarOrderMembers)
         {
+            if (queueMode == PlayerCommandQueueMode.Append
+                && TryAppendMovementOrder(entity, issuer, entity.Id, target, mode))
+            {
+                continue;
+            }
+
             var movement = entity.Components.TryGet<MovementComponentState>(out var existing)
                 ? existing
                 : new MovementComponentState(Velocity: default);
@@ -62,6 +69,7 @@ public sealed partial class CommandSystem
                 patrol.PointB,
                 MovingToB: true));
             entity.Components.Remove<GuardOrderComponentState>();
+            entity.Components.Remove<CommandQueueComponentState>();
 
             var movement = entity.Components.TryGet<MovementComponentState>(out var existing)
                 ? existing
@@ -132,6 +140,7 @@ public sealed partial class CommandSystem
                 guard.Radius));
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<PathfindingComponentState>();
+            entity.Components.Remove<CommandQueueComponentState>();
 
             var movement = entity.Components.TryGet<MovementComponentState>(out var existing)
                 ? existing
@@ -207,6 +216,12 @@ public sealed partial class CommandSystem
             }
 
             var slotPoint = new Vector2(slot.X, slot.Y);
+            if (command.QueueMode == PlayerCommandQueueMode.Append
+                && TryAppendMovementOrder(entity, command.Issuer, entity.Id, slotPoint, command.Mode))
+            {
+                continue;
+            }
+
             if (entity.Components.TryGet<MovementComponentState>(out var movement))
             {
                 entity.Components.Set(movement with
@@ -251,6 +266,7 @@ public sealed partial class CommandSystem
             entity.Components.Remove<PatrolOrderComponentState>();
             entity.Components.Remove<GuardOrderComponentState>();
             entity.Components.Remove<AttackGroundOrderComponentState>();
+            entity.Components.Remove<CommandQueueComponentState>();
 
             ClearWeaponFocus(entity);
             ClearCommandIntent(entity);
@@ -280,6 +296,61 @@ public sealed partial class CommandSystem
         entity.Components.Remove<GuardOrderComponentState>();
         entity.Components.Remove<RepairOrderComponentState>();
         entity.Components.Remove<AttackGroundOrderComponentState>();
+        entity.Components.Remove<CommandQueueComponentState>();
+    }
+
+    private static bool TryAppendMovementOrder(
+        EntityInstance entity,
+        OwnerId issuer,
+        EntityId subject,
+        Vector2 target,
+        MoveCommandMode mode)
+    {
+        if (!CanAppendMovementOrder(entity))
+        {
+            return false;
+        }
+
+        var queued = entity.Components.TryGet<CommandQueueComponentState>(out var existingQueue)
+            ? existingQueue.Items
+            : Array.Empty<EntityCommand>();
+        if (queued.Count >= MaxQueuedMovementOrders)
+        {
+            return true;
+        }
+
+        var next = new EntityCommand[queued.Count + 1];
+        for (var index = 0; index < queued.Count; index++)
+        {
+            next[index] = queued[index];
+        }
+
+        next[^1] = new MoveEntityCommand(issuer, [subject], queued.Count + 1, target, mode);
+        entity.Components.Set(new CommandQueueComponentState(next));
+        return true;
+    }
+
+    private static bool CanAppendMovementOrder(EntityInstance entity)
+    {
+        if (entity.Components.Has<PatrolOrderComponentState>()
+            || entity.Components.Has<GuardOrderComponentState>()
+            || entity.Components.Has<RepairOrderComponentState>()
+            || entity.Components.Has<AttackGroundOrderComponentState>())
+        {
+            return false;
+        }
+
+        if (entity.Components.TryGet<WeaponUserComponentState>(out var weapon)
+            && weapon.AttackTargetIsManual
+            && weapon.AttackTarget.IsValid)
+        {
+            return false;
+        }
+
+        var hasQueuedMovement = entity.Components.TryGet<CommandQueueComponentState>(out var queue)
+            && queue.Items.Count > 0;
+        return hasQueuedMovement
+            || entity.Components.TryGet<MovementComponentState>(out var movement) && movement.MoveTarget is not null;
     }
 
     private static void ClearCommandIntent(EntityInstance entity)

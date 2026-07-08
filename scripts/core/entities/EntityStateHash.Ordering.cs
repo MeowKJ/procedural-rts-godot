@@ -111,6 +111,7 @@ public static partial class EntityStateHash
             hash = Add(hash, item.Tick);
             hash = Add(hash, item.Subjects.Count);
             hash = AddCommandSubjects(hash, item, commandSubjectOrder);
+            hash = AddCommandQueuePayload(hash, item);
         }
 
         ordered.Clear();
@@ -133,6 +134,35 @@ public static partial class EntityStateHash
         }
 
         ordered.Clear();
+        return hash;
+    }
+
+    private static ulong AddCommandQueuePayload(ulong hash, EntityCommand item)
+    {
+        return item switch
+        {
+            MoveEntityCommand move => Add(Add(hash, move.Target), (int)move.Mode),
+            GroupMoveEntityCommand move => Add(Add(hash, move.Target), (int)move.Mode),
+            AttackMoveEntityCommand move => Add(Add(hash, move.Target), (int)move.Mode),
+            AttackGroundEntityCommand attackGround => Add(hash, attackGround.Target),
+            AttackEntityCommand attack => Add(Add(hash, attack.Target.Value), (int)attack.TargetKind),
+            GroupAttackEntityCommand attack => Add(Add(hash, attack.Target.Value), (int)attack.TargetKind),
+            SetRallyPointEntityCommand rally => Add(Add(hash, rally.Target), rally.TargetEntity.Value),
+            HarvestEntityCommand harvest => Add(hash, harvest.ResourceTarget.Value),
+            RepairEntityCommand repair => Add(hash, repair.Target.Value),
+            ProduceEntityCommand produce => Add(hash, produce.OutputSpecId),
+            StartConstructionEntityCommand build => Add(Add(Add(hash, build.BuildingSpecId), build.Position), build.ReadyTicket.Value),
+            SetStanceEntityCommand stance => Add(hash, (int)stance.Stance),
+            AbilityEntityCommand ability => AddQueuedAbility(hash, ability),
+            _ => hash,
+        };
+    }
+
+    private static ulong AddQueuedAbility(ulong hash, AbilityEntityCommand ability)
+    {
+        hash = Add(hash, (int)ability.Ability);
+        hash = Add(hash, ability.Target.Value);
+        hash = AddNullableVector(hash, ability.TargetPoint);
         return hash;
     }
 
