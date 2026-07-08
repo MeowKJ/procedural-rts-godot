@@ -64,6 +64,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(cursorCatalog, "Kenney Cursor Pack CC0", "Cursor catalog texture entries must keep Kenney CC0 provenance near the data.");
     RequireText(hudLayer, "Input.SetCustomMouseCursor", "HudLayer should use custom cursor textures when catalog texture paths are present.");
     RequireText(hudLayer, "Input.SetDefaultCursorShape(shape)", "HudLayer cursor textures must preserve built-in cursor shape fallback.");
+    RequireText(hudLayer, "image.Load(absolutePath) == Error.Ok", "HudLayer cursor textures must load source PNGs before ResourceLoader to avoid CI import-loader noise.");
+    RequireText(hudLayer, "else if (ResourceLoader.Exists(texturePath))", "HudLayer cursor ResourceLoader fallback must be guarded to avoid missing-loader log spam.");
     RequireText(hudLayer, "ApplyCommandCursor(preview);", "HudLayer command preview updates must route cursor state through the cursor catalog.");
     RequireText(hudLayer, "BattleCursorCatalog.StateForPreview(preview)", "HudLayer must derive in-game cursor state from command preview state.");
     RequireText(uiFactory, "BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover)", "HUD/UI buttons must use the shared cursor catalog for hover cursors.");
