@@ -69,15 +69,30 @@ public partial class SelectionController
     {
         if (_hoveredUnitInstance is { } unit && UnitBattlefield!.CanRepairSelected(LocalPlayerSlotId, unit))
         {
-            return new CommandPreviewState(CommandPreviewKind.Repair, GameText.T("ui.context.repair"), screenPosition, unit.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.Repair, RepairUnitPreviewLabel(), screenPosition, unit.Position, true);
         }
 
         if (_hoveredBuildingProjection is { } building && UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, building.Id))
         {
-            return new CommandPreviewState(CommandPreviewKind.Repair, GameText.T("ui.context.repair"), screenPosition, building.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, building.Position, true);
         }
 
-        return new CommandPreviewState(CommandPreviewKind.Repair, GameText.T("ui.context.repair"), screenPosition, worldPosition, false);
+        return new CommandPreviewState(CommandPreviewKind.Repair, RepairInvalidPreviewLabel(), screenPosition, worldPosition, false);
+    }
+
+    private static string RepairUnitPreviewLabel()
+    {
+        return GameText.T("preview.repair.unit");
+    }
+
+    private static string RepairStructurePreviewLabel()
+    {
+        return GameText.T("preview.repair.structure");
+    }
+
+    private static string RepairInvalidPreviewLabel()
+    {
+        return GameText.T("preview.repair.invalid");
     }
 
     private void FinishArmedRepairCommand(Vector2 screenPoint)

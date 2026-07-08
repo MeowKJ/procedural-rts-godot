@@ -38,7 +38,7 @@ public partial class SelectionController
 
             if (UnitBattlefield.CanRepairSelected(LocalPlayerSlotId, hoveredUnitInstance))
             {
-                return new CommandPreviewState(CommandPreviewKind.Repair, GameText.T("ui.context.repair"), screenPosition, hoveredUnitInstance.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Repair, RepairUnitPreviewLabel(), screenPosition, hoveredUnitInstance.Position, true);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, relation == PlayerRelation.Hostile ? GameText.T("preview.enemy") : GameText.T("preview.unit"), screenPosition, hoveredUnitInstance.Position, true);
@@ -65,7 +65,7 @@ public partial class SelectionController
 
             if (UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, buildingProjection.Id))
             {
-                return new CommandPreviewState(CommandPreviewKind.Repair, GameText.T("ui.context.repair"), screenPosition, buildingProjection.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, buildingProjection.Position, true);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, buildingProjection.Position, true);
