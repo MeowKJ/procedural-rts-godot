@@ -113,6 +113,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must count provider lanes for the selected train category.");
     RequireText(hudLayer, "CatalogModeButton", "Right command panel mode controls must be clickable buttons, not decorative labels.");
     RequireText(hudLayer, "button.Pressed += () => SelectCatalogMode(mode);", "Build/Train mode buttons must switch catalog pages.");
+    RequireText(hudLayer, "private void CycleCatalogMode(int direction)", "Right catalog pages must expose keyboard cycling through the same mode selection path.");
+    RequireText(hudLayer, "key.Keycode == Key.Pageup", "Right catalog keyboard cycling must support PageUp.");
+    RequireText(hudLayer, "key.Keycode == Key.Pagedown", "Right catalog keyboard cycling must support PageDown.");
+    RequireText(hudLayer, "CycleCatalogMode(-1)", "PageUp must cycle the right catalog to the previous page.");
+    RequireText(hudLayer, "CycleCatalogMode(1)", "PageDown must cycle the right catalog to the next page.");
     RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.");
     RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.");
     RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.");
@@ -304,7 +309,7 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(settingsOverlay, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.");
     RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.");
     RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.");
-    RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"Build / Train / UPG / ABIL pages\"", "English hotkey legend must expose right catalog page switching.");
+    RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown cycle pages\"", "English hotkey legend must expose right catalog page cycling.");
     RequireText(englishText, "[\"hotkeys.catalog.3\"] = \"Click cards / provider lanes\"", "English hotkey legend must expose right catalog card and provider interactions.");
     RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.");
     RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
@@ -379,7 +384,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.ability.state.active\"] = \"开启\"", "Chinese ability cards must expose compact active state.");
     RequireText(chineseText, "[\"hotkeys.catalog\"] = \"目录\"", "Chinese hotkey legend must label the right catalog section.");
     RequireText(chineseText, "[\"hotkeys.catalog.1\"] = \"Tab 右侧目录抽屉\"", "Chinese hotkey legend must expose the right catalog drawer toggle.");
-    RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"建造/训练/升级/能力页\"", "Chinese hotkey legend must expose right catalog page switching.");
+    RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown 切换页面\"", "Chinese hotkey legend must expose right catalog page cycling.");
     RequireText(chineseText, "[\"hotkeys.catalog.3\"] = \"点击卡片/来源通道\"", "Chinese hotkey legend must expose right catalog card and provider interactions.");
     RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.");
     RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");

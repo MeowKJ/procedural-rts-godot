@@ -98,10 +98,29 @@ public partial class HudLayer : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Tab })
+        if (@event is not InputEventKey { Pressed: true, Echo: false } key)
+        {
+            return;
+        }
+
+        if (key.Keycode == Key.Tab)
         {
             _manualDrawerOpen = !_manualDrawerOpen;
             _drawerInactivity = _manualDrawerOpen ? 0 : 3;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (key.Keycode == Key.Pageup)
+        {
+            CycleCatalogMode(-1);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (key.Keycode == Key.Pagedown)
+        {
+            CycleCatalogMode(1);
             GetViewport().SetInputAsHandled();
         }
     }
