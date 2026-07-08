@@ -225,7 +225,7 @@ public partial class HudLayer : CanvasLayer
             SetCatalogStatusText(button.InspectorText);
             if (!string.IsNullOrWhiteSpace(button.BuildKind))
             {
-                BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId());
+                BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind));
                 return;
             }
 
