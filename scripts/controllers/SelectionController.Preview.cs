@@ -10,7 +10,7 @@ public partial class SelectionController
     {
         if (_dragStartScreen is not null)
         {
-            return new CommandPreviewState(CommandPreviewKind.Select, GameText.T("preview.select"), screenPosition, worldPosition, true);
+            return DragPreviewState(screenPosition, worldPosition);
         }
 
         if (_rallyCommandArmed)
@@ -124,6 +124,31 @@ public partial class SelectionController
             screenPosition,
             worldPosition,
             true);
+    }
+
+    private CommandPreviewState DragPreviewState(Vector2 screenPosition, Vector2 worldPosition)
+    {
+        var kind = IsActiveSelectionDrag(screenPosition)
+            ? CommandPreviewKind.DragSelect
+            : CommandPreviewKind.Select;
+        return new CommandPreviewState(kind, GameText.T("preview.select"), screenPosition, worldPosition, true);
+    }
+
+    private bool IsActiveSelectionDrag(Vector2 screenPosition)
+    {
+        if (_dragStartScreen is null)
+        {
+            return false;
+        }
+
+        var distance = _dragStartScreen.Value.DistanceTo(screenPosition);
+        if (_dragButton == MouseButton.Right)
+        {
+            var elapsed = Time.GetTicksMsec() / 1000.0 - _dragStartSeconds;
+            return SelectionGestureMath.IsRightSelectionDrag(distance, elapsed);
+        }
+
+        return SelectionGestureMath.IsLeftSelectionDrag(distance);
     }
 
     private MoveCommandMode PreviewMoveModeFromModifiers()

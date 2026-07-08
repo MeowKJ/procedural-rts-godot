@@ -3,6 +3,7 @@ namespace ProceduralRts.Core;
 public enum BattleCursorState
 {
     DefaultSelect,
+    DragSelect,
     UiHover,
     MoveCommand,
     AttackCommand,
@@ -50,6 +51,7 @@ public static class BattleCursorCatalog
     public static readonly BattleCursorDefinition[] Definitions =
     [
         new(BattleCursorState.DefaultSelect, BattleCursorShape.Arrow, 0, 0, 32, 32, "res://assets/cursors/kenney/default_select.png", KenneyCursorPackSource),
+        new(BattleCursorState.DragSelect, BattleCursorShape.Drag, 16, 16, 32, 32, "res://assets/cursors/kenney/move_command.png", KenneyCursorPackSource),
         new(BattleCursorState.UiHover, BattleCursorShape.PointingHand, 8, 2, 32, 32, "res://assets/cursors/kenney/ui_hover.png", KenneyCursorPackSource),
         new(BattleCursorState.MoveCommand, BattleCursorShape.Move, 16, 16, 32, 32, "res://assets/cursors/kenney/move_command.png", KenneyCursorPackSource),
         new(BattleCursorState.AttackCommand, BattleCursorShape.Cross, 16, 16, 32, 32, "res://assets/cursors/kenney/attack_command.png", KenneyCursorPackSource),
@@ -88,6 +90,7 @@ public static class BattleCursorCatalog
         return preview.Kind switch
         {
             CommandPreviewKind.Move => BattleCursorState.MoveCommand,
+            CommandPreviewKind.DragSelect => BattleCursorState.DragSelect,
             CommandPreviewKind.Attack => BattleCursorState.AttackCommand,
             CommandPreviewKind.Repair => BattleCursorState.RepairCommand,
             CommandPreviewKind.Rally => BattleCursorState.RallyPoint,
@@ -149,6 +152,13 @@ public static class BattleCursorCatalog
         if (valid.HotspotX != invalid.HotspotX || valid.HotspotY != invalid.HotspotY)
         {
             issues.Add("BuildValid and BuildInvalid must share a hotspot so placement feedback does not jump");
+        }
+
+        var select = DefinitionFor(BattleCursorState.DefaultSelect);
+        var dragSelect = DefinitionFor(BattleCursorState.DragSelect);
+        if (select.Shape == dragSelect.Shape && select.TexturePath == dragSelect.TexturePath)
+        {
+            issues.Add("DragSelect must not reuse the default select cursor shape and texture together");
         }
 
         return issues;

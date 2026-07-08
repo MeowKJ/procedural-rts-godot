@@ -7,6 +7,7 @@ var requiredTextureStates = Enum.GetValues<BattleCursorState>();
 
 Require(BattleCursorCatalog.StateForPreview(CommandPreviewState.None) == BattleCursorState.DefaultSelect, "None preview should use DefaultSelect.", failures);
 Require(StateFor(CommandPreviewKind.Select, true) == BattleCursorState.DefaultSelect, "Select preview should use DefaultSelect.", failures);
+Require(StateFor(CommandPreviewKind.DragSelect, true) == BattleCursorState.DragSelect, "Drag-select preview should use DragSelect.", failures);
 Require(StateFor(CommandPreviewKind.TargetHover, true) == BattleCursorState.UiHover, "Target hover preview should use UiHover.", failures);
 Require(StateFor(CommandPreviewKind.Move, true) == BattleCursorState.MoveCommand, "Move preview should use MoveCommand.", failures);
 Require(StateFor(CommandPreviewKind.Attack, true) == BattleCursorState.AttackCommand, "Attack preview should use AttackCommand.", failures);
@@ -30,6 +31,11 @@ foreach (var state in requiredTextureStates)
 }
 
 Require(File.Exists(Path.Combine(root, "assets", "cursors", "kenney", "LICENSE.kenney-cursor-pack.txt")), "Kenney cursor license/source file should be present.", failures);
+
+var select = BattleCursorCatalog.DefinitionFor(BattleCursorState.DefaultSelect);
+var dragSelect = BattleCursorCatalog.DefinitionFor(BattleCursorState.DragSelect);
+Require(dragSelect.Shape == BattleCursorShape.Drag, "DragSelect should keep Godot drag-shape fallback.", failures);
+Require(dragSelect.TexturePath != select.TexturePath, "DragSelect should not reuse the default select texture.", failures);
 
 if (failures.Count > 0)
 {
