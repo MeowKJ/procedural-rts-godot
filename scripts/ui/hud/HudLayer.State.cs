@@ -469,6 +469,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode == CatalogModeKind.Build)
         {
+            ClearUpgradeProjectCards();
             ClearAbilityCards();
             RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
@@ -478,6 +479,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode == CatalogModeKind.Train)
         {
+            ClearUpgradeProjectCards();
             ClearAbilityCards();
             RefreshProductionProviderLaneSummary();
             RefreshProductionProviderLaneButtons();
@@ -491,10 +493,11 @@ public partial class HudLayer : CanvasLayer
         {
             ClearAbilityCards();
             RefreshRepeatProductionControl();
-            SetCatalogStatusText(GameText.T("ui.catalog.upgradesEmpty"));
+            RefreshUpgradeProjectCards();
             return;
         }
 
+        ClearUpgradeProjectCards();
         RefreshAbilityCards();
     }
 
@@ -507,7 +510,7 @@ public partial class HudLayer : CanvasLayer
     {
         SetCatalogStatusText(_selectedCatalogMode switch
         {
-            CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgradesEmpty"),
+            CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),
             CatalogModeKind.Abilities => _abilityCardStates.Count == 0
                 ? GameText.T("ui.catalog.abilitiesEmpty")
                 : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
