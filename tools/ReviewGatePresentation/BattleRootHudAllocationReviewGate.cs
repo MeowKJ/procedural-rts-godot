@@ -69,10 +69,15 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
+        RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
+        RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button focus must explain the page in the inspector.", result);
+        RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button press must explain the selected page in the inspector.", result);
         RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades catalog mode must own a distinct surface label.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.overview.upgrades\")", "Upgrades catalog mode must expose a no-provider-lanes overview.", result);
         RequireText(hudLayer, "SetCatalogStatusText(GameText.T(\"ui.catalog.upgradesEmpty\"))", "Upgrades catalog shell must show localized empty text instead of production status.", result);
+        RequireText(hudLayer, "_selectedCatalogMode == CatalogModeKind.Upgrades", "Catalog inspector restore must keep Upgrades on its shell empty state.", result);
         RequireText(hudLayer, "CatalogOverviewConstructionLaneCount()", "Build catalog overview must summarize construction provider lane count.", result);
         RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must summarize visible provider lane count.", result);
         RequireText(hudLayer, "_selectedCatalogMode == CatalogModeKind.Build", "HudLayer command-card refresh must branch build cards from train cards by catalog mode.", result);
@@ -318,6 +323,14 @@ static class BattleRootHudAllocationReviewGate
 
         var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
+        RequireText(englishText, "[\"ui.catalog.buildHelp\"]", "English catalog mode Build help text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.trainHelp\"]", "English catalog mode Train help text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.upgradesHelp\"]", "English catalog mode Upgrades help text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.trainHelp\"]", "Chinese catalog mode Train help text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"]", "Chinese catalog mode Upgrades help text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
         RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);
         RequireText(englishText, "[\"production.batchQueued\"]", "English Shift production batch status text must exist.", result);
