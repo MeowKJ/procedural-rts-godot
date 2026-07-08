@@ -58,6 +58,7 @@ static void AssertHudFactoryExtraction(string root)
     var controlBindingCatalog = File.ReadAllText(Path.Combine(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs"));
     var hotkeys = File.ReadAllText(Path.Combine(root, "scripts", "ui", "HotkeyLegendLayer.cs"));
     var settingsOverlay = File.ReadAllText(Path.Combine(root, "scripts", "ui", "SettingsOverlayLayer.cs"));
+    var signalNetworkLayer = File.ReadAllText(Path.Combine(root, "scripts", "world", "SignalNetworkLayer.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
     var chineseText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"));
 
@@ -243,6 +244,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(selectionController, "GameText.T(\"preview.rally.point\")", "Armed rally preview must distinguish point targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must distinguish resource targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must distinguish friendly-unit targets.");
+    RequireText(signalNetworkLayer, "private enum SignalOutputMode", "SignalNetworkLayer must render explicit signal output modes.");
+    RequireText(signalNetworkLayer, "SignalOutputMode.Offline", "SignalNetworkLayer must distinguish offline signal nodes.");
+    RequireText(signalNetworkLayer, "SignalOutputMode.DayControl", "SignalNetworkLayer must distinguish day-control signal output.");
+    RequireText(signalNetworkLayer, "SignalOutputMode.NightVision", "SignalNetworkLayer must distinguish night-vision signal output.");
+    RequireText(signalNetworkLayer, "State.ResourceAtmosphere", "SignalNetworkLayer output-mode presentation must follow GameState.ResourceAtmosphere.");
+    RequireText(signalNetworkLayer, "DrawOfflineNodeMarker", "SignalNetworkLayer must visibly mark offline nodes.");
+    RequireText(signalNetworkLayer, "DrawDayControlIndicator", "SignalNetworkLayer must visibly mark day-control mode.");
+    RequireText(signalNetworkLayer, "DrawNightVisionIndicator", "SignalNetworkLayer must visibly mark night-vision mode.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
     RequireText(hudLayer, "_sellOrCancelAction = ribbonCancel;", "Command ribbon sell action must keep a stable control reference for context affordance.");
     RequireText(hudLayer, "RefreshSellOrCancelAction()", "Command ribbon sell action must refresh context from selection and queue state.");
