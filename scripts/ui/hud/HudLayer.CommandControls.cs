@@ -69,6 +69,15 @@ public partial class HudLayer : CanvasLayer
                     DrawLine(position + new Vector2(0, -12), position + new Vector2(12, 12), color, 2.4f, true);
                     DrawLine(position + new Vector2(-7, 2), position + new Vector2(7, 2), color, 2.4f, true);
                     break;
+                case CommandPreviewKind.DragSelect:
+                    var dragRect = new Rect2(position - new Vector2(12, 9), new Vector2(24, 18));
+                    DrawRect(dragRect, new Color(color, 0.12f), true);
+                    DrawRect(dragRect, color, false, 2);
+                    DrawLine(dragRect.Position, dragRect.Position + new Vector2(8, 0), color, 2.6f, true);
+                    DrawLine(dragRect.Position, dragRect.Position + new Vector2(0, 8), color, 2.6f, true);
+                    DrawLine(dragRect.End, dragRect.End - new Vector2(8, 0), color, 2.6f, true);
+                    DrawLine(dragRect.End, dragRect.End - new Vector2(0, 8), color, 2.6f, true);
+                    break;
                 case CommandPreviewKind.BuildValid:
                 case CommandPreviewKind.BuildInvalid:
                     DrawRect(new Rect2(position - new Vector2(11, 9), new Vector2(22, 18)), new Color(color, 0.16f), true);

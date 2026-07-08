@@ -4,6 +4,7 @@ public enum CommandPreviewKind
 {
     None,
     Select,
+    DragSelect,
     TargetHover,
     Move,
     Attack,
