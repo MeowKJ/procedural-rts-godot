@@ -477,12 +477,14 @@ public partial class BattleRoot
             ? GameText.T("ui.queue.empty").ToUpperInvariant()
             : ProductionDetail(building.ProductionQueue);
         var rally = building.HasRallyPoint ? GameText.T("ui.rally.set") : GameText.T("ui.rally.none");
+        var spec = BuildSpecCatalog.For(building.Kind);
+        var sellRefund = BuildingSellRefundPreview(spec);
 
         _hud.SetSelectionInfo(
             building.Label.ToUpperInvariant(),
             $"{PlayerSlotLabel(building.PlayerSlotId)} / {UnitFactionLabel(building.Faction)}",
             GameText.Format("ui.stat.building", health, building.SightRange),
-            GameText.Format("ui.detail.building", queue, rally),
+            GameText.Format("ui.detail.building", queue, rally, sellRefund),
             "building",
             building.Icon,
             [],
