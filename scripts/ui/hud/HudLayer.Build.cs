@@ -9,21 +9,27 @@ public partial class HudLayer : CanvasLayer
     {
         var top = MakePanel("ResourceStrip", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorderStrong);
         top.SetAnchorsPreset(Control.LayoutPreset.CenterTop);
-        top.OffsetLeft = -224;
+        top.OffsetLeft = -ResourceStripWidth / 2f;
         top.OffsetTop = 10;
-        top.OffsetRight = 224;
+        top.OffsetRight = ResourceStripWidth / 2f;
         top.OffsetBottom = 56;
         top.MouseFilter = Control.MouseFilterEnum.Ignore;
         root.AddChild(top);
 
-        var credits = MakeBlock(GameText.T("ui.top.credits"), "0", new Vector2(10, 5), new Vector2(150, 36));
+        var credits = MakeBlock(GameText.T("ui.top.credits"), "0", new Vector2(10, 5), new Vector2(104, 36));
         _creditsValue = credits.GetNode<Label>("Value");
         top.AddChild(credits);
 
-        var power = MakeBlock(GameText.T("ui.top.power"), GameText.T("ui.top.powerStable"), new Vector2(170, 5), new Vector2(116, 36));
+        var power = MakeBlock(GameText.T("ui.top.power"), GameText.T("ui.top.powerStable"), new Vector2(122, 5), new Vector2(96, 36));
         top.AddChild(power);
 
-        var status = MakeBlock(GameText.T("ui.top.status"), GameText.T("ui.status.systemsOnline"), new Vector2(296, 5), new Vector2(140, 36));
+        var army = MakeBlock(GameText.T("ui.top.army"), GameText.Format("ui.top.armyReadiness", 0, 0, GameText.T("ui.top.armyNoSelection")), new Vector2(226, 5), new Vector2(142, 36));
+        army.Name = "ArmyReadiness";
+        _armyReadinessValue = army.GetNode<Label>("Value");
+        _armyReadinessValue.Name = "ArmyReadinessValue";
+        top.AddChild(army);
+
+        var status = MakeBlock(GameText.T("ui.top.status"), GameText.T("ui.status.systemsOnline"), new Vector2(376, 5), new Vector2(150, 36));
         _statusValue = status.GetNode<Label>("Value");
         top.AddChild(status);
     }

@@ -47,6 +47,14 @@ static class BattleRootHudAllocationReviewGate
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
         var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");
+        var topEnglishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
+        var topChineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
+        RequireText(hudBuild, "Name = \"ArmyReadiness\"", "Top HUD army readiness strip must expose a stable node.", result);
+        RequireText(hudLayer, "SetArmyReadiness(int selectedArmyUnits, int totalArmyUnits, string readiness)", "HudLayer must expose compact top army readiness state.", result);
+        RequireText(hudSync, "RefreshTopArmyReadiness(selectedUnitInstances.Count, selectedBuildingProjections.Count)", "BattleRoot runtime selection sync must feed top army readiness.", result);
+        RequireText(hudSync, "LivePlayerUnitBattlefieldUnitCount()", "Top army readiness must count player live runtime units explicitly.", result);
+        RequireText(topEnglishText, "[\"ui.top.armyReadiness\"] = \"{0}/{1} {2}\"", "English top army readiness copy must exist.", result);
+        RequireText(topChineseText, "[\"ui.top.armyReadiness\"] = \"{0}/{1} {2}\"", "Chinese top army readiness copy must exist.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.command\")", "Production drawer tabs must expose the command build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.power\")", "Production drawer tabs must expose the power build category.", result);
         RequireText(hudBuild, "GameText.T(\"ui.tabs.economy\")", "Production drawer tabs must expose the economy build category.", result);

@@ -24,7 +24,6 @@ public partial class HudLayer : CanvasLayer
     private static Color Danger => CurrentPalette.Danger;
     private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
 
-    private Label _creditsValue = null!;
     private Label _drawerSelectedTitle = null!;
     private Label _drawerSelectedMeta = null!;
     private Label _drawerSelectedStats = null!;
@@ -33,7 +32,6 @@ public partial class HudLayer : CanvasLayer
     private SelectionIconSummary _drawerIconSummary = null!;
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
-    private Label _statusValue = null!;
     private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;

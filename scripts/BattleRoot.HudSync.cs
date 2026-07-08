@@ -243,6 +243,10 @@ public partial class BattleRoot
     {
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
         var selectedUnitInstances = _selectedUnitInstanceBuffer;
+        var selectedBuildingProjections = UseUnitDesignRuntime
+            ? _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One)
+            : [];
+        RefreshTopArmyReadiness(selectedUnitInstances.Count, selectedBuildingProjections.Count);
         if (selectedUnitInstances.Count > 0)
         {
             _hud.SetHudContext(true, false, _buildPlacement.IsActive);
@@ -261,7 +265,6 @@ public partial class BattleRoot
 
         if (UseUnitDesignRuntime)
         {
-            var selectedBuildingProjections = _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
             if (selectedBuildingProjections.Count > 0)
             {
                 _hud.SetHudContext(true, true, _buildPlacement.IsActive);
@@ -295,6 +298,7 @@ public partial class BattleRoot
 
         _hud.SetHudContext(true, selectedBuildings.Count > 0, _buildPlacement.IsActive);
         _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnits));
+        RefreshTopArmyReadiness(selectedUnits.Count, selectedBuildings.Count);
 
         if (total > 1)
         {
@@ -346,6 +350,62 @@ public partial class BattleRoot
         }
 
         SetBuildingSelectionInfo(selectedBuildings[0]);
+    }
+
+    private void RefreshTopArmyReadiness(int selectedArmyUnits, int selectedBuildings)
+    {
+        var liveArmyUnits = UseUnitDesignRuntime
+            ? LivePlayerUnitBattlefieldUnitCount()
+            : LivePlayerLegacyUnitCount();
+        var readiness = TopArmyReadinessText(selectedArmyUnits, selectedBuildings, liveArmyUnits);
+        _hud.SetArmyReadiness(selectedArmyUnits, liveArmyUnits, readiness);
+    }
+
+    private string TopArmyReadinessText(int selectedArmyUnits, int selectedBuildings, int liveArmyUnits)
+    {
+        if (liveArmyUnits <= 0)
+        {
+            return GameText.T("ui.top.armyNone");
+        }
+
+        if (selectedArmyUnits <= 0)
+        {
+            return selectedBuildings > 0
+                ? GameText.T("ui.top.armyStructure")
+                : GameText.T("ui.top.armyNoSelection");
+        }
+
+        return selectedArmyUnits >= liveArmyUnits
+            ? GameText.T("ui.top.armyAll")
+            : GameText.T("ui.top.armyReady");
+    }
+
+    private int LivePlayerUnitBattlefieldUnitCount()
+    {
+        var count = 0;
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == PlayerSlotId.One && unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int LivePlayerLegacyUnitCount()
+    {
+        var count = 0;
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Hp > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private void CollectSelectedLegacyUnits(List<UnitModel> result)

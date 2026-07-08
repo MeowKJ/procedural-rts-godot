@@ -32,6 +32,8 @@ public static class HudLayoutMath
     public const float RailWidth = 48;
     public const float DrawerWidth = 300;
     public const float RightColumnWidth = 312;
+    public const float ResourceStripWidth = 536;
+    public const float ResourceStripHeight = 46;
     public const float ProductionPanelTop = 190;
     public const float ProductionPanelHeight = 358;
     public const float MinimumBattlefieldWidth = 920;
@@ -43,7 +45,7 @@ public static class HudLayoutMath
         var scale = MathF.Max(1, uiScale);
         var railWidth = RailWidth * scale;
         var rightColumnWidth = RightColumnWidth * scale;
-        var resource = new HudRect("resource-strip", viewportWidth / 2f - 224 * scale, 10 * scale, 448 * scale, 46 * scale);
+        var resource = new HudRect("resource-strip", viewportWidth / 2f - ResourceStripWidth / 2f * scale, 10 * scale, ResourceStripWidth * scale, ResourceStripHeight * scale);
         var minimap = new HudRect("minimap-radar", viewportWidth - rightColumnWidth, 12 * scale, 300 * scale, 166 * scale);
         var globalSkills = new HudRect("global-skills", 12 * scale, 182 * scale, 64 * scale, viewportHeight - 360 * scale);
         var rail = new HudRect("right-rail", viewportWidth - railWidth, ProductionPanelTop * scale, railWidth, viewportHeight - 202 * scale);

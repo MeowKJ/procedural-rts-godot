@@ -14,6 +14,12 @@ foreach (var testCase in cases)
 {
     var snapshot = HudLayoutMath.Create(testCase.Width, testCase.Height, testCase.UiScale);
     var issues = HudLayoutMath.Validate(snapshot);
+    var resourceStrip = snapshot.Rects.Single(rect => rect.Name == "resource-strip");
+    if (Math.Abs(resourceStrip.Width - HudLayoutMath.ResourceStripWidth * snapshot.UiScale) > 0.1f)
+    {
+        failures.Add($"{testCase.Name} resource strip width drifted from army-readiness allocation.");
+    }
+
     if (issues.Count > 0)
     {
         failures.Add($"{testCase.Name} {testCase.Width}x{testCase.Height} scale {testCase.UiScale:0.##}: {string.Join("; ", issues)}");
@@ -98,6 +104,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
+    RequireText(hudLayer, "Name = \"ArmyReadiness\"", "Top HUD must expose a stable army readiness node.");
+    RequireText(hudLayer, "Name = \"ArmyReadinessValue\"", "Top HUD must expose a stable army readiness value node.");
+    RequireText(hudLayer, "SetArmyReadiness(int selectedArmyUnits, int totalArmyUnits, string readiness)", "Top HUD must expose compact selected-army readiness state.");
+    RequireText(hudSync, "RefreshTopArmyReadiness(selectedUnitInstances.Count, selectedBuildingProjections.Count)", "Runtime selection sync must feed top army readiness without command changes.");
+    RequireText(englishText, "[\"ui.top.armyReadiness\"] = \"{0}/{1} {2}\"", "English top army readiness copy must exist.");
+    RequireText(chineseText, "[\"ui.top.armyReadiness\"] = \"{0}/{1} {2}\"", "Chinese top army readiness copy must exist.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");

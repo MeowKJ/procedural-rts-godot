@@ -21,6 +21,7 @@ public partial class HudLayer : CanvasLayer
         SetLabelColor(_drawerSelectedMeta, Mint);
         SetLabelColor(_drawerSelectedStats, Ink);
         SetLabelColor(_drawerSelectedDetail, InkMuted);
+        SetLabelColor(_armyReadinessValue, InkMuted);
         SetLabelColor(_statusValue, Ink);
         SetLabelColor(_providerLaneSummaryValue, InkMuted);
         SetLabelColor(_productionValue, Ink);
