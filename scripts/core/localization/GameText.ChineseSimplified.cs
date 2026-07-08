@@ -492,5 +492,6 @@ public static partial class GameText
         ["alert.prefix.building"] = "建筑",
         ["alert.prefix.power"] = "电力",
         ["alert.prefix.system"] = "系统",
+        ["alert.jumpHint"] = "空格",
     };
 }

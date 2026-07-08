@@ -535,5 +535,6 @@ public static partial class GameText
         ["alert.prefix.building"] = "BLD",
         ["alert.prefix.power"] = "PWR",
         ["alert.prefix.system"] = "SYS",
+        ["alert.jumpHint"] = "SPACE",
     };
 }

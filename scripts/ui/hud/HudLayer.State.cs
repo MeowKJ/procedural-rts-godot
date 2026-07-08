@@ -592,7 +592,7 @@ public partial class HudLayer : CanvasLayer
 
     public readonly record struct MinimapAlertPing(Vector2 Position, AlertKind Kind, float RemainingRatio);
 
-    public readonly record struct AlertLine(AlertKind Kind, FactionId? FactionId, string Text, float RemainingRatio);
+    public readonly record struct AlertLine(AlertKind Kind, FactionId? FactionId, string Text, float RemainingRatio, bool CanJumpToWorld);
 
     public readonly record struct AbilityCardState(AbilitySpec Ability, float CooldownRemaining, bool IsActive);
 

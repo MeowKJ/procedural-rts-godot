@@ -71,6 +71,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "ApplyCommandCursor(preview);", "HudLayer command preview updates must route cursor state through the cursor catalog.");
     RequireText(hudLayer, "BattleCursorCatalog.StateForPreview(preview)", "HudLayer must derive in-game cursor state from command preview state.");
     RequireText(uiFactory, "BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover)", "HUD/UI buttons must use the shared cursor catalog for hover cursors.");
+    RequireText(hudLayer, "AlertLine(AlertKind Kind, FactionId? FactionId, string Text, float RemainingRatio, bool CanJumpToWorld)", "Alert rows must carry whether Space can jump to the alert.");
+    RequireText(hudLayer, "alert.CanJumpToWorld", "Alert rows must render jump affordance only for positioned alerts.");
+    RequireText(englishText, "[\"alert.jumpHint\"] = \"SPACE\"", "English alert jump hint text must exist.");
+    RequireText(chineseText, "[\"alert.jumpHint\"] = \"空格\"", "Chinese alert jump hint text must exist.");
     RequireText(battleRoot, "IsInsufficientCreditsStatus(status)", "BattleRoot status alerts must detect insufficient-credit failures through a focused helper.");
     RequireText(battleRoot, "TryUseAlertCooldown(\"status:insufficient-credits\", InsufficientCreditsAlertCooldown)", "Insufficient-credit HUD alerts must use one shared cooldown key instead of per-status spam.");
     RequireText(battleRoot, "AddAlert(AlertKind.Economy, GameText.T(\"ui.alert.insufficientCredits\"))", "Insufficient-credit failures must surface a localized economy alert.");

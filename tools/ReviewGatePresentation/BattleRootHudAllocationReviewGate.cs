@@ -19,6 +19,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<HudLayer.MinimapAlertPing> _minimapAlertPingBuffer", "BattleRoot minimap alert pings must use reusable storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapAlertPing> _minimapAlertPingSecondaryBuffer", "BattleRoot minimap alert pings must be double-buffered for redraw safety.", result);
         RequireText(battleRoot, "List<HudLayer.AlertLine> _alertLineBuffer", "BattleRoot alert HUD sync must reuse alert line storage.", result);
+        RequireText(battleRoot, "alert.WorldPosition is not null", "Alert HUD sync must mark only positioned alerts as Space-jumpable.", result);
         RequireText(battleRoot, "List<UnitInstance> _selectedUnitInstanceBuffer", "BattleRoot runtime selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
         RequireText(battleRoot, "List<BuildingModel> _selectedLegacyBuildingBuffer", "BattleRoot legacy selection HUD sync must reuse selected building storage.", result);
@@ -315,6 +316,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(minimap, "foreach (var building in projections)", "BattleRoot runtime minimap buildings must copy projections explicitly.", result);
         RequireText(minimap, "foreach (var resource in pips)", "BattleRoot minimap resources must copy pips explicitly.", result);
         RequireText(hudState, "public readonly record struct MinimapAlertPing", "HudLayer must expose a compact minimap alert ping presentation record.", result);
+        RequireText(hudState, "bool CanJumpToWorld", "HudLayer alert rows must carry a jump affordance bit.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.NestedControls.cs"), "alert.CanJumpToWorld", "Alert rows must render the Space jump hint only for positioned alerts.", result);
         RequireText(alerts, "_alertLineBuffer.Clear();", "RefreshAlerts must clear and reuse the alert line buffer.", result);
         RequireText(alerts, "_alertLineBuffer.Count < 4", "RefreshAlerts must cap HUD alert lines without LINQ Take.", result);
         RequireText(alerts, "_hud.SetAlerts(_alertLineBuffer)", "RefreshAlerts must pass reusable alert lines to HudLayer.", result);

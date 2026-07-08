@@ -29,7 +29,8 @@ public partial class BattleRoot
                 alert.Kind,
                 alert.FactionId,
                 alert.Text,
-                1 - Mathf.Clamp(alert.Age / alert.Lifetime, 0, 1)));
+                1 - Mathf.Clamp(alert.Age / alert.Lifetime, 0, 1),
+                alert.WorldPosition is not null));
         }
 
         _hud.SetAlerts(_alertLineBuffer);

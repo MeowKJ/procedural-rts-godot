@@ -412,7 +412,12 @@ public partial class HudLayer : CanvasLayer
             DrawRect(new Rect2(0, 0, 4, rect.Size.Y), new Color(color, alpha), true);
             DrawRect(new Rect2(6, rect.Size.Y - 2, Mathf.Clamp(alert.RemainingRatio, 0, 1) * (rect.Size.X - 8), 2), new Color(color, 0.58f), true);
             DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(10, 12), AlertPrefix(alert.Kind), HorizontalAlignment.Left, 58, 10, new Color(color, alpha));
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(70, 12), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72, 10, new Color(Ink, alpha));
+            var hintWidth = alert.CanJumpToWorld ? 44 : 0;
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(70, 12), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72 - hintWidth, 10, new Color(Ink, alpha));
+            if (alert.CanJumpToWorld)
+            {
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(rect.Size.X - 44, 12), GameText.T("alert.jumpHint"), HorizontalAlignment.Right, 38, 10, new Color(color, alpha));
+            }
         }
 
         private static string AlertPrefix(AlertKind kind)
