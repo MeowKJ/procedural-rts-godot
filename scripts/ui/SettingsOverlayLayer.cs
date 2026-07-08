@@ -30,7 +30,9 @@ public partial class SettingsOverlayLayer : CanvasLayer
     private Label _controlsLabel = null!;
     private Label _controlsOverview = null!;
     private OptionButton _controlsSection = null!;
+    private Button _controlsDefaults = null!;
     private Label _controlsSectionRows = null!;
+    private Label _controlsDefaultsStatus = null!;
     private Label _volumeLabel = null!;
     private HSlider _volume = null!;
     private Label _volumeValue = null!;
@@ -235,7 +237,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
         {
             Name = "ControlsBindingSectionSelect",
             Position = new Vector2(204, 408),
-            CustomMinimumSize = new Vector2(274, 34),
+            CustomMinimumSize = new Vector2(162, 34),
             FocusMode = Control.FocusModeEnum.All,
             TooltipText = GameText.T("settings.controls.tooltip"),
         };
@@ -248,12 +250,28 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsSection.ItemSelected += OnControlsSectionSelected;
         _panel.AddChild(_controlsSection);
 
+        _controlsDefaults = UiFactory.MakeButton(GameText.T("settings.controls.defaults"), Mint);
+        _controlsDefaults.Name = "ControlsBindingDefaultsButton";
+        _controlsDefaults.Position = new Vector2(374, 408);
+        _controlsDefaults.CustomMinimumSize = new Vector2(104, 34);
+        _controlsDefaults.Disabled = true;
+        _controlsDefaults.FocusMode = Control.FocusModeEnum.None;
+        _controlsDefaults.TooltipText = GameText.T("settings.controls.defaults.tooltip");
+        _panel.AddChild(_controlsDefaults);
+
         _controlsSectionRows = UiFactory.MakeLabel(SettingsControlsSectionText(_selectedControlsSectionIndex), 10, Ink);
         _controlsSectionRows.Name = "ControlsBindingSectionRows";
         _controlsSectionRows.Position = new Vector2(204, 448);
-        _controlsSectionRows.CustomMinimumSize = new Vector2(274, 66);
+        _controlsSectionRows.CustomMinimumSize = new Vector2(274, 52);
         _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
         _panel.AddChild(_controlsSectionRows);
+
+        _controlsDefaultsStatus = UiFactory.MakeLabel(SettingsControlsDefaultsText(_selectedControlsSectionIndex), 9, InkMuted);
+        _controlsDefaultsStatus.Name = "ControlsBindingDefaultsStatus";
+        _controlsDefaultsStatus.Position = new Vector2(204, 502);
+        _controlsDefaultsStatus.CustomMinimumSize = new Vector2(274, 18);
+        _controlsDefaultsStatus.TooltipText = GameText.T("settings.controls.defaults.tooltip");
+        _panel.AddChild(_controlsDefaultsStatus);
 
         _volumeLabel = UiFactory.MakeLabel(GameText.T("settings.masterAudio"), 12, InkMuted);
         _volumeLabel.Position = new Vector2(32, 526);
@@ -362,6 +380,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
     {
         _selectedControlsSectionIndex = Mathf.Clamp((int)index, 0, ControlBindingCatalog.Sections.Count - 1);
         _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
+        _controlsDefaultsStatus.Text = SettingsControlsDefaultsText(_selectedControlsSectionIndex);
     }
 
     private void OnLanguageSelected(long index)
@@ -401,6 +420,8 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsLabel.Text = GameText.T("settings.controls");
         _controlsOverview.Text = SettingsControlsOverviewText();
         _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
+        _controlsDefaults.Text = GameText.T("settings.controls.defaults");
+        _controlsDefaults.TooltipText = GameText.T("settings.controls.defaults.tooltip");
         for (var index = 0; index < ControlBindingCatalog.Sections.Count; index++)
         {
             _controlsSection.SetItemText(index, GameText.T(ControlBindingCatalog.Sections[index].TitleKey));
@@ -410,6 +431,8 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsSection.Select(_selectedControlsSectionIndex);
         _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
         _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
+        _controlsDefaultsStatus.Text = SettingsControlsDefaultsText(_selectedControlsSectionIndex);
+        _controlsDefaultsStatus.TooltipText = GameText.T("settings.controls.defaults.tooltip");
         _volumeLabel.Text = GameText.T("settings.masterAudio");
         _volume.TooltipText = GameText.T("settings.masterAudio.tooltip");
         _close.Text = GameText.T("settings.close");
@@ -443,6 +466,17 @@ public partial class SettingsOverlayLayer : CanvasLayer
         }
 
         return string.Join('\n', rows);
+    }
+
+    private static string SettingsControlsDefaultsText(int sectionIndex)
+    {
+        if (sectionIndex < 0 || sectionIndex >= ControlBindingCatalog.Sections.Count)
+        {
+            sectionIndex = 0;
+        }
+
+        var sectionTitle = GameText.T(ControlBindingCatalog.Sections[sectionIndex].TitleKey);
+        return GameText.Format("settings.controls.defaultsStatus", sectionTitle);
     }
 
     private partial class SettingsBackdrop : Control

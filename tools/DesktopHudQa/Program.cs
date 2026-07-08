@@ -306,12 +306,19 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionSelect\"", "Settings overlay must expose a stable controls section selector node.");
+    RequireText(settingsOverlay, "Name = \"ControlsBindingDefaultsButton\"", "Settings overlay must expose a stable controls defaults affordance node.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.");
+    RequireText(settingsOverlay, "Name = \"ControlsBindingDefaultsStatus\"", "Settings overlay must expose stable controls defaults status text.");
     RequireText(settingsOverlay, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.");
     RequireText(settingsOverlay, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.");
+    RequireText(settingsOverlay, "SettingsControlsDefaultsText(_selectedControlsSectionIndex)", "Settings overlay controls defaults status must be scoped to the selected binding section.");
+    RequireText(settingsOverlay, "_controlsSectionRows.CustomMinimumSize = new Vector2(274, 52)", "Settings overlay controls section rows must leave vertical room for defaults status at 720p.");
+    RequireText(settingsOverlay, "_controlsDefaultsStatus.Position = new Vector2(204, 502)", "Settings overlay controls defaults status must stay above audio controls at 720p.");
     RequireText(settingsOverlay, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.");
     RequireText(settingsOverlay, "GameText.T(\"settings.controls.tooltip\")", "Settings overlay controls overview must explain its read-only remap staging state.");
+    RequireText(settingsOverlay, "_controlsDefaults.Disabled = true", "Settings overlay controls defaults affordance must remain non-mutating until remapping persistence exists.");
     RequireText(settingsOverlay, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.");
+    RequireText(settingsOverlay, "_controlsDefaultsStatus.Text = SettingsControlsDefaultsText(_selectedControlsSectionIndex)", "Settings overlay language refresh must update controls defaults status.");
     ForbidText(settingsOverlay, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.");
     RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.");
     RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.");
@@ -321,6 +328,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
     RequireText(englishText, "[\"settings.controls.tooltip\"]", "English settings controls tooltip must exist.");
     ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
+    RequireText(englishText, "[\"settings.controls.defaults\"] = \"DEFAULTS\"", "English settings controls defaults affordance text must exist.");
+    RequireText(englishText, "[\"settings.controls.defaultsStatus\"] = \"{0} defaults active; editing later\"", "English settings controls defaults status must explain the non-persistent staging state.");
     RequireText(englishText, "[\"ui.catalog.overview.build\"]", "English HUD catalog build overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.train\"]", "English HUD catalog train overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.abilities\"]", "English HUD catalog ability overview text must exist.");
@@ -399,6 +408,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");
     RequireText(chineseText, "[\"settings.controls.tooltip\"]", "Chinese settings controls tooltip must exist.");
     ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
+    RequireText(chineseText, "[\"settings.controls.defaults\"] = \"默认\"", "Chinese settings controls defaults affordance text must exist.");
+    RequireText(chineseText, "[\"settings.controls.defaultsStatus\"] = \"{0} 默认已生效；编辑稍后接入\"", "Chinese settings controls defaults status must explain the non-persistent staging state.");
     RequireText(chineseText, "[\"ui.catalog.overview.build\"]", "Chinese HUD catalog build overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"]", "Chinese HUD catalog train overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.abilities\"]", "Chinese HUD catalog ability overview text must exist.");
