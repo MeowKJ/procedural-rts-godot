@@ -48,6 +48,8 @@ public sealed partial class ProductionSystem
         return true;
     }
 
+    private const float ProducedUnitGuardRallyRadius = 180f;
+
     private static bool TryApplyEntityRally(EntityWorld world, EntityInstance unit, RallyPointComponentState rally)
     {
         if (rally.TargetEntityId is not int targetId
@@ -58,6 +60,8 @@ public sealed partial class ProductionSystem
             return false;
         }
 
+        var guardPoint = rally.Target ?? target.Transform.Position;
+        unit.Components.Set(new GuardOrderComponentState(target.Id, guardPoint, ProducedUnitGuardRallyRadius));
         ApplyPointRally(unit, target.Transform.Position);
         return true;
     }

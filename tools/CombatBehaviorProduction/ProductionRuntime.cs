@@ -240,6 +240,55 @@ static partial class Program
             throw new InvalidOperationException("UnitBattlefield production completion should adopt EntityWorld-spawned units and sync producer queues back to legacy runtime");
         }
 
+        var followRallyBattlefield = new UnitBattlefield();
+        followRallyBattlefield.WorldSize = new Vector2(900, 700);
+        followRallyBattlefield.SetCredits(PlayerSlotId.One, 500);
+        var followRallyBarracks = followRallyBattlefield.UpsertBuildingTarget(
+            198,
+            BuildingDesignIds.Barracks,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(240, 460),
+            0,
+            unitProductionBarracksSpec.MaxHp);
+        var followRallyTarget = followRallyBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(520, 500));
+        var followRallyEvents = new List<UnitInstance>();
+        followRallyBattlefield.ProductionCompleted += (_, _, unit) => followRallyEvents.Add(unit);
+        if (!followRallyBattlefield.SetRallyPoint(followRallyBarracks.Id, followRallyTarget, out _)
+            || !followRallyBattlefield.EnqueueProduction(ProductionKind.InfantrySquad, PlayerSlotId.One, out _))
+        {
+            throw new InvalidOperationException("friendly unit rally follow fixture should accept rally target and production.");
+        }
+
+        for (var step = 0; step < 210; step++)
+        {
+            followRallyBattlefield.Update(1 / 30.0);
+        }
+
+        var producedFollower = followRallyEvents.SingleOrDefault();
+        var producedFollowerEntity = producedFollower is null
+            ? null
+            : followRallyBattlefield.UnitEntityByInstanceId(producedFollower.Id);
+        if (producedFollower is null
+            || producedFollower.CommandVisualTarget != followRallyTarget.Position
+            || producedFollowerEntity is null
+            || !producedFollowerEntity.Components.TryGet<GuardOrderComponentState>(out var guard)
+            || guard.TargetEntity != followRallyTarget.EntityId
+            || guard.GuardPoint != followRallyTarget.Position)
+        {
+            throw new InvalidOperationException("produced units rallied onto friendly units should keep a live guard target instead of only a point rally.");
+        }
+
+        var movedRallyTarget = new Vector2(700, 540);
+        followRallyTarget.Position = movedRallyTarget;
+        followRallyBattlefield.Update(1 / 30.0);
+        if (producedFollower.CommandVisualTarget != movedRallyTarget
+            || producedFollower.PlayerIntentTarget != movedRallyTarget
+            || producedFollowerEntity.Components.Require<GuardOrderComponentState>().TargetEntity != followRallyTarget.EntityId)
+        {
+            throw new InvalidOperationException("produced units rallied onto friendly units should follow the live target after it moves.");
+        }
+
         unitProductionBattlefield.SetCredits(PlayerSlotId.One, 500);
         if (unitProductionBattlefield.EnqueueProduction(ProductionKind.Harvester, PlayerSlotId.One, out var unsupportedProductionStatus)
             || unsupportedProductionStatus.Length == 0)
