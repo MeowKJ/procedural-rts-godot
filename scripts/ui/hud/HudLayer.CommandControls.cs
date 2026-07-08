@@ -139,8 +139,10 @@ public partial class HudLayer : CanvasLayer
         public string? BuildKind { get; set; }
         public string ProducerShortCode { get; private set; } = "";
         public string ProducerLabel { get; private set; } = "";
+        public string BuildCategoryLabel { get; private set; } = "";
         public IconGlyph RoleGlyph { get; private set; }
         public float Duration { get; private set; }
+        public float BuildDuration { get; private set; }
         private int _queued;
         private float _progress;
         private string _disabledReason = "";
@@ -160,8 +162,10 @@ public partial class HudLayer : CanvasLayer
             Cost = state.Cost;
             ProducerShortCode = BuildSpecCatalog.For(state.ProducerKind).ShortCode;
             ProducerLabel = BuildSpecCatalog.For(state.ProducerKind).Label;
+            BuildCategoryLabel = "";
             RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph;
             Duration = state.Duration;
+            BuildDuration = 0;
             InspectorText = TrainInspectorText(state, ProducerLabel, disabledReason);
             SetState(state.CanQueue, state.QueuedCount, state.ActiveProgress, disabledReason, state.DisabledReasonKey);
         }
@@ -173,8 +177,10 @@ public partial class HudLayer : CanvasLayer
             BuildKind = state.Kind;
             ProducerShortCode = "";
             ProducerLabel = "";
+            BuildCategoryLabel = GameText.T($"build.category.{state.Category}");
             RoleGlyph = IconGlyph.None;
             Duration = 0;
+            BuildDuration = state.BuildTime;
             ShortLabel = spec.ShortCode;
             Glyph = state.Icon;
             Accent = spec.Accent;
@@ -251,8 +257,13 @@ public partial class HudLayer : CanvasLayer
             {
                 DrawTrainCardMetadata(size);
             }
+            else if (IsBuildCard)
+            {
+                DrawBuildCardMetadata(size);
+            }
 
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, size.X - 16, 9, style.ShortLabel);
+            var shortLabelWidth = IsBuildCard && BuildDuration > 0 ? size.X - 44 : size.X - 16;
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, shortLabelWidth, 9, style.ShortLabel);
             if (_progress > 0)
             {
                 DrawRect(new Rect2(0, size.Y - 5, size.X * _progress, 5), style.Progress, true);
@@ -292,6 +303,35 @@ public partial class HudLayer : CanvasLayer
         }
 
         private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId);
+        private bool IsBuildCard => !string.IsNullOrWhiteSpace(BuildKind);
+
+        private void DrawBuildCardMetadata(Vector2 size)
+        {
+            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
+            var chip = new Rect2(new Vector2(5, 5), new Vector2(34, 13));
+            DrawRect(chip, new Color(CurrentPalette.PanelStrongFill, 0.72f), true);
+            DrawRect(chip, new Color(Accent, Disabled ? 0.20f : 0.38f), false, 1);
+            DrawString(
+                font,
+                chip.Position + new Vector2(3, 10),
+                CompactCardText(BuildCategoryLabel, 5),
+                HorizontalAlignment.Left,
+                chip.Size.X - 5,
+                8,
+                new Color(Accent, Disabled ? 0.44f : 0.80f));
+
+            if (BuildDuration > 0)
+            {
+                DrawString(
+                    font,
+                    new Vector2(size.X - 30, size.Y - 12),
+                    BuildDurationText(BuildDuration),
+                    HorizontalAlignment.Right,
+                    24,
+                    8,
+                    new Color(CurrentPalette.TextMuted, Disabled ? 0.46f : 0.68f));
+            }
+        }
 
         private void DrawTrainCardMetadata(Vector2 size)
         {
@@ -331,6 +371,11 @@ public partial class HudLayer : CanvasLayer
                     8,
                     new Color(CurrentPalette.TextMuted, Disabled ? 0.46f : 0.68f));
             }
+        }
+
+        private static string BuildDurationText(float buildTime)
+        {
+            return $"{Mathf.CeilToInt(buildTime)}s";
         }
 
         private void DrawStatusBadge(Vector2 size)

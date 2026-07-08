@@ -339,8 +339,15 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudCommandControls, "RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph", "Train catalog cards must surface unit role glyphs separately from the main unit icon.", result);
         RequireText(hudCommandControls, "private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId)", "Train catalog card metadata must stay scoped to unit production cards.", result);
         RequireText(hudCommandControls, "DrawTrainCardMetadata(size)", "Train catalog cards must render source/role metadata in the card surface.", result);
+        RequireText(hudCommandControls, "private bool IsBuildCard => !string.IsNullOrWhiteSpace(BuildKind)", "Build catalog card metadata must stay scoped to build cards.", result);
+        RequireText(hudCommandControls, "DrawBuildCardMetadata(size)", "Build catalog cards must render build-only category/time metadata in the card surface.", result);
+        RequireText(hudCommandControls, "BuildCategoryLabel = GameText.T($\"build.category.{state.Category}\")", "Build catalog cards must surface build category as compact metadata.", result);
+        RequireText(hudCommandControls, "BuildDuration = state.BuildTime", "Build catalog cards must surface build time as compact metadata.", result);
+        RequireText(hudCommandControls, "var shortLabelWidth = IsBuildCard && BuildDuration > 0 ? size.X - 44 : size.X - 16", "Build catalog card short labels must reserve room for build-time metadata.", result);
         RequireText(hudCommandControls, "ProducerShortCode = \"\";", "Build cards must clear train-only producer metadata.", result);
         RequireText(hudCommandControls, "Duration = 0;", "Build cards must clear train-only duration metadata.", result);
+        RequireText(hudCommandControls, "BuildCategoryLabel = \"\";", "Train cards must clear build-only category metadata.", result);
+        RequireText(hudCommandControls, "BuildDuration = 0;", "Train cards must clear build-only duration metadata.", result);
         RequireText(hudCommandControls, "CompactCardText(_disabledReason, 11)", "Train catalog cards must surface compact disabled reasons without expanding the layout.", result);
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
