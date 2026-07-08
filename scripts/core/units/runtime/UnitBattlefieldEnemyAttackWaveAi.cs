@@ -5,7 +5,6 @@ namespace ProceduralRts.Core;
 public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 {
     private const float DefenseCheckInterval = 1.0f;
-    private const float DefenseRadius = 900f;
 
     private readonly EnemyDifficultyProfile _profile;
     private readonly List<UnitInstance> _waveCandidateUnits = new();
@@ -20,6 +19,8 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
     public int WavesLaunched { get; private set; }
     public int DefenseOrders { get; private set; }
     public string LastStatus { get; private set; } = "Enemy attack waves forming";
+    private float DefenseRadius => _profile.DefenseRadius;
+    private int MaximumDefenseUnits => _profile.MaximumDefenseUnits;
 
     public UnitBattlefieldEnemyAttackWaveAi()
         : this(EnemyDifficultyProfile.Normal)
@@ -68,6 +69,13 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 
         if (!TryFindTarget(battlefield, enemyPlayerSlotId, _profile.AggressionRadius, out var targetKind, out var targetUnit, out var targetBuilding, out _))
         {
+            if (!_profile.ScoutWavesEnabled)
+            {
+                _waveTimer = Math.Min(_profile.AttackWaveInterval, 8f);
+                LastStatus = "Enemy scout wave held by difficulty";
+                return;
+            }
+
             if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds, out var scoutStatus))
             {
                 WavesLaunched++;
@@ -113,7 +121,7 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return false;
         }
 
-        CollectAvailableDefenseUnits(battlefield, playerSlotId, targetPosition, 6, _defenseUnits);
+        CollectAvailableDefenseUnits(battlefield, playerSlotId, targetPosition, MaximumDefenseUnits, _defenseUnits);
         if (_defenseUnits.Count == 0)
         {
             return false;

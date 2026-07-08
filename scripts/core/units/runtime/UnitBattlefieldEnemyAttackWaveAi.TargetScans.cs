@@ -27,12 +27,12 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         return battlefield.NearestVisibleAttackableUnit(playerSlotId, origin, aggressionRadius);
     }
 
-    private static UnitInstance? NearestVisibleDefenseThreatUnit(UnitBattlefield battlefield, PlayerSlotId playerSlotId, Vector2 baseCenter)
+    private UnitInstance? NearestVisibleDefenseThreatUnit(UnitBattlefield battlefield, PlayerSlotId playerSlotId, Vector2 baseCenter)
     {
         return battlefield.NearestVisibleDefenseThreatUnit(playerSlotId, baseCenter, DefenseRadius);
     }
 
-    private static UnitBattlefieldBuildingSnapshot? NearestVisibleDefenseThreatBuilding(UnitBattlefield battlefield, PlayerSlotId playerSlotId, Vector2 baseCenter)
+    private UnitBattlefieldBuildingSnapshot? NearestVisibleDefenseThreatBuilding(UnitBattlefield battlefield, PlayerSlotId playerSlotId, Vector2 baseCenter)
     {
         return battlefield.NearestVisibleDefenseThreatBuilding(playerSlotId, baseCenter, DefenseRadius);
     }

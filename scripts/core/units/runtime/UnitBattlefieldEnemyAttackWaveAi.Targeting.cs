@@ -71,7 +71,7 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         return true;
     }
 
-    private static bool TryFindDefenseTarget(
+    private bool TryFindDefenseTarget(
         UnitBattlefield battlefield,
         PlayerSlotId playerSlotId,
         out CombatTargetKind targetKind,

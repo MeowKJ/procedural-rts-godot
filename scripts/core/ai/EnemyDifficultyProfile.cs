@@ -10,7 +10,10 @@ public sealed record EnemyDifficultyProfile(
     float AttackWaveInterval,
     int MinimumWaveUnits,
     int MaximumWaveUnits,
-    float AggressionRadius)
+    float AggressionRadius,
+    float DefenseRadius = 900f,
+    int MaximumDefenseUnits = 6,
+    bool ScoutWavesEnabled = true)
 {
     public static EnemyDifficultyProfile Easy { get; } = new(
         EnemyDifficulty.Easy,
@@ -22,7 +25,10 @@ public sealed record EnemyDifficultyProfile(
         AttackWaveInterval: 34f,
         MinimumWaveUnits: 3,
         MaximumWaveUnits: 5,
-        AggressionRadius: 1450);
+        AggressionRadius: 1450,
+        DefenseRadius: 620f,
+        MaximumDefenseUnits: 4,
+        ScoutWavesEnabled: false);
 
     public static EnemyDifficultyProfile Normal { get; } = new(
         EnemyDifficulty.Normal,
@@ -34,7 +40,10 @@ public sealed record EnemyDifficultyProfile(
         AttackWaveInterval: 24f,
         MinimumWaveUnits: 3,
         MaximumWaveUnits: 8,
-        AggressionRadius: float.PositiveInfinity);
+        AggressionRadius: float.PositiveInfinity,
+        DefenseRadius: 900f,
+        MaximumDefenseUnits: 6,
+        ScoutWavesEnabled: true);
 
     public static EnemyDifficultyProfile Hard { get; } = new(
         EnemyDifficulty.Hard,
@@ -46,7 +55,10 @@ public sealed record EnemyDifficultyProfile(
         AttackWaveInterval: 15f,
         MinimumWaveUnits: 5,
         MaximumWaveUnits: 12,
-        AggressionRadius: 4200);
+        AggressionRadius: 4200,
+        DefenseRadius: 1180f,
+        MaximumDefenseUnits: 8,
+        ScoutWavesEnabled: true);
 
     public static EnemyDifficultyProfile For(EnemyDifficulty difficulty)
     {
