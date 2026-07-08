@@ -139,12 +139,14 @@ public partial class BattleRoot
         _commandAcknowledgements = new CommandAcknowledgementLayer { Name = "CommandAcknowledgements" };
         AddChild(_commandAcknowledgements);
 
-        AddChild(new PathDebugLayer
+        _pathDebug = new PathDebugLayer
         {
             Name = "PathDebug",
             State = _state,
+            UnitBattlefield = _unitBattlefield,
             StatusChanged = OnStatusChanged,
-        });
+        };
+        AddChild(_pathDebug);
 
         _camera = new CameraController { Name = "Camera", WorldSize = _state.WorldSize };
         _camera.ViewChanged += RefreshViewCulling;

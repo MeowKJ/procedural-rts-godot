@@ -8,6 +8,7 @@ static class BattleRootHudAllocationReviewGate
         var minimap = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudMinimap.cs");
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
+        var pathDebug = ReviewGateSource.Read(root, "scripts", "world", "PathDebugLayer.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
         var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
 
@@ -153,6 +154,19 @@ static class BattleRootHudAllocationReviewGate
         RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);
         RequireText(sandbox, "_unitBattlefield.EntityWorld.DeterministicStateHash()", "Sandbox state-hash readout must use the live runtime EntityWorld hash.", result);
         RequireText(process, "RefreshSandboxStateHash();", "BattleRoot process must refresh sandbox state-hash overlay state.", result);
+        RequireText(battleRoot, "PathDebugLayer _pathDebug", "BattleRoot must keep a stable PathDebugLayer reference for sandbox overlay refresh.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "BattleRoot.Lifecycle.cs"), "UnitBattlefield = _unitBattlefield", "PathDebugLayer must receive the runtime UnitBattlefield for sandbox entity overlays.", result);
+        RequireText(sandbox, "RefreshSandboxDebugOverlays()", "BattleRoot sandbox context changes must refresh display-only debug overlay flags.", result);
+        RequireText(process, "RefreshSandboxDebugOverlays();", "BattleRoot process must refresh sandbox debug overlays without changing simulation state.", result);
+        RequireText(pathDebug, "SetSandboxOverlayFlags(SandboxDebugOverlayFlag flags)", "PathDebugLayer must expose sandbox overlay flags as display-only state.", result);
+        RequireText(pathDebug, "RuntimeSandboxOverlaysVisible(LaunchMode launchMode, SandboxDebugOverlayFlag flags)", "PathDebugLayer sandbox overlay activation must stay pure enough for smoke coverage.", result);
+        RequireText(pathDebug, "State.Options.LaunchMode == LaunchMode.Sandbox", "PathDebugLayer must gate sandbox overlays to Sandbox launch mode.", result);
+        RequireText(pathDebug, "SandboxDebugOverlayFlag.Paths", "PathDebugLayer must honor the sandbox Paths overlay flag.", result);
+        RequireText(pathDebug, "SandboxDebugOverlayFlag.Rings", "PathDebugLayer must honor the sandbox Rings overlay flag.", result);
+        RequireText(pathDebug, "SandboxDebugOverlayFlag.Anchors", "PathDebugLayer must honor the sandbox Anchors overlay flag.", result);
+        RequireText(pathDebug, "DrawSandboxRuntimePaths", "Sandbox path overlay must render selected-unit runtime path and intent markers.", result);
+        RequireText(pathDebug, "DrawSandboxRuntimeRings", "Sandbox ring overlay must render selected-unit runtime radius rings.", result);
+        RequireText(pathDebug, "DrawSandboxRuntimeAnchors", "Sandbox anchor overlay must render selected-unit runtime guard/autonomy anchors.", result);
         RequireText(hudSync, "CollectSelectedProductionBuildingIds();", "Runtime command-card refresh must collect selected building ids once for command-card and queue sync.", result);
         RequireText(hudSync, "RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer)", "Runtime command-card refresh must route through selected-producer state selection.", result);
         RequireText(hudSync, "_unitBattlefield.ProductionDesignOptionStatesForSelectedProducers", "Runtime command-card refresh must use selected producer production options when available.", result);

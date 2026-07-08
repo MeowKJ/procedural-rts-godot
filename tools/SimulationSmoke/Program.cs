@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.World;
 
 const float DurationSeconds = 300f;
 const float StepSeconds = 0.1f;
@@ -47,6 +48,21 @@ static void ValidateSandboxDebugOverlayState()
     var allEnabled = state.Set(SandboxDebugOverlayFlag.All, true);
     Expect(allEnabled.IsEnabled(SandboxDebugOverlayFlag.All), "all overlay flag should enable every known overlay");
     Expect(allEnabled.FormatStatus().Contains("state-hash", StringComparison.Ordinal), "all overlay status should include state hash");
+
+    Expect(!PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Skirmish, SandboxDebugOverlayFlag.Paths),
+        "sandbox runtime overlays must stay hidden outside Sandbox launch mode");
+    Expect(!PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, SandboxDebugOverlayFlag.StateHash),
+        "diagnostic-only sandbox flags must not activate path debug drawing");
+    Expect(PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, SandboxDebugOverlayFlag.Paths),
+        "Sandbox Paths flag should activate runtime path debug drawing");
+    Expect(PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, SandboxDebugOverlayFlag.Rings),
+        "Sandbox Rings flag should activate runtime radius debug drawing");
+    Expect(PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, SandboxDebugOverlayFlag.Anchors),
+        "Sandbox Anchors flag should activate runtime anchor debug drawing");
+    Expect(PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, movementPreset.Flags),
+        "Sandbox movement preset should activate runtime movement overlays");
+    Expect(!PathDebugLayer.RuntimeSandboxOverlaysVisible(LaunchMode.Sandbox, SandboxDebugOverlayState.PresetByKey("diagnostics").Flags),
+        "Sandbox diagnostics preset should not activate runtime path/ring/anchor drawing");
 }
 
 static void AssignHarvester(GameState state, Owner owner, ResourceFieldModel field)

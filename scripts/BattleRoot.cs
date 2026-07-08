@@ -87,6 +87,7 @@ public partial class BattleRoot : Node2D
     private Node2D _unitInstanceRoot = null!;
     private CombatEffectsLayer _combatEffects = null!;
     private CommandAcknowledgementLayer _commandAcknowledgements = null!;
+    private PathDebugLayer _pathDebug = null!;
     private FootprintLayer _footprints = null!;
     private FogOfWarLayer _fogOfWar = null!;
     private ControlGroupController _controlGroups = null!;

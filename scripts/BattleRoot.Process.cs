@@ -45,6 +45,7 @@ public partial class BattleRoot
         RefreshAlerts((float)delta);
         RefreshCommandPreview();
         RefreshSandboxStateHash();
+        RefreshSandboxDebugOverlays();
         _combatEffects.CommandMarkerCount = _commandAcknowledgements.ActiveRingCount;
         _viewCullingTimer -= (float)delta;
         if (_viewCullingTimer <= 0)
