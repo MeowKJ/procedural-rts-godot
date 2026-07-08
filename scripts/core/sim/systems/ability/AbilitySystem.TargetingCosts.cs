@@ -127,33 +127,55 @@ public sealed partial class AbilitySystem
         return world.Relations.Relation(caster.OwnerId, candidate.OwnerId) is PlayerRelation.Self or PlayerRelation.Allied;
     }
 
-    private void SetCooldown(
+    private static void SetCooldown(
         EntityInstance caster,
         AbilityRuntimeComponentState runtime,
         AbilityKind kind,
         float seconds)
     {
-        _cooldownScratch.Clear();
-        var found = false;
-        foreach (var cooldown in runtime.Cooldowns)
+        for (var index = 0; index < runtime.Cooldowns.Count; index++)
         {
+            var cooldown = runtime.Cooldowns[index];
             if (cooldown.Kind == kind)
             {
-                _cooldownScratch.Add(cooldown with { CooldownRemaining = seconds });
-                found = true;
-                continue;
+                var cooldowns = WritableCooldowns(caster, runtime);
+                cooldowns[index] = cooldown with { CooldownRemaining = seconds };
+                return;
             }
-
-            _cooldownScratch.Add(cooldown);
         }
 
-        if (!found)
+        var expanded = new AbilityCooldownState[runtime.Cooldowns.Count + 1];
+        for (var index = 0; index < runtime.Cooldowns.Count; index++)
         {
-            _cooldownScratch.Add(new AbilityCooldownState(kind, seconds));
+            expanded[index] = runtime.Cooldowns[index];
         }
 
-        caster.Components.Set(runtime with { Cooldowns = _cooldownScratch.ToArray() });
-        _cooldownScratch.Clear();
+        expanded[^1] = new AbilityCooldownState(kind, seconds);
+        caster.Components.Set(runtime with { Cooldowns = expanded });
+    }
+
+    private static IList<AbilityCooldownState> WritableCooldowns(
+        EntityInstance entity,
+        AbilityRuntimeComponentState runtime)
+    {
+        if (runtime.Cooldowns is AbilityCooldownState[] array)
+        {
+            return array;
+        }
+
+        if (runtime.Cooldowns is List<AbilityCooldownState> list)
+        {
+            return list;
+        }
+
+        var copy = new AbilityCooldownState[runtime.Cooldowns.Count];
+        for (var index = 0; index < runtime.Cooldowns.Count; index++)
+        {
+            copy[index] = runtime.Cooldowns[index];
+        }
+
+        entity.Components.Set(runtime with { Cooldowns = copy });
+        return copy;
     }
 
     private static bool IsDead(EntityInstance entity)

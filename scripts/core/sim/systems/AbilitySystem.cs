@@ -16,7 +16,6 @@ public sealed partial class AbilitySystem : ISimSystem
     private const float DeployCooldownSeconds = 0.5f;
     private const float DefaultDeploySetupSeconds = 0.6f;
     private const float DefaultDeployRangeMultiplier = 1.55f;
-    private readonly List<AbilityCooldownState> _cooldownScratch = new();
 
     public void Step(SimContext context)
     {
