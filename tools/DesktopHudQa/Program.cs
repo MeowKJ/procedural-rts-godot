@@ -89,6 +89,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "BuildCategory.Naval, active: false", "HUD must keep the naval build tab visibly disabled until naval build specs exist.");
     RequireText(hudLayer, "\"CatalogModeBuild\"", "Right command panel must expose a stable Build catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeTrain\"", "Right command panel must expose a stable Train catalog mode node.");
+    RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
@@ -109,6 +110,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card status badges must derive from enabled, queue, progress, and disabled-reason state.");
     RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.");
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");
+    RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades mode must own a distinct right-panel surface label.");
+    RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.overview.upgrades\")", "Upgrades mode must expose a shell overview without provider lanes.");
+    RequireText(hudLayer, "SetCatalogStatusText(GameText.T(\"ui.catalog.upgradesEmpty\"))", "Upgrades mode must show a localized shell empty state instead of production status.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
     RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
     RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated ability cards.");
@@ -202,6 +206,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.build\"]", "English HUD catalog Build label must exist.");
     RequireText(englishText, "[\"ui.catalog.buildSurface\"]", "English HUD catalog Build surface label must exist.");
     RequireText(englishText, "[\"ui.catalog.train\"]", "English HUD catalog Train label must exist.");
+    RequireText(englishText, "[\"ui.catalog.upgrades\"]", "English HUD catalog Upgrades label must exist.");
+    RequireText(englishText, "[\"ui.catalog.upgradesEmpty\"]", "English HUD catalog Upgrades empty text must exist.");
     RequireText(englishText, "[\"ui.catalog.abilities\"]", "English HUD catalog Abilities label must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
@@ -230,6 +236,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.build\"]", "Chinese HUD catalog Build label must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildSurface\"]", "Chinese HUD catalog Build surface label must exist.");
     RequireText(chineseText, "[\"ui.catalog.train\"]", "Chinese HUD catalog Train label must exist.");
+    RequireText(chineseText, "[\"ui.catalog.upgrades\"]", "Chinese HUD catalog Upgrades label must exist.");
+    RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"]", "Chinese HUD catalog Upgrades empty text must exist.");
     RequireText(chineseText, "[\"ui.catalog.abilities\"]", "Chinese HUD catalog Abilities label must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");

@@ -487,6 +487,14 @@ public partial class HudLayer : CanvasLayer
 
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        if (_selectedCatalogMode == CatalogModeKind.Upgrades)
+        {
+            ClearAbilityCards();
+            RefreshRepeatProductionControl();
+            SetCatalogStatusText(GameText.T("ui.catalog.upgradesEmpty"));
+            return;
+        }
+
         RefreshAbilityCards();
     }
 

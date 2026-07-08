@@ -180,9 +180,10 @@ public partial class HudLayer : CanvasLayer
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
 
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), new Vector2(12, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), new Vector2(106, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), new Vector2(200, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), new Vector2(8, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), new Vector2(78, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Upgrades, GameText.T("ui.catalog.upgrades"), GameText.T("ui.catalog.upgradesDetail"), new Vector2(148, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), new Vector2(218, 8));
 
         AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 44), BuildCategory.Command, active: true);
         AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 44), BuildCategory.Power, active: true);
