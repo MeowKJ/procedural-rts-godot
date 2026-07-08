@@ -133,6 +133,20 @@ static partial class Program
         Assert(!nightInactiveSignal.Components.Has<VisionComponentState>(), "unpowered night signal should not emit vision");
         Assert(!unpoweredNight.Visibility.IsVisible(new OwnerId(1), targetId), "unpowered night signal should not reveal hostile target");
 
+        var liveThemeSignalWorld = BuildDaySignalWorld(powered: true);
+        var liveThemeClock = new SimClock();
+        liveThemeSignalWorld.ResourceAtmosphere = WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.DuskDefense);
+        liveThemeSignalWorld.Step(1, liveThemeClock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+        var duskSignal = liveThemeSignalWorld.OrderedEntities.Single(entity => entity.Id.Value == 1);
+        Assert(!duskSignal.Components.Has<BuildRadiusComponentState>(), "dusk-defense visual theme should drive night signal mode without a build radius");
+        Assert(duskSignal.Components.Require<VisionComponentState>().SightRange == 260, "dusk-defense visual theme should drive signal night vision");
+
+        liveThemeSignalWorld.ResourceAtmosphere = WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.FogMorning);
+        liveThemeSignalWorld.Step(2, liveThemeClock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+        var fogSignal = liveThemeSignalWorld.OrderedEntities.Single(entity => entity.Id.Value == 1);
+        Assert(fogSignal.Components.Require<BuildRadiusComponentState>().Radius == 160, "fog-morning visual theme should drive day-control build radius");
+        Assert(!fogSignal.Components.Has<VisionComponentState>(), "fog-morning visual theme should clear signal night vision");
+
         Console.WriteLine($"OK [signal-network]: day build radius 160, resource {poweredResource.Amount}>{unpoweredResource.Amount}; night vision reveals target.");
     }
 }

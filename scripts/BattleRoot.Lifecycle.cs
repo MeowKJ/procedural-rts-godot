@@ -18,9 +18,10 @@ public partial class BattleRoot
         if (_hud is not null)
         {
             _state.VisualThemeChanged -= _hud.SetVisualTheme;
-            _hud.ReleaseManagedResources();
         }
 
+        _state.VisualThemeChanged -= SyncEntityWorldResourceAtmosphere;
+        _hud?.ReleaseManagedResources();
         _audio?.ReleaseManagedResources();
         _state.FogOfWar.ReleaseManagedResources();
         ManagedGodotResourceCleanup.ReleaseTree(this);
@@ -267,6 +268,7 @@ public partial class BattleRoot
         _hud.SetSandboxDeveloperControlsVisible(_state.Options.LaunchMode == LaunchMode.Sandbox);
         _hud.SetSandboxDeveloperContext(_sandboxContext);
         _state.VisualThemeChanged += _hud.SetVisualTheme;
+        _state.VisualThemeChanged += SyncEntityWorldResourceAtmosphere;
 
         _perfHud = new PerfHudLayer
         {

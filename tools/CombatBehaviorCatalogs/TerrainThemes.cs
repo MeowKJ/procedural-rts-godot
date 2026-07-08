@@ -79,6 +79,14 @@ static partial class Program
             throw new InvalidOperationException("completed visual theme transitions should resolve to the target theme palette and tactical profile");
         }
 
+        if (WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.DayCommand) != ResourceAtmosphere.Day
+            || WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.FogMorning) != ResourceAtmosphere.Fog
+            || WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.DuskDefense) != ResourceAtmosphere.Night
+            || WorldThemeMath.ResourceAtmosphereFor(WorldVisualTheme.NightRadar) != ResourceAtmosphere.Night)
+        {
+            throw new InvalidOperationException("world visual themes should map explicitly to the sim resource atmosphere used by live signal systems");
+        }
+
         var themedState = EmptyState();
         var observedThemes = new List<WorldVisualThemeState>();
         themedState.VisualThemeChanged += observedThemes.Add;
@@ -91,6 +99,17 @@ static partial class Program
             || observedThemes.Count < 3)
         {
             throw new InvalidOperationException("game state should expose scriptable visual theme transition hooks for mission events");
+        }
+
+        if (themedState.ResourceAtmosphere != ResourceAtmosphere.Day)
+        {
+            throw new InvalidOperationException("in-progress day-to-night visual theme transitions should keep the current sim atmosphere until the transition completes");
+        }
+
+        themedState.AdvanceVisualThemeTransition(10f);
+        if (themedState.ResourceAtmosphere != ResourceAtmosphere.Night)
+        {
+            throw new InvalidOperationException("completed visual theme transitions should update GameState.ResourceAtmosphere to the target theme's sim atmosphere");
         }
 
         var signalNodes = SignalNetworkMath.CreateDefaultNetwork(new Vector2(3600, 2400));
