@@ -116,17 +116,93 @@ public partial class HudLayer : CanvasLayer
         {
             CatalogModeKind.Build => GameText.Format(
                 "ui.catalog.overview.build",
+                CatalogOverviewBuildStartableCount(),
                 _visibleBuildCardStates.Count,
-                CatalogOverviewConstructionLaneCount()),
+                CatalogOverviewConstructionLaneCount(),
+                CatalogOverviewProviderScopeText(_selectedConstructionProviderLaneScope)),
             CatalogModeKind.Train => GameText.Format(
                 "ui.catalog.overview.train",
+                CatalogOverviewTrainQueueableCount(),
                 _visibleCommandCardStates.Count,
-                CatalogOverviewProductionLaneCount()),
-            CatalogModeKind.Abilities => GameText.Format(
-                "ui.catalog.overview.abilities",
-                Math.Min(_abilityCardStates.Count, 12)),
-            CatalogModeKind.Upgrades => GameText.T("ui.catalog.overview.upgrades"),
+                CatalogOverviewProductionLaneCount(),
+                CatalogOverviewProviderScopeText(_selectedProductionProviderLaneScope)),
+            CatalogModeKind.Abilities => CatalogOverviewAbilitiesText(),
+            CatalogModeKind.Upgrades => GameText.Format(
+                "ui.catalog.overview.upgrades",
+                CatalogOverviewUpgradeProjectCount()),
             _ => "",
+        };
+    }
+
+    private int CatalogOverviewBuildStartableCount()
+    {
+        var count = 0;
+        for (var index = 0; index < _visibleBuildCardStates.Count; index++)
+        {
+            if (_visibleBuildCardStates[index].CanStart)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private int CatalogOverviewTrainQueueableCount()
+    {
+        var count = 0;
+        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
+        {
+            if (_visibleCommandCardStates[index].CanQueue)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private string CatalogOverviewAbilitiesText()
+    {
+        var visibleCount = Math.Min(_abilityCardStates.Count, 12);
+        if (visibleCount == 0)
+        {
+            return GameText.T("ui.catalog.overview.abilitiesEmpty");
+        }
+
+        return GameText.Format(
+            "ui.catalog.overview.abilities",
+            CatalogOverviewReadyAbilityCount(visibleCount),
+            visibleCount);
+    }
+
+    private int CatalogOverviewReadyAbilityCount(int visibleCount)
+    {
+        var count = 0;
+        for (var index = 0; index < visibleCount; index++)
+        {
+            var state = _abilityCardStates[index];
+            if (state.CooldownRemaining <= 0.01f || state.IsActive)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CatalogOverviewUpgradeProjectCount()
+    {
+        return Math.Min(DefaultUpgradeProjectShellStates.Length, 12);
+    }
+
+    private static string CatalogOverviewProviderScopeText(ProductionProviderLaneScope scope)
+    {
+        return scope switch
+        {
+            ProductionProviderLaneScope.All => GameText.T("ui.catalog.overview.scope.all"),
+            ProductionProviderLaneScope.Specific => GameText.T("ui.catalog.overview.scope.specific"),
+            _ => GameText.T("ui.catalog.overview.scope.auto"),
         };
     }
 
