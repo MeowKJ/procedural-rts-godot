@@ -124,8 +124,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");
     RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades mode must own a distinct right-panel surface label.");
     RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.overview.upgrades\")", "Upgrades mode must expose a shell overview without provider lanes.");
-    RequireText(hudLayer, "SetCatalogStatusText(GameText.T(\"ui.catalog.upgradesEmpty\"))", "Upgrades mode must show a localized shell empty state instead of production status.");
-    RequireText(hudLayer, "_selectedCatalogMode == CatalogModeKind.Upgrades", "Catalog inspector restore must keep Upgrades on its shell empty state.");
+    RequireText(hudLayer, "UpgradeProjectCatalogStatusText()", "Catalog inspector restore must keep Upgrades on its project-card shell status.");
+    RequireText(hudLayer, "private partial class UpgradeProjectCard : Button", "Upgrades mode must render dedicated project-shell cards instead of production cards.");
+    RequireText(hudLayer, "Name = $\"UpgradeProjectCard{id}\"", "Upgrades project-shell cards must expose stable node names for QA.");
+    RequireText(hudLayer, "RefreshUpgradeProjectCards()", "Upgrades mode must refresh project-shell cards when the catalog page is selected.");
+    RequireText(hudLayer, "card.Pressed += () => SetCatalogStatusText(card.InspectorText);", "Upgrades project-shell cards must update the inspector without emitting commands.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
     RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
     RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated ability cards.");
@@ -225,6 +228,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.upgradesHelp\"] = \"Research projects\\nselect research building\"", "English HUD catalog Upgrades help must frame research as selected-building contextual.");
     RequireText(englishText, "[\"ui.catalog.upgradesEmpty\"] = \"Select research building\\nprojects only, no lanes\"", "English HUD catalog Upgrades empty text must reject provider lanes.");
     RequireText(englishText, "[\"ui.catalog.overview.upgrades\"] = \"research / no lanes\"", "English HUD catalog Upgrades overview must stay a no-provider-lane shell.");
+    RequireText(englishText, "[\"ui.catalog.upgradesCount\"] = \"{0} project cards\\nselected source required\"", "English HUD catalog Upgrades count must explain selected-source project cards.");
+    RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"]", "English HUD catalog upgrade inspector text must exist.");
+    RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.");
     RequireText(englishText, "[\"ui.catalog.abilities\"]", "English HUD catalog Abilities label must exist.");
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
@@ -263,6 +269,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.trainHelp\"]", "Chinese HUD catalog Train help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.upgrades\"]", "Chinese HUD catalog Upgrades label must exist.");
     RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"] = \"研究项目\\n选择科研建筑\"", "Chinese HUD catalog Upgrades help must frame research as selected-building contextual.");
+    RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目卡\\n需要选择来源\"", "Chinese HUD catalog Upgrades count must explain selected-source project cards.");
     RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"] = \"选择科研建筑\\n项目无生产通道\"", "Chinese HUD catalog Upgrades empty text must reject provider lanes.");
     RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"研究 / 无通道\"", "Chinese HUD catalog Upgrades overview must stay a no-provider-lane shell.");
     RequireText(chineseText, "[\"ui.catalog.abilities\"]", "Chinese HUD catalog Abilities label must exist.");
