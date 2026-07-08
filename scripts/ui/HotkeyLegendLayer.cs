@@ -105,6 +105,7 @@ public partial class HotkeyLegendLayer : CanvasLayer
             (GameText.T("hotkeys.stance"), [GameText.T("hotkeys.stance.1"), GameText.T("hotkeys.stance.2"), GameText.T("hotkeys.stance.3")], Mint),
             (GameText.T("hotkeys.groups"), [GameText.T("hotkeys.groups.1"), GameText.T("hotkeys.groups.2")], Cyan),
             (GameText.T("hotkeys.build"), [GameText.T("hotkeys.build.1"), GameText.T("hotkeys.build.2"), GameText.T("hotkeys.build.3")], Amber),
+            (GameText.T("hotkeys.catalog"), [GameText.T("hotkeys.catalog.1"), GameText.T("hotkeys.catalog.2"), GameText.T("hotkeys.catalog.3")], Cyan),
             (GameText.T("hotkeys.debug"), [GameText.T("hotkeys.debug.1"), GameText.T("hotkeys.debug.2"), GameText.T("hotkeys.debug.3")], Danger),
         ];
 
