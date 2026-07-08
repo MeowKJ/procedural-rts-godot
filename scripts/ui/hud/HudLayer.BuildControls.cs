@@ -145,7 +145,7 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(tab);
     }
 
-    private void AddCatalogModeButton(Control parent, CatalogModeKind mode, string label, string detail, Vector2 position)
+    private void AddCatalogModeButton(Control parent, CatalogModeKind mode, string label, string detail, string helpText, Vector2 position)
     {
         var button = new CatalogModeButton
         {
@@ -160,15 +160,21 @@ public partial class HudLayer : CanvasLayer
             Mode = mode,
             Label = label,
             Detail = detail,
+            HelpText = helpText,
             Position = position,
             CustomMinimumSize = new Vector2(66, 28),
             Size = new Vector2(66, 28),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = label,
+            TooltipText = helpText,
         };
         RegisterCatalogModeButton(button);
         button.Pressed += () => SelectCatalogMode(mode);
+        button.Pressed += () => SetCatalogStatusText(button.HelpText);
+        button.MouseEntered += () => SetCatalogStatusText(button.HelpText);
+        button.MouseExited += RestoreCatalogStatusText;
+        button.FocusEntered += () => SetCatalogStatusText(button.HelpText);
+        button.FocusExited += RestoreCatalogStatusText;
         parent.AddChild(button);
     }
 

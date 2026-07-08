@@ -505,17 +505,14 @@ public partial class HudLayer : CanvasLayer
 
     private void RestoreCatalogStatusText()
     {
-        if (_selectedCatalogMode == CatalogModeKind.Abilities)
+        SetCatalogStatusText(_selectedCatalogMode switch
         {
-            SetCatalogStatusText(_abilityCardStates.Count == 0
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgradesEmpty"),
+            CatalogModeKind.Abilities => _abilityCardStates.Count == 0
                 ? GameText.T("ui.catalog.abilitiesEmpty")
-                : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)));
-            return;
-        }
-
-        SetCatalogStatusText(string.IsNullOrWhiteSpace(_lastProductionStatus)
-            ? GameText.T("ui.status.ready")
-            : _lastProductionStatus);
+                : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
+            _ => string.IsNullOrWhiteSpace(_lastProductionStatus) ? GameText.T("ui.status.ready") : _lastProductionStatus,
+        });
     }
 
     private void RefreshBuildCards()

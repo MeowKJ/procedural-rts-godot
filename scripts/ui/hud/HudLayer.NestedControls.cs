@@ -66,6 +66,7 @@ public partial class HudLayer : CanvasLayer
         public required CatalogModeKind Mode { get; init; }
         public required string Label { get; init; }
         public required string Detail { get; init; }
+        public required string HelpText { get; init; }
         private bool _selected;
 
         public void SetSelected(bool selected)
