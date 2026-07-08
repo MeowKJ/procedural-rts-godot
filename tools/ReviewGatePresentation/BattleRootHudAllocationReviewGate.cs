@@ -111,7 +111,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card badges must derive from enabled, queue, progress, and disabled-reason state.", result);
         RequireText(hudLayer, "new Rect2(new Vector2(5, 21), new Vector2(36, 12))", "Train card status badges must avoid the right-side role glyph lane.", result);
         RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.", result);
-        RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId())", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
+        RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind))", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
         ForbidText(hudLayer, "BuildCategoryRequested?.Invoke(category);", "Build category tabs must filter build cards without arming placement.", result);
         ForbidText(hudLayer, "Action<BuildCategory>? BuildCategoryRequested", "HudLayer must not expose a stale build-category placement intent.", result);
         ForbidText(battleRoot, "BuildCategoryRequested = OnBuildCategoryRequested", "BattleRoot must not wire category tabs into build placement.", result);
@@ -172,7 +172,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.", result);
         RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept Build-mode construction provider lane read models separately from Train lanes.", result);
         RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.", result);
-        RequireText(hudLayer, "private int? SelectedConstructionProviderId()", "Build provider lanes must expose selected specific-provider ids for Build card routing.", result);
+        RequireText(hudLayer, "private int? SelectedConstructionProviderId(string? buildKind)", "Build provider lanes must expose selected provider ids for Build card routing.", result);
         RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.", result);
         RequireText(hudLayer, "ui.constructionProviderLane.tooltip", "Build provider lane tooltips must use construction-specific copy.", result);
         RequireText(hudLayer, "ProviderLaneSummaryText(state)", "Train provider lane summary must render selected provider count, queue count, progress, and availability.", result);
@@ -193,6 +193,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "ProductionBatchStatus(queued, attempts, status)", "BattleRoot production requests must summarize Shift batches after existing command submission.", result);
         RequireText(battleRoot, "TrySubmitProductionDesignRequest(designId, providerIdSelector(), out status)", "Train-card Shift batches must resolve provider lanes for each queued attempt.", result);
         RequireText(hudLayer, "NextAllProductionProviderId(spec.Production.ProducerKind)", "All provider lane clicks must distribute repeated train commands across valid providers.", result);
+        RequireText(hudLayer, "NextAllConstructionProviderId(requiredProducer)", "Build All provider lane clicks must rotate across valid construction providers.", result);
+        RequireText(hudLayer, "BuildSpecCatalog.For(buildKind).RequiredProducer", "Build All provider routing must derive the required construction provider from the selected build kind.", result);
+        RequireText(hudLayer, "_allConstructionProviderCursorByKind[providerKind]", "Build All provider routing must keep a cursor per construction provider kind.", result);
         RequireText(hudSync, "_hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime production provider lane state into the HUD.", result);
         RequireText(hudSync, "_hud.SetConstructionProviderLaneState(_unitBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One))", "BattleRoot must feed runtime construction provider lane state into the HUD.", result);
         RequireText(hudSync, "_buildPlacement.SelectBuildKind(kind, constructionProviderId)", "BattleRoot must hand selected Build provider lanes into build placement.", result);

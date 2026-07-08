@@ -75,6 +75,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<ProductionProviderLaneState> _constructionProviderLaneStates = [];
     private readonly List<ProductionProviderLaneButton> _productionProviderLaneButtons = [];
     private readonly Dictionary<string, int> _allProductionProviderCursorByKind = [];
+    private readonly Dictionary<string, int> _allConstructionProviderCursorByKind = [];
     private readonly HashSet<string> _commandCardActiveIds = [];
     private readonly List<string> _commandCardStaleIds = [];
     private readonly List<Button> _sandboxDeveloperButtons = [];
