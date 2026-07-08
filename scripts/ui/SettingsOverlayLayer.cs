@@ -221,7 +221,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsLabel.CustomMinimumSize = new Vector2(160, 22);
         _panel.AddChild(_controlsLabel);
 
-        _controlsOverview = UiFactory.MakeLabel(GameText.T("settings.controlsOverview"), 11, Ink);
+        _controlsOverview = UiFactory.MakeLabel(SettingsControlsOverviewText(), 11, Ink);
         _controlsOverview.Name = "ControlsBindingOverview";
         _controlsOverview.Position = new Vector2(204, 408);
         _controlsOverview.CustomMinimumSize = new Vector2(274, 64);
@@ -365,12 +365,24 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _impactShake.Text = GameText.T("settings.impactShake");
         _impactShake.TooltipText = GameText.T("settings.impactShake.tooltip");
         _controlsLabel.Text = GameText.T("settings.controls");
-        _controlsOverview.Text = GameText.T("settings.controlsOverview");
+        _controlsOverview.Text = SettingsControlsOverviewText();
         _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
         _volumeLabel.Text = GameText.T("settings.masterAudio");
         _volume.TooltipText = GameText.T("settings.masterAudio.tooltip");
         _close.Text = GameText.T("settings.close");
         _close.TooltipText = GameText.T("settings.close");
+    }
+
+    private static string SettingsControlsOverviewText()
+    {
+        var rowKeys = ControlBindingCatalog.SettingsOverviewRowKeys;
+        var rows = new string[rowKeys.Count];
+        for (var index = 0; index < rowKeys.Count; index++)
+        {
+            rows[index] = GameText.T(rowKeys[index]);
+        }
+
+        return string.Join('\n', rows);
     }
 
     private partial class SettingsBackdrop : Control

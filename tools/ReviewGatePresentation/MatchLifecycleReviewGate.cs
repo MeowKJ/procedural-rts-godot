@@ -8,6 +8,7 @@ static class MatchLifecycleReviewGate
         var pauseMenu = ReviewGateSource.Read(root, "scripts", "ui", "PauseMenuLayer.cs");
         var outcome = ReviewGateSource.Read(root, "scripts", "ui", "OutcomeScreenLayer.cs");
         var settings = ReviewGateSource.Read(root, "scripts", "ui", "SettingsOverlayLayer.cs");
+        var controlBindingCatalog = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs");
         var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
 
@@ -21,12 +22,17 @@ static class MatchLifecycleReviewGate
         RequireText(pauseQa, "CountNodes<BattleRoot>", "PauseQa must assert battle roots do not leak across lifecycle transitions.", result);
         RequireText(pauseMenu, "GetTree().Paused = false;", "Pause menu scene changes must clear paused state.", result);
         RequireText(outcome, "GetTree().Paused = false;", "Outcome scene changes must clear paused state.", result);
+        RequireText(controlBindingCatalog, "public static IReadOnlyList<ControlBindingSection> Sections", "Control binding sections must live in a shared catalog.", result);
+        RequireText(controlBindingCatalog, "public static IReadOnlyList<string> SettingsOverviewRowKeys", "Settings controls overview must draw from the shared binding catalog.", result);
+        RequireText(controlBindingCatalog, "\"hotkeys.build.4\"", "Shared binding catalog must include batch production controls.", result);
         RequireText(settings, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.", result);
-        RequireText(settings, "GameText.T(\"settings.controlsOverview\")", "Settings overlay controls overview must use localized copy.", result);
-        RequireText(settings, "_controlsOverview.Text = GameText.T(\"settings.controlsOverview\")", "Settings overlay language refresh must update the controls binding overview.", result);
+        RequireText(settings, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.", result);
+        RequireText(settings, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.", result);
         RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.", result);
-        RequireText(englishText, "[\"settings.controlsOverview\"]", "English settings controls overview must exist.", result);
+        RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.", result);
+        ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
         RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.", result);
-        RequireText(chineseText, "[\"settings.controlsOverview\"]", "Chinese settings controls overview must exist.", result);
+        RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.", result);
+        ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
     }
 }
