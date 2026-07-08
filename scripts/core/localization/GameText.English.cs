@@ -87,6 +87,8 @@ public static partial class GameText
         ["ui.catalog.abilitiesSurface"] = "UNIT ABILITIES",
         ["ui.catalog.abilitiesEmpty"] = "Select support unit\nno ability source",
         ["ui.catalog.abilitiesCount"] = "{0} ability cards",
+        ["ui.catalog.modeSelected"] = "PAGE: {0}\n{1}",
+        ["ui.catalog.modeFocus"] = "FOCUS: {0}\npress to switch page",
         ["ui.catalog.overview.build"] = "{0}/{1} OK | {2} lanes | {3}",
         ["ui.catalog.overview.train"] = "{0}/{1} OK | {2} lanes | {3}",
         ["ui.catalog.overview.abilities"] = "{0}/{1} RDY",

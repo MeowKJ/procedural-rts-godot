@@ -71,8 +71,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
         RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
-        RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button focus must explain the page in the inspector.", result);
-        RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button press must explain the selected page in the inspector.", result);
+        RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
+        RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page in the inspector.", result);
+        RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.", result);
+        RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.", result);
         RequireText(hudLayer, "button.FocusExited += () => RestoreCatalogStatusText();", "Build and Train card focus exit must restore catalog page help/status.", result);
@@ -403,6 +405,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.overview.scope.auto\"] = \"AUTO\"", "English catalog overview provider scope must expose Auto compactly.", result);
         RequireText(englishText, "[\"ui.catalog.upgradesCount\"] = \"{0} project shells\\nsource: {1}; read-only\"", "English catalog mode Upgrades count must explain read-only selected-source project shells.", result);
         RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English catalog mode upgrade inspector text must include source context.", result);
+        RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.", result);
         RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.", result);
@@ -418,6 +422,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"{0}壳 | 无通道\"", "Chinese catalog mode Upgrades overview must stay a non-provider project shell.", result);
         RequireText(chineseText, "[\"ui.catalog.overview.scope.auto\"] = \"自动\"", "Chinese catalog overview provider scope must expose Auto compactly.", result);
         RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese catalog mode Upgrades count must explain read-only selected-source project shells.", result);
+        RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);

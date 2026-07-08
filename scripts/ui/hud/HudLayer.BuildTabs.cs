@@ -55,14 +55,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_catalogSurfaceLabel is not null)
         {
-            _catalogSurfaceLabel.Text = mode switch
-            {
-                CatalogModeKind.Build => GameText.T("ui.catalog.buildSurface"),
-                CatalogModeKind.Train => GameText.T("ui.catalog.trainSurface"),
-                CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgradesSurface"),
-                CatalogModeKind.Abilities => GameText.T("ui.catalog.abilitiesSurface"),
-                _ => "",
-            };
+            _catalogSurfaceLabel.Text = CatalogModeSurfaceText(mode);
         }
 
         if (mode != CatalogModeKind.Abilities && _productionValue is not null)
@@ -88,6 +81,28 @@ public partial class HudLayer : CanvasLayer
 
         RefreshCommandCards();
         RefreshCatalogOverview();
+    }
+
+    private static string CatalogModeSurfaceText(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => GameText.T("ui.catalog.buildSurface"),
+            CatalogModeKind.Train => GameText.T("ui.catalog.trainSurface"),
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgradesSurface"),
+            CatalogModeKind.Abilities => GameText.T("ui.catalog.abilitiesSurface"),
+            _ => "",
+        };
+    }
+
+    private static string CatalogModePageSelectedText(CatalogModeButton button)
+    {
+        return GameText.Format("ui.catalog.modeSelected", button.Label, CatalogModeSurfaceText(button.Mode));
+    }
+
+    private static string CatalogModeFocusText(CatalogModeButton button)
+    {
+        return GameText.Format("ui.catalog.modeFocus", button.Label);
     }
 
     private void SelectProductionCategory(ProductionCategory category)

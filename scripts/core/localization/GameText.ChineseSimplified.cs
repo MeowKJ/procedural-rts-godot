@@ -62,6 +62,8 @@ public static partial class GameText
         ["ui.catalog.abilitiesSurface"] = "单位能力",
         ["ui.catalog.abilitiesEmpty"] = "选择支援单位\n无能力来源",
         ["ui.catalog.abilitiesCount"] = "{0} 张能力卡",
+        ["ui.catalog.modeSelected"] = "页面: {0}\n{1}",
+        ["ui.catalog.modeFocus"] = "焦点: {0}\n确认切换页面",
         ["ui.catalog.overview.build"] = "{0}/{1}可 | {2}线 | {3}",
         ["ui.catalog.overview.train"] = "{0}/{1}可 | {2}线 | {3}",
         ["ui.catalog.overview.abilities"] = "{0}/{1}就绪",

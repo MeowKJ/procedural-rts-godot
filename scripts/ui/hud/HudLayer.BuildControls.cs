@@ -170,10 +170,10 @@ public partial class HudLayer : CanvasLayer
         };
         RegisterCatalogModeButton(button);
         button.Pressed += () => SelectCatalogMode(mode);
-        button.Pressed += () => SetCatalogStatusText(button.HelpText);
+        button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));
         button.MouseEntered += () => SetCatalogStatusText(button.HelpText);
         button.MouseExited += RestoreCatalogStatusText;
-        button.FocusEntered += () => SetCatalogStatusText(button.HelpText);
+        button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));
         button.FocusExited += RestoreCatalogStatusText;
         parent.AddChild(button);
     }

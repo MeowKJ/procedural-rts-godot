@@ -79,17 +79,29 @@ public partial class HudLayer : CanvasLayer
         {
             var rect = new Rect2(Vector2.Zero, Size);
             var accent = CatalogModeAccent(Mode);
-            var fill = _selected ? new Color(accent, 0.16f) : new Color(CurrentPalette.PanelSubtleFill, 0.82f);
+            var focused = HasFocus();
+            var borderAlpha = focused ? 0.95f : _selected ? 0.84f : 0.42f;
+            var borderWidth = focused ? 2.2f : _selected ? 1.8f : 1.2f;
+            var textStrong = _selected || focused;
+            var fill = _selected
+                ? new Color(accent, focused ? 0.24f : 0.16f)
+                : new Color(focused ? accent : CurrentPalette.PanelSubtleFill, focused ? 0.12f : 0.82f);
             DrawRect(rect, fill, true);
-            DrawRect(rect.Grow(-1), new Color(accent, _selected ? 0.84f : 0.42f), false, _selected ? 1.8f : 1.2f, true);
-            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected ? 0.78f : 0.46f), true);
+            DrawRect(rect.Grow(-1), new Color(accent, borderAlpha), false, borderWidth, true);
+            if (focused)
+            {
+                DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);
+                DrawRect(new Rect2(new Vector2(2, 5), new Vector2(2, rect.Size.Y - 10)), new Color(accent, 0.95f), true);
+            }
+
+            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, textStrong ? 0.78f : 0.46f), true);
 
             var glyph = CatalogModeGlyph(Mode);
-            DrawIconGlyph(this, glyph, new Vector2(11, rect.Size.Y * 0.5f), 14, new Color(accent, _selected ? 1f : 0.72f));
+            DrawIconGlyph(this, glyph, new Vector2(11, rect.Size.Y * 0.5f), 14, new Color(accent, textStrong ? 1f : 0.72f));
 
             var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);
-            DrawString(labelFont, new Vector2(22, 12), Label, HorizontalAlignment.Left, rect.Size.X - 26, 10, new Color(Ink, _selected ? 1f : 0.82f));
-            DrawString(labelFont, new Vector2(22, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 26, 8, new Color(InkMuted, 0.82f));
+            DrawString(labelFont, new Vector2(22, 12), Label, HorizontalAlignment.Left, rect.Size.X - 26, 10, new Color(Ink, textStrong ? 1f : 0.82f));
+            DrawString(labelFont, new Vector2(22, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 26, 8, new Color(focused ? Ink : InkMuted, focused ? 0.92f : 0.82f));
         }
     }
 
