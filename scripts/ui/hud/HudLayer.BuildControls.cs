@@ -153,6 +153,7 @@ public partial class HudLayer : CanvasLayer
             {
                 CatalogModeKind.Build => "CatalogModeBuild",
                 CatalogModeKind.Train => "CatalogModeTrain",
+                CatalogModeKind.Upgrades => "CatalogModeUpgrades",
                 CatalogModeKind.Abilities => "CatalogModeAbilities",
                 _ => "CatalogMode",
             },
@@ -160,8 +161,8 @@ public partial class HudLayer : CanvasLayer
             Label = label,
             Detail = detail,
             Position = position,
-            CustomMinimumSize = new Vector2(84, 28),
-            Size = new Vector2(84, 28),
+            CustomMinimumSize = new Vector2(66, 28),
+            Size = new Vector2(66, 28),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             TooltipText = label,

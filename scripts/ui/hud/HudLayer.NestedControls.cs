@@ -9,6 +9,7 @@ public partial class HudLayer : CanvasLayer
     {
         Build,
         Train,
+        Upgrades,
         Abilities,
     }
 
@@ -18,7 +19,8 @@ public partial class HudLayer : CanvasLayer
         {
             CatalogModeKind.Build => Cyan,
             CatalogModeKind.Train => Mint,
-            CatalogModeKind.Abilities => Amber,
+            CatalogModeKind.Upgrades => Amber,
+            CatalogModeKind.Abilities => Danger,
             _ => InkMuted,
         };
     }
@@ -29,6 +31,7 @@ public partial class HudLayer : CanvasLayer
         {
             CatalogModeKind.Build => IconGlyph.Building,
             CatalogModeKind.Train => IconGlyph.Infantry,
+            CatalogModeKind.Upgrades => IconGlyph.Settings,
             CatalogModeKind.Abilities => IconGlyph.Ability,
             _ => IconGlyph.None,
         };
@@ -81,11 +84,11 @@ public partial class HudLayer : CanvasLayer
             DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected ? 0.78f : 0.46f), true);
 
             var glyph = CatalogModeGlyph(Mode);
-            DrawIconGlyph(this, glyph, new Vector2(14, rect.Size.Y * 0.5f), 15, new Color(accent, _selected ? 1f : 0.72f));
+            DrawIconGlyph(this, glyph, new Vector2(11, rect.Size.Y * 0.5f), 14, new Color(accent, _selected ? 1f : 0.72f));
 
             var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);
-            DrawString(labelFont, new Vector2(28, 12), Label, HorizontalAlignment.Left, rect.Size.X - 34, 10, new Color(Ink, _selected ? 1f : 0.82f));
-            DrawString(labelFont, new Vector2(28, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 34, 8, new Color(InkMuted, 0.82f));
+            DrawString(labelFont, new Vector2(22, 12), Label, HorizontalAlignment.Left, rect.Size.X - 26, 10, new Color(Ink, _selected ? 1f : 0.82f));
+            DrawString(labelFont, new Vector2(22, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 26, 8, new Color(InkMuted, 0.82f));
         }
     }
 

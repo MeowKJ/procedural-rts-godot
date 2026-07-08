@@ -59,6 +59,7 @@ public partial class HudLayer : CanvasLayer
             {
                 CatalogModeKind.Build => GameText.T("ui.catalog.buildSurface"),
                 CatalogModeKind.Train => GameText.T("ui.catalog.trainSurface"),
+                CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgradesSurface"),
                 CatalogModeKind.Abilities => GameText.T("ui.catalog.abilitiesSurface"),
                 _ => "",
             };
@@ -124,6 +125,7 @@ public partial class HudLayer : CanvasLayer
             CatalogModeKind.Abilities => GameText.Format(
                 "ui.catalog.overview.abilities",
                 Math.Min(_abilityCardStates.Count, 12)),
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.overview.upgrades"),
             _ => "",
         };
     }

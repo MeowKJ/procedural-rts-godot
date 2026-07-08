@@ -69,6 +69,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.", result);
+        RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades catalog mode must own a distinct surface label.", result);
+        RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.overview.upgrades\")", "Upgrades catalog mode must expose a no-provider-lanes overview.", result);
+        RequireText(hudLayer, "SetCatalogStatusText(GameText.T(\"ui.catalog.upgradesEmpty\"))", "Upgrades catalog shell must show localized empty text instead of production status.", result);
         RequireText(hudLayer, "CatalogOverviewConstructionLaneCount()", "Build catalog overview must summarize construction provider lane count.", result);
         RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must summarize visible provider lane count.", result);
         RequireText(hudLayer, "_selectedCatalogMode == CatalogModeKind.Build", "HudLayer command-card refresh must branch build cards from train cards by catalog mode.", result);
