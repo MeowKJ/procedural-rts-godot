@@ -212,7 +212,7 @@ public partial class HudLayer : CanvasLayer
         _drawerSelectedTitle.Text = CompactText(title, 24);
         _drawerSelectedMeta.Text = CompactText(meta, 30);
         _drawerSelectedStats.Text = CompactText(stats, 31);
-        _drawerSelectedDetail.Text = CompactText(detail, 34);
+        _drawerSelectedDetail.Text = CompactMultiline(detail, 34);
         _drawerPortrait.Mode = portraitMode;
         _drawerPortrait.Icon = icon;
         _drawerPortrait.UnitDesignId = unitDesignId;

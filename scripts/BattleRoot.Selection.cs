@@ -70,12 +70,13 @@ public partial class BattleRoot
             : ProductionDetail(building);
         var rally = building.RallyPoint is null ? GameText.T("ui.rally.none") : GameText.T("ui.rally.set");
         var sellRefund = BuildingSellRefundPreview(spec);
+        var support = BuildingSupportDetail(sellRefund, BuildingRepairStatus(building.Hp, spec.MaxHp));
 
         _hud.SetSelectionInfo(
             GameText.T(spec.NameKey).ToUpperInvariant(),
             BuildingAffiliationLabel(building),
             GameText.Format("ui.stat.building", health, spec.SightRange),
-            GameText.Format("ui.detail.building", queue, rally, sellRefund),
+            GameText.Format("ui.detail.building", queue, rally, support),
             "building",
             spec.Icon,
             [],
@@ -86,6 +87,58 @@ public partial class BattleRoot
     {
         var refund = Mathf.RoundToInt(spec.Cost * Math.Clamp(spec.RefundRatio, 0, 1));
         return GameText.Format("ui.detail.sellRefund", refund);
+    }
+
+    private static string BuildingSupportDetail(string sellRefund, string repairStatus)
+    {
+        return GameText.Format("ui.detail.buildingSupport", sellRefund, repairStatus);
+    }
+
+    private string BuildingRepairStatus(float hp, float maxHp)
+    {
+        if (maxHp <= 0 || hp >= maxHp)
+        {
+            return GameText.T("ui.detail.repairHealthy");
+        }
+
+        return HasLivePlayerRepairSupport()
+            ? GameText.T("ui.detail.repairReady")
+            : GameText.T("ui.detail.repairNeeded");
+    }
+
+    private bool HasLivePlayerRepairSupport()
+    {
+        return UseUnitDesignRuntime ? HasLiveRuntimeRepairSupport() : HasLiveLegacyRepairSupport();
+    }
+
+    private bool HasLiveRuntimeRepairSupport()
+    {
+        foreach (var unit in _unitBattlefield.Units)
+        {
+            if (unit.PlayerSlotId == PlayerSlotId.One
+                && unit.Hp > 0
+                && unit.Spec.HasAbility(AbilityKind.RepairField))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasLiveLegacyRepairSupport()
+    {
+        foreach (var unit in _state.Units)
+        {
+            if (unit.Owner == ProceduralRts.Core.Owner.Player
+                && unit.Hp > 0
+                && unit.Spec.HasAbility(AbilityKind.RepairField))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string UnitAffiliationLabel(UnitModel unit)
