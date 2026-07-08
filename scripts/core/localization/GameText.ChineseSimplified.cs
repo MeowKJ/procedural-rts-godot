@@ -110,6 +110,8 @@ public static partial class GameText
         ["ui.providerLane.summaryIncomplete"] = "建造",
         ["ui.providerLane.summaryNone"] = "无源",
         ["ui.providerLane.summaryLocked"] = "锁定",
+        ["ui.providerLane.upgradesNone"] = "无\n科技\n通道",
+        ["ui.providerLane.abilitiesNone"] = "单位\n能力",
         ["ui.providerLane.offline"] = "生产者离线",
         ["ui.providerLane.incomplete"] = "生产者未完工",
         ["ui.constructionProviderLane.auto"] = "自动建造源",

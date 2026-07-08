@@ -135,6 +135,8 @@ public static partial class GameText
         ["ui.providerLane.summaryIncomplete"] = "BLD",
         ["ui.providerLane.summaryNone"] = "NONE",
         ["ui.providerLane.summaryLocked"] = "LOCK",
+        ["ui.providerLane.upgradesNone"] = "NO\nTECH\nLANE",
+        ["ui.providerLane.abilitiesNone"] = "UNIT\nABIL",
         ["ui.providerLane.offline"] = "Provider offline",
         ["ui.providerLane.incomplete"] = "Provider incomplete",
         ["ui.constructionProviderLane.auto"] = "Auto builder",
