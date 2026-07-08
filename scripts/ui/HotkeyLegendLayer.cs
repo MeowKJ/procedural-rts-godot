@@ -97,18 +97,6 @@ public partial class HotkeyLegendLayer : CanvasLayer
         private const float RowHeight = 14f;
         private readonly float[] _columnY = new float[LegendColumnCount];
 
-        private readonly (string Section, string[] Rows, Color Accent)[] _sections =
-        [
-            (GameText.T("hotkeys.camera"), [GameText.T("hotkeys.camera.1"), GameText.T("hotkeys.camera.2"), GameText.T("hotkeys.camera.3")], Cyan),
-            (GameText.T("hotkeys.select"), [GameText.T("hotkeys.select.1"), GameText.T("hotkeys.select.2"), GameText.T("hotkeys.select.3")], Mint),
-            (GameText.T("hotkeys.orders"), [GameText.T("hotkeys.orders.1"), GameText.T("hotkeys.orders.2"), GameText.T("hotkeys.orders.3")], Amber),
-            (GameText.T("hotkeys.stance"), [GameText.T("hotkeys.stance.1"), GameText.T("hotkeys.stance.2"), GameText.T("hotkeys.stance.3")], Mint),
-            (GameText.T("hotkeys.groups"), [GameText.T("hotkeys.groups.1"), GameText.T("hotkeys.groups.2")], Cyan),
-            (GameText.T("hotkeys.build"), [GameText.T("hotkeys.build.1"), GameText.T("hotkeys.build.2"), GameText.T("hotkeys.build.3")], Amber),
-            (GameText.T("hotkeys.catalog"), [GameText.T("hotkeys.catalog.1"), GameText.T("hotkeys.catalog.2"), GameText.T("hotkeys.catalog.3")], Cyan),
-            (GameText.T("hotkeys.debug"), [GameText.T("hotkeys.debug.1"), GameText.T("hotkeys.debug.2"), GameText.T("hotkeys.debug.3")], Danger),
-        ];
-
         public override void _Draw()
         {
             var rect = new Rect2(Vector2.Zero, Size);
@@ -122,14 +110,15 @@ public partial class HotkeyLegendLayer : CanvasLayer
                 _columnY[column] = HeaderHeight + SectionTopGap;
             }
 
-            for (var index = 0; index < _sections.Length; index++)
+            var sections = ControlBindingCatalog.Sections;
+            for (var index = 0; index < sections.Count; index++)
             {
-                var (section, rows, accent) = _sections[index];
+                var section = sections[index];
                 var column = index % LegendColumnCount;
                 var x = PanelPadding + column * (columnWidth + ColumnGap);
                 var y = _columnY[column];
-                DrawSection(section, rows, accent, new Vector2(x, y), columnWidth);
-                _columnY[column] += SectionHeight(rows.Length) + SectionGap;
+                DrawSection(section, SectionAccent(section.Kind), new Vector2(x, y), columnWidth);
+                _columnY[column] += SectionHeight(section.RowKeys.Count) + SectionGap;
             }
         }
 
@@ -140,26 +129,26 @@ public partial class HotkeyLegendLayer : CanvasLayer
             DrawLine(new Vector2(14, 52), new Vector2(Size.X - 14, 52), new Color("#59f1ff", 0.24f), 1, true);
         }
 
-        private void DrawSection(string section, string[] rows, Color accent, Vector2 position, float width)
+        private void DrawSection(ControlBindingSection section, Color accent, Vector2 position, float width)
         {
-            var sectionHeight = SectionHeight(rows.Length);
+            var sectionHeight = SectionHeight(section.RowKeys.Count);
             DrawRect(new Rect2(position, new Vector2(width, sectionHeight)), new Color("#071019", 0.72f), true);
             DrawRect(new Rect2(position, new Vector2(4, sectionHeight)), new Color(accent, 0.78f), true);
             DrawString(
                 UiFontProfile.DrawFont(UiFontRole.Compact),
                 position + new Vector2(12, 14),
-                section,
+                GameText.T(section.TitleKey),
                 HorizontalAlignment.Left,
                 width - 24,
                 11,
                 new Color(accent, 0.96f));
 
-            for (var index = 0; index < rows.Length; index++)
+            for (var index = 0; index < section.RowKeys.Count; index++)
             {
                 DrawString(
                     UiFontProfile.DrawFont(UiFontRole.Compact),
                     position + new Vector2(12, SectionHeaderHeight + 10 + index * RowHeight),
-                    rows[index],
+                    GameText.T(section.RowKeys[index]),
                     HorizontalAlignment.Left,
                     width - 24,
                     11,
@@ -170,6 +159,22 @@ public partial class HotkeyLegendLayer : CanvasLayer
         private static float SectionHeight(int rowCount)
         {
             return SectionHeaderHeight + rowCount * RowHeight + 10f;
+        }
+
+        private static Color SectionAccent(ControlBindingSectionKind kind)
+        {
+            return kind switch
+            {
+                ControlBindingSectionKind.Camera => Cyan,
+                ControlBindingSectionKind.Select => Mint,
+                ControlBindingSectionKind.Orders => Amber,
+                ControlBindingSectionKind.Stance => Mint,
+                ControlBindingSectionKind.Groups => Cyan,
+                ControlBindingSectionKind.Build => Amber,
+                ControlBindingSectionKind.Catalog => Cyan,
+                ControlBindingSectionKind.Debug => Danger,
+                _ => InkMuted,
+            };
         }
     }
 }

@@ -5,6 +5,7 @@ static class HoverTooltipReviewGate
         var preview = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Preview.cs");
         var tooltips = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.HoverTooltips.cs");
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
+        var controlBindingCatalog = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs");
         var selectionInput = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.cs");
         var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
@@ -52,7 +53,8 @@ static class HoverTooltipReviewGate
         RequireText(hotkeys, "private const float PanelHeight = 458f;", "Hotkey legend must keep a fixed 720p-safe panel height.", result);
         RequireText(hotkeys, "private const int LegendColumnCount = 2;", "Hotkey legend must use a compact two-column command reference.", result);
         RequireText(hotkeys, "var column = index % LegendColumnCount;", "Hotkey legend sections must flow into two columns instead of one tall stack.", result);
-        RequireText(hotkeys, "GameText.T(\"hotkeys.catalog\")", "Hotkey legend must include a right-catalog control section.", result);
+        RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.", result);
+        RequireText(controlBindingCatalog, "ControlBindingSectionKind.Catalog, \"hotkeys.catalog\"", "Shared binding catalog must include a right-catalog control section.", result);
         RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.", result);
         RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.", result);
         RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"Build / Train / UPG / ABIL pages\"", "English hotkey legend must expose right catalog page switching.", result);
