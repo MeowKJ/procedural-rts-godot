@@ -105,6 +105,34 @@ public partial class HudLayer : CanvasLayer
         return GameText.Format("ui.catalog.modeFocus", button.Label);
     }
 
+    private void CycleCatalogMode(int direction)
+    {
+        var next = _selectedCatalogMode switch
+        {
+            CatalogModeKind.Build => direction >= 0 ? CatalogModeKind.Train : CatalogModeKind.Abilities,
+            CatalogModeKind.Train => direction >= 0 ? CatalogModeKind.Upgrades : CatalogModeKind.Build,
+            CatalogModeKind.Upgrades => direction >= 0 ? CatalogModeKind.Abilities : CatalogModeKind.Train,
+            CatalogModeKind.Abilities => direction >= 0 ? CatalogModeKind.Build : CatalogModeKind.Upgrades,
+            _ => CatalogModeKind.Train,
+        };
+        SelectCatalogMode(next);
+        _manualDrawerOpen = true;
+        _drawerInactivity = 0;
+        SetCatalogStatusText(GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
+    }
+
+    private static string CatalogModeLabelText(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => GameText.T("ui.catalog.build"),
+            CatalogModeKind.Train => GameText.T("ui.catalog.train"),
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.upgrades"),
+            CatalogModeKind.Abilities => GameText.T("ui.catalog.abilities"),
+            _ => "",
+        };
+    }
+
     private void SelectProductionCategory(ProductionCategory category)
     {
         _selectedProductionCategory = category;

@@ -474,7 +474,7 @@ public static partial class GameText
         ["hotkeys.build.4"] = "Shift 点击训练 x5",
         ["hotkeys.catalog"] = "目录",
         ["hotkeys.catalog.1"] = "Tab 右侧目录抽屉",
-        ["hotkeys.catalog.2"] = "建造/训练/升级/能力页",
+        ["hotkeys.catalog.2"] = "PageUp/PageDown 切换页面",
         ["hotkeys.catalog.3"] = "点击卡片/来源通道",
         ["hotkeys.debug"] = "调试",
         ["hotkeys.debug.1"] = "F1 热键",

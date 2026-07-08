@@ -14,6 +14,7 @@ static class HoverTooltipReviewGate
         var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
         var battleRootAlerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var hudPreview = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
+        var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
         var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
 
@@ -65,9 +66,12 @@ static class HoverTooltipReviewGate
         RequireText(hotkeys, "var column = index % LegendColumnCount;", "Hotkey legend sections must flow into two columns instead of one tall stack.", result);
         RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.", result);
         RequireText(controlBindingCatalog, "ControlBindingSectionKind.Catalog, \"hotkeys.catalog\"", "Shared binding catalog must include a right-catalog control section.", result);
+        RequireText(hudLayer, "private void CycleCatalogMode(int direction)", "Right catalog pages must expose keyboard cycling through the same mode selection path.", result);
+        RequireText(hudLayer, "key.Keycode == Key.Pageup", "Right catalog keyboard cycling must support PageUp.", result);
+        RequireText(hudLayer, "key.Keycode == Key.Pagedown", "Right catalog keyboard cycling must support PageDown.", result);
         RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.", result);
         RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.", result);
-        RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"Build / Train / UPG / ABIL pages\"", "English hotkey legend must expose right catalog page switching.", result);
+        RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown cycle pages\"", "English hotkey legend must expose right catalog page cycling.", result);
         RequireText(englishText, "[\"hotkeys.catalog.3\"] = \"Click cards / provider lanes\"", "English hotkey legend must expose right catalog card and provider interactions.", result);
         RequireText(englishText, "[\"hotkeys.orders.1\"] = \"Ribbon / RMB direct\"", "English hotkey legend must point move modes at visible ribbon controls and right-click modifiers.", result);
         RequireText(englishText, "[\"hotkeys.orders.2\"] = \"Ribbon / Alt+RMB attack\"", "English hotkey legend must point attack move at visible ribbon controls and right-click modifiers.", result);
@@ -77,7 +81,7 @@ static class HoverTooltipReviewGate
         RequireText(chineseText, "[\"hotkeys.orders.3\"] = \"命令栏 / Ctrl+右键无视\"", "Chinese hotkey legend must point ignore move at visible ribbon controls and right-click modifiers.", result);
         RequireText(chineseText, "[\"hotkeys.catalog\"] = \"目录\"", "Chinese hotkey legend must label the right catalog section.", result);
         RequireText(chineseText, "[\"hotkeys.catalog.1\"] = \"Tab 右侧目录抽屉\"", "Chinese hotkey legend must expose the right catalog drawer toggle.", result);
-        RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"建造/训练/升级/能力页\"", "Chinese hotkey legend must expose right catalog page switching.", result);
+        RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown 切换页面\"", "Chinese hotkey legend must expose right catalog page cycling.", result);
         RequireText(chineseText, "[\"hotkeys.catalog.3\"] = \"点击卡片/来源通道\"", "Chinese hotkey legend must expose right catalog card and provider interactions.", result);
         ForbidText(selectionInput, "HandleMoveModeHotkey", "Selection input must not dispatch a second move-mode hotkey path that conflicts with help/debug keys.", result);
         ForbidText(selectionHotkeys, "HandleMoveModeHotkey", "Selection hotkeys must not keep a dead move-mode hotkey handler.", result);

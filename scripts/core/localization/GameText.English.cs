@@ -517,7 +517,7 @@ public static partial class GameText
         ["hotkeys.build.4"] = "Shift-click trains x5",
         ["hotkeys.catalog"] = "CATALOG",
         ["hotkeys.catalog.1"] = "Tab right catalog drawer",
-        ["hotkeys.catalog.2"] = "Build / Train / UPG / ABIL pages",
+        ["hotkeys.catalog.2"] = "PageUp/PageDown cycle pages",
         ["hotkeys.catalog.3"] = "Click cards / provider lanes",
         ["hotkeys.debug"] = "DEBUG",
         ["hotkeys.debug.1"] = "F1 hotkeys",
