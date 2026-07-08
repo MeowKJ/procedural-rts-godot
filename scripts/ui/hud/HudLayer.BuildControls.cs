@@ -217,6 +217,9 @@ public partial class HudLayer : CanvasLayer
         button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);
         button.MouseEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
         button.MouseExited += RestoreCatalogStatusText;
+        button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
+        button.FocusExited += () => RestoreCatalogStatusText();
         button.Pressed += () =>
         {
             SetCatalogStatusText(button.InspectorText);

@@ -73,6 +73,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button focus must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button press must explain the selected page in the inspector.", result);
+        RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.", result);
+        RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.", result);
+        RequireText(hudLayer, "button.FocusExited += () => RestoreCatalogStatusText();", "Build and Train card focus exit must restore catalog page help/status.", result);
+        RequireText(hudLayer, "card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);", "Ability card focus must show focused ability details in the catalog inspector.", result);
+        RequireText(hudLayer, "card.FocusExited += RestoreCatalogStatusText;", "Ability card focus exit must restore catalog ability page status.", result);
         RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades catalog mode must own a distinct surface label.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.overview.upgrades\")", "Upgrades catalog mode must expose a no-provider-lanes overview.", result);
