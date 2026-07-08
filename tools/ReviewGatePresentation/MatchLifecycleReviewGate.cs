@@ -26,8 +26,13 @@ static class MatchLifecycleReviewGate
         RequireText(controlBindingCatalog, "public static IReadOnlyList<string> SettingsOverviewRowKeys", "Settings controls overview must draw from the shared binding catalog.", result);
         RequireText(controlBindingCatalog, "\"hotkeys.build.4\"", "Shared binding catalog must include batch production controls.", result);
         RequireText(settings, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.", result);
+        RequireText(settings, "Name = \"ControlsBindingSectionSelect\"", "Settings overlay must expose a stable controls section selector node.", result);
+        RequireText(settings, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.", result);
         RequireText(settings, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.", result);
+        RequireText(settings, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.", result);
+        RequireText(settings, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.", result);
         RequireText(settings, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.", result);
+        ForbidText(settings, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.", result);
         RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.", result);
         RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.", result);
         ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);

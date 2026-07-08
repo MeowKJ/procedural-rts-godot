@@ -282,9 +282,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(controlBindingCatalog, "\"hotkeys.build.4\"", "Shared binding catalog must include batch production controls.");
     RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.");
+    RequireText(settingsOverlay, "Name = \"ControlsBindingSectionSelect\"", "Settings overlay must expose a stable controls section selector node.");
+    RequireText(settingsOverlay, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.");
     RequireText(settingsOverlay, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.");
+    RequireText(settingsOverlay, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.");
+    RequireText(settingsOverlay, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.");
     RequireText(settingsOverlay, "GameText.T(\"settings.controls.tooltip\")", "Settings overlay controls overview must explain its read-only remap staging state.");
     RequireText(settingsOverlay, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.");
+    ForbidText(settingsOverlay, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.");
     RequireText(englishText, "[\"hotkeys.catalog\"] = \"CATALOG\"", "English hotkey legend must label the right catalog section.");
     RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.");
     RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"Build / Train / UPG / ABIL pages\"", "English hotkey legend must expose right catalog page switching.");

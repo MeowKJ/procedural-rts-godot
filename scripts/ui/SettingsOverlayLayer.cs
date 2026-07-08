@@ -29,11 +29,14 @@ public partial class SettingsOverlayLayer : CanvasLayer
     private CheckButton _impactShake = null!;
     private Label _controlsLabel = null!;
     private Label _controlsOverview = null!;
+    private OptionButton _controlsSection = null!;
+    private Label _controlsSectionRows = null!;
     private Label _volumeLabel = null!;
     private HSlider _volume = null!;
     private Label _volumeValue = null!;
     private Button _close = null!;
     private Label _status = null!;
+    private int _selectedControlsSectionIndex;
     private float _elapsed;
     public bool IsOpen => _root is not null && _root.Visible;
 
@@ -223,19 +226,43 @@ public partial class SettingsOverlayLayer : CanvasLayer
 
         _controlsOverview = UiFactory.MakeLabel(SettingsControlsOverviewText(), 11, Ink);
         _controlsOverview.Name = "ControlsBindingOverview";
-        _controlsOverview.Position = new Vector2(204, 408);
-        _controlsOverview.CustomMinimumSize = new Vector2(274, 64);
+        _controlsOverview.Position = new Vector2(32, 446);
+        _controlsOverview.CustomMinimumSize = new Vector2(148, 64);
         _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
         _panel.AddChild(_controlsOverview);
 
+        _controlsSection = new OptionButton
+        {
+            Name = "ControlsBindingSectionSelect",
+            Position = new Vector2(204, 408),
+            CustomMinimumSize = new Vector2(274, 34),
+            FocusMode = Control.FocusModeEnum.All,
+            TooltipText = GameText.T("settings.controls.tooltip"),
+        };
+        for (var index = 0; index < ControlBindingCatalog.Sections.Count; index++)
+        {
+            _controlsSection.AddItem(GameText.T(ControlBindingCatalog.Sections[index].TitleKey), index);
+        }
+
+        UiFactory.StyleButton(_controlsSection, Amber);
+        _controlsSection.ItemSelected += OnControlsSectionSelected;
+        _panel.AddChild(_controlsSection);
+
+        _controlsSectionRows = UiFactory.MakeLabel(SettingsControlsSectionText(_selectedControlsSectionIndex), 10, Ink);
+        _controlsSectionRows.Name = "ControlsBindingSectionRows";
+        _controlsSectionRows.Position = new Vector2(204, 448);
+        _controlsSectionRows.CustomMinimumSize = new Vector2(274, 66);
+        _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
+        _panel.AddChild(_controlsSectionRows);
+
         _volumeLabel = UiFactory.MakeLabel(GameText.T("settings.masterAudio"), 12, InkMuted);
-        _volumeLabel.Position = new Vector2(32, 492);
+        _volumeLabel.Position = new Vector2(32, 526);
         _volumeLabel.CustomMinimumSize = new Vector2(160, 22);
         _panel.AddChild(_volumeLabel);
 
         _volume = new HSlider
         {
-            Position = new Vector2(204, 486),
+            Position = new Vector2(204, 520),
             CustomMinimumSize = new Vector2(208, 36),
             MinValue = 0,
             MaxValue = 100,
@@ -248,19 +275,19 @@ public partial class SettingsOverlayLayer : CanvasLayer
 
         _volumeValue = UiFactory.MakeLabel("0%", 13, Ink);
         _volumeValue.HorizontalAlignment = HorizontalAlignment.Right;
-        _volumeValue.Position = new Vector2(420, 492);
+        _volumeValue.Position = new Vector2(420, 526);
         _volumeValue.CustomMinimumSize = new Vector2(58, 22);
         _panel.AddChild(_volumeValue);
 
         _close = UiFactory.MakeButton(GameText.T("settings.close"), Danger);
-        _close.Position = new Vector2(28, 548);
+        _close.Position = new Vector2(28, 574);
         _close.CustomMinimumSize = new Vector2(450, 44);
         _close.Pressed += Close;
         _panel.AddChild(_close);
 
         _status = UiFactory.MakeLabel(GameText.T("settings.hint"), 11, InkMuted);
         _status.HorizontalAlignment = HorizontalAlignment.Center;
-        _status.Position = new Vector2(28, 612);
+        _status.Position = new Vector2(28, 628);
         _status.CustomMinimumSize = new Vector2(450, 20);
         _panel.AddChild(_status);
     }
@@ -281,6 +308,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _impactShake.ButtonPressed = DisplayAudioSettings.ImpactScreenShake;
         _volume.Value = Mathf.RoundToInt(DisplayAudioSettings.MasterVolume * 100);
         _volumeValue.Text = $"{Mathf.RoundToInt(DisplayAudioSettings.MasterVolume * 100)}%";
+        _controlsSection.Select(_selectedControlsSectionIndex);
         RefreshText();
     }
 
@@ -330,6 +358,12 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _status.Text = GameText.T(enabled ? "settings.impactShakeEnabled" : "settings.impactShakeDisabled");
     }
 
+    private void OnControlsSectionSelected(long index)
+    {
+        _selectedControlsSectionIndex = Mathf.Clamp((int)index, 0, ControlBindingCatalog.Sections.Count - 1);
+        _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
+    }
+
     private void OnLanguageSelected(long index)
     {
         var language = Enum.IsDefined(typeof(GameLanguage), (int)index)
@@ -367,6 +401,15 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsLabel.Text = GameText.T("settings.controls");
         _controlsOverview.Text = SettingsControlsOverviewText();
         _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
+        for (var index = 0; index < ControlBindingCatalog.Sections.Count; index++)
+        {
+            _controlsSection.SetItemText(index, GameText.T(ControlBindingCatalog.Sections[index].TitleKey));
+        }
+
+        _controlsSection.TooltipText = GameText.T("settings.controls.tooltip");
+        _controlsSection.Select(_selectedControlsSectionIndex);
+        _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
+        _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
         _volumeLabel.Text = GameText.T("settings.masterAudio");
         _volume.TooltipText = GameText.T("settings.masterAudio.tooltip");
         _close.Text = GameText.T("settings.close");
@@ -380,6 +423,23 @@ public partial class SettingsOverlayLayer : CanvasLayer
         for (var index = 0; index < rowKeys.Count; index++)
         {
             rows[index] = GameText.T(rowKeys[index]);
+        }
+
+        return string.Join('\n', rows);
+    }
+
+    private static string SettingsControlsSectionText(int sectionIndex)
+    {
+        if (sectionIndex < 0 || sectionIndex >= ControlBindingCatalog.Sections.Count)
+        {
+            sectionIndex = 0;
+        }
+
+        var section = ControlBindingCatalog.Sections[sectionIndex];
+        var rows = new string[section.RowKeys.Count];
+        for (var index = 0; index < section.RowKeys.Count; index++)
+        {
+            rows[index] = GameText.T(section.RowKeys[index]);
         }
 
         return string.Join('\n', rows);
