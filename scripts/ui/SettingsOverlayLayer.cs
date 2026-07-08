@@ -27,6 +27,8 @@ public partial class SettingsOverlayLayer : CanvasLayer
     private Label _ownerColorsLabel = null!;
     private OptionButton _ownerColors = null!;
     private CheckButton _impactShake = null!;
+    private Label _controlsLabel = null!;
+    private Label _controlsOverview = null!;
     private Label _volumeLabel = null!;
     private HSlider _volume = null!;
     private Label _volumeValue = null!;
@@ -214,14 +216,26 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _impactShake.Toggled += OnImpactShakeToggled;
         _panel.AddChild(_impactShake);
 
+        _controlsLabel = UiFactory.MakeLabel(GameText.T("settings.controls"), 12, InkMuted);
+        _controlsLabel.Position = new Vector2(32, 420);
+        _controlsLabel.CustomMinimumSize = new Vector2(160, 22);
+        _panel.AddChild(_controlsLabel);
+
+        _controlsOverview = UiFactory.MakeLabel(GameText.T("settings.controlsOverview"), 11, Ink);
+        _controlsOverview.Name = "ControlsBindingOverview";
+        _controlsOverview.Position = new Vector2(204, 408);
+        _controlsOverview.CustomMinimumSize = new Vector2(274, 64);
+        _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
+        _panel.AddChild(_controlsOverview);
+
         _volumeLabel = UiFactory.MakeLabel(GameText.T("settings.masterAudio"), 12, InkMuted);
-        _volumeLabel.Position = new Vector2(32, 428);
+        _volumeLabel.Position = new Vector2(32, 492);
         _volumeLabel.CustomMinimumSize = new Vector2(160, 22);
         _panel.AddChild(_volumeLabel);
 
         _volume = new HSlider
         {
-            Position = new Vector2(204, 422),
+            Position = new Vector2(204, 486),
             CustomMinimumSize = new Vector2(208, 36),
             MinValue = 0,
             MaxValue = 100,
@@ -234,19 +248,19 @@ public partial class SettingsOverlayLayer : CanvasLayer
 
         _volumeValue = UiFactory.MakeLabel("0%", 13, Ink);
         _volumeValue.HorizontalAlignment = HorizontalAlignment.Right;
-        _volumeValue.Position = new Vector2(420, 428);
+        _volumeValue.Position = new Vector2(420, 492);
         _volumeValue.CustomMinimumSize = new Vector2(58, 22);
         _panel.AddChild(_volumeValue);
 
         _close = UiFactory.MakeButton(GameText.T("settings.close"), Danger);
-        _close.Position = new Vector2(28, 504);
+        _close.Position = new Vector2(28, 548);
         _close.CustomMinimumSize = new Vector2(450, 44);
         _close.Pressed += Close;
         _panel.AddChild(_close);
 
         _status = UiFactory.MakeLabel(GameText.T("settings.hint"), 11, InkMuted);
         _status.HorizontalAlignment = HorizontalAlignment.Center;
-        _status.Position = new Vector2(28, 564);
+        _status.Position = new Vector2(28, 612);
         _status.CustomMinimumSize = new Vector2(450, 20);
         _panel.AddChild(_status);
     }
@@ -350,6 +364,9 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _ownerColors.SetItemText((int)OwnerColorPaletteMode.ColorblindSafe, DisplayAudioSettings.OwnerColorPaletteLabel(OwnerColorPaletteMode.ColorblindSafe));
         _impactShake.Text = GameText.T("settings.impactShake");
         _impactShake.TooltipText = GameText.T("settings.impactShake.tooltip");
+        _controlsLabel.Text = GameText.T("settings.controls");
+        _controlsOverview.Text = GameText.T("settings.controlsOverview");
+        _controlsOverview.TooltipText = GameText.T("settings.controls.tooltip");
         _volumeLabel.Text = GameText.T("settings.masterAudio");
         _volume.TooltipText = GameText.T("settings.masterAudio.tooltip");
         _close.Text = GameText.T("settings.close");
