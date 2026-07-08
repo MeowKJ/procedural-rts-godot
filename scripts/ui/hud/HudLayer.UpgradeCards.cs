@@ -153,7 +153,16 @@ public partial class HudLayer : CanvasLayer
     {
         return GameText.Format(
             "ui.catalog.upgradesCount",
-            Math.Min(DefaultUpgradeProjectShellStates.Length, 12));
+            Math.Min(DefaultUpgradeProjectShellStates.Length, 12),
+            GameText.T("ui.upgrade.source.researchBuilding"));
+    }
+
+    private static string UpgradeProjectCardMetricText(UpgradeProjectCardState state)
+    {
+        return GameText.Format(
+            "ui.catalog.upgradeCardMetric",
+            state.Cost,
+            state.DurationSeconds);
     }
 
     private static Color UpgradeProjectAccent(UpgradeProjectAccentKind accent)

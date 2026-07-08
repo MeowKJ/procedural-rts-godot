@@ -15,6 +15,7 @@ public partial class HudLayer : CanvasLayer
         private string _effect = "";
         private string _status = "";
         private string _statusBadge = "";
+        private string _metric = "";
         public string InspectorText { get; private set; } = "";
 
         public void SetState(UpgradeProjectCardState state)
@@ -27,6 +28,7 @@ public partial class HudLayer : CanvasLayer
             _effect = GameText.T(state.EffectKey);
             _status = GameText.T(state.StatusKey);
             _statusBadge = GameText.T(state.StatusBadgeKey);
+            _metric = UpgradeProjectCardMetricText(state);
             InspectorText = GameText.Format(
                 "ui.catalog.inspectUpgrade",
                 _label,
@@ -36,7 +38,7 @@ public partial class HudLayer : CanvasLayer
                 state.DurationSeconds,
                 _effect,
                 _status);
-            Text = $"\n\n{state.Cost}  {state.DurationSeconds}s";
+            Text = "";
             TooltipText = $"{_label} - {_target} - {_source} - {_effect} - {_status}";
             QueueRedraw();
         }
@@ -53,6 +55,8 @@ public partial class HudLayer : CanvasLayer
             var font = UiFontProfile.DrawFont(UiFontRole.Compact);
             DrawString(font, new Vector2(8, size.Y - 12), CompactCardText(_shortLabel, 9), HorizontalAlignment.Left, size.X - 16, 9, new Color(CurrentPalette.Text, 0.92f));
             DrawString(font, new Vector2(8, 17), CompactCardText(_target, 11), HorizontalAlignment.Left, size.X - 16, 8, new Color(CurrentPalette.TextMuted, 0.72f));
+            DrawString(font, new Vector2(8, 31), CompactCardText(_source, 12), HorizontalAlignment.Left, size.X - 16, 8, new Color(CurrentPalette.TextMuted, 0.66f));
+            DrawString(font, new Vector2(size.X - 47, size.Y - 12), CompactCardText(_metric, 11), HorizontalAlignment.Right, 39, 8, new Color(CurrentPalette.TextMuted, 0.78f));
 
             var badge = new Rect2(new Vector2(size.X - 42, 20), new Vector2(36, 12));
             DrawRect(badge, new Color(accentColor, 0.16f), true);
