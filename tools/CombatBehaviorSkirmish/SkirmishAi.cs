@@ -236,6 +236,7 @@ static partial class Program
             || sandboxState.Options.LaunchMode != LaunchMode.Sandbox
             || sandboxState.Credits(Owner.Player) != SkirmishOptions.SandboxStartingCredits
             || sandboxState.VisualTheme.Current != WorldVisualTheme.DayCommand
+            || sandboxState.ResourceAtmosphere != ResourceAtmosphere.Day
             || sandboxState.VisualTheme.Driver != "developer-sandbox")
         {
             throw new InvalidOperationException("developer sandbox launch options should initialize a high-resource daytime test battle");
@@ -276,6 +277,7 @@ static partial class Program
         if (sandboxState.VisualTheme.Current != WorldVisualTheme.FogMorning
             || sandboxState.VisualTheme.Target != WorldVisualTheme.FogMorning
             || sandboxState.VisualTheme.Driver != "sandbox-fog-morning"
+            || sandboxState.ResourceAtmosphere != ResourceAtmosphere.Fog
             || sandboxState.SignalNodes.Any(node => !node.Powered))
         {
             throw new InvalidOperationException("sandbox dusk control should switch to fog-morning exploration while keeping the signal network powered");
@@ -284,9 +286,16 @@ static partial class Program
         sandboxState.ApplySandboxAtmosphere(SandboxAtmospherePreset.Corruption);
         if (sandboxState.VisualTheme.Driver != "sandbox-corruption"
             || sandboxState.VisualTheme.Target != WorldVisualTheme.DuskDefense
+            || sandboxState.ResourceAtmosphere != ResourceAtmosphere.Corruption
             || sandboxState.SignalNodes.Any(node => node.Powered))
         {
             throw new InvalidOperationException("sandbox corruption control should start a dusk-defense transition and depower signal nodes");
+        }
+
+        sandboxState.AdvanceVisualThemeTransition(10f);
+        if (sandboxState.ResourceAtmosphere != ResourceAtmosphere.Corruption)
+        {
+            throw new InvalidOperationException("sandbox corruption atmosphere should stay authoritative for sim economy/signal rules until another atmosphere preset replaces it");
         }
 
         var sandboxSignalProbe = sandboxState.SignalNodes.First(node => node.Kind == SignalNodeKind.SignalTower);
@@ -299,6 +308,7 @@ static partial class Program
         if (sandboxState.VisualTheme.Driver != "sandbox-signal-restoration"
             || sandboxState.VisualTheme.Current != WorldVisualTheme.FogMorning
             || sandboxState.VisualTheme.Target != WorldVisualTheme.DayCommand
+            || sandboxState.ResourceAtmosphere != ResourceAtmosphere.Fog
             || sandboxState.SignalNodes.Any(node => !node.Powered))
         {
             throw new InvalidOperationException("sandbox signal restoration control should repower signal nodes and transition fog morning back to day");
@@ -307,6 +317,7 @@ static partial class Program
         sandboxState.ApplySandboxAtmosphere(SandboxAtmospherePreset.Daytime);
         if (sandboxState.VisualTheme.Current != WorldVisualTheme.DayCommand
             || sandboxState.VisualTheme.Driver != "sandbox-daytime"
+            || sandboxState.ResourceAtmosphere != ResourceAtmosphere.Day
             || sandboxState.FogOfWar.IsVisible(sandboxSignalProbe.Position))
         {
             throw new InvalidOperationException("sandbox daytime control should return to planning mode without night signal-vision contribution");
