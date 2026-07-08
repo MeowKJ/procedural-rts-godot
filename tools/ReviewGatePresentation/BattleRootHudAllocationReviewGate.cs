@@ -330,11 +330,15 @@ static class BattleRootHudAllocationReviewGate
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
         RequireText(englishText, "[\"ui.catalog.buildHelp\"]", "English catalog mode Build help text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.trainHelp\"]", "English catalog mode Train help text must exist.", result);
-        RequireText(englishText, "[\"ui.catalog.upgradesHelp\"]", "English catalog mode Upgrades help text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.upgradesHelp\"] = \"Research projects\\nselect research building\"", "English catalog mode Upgrades help must frame research as selected-building contextual.", result);
+        RequireText(englishText, "[\"ui.catalog.upgradesEmpty\"] = \"Select research building\\nprojects only, no lanes\"", "English catalog mode Upgrades empty text must reject provider lanes.", result);
+        RequireText(englishText, "[\"ui.catalog.overview.upgrades\"] = \"research / no lanes\"", "English catalog mode Upgrades overview must stay a no-provider-lane shell.", result);
         RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.trainHelp\"]", "Chinese catalog mode Train help text must exist.", result);
-        RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"]", "Chinese catalog mode Upgrades help text must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"] = \"研究项目\\n选择科研建筑\"", "Chinese catalog mode Upgrades help must frame research as selected-building contextual.", result);
+        RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"] = \"选择科研建筑\\n项目无生产通道\"", "Chinese catalog mode Upgrades empty text must reject provider lanes.", result);
+        RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"研究 / 无通道\"", "Chinese catalog mode Upgrades overview must stay a no-provider-lane shell.", result);
         RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
         RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);
