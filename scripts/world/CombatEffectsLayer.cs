@@ -42,6 +42,8 @@ public partial class CombatEffectsLayer : Node2D
     private readonly List<ShotTrailEffect> _pooledShotTrails = [];
     private readonly List<BeamEffect> _beamEffects = [];
     private readonly List<ProjectilePresentationProjection> _projectileProjections = [];
+    private readonly List<ActiveRepairFeedbackProjection> _activeRepairFeedbackProjections = [];
+    private int _activeRepairFeedbackEffectCount;
     public int ActiveEffectCount =>
         _unitDeaths.Count
         + _impactFlashes.Count
@@ -50,7 +52,8 @@ public partial class CombatEffectsLayer : Node2D
         + _beamEffects.Count
         + State.Projectiles.Count
         + State.Beams.Count
-        + (UnitBattlefield?.ProjectileProjectionCount() ?? 0);
+        + (UnitBattlefield?.ProjectileProjectionCount() ?? 0)
+        + _activeRepairFeedbackEffectCount;
 
     public void AddUnitDeath(UnitDeathInfo death, Color accent)
     {
@@ -165,6 +168,7 @@ public partial class CombatEffectsLayer : Node2D
         DrawMuzzleFlashes();
         DrawBeams();
         DrawProjectiles();
+        DrawActiveRepairFeedback();
         DrawImpactFlashes();
         DrawHitPulses();
     }

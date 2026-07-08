@@ -210,6 +210,57 @@ static partial class Program
             throw new InvalidOperationException("smart right-click damaged ally branch should route selected repairers through UnitBattlefield EntityCommandBuffer repair commands");
         }
 
+        var repairFeedbackBattlefield = new UnitBattlefield();
+        repairFeedbackBattlefield.SetCredits(PlayerSlotId.One, 1000);
+        var repairFeedbackEngineer = repairFeedbackBattlefield.Spawn("dog.engineer", PlayerSlotId.One, new Vector2(240, 240));
+        var repairFeedbackAlly = repairFeedbackBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(276, 240));
+        repairFeedbackAlly.Hp -= 8;
+        repairFeedbackBattlefield.SelectUnitsByIds(PlayerSlotId.One, [repairFeedbackEngineer.Id]);
+        if (!repairFeedbackBattlefield.CommandRepairSelected(PlayerSlotId.One, repairFeedbackAlly, out _))
+        {
+            throw new InvalidOperationException("active repair feedback setup should accept a close damaged friendly target");
+        }
+
+        var repairFeedback = new List<ActiveRepairFeedbackProjection>();
+        repairFeedbackBattlefield.ActiveRepairFeedbackProjections(repairFeedback);
+        if (repairFeedback.Count != 1
+            || repairFeedback[0].RepairerId != repairFeedbackEngineer.EntityId
+            || repairFeedback[0].TargetId != repairFeedbackAlly.EntityId
+            || repairFeedback[0].RepairerPosition != repairFeedbackEngineer.Position
+            || repairFeedback[0].TargetPosition != repairFeedbackAlly.Position
+            || repairFeedback[0].TargetRadius <= 0
+            || repairFeedback[0].WorkRate <= 0
+            || repairFeedbackBattlefield.ActiveRepairFeedbackProjectionCount() != 1)
+        {
+            throw new InvalidOperationException("active repair feedback projection should expose a render-ready repairer-target pair while repair work is in range");
+        }
+
+        var noCreditRepairBattlefield = new UnitBattlefield();
+        var noCreditEngineer = noCreditRepairBattlefield.Spawn("dog.engineer", PlayerSlotId.One, new Vector2(240, 280));
+        var noCreditAlly = noCreditRepairBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(276, 280));
+        noCreditAlly.Hp -= 8;
+        noCreditRepairBattlefield.SelectUnitsByIds(PlayerSlotId.One, [noCreditEngineer.Id]);
+        if (!noCreditRepairBattlefield.CommandRepairSelected(PlayerSlotId.One, noCreditAlly, out _))
+        {
+            throw new InvalidOperationException("no-credit repair feedback setup should still accept the repair order before feedback filters it");
+        }
+
+        noCreditRepairBattlefield.ActiveRepairFeedbackProjections(repairFeedback);
+        if (repairFeedback.Count != 0 || noCreditRepairBattlefield.ActiveRepairFeedbackProjectionCount() != 0)
+        {
+            throw new InvalidOperationException("active repair feedback projection should stay hidden when the owner cannot fund repair work");
+        }
+
+        repairFeedbackAlly.Hp = repairFeedbackAlly.Spec.Stats.MaxHp;
+        repairFeedbackBattlefield.CommandMoveSelected(PlayerSlotId.One, repairFeedbackEngineer.Position, repairFeedbackBattlefield.WorldSize, MoveCommandMode.Direct);
+        repairFeedbackBattlefield.ActiveRepairFeedbackProjections(repairFeedback);
+        if (repairFeedback.Count != 0
+            || repairFeedbackBattlefield.ActiveRepairFeedbackProjectionCount() != 0
+            || repairFeedbackBattlefield.UnitEntityByInstanceId(repairFeedbackEngineer.Id)?.Components.TryGet<RepairOrderComponentState>(out _) == true)
+        {
+            throw new InvalidOperationException("active repair feedback projection should disappear after target is no longer repairable or the repair order is cleared");
+        }
+
         var smartClickBeforeBuildingRepair = smartClickBattlefield.AppliedInputCommandCount;
         var smartClickRefineryProjection = smartClickBattlefield.PickAnyBuildingHoverProjection(smartClickRefinery.Position, PlayerSlotId.One, pickPadding: 8);
         if (smartClickRefineryProjection is null
