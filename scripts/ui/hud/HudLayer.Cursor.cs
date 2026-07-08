@@ -42,15 +42,16 @@ public partial class HudLayer
             return cached;
         }
 
-        var texture = ResourceLoader.Load<Texture2D>(texturePath);
-        if (texture is null)
+        Texture2D? texture = null;
+        using var image = new Image();
+        var absolutePath = ProjectSettings.GlobalizePath(texturePath);
+        if (image.Load(absolutePath) == Error.Ok)
         {
-            using var image = new Image();
-            var absolutePath = ProjectSettings.GlobalizePath(texturePath);
-            if (image.Load(absolutePath) == Error.Ok)
-            {
-                texture = ImageTexture.CreateFromImage(image);
-            }
+            texture = ImageTexture.CreateFromImage(image);
+        }
+        else if (ResourceLoader.Exists(texturePath))
+        {
+            texture = ResourceLoader.Load<Texture2D>(texturePath);
         }
 
         _cursorTextureCache[texturePath] = texture;

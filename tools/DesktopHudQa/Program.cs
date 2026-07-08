@@ -64,6 +64,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(cursorCatalog, "Kenney Cursor Pack CC0", "Cursor catalog texture entries must keep Kenney CC0 provenance near the data.");
     RequireText(hudLayer, "Input.SetCustomMouseCursor", "HudLayer should use custom cursor textures when catalog texture paths are present.");
     RequireText(hudLayer, "Input.SetDefaultCursorShape(shape)", "HudLayer cursor textures must preserve built-in cursor shape fallback.");
+    RequireText(hudLayer, "image.Load(absolutePath) == Error.Ok", "HudLayer cursor textures must load source PNGs before ResourceLoader to avoid CI import-loader noise.");
+    RequireText(hudLayer, "else if (ResourceLoader.Exists(texturePath))", "HudLayer cursor ResourceLoader fallback must be guarded to avoid missing-loader log spam.");
     RequireText(hudLayer, "ApplyCommandCursor(preview);", "HudLayer command preview updates must route cursor state through the cursor catalog.");
     RequireText(hudLayer, "BattleCursorCatalog.StateForPreview(preview)", "HudLayer must derive in-game cursor state from command preview state.");
     RequireText(uiFactory, "BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover)", "HUD/UI buttons must use the shared cursor catalog for hover cursors.");
@@ -220,8 +222,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.train\"]", "English HUD catalog Train label must exist.");
     RequireText(englishText, "[\"ui.catalog.trainHelp\"]", "English HUD catalog Train help text must exist.");
     RequireText(englishText, "[\"ui.catalog.upgrades\"]", "English HUD catalog Upgrades label must exist.");
-    RequireText(englishText, "[\"ui.catalog.upgradesHelp\"]", "English HUD catalog Upgrades help text must exist.");
-    RequireText(englishText, "[\"ui.catalog.upgradesEmpty\"]", "English HUD catalog Upgrades empty text must exist.");
+    RequireText(englishText, "[\"ui.catalog.upgradesHelp\"] = \"Research projects\\nselect research building\"", "English HUD catalog Upgrades help must frame research as selected-building contextual.");
+    RequireText(englishText, "[\"ui.catalog.upgradesEmpty\"] = \"Select research building\\nprojects only, no lanes\"", "English HUD catalog Upgrades empty text must reject provider lanes.");
+    RequireText(englishText, "[\"ui.catalog.overview.upgrades\"] = \"research / no lanes\"", "English HUD catalog Upgrades overview must stay a no-provider-lane shell.");
     RequireText(englishText, "[\"ui.catalog.abilities\"]", "English HUD catalog Abilities label must exist.");
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
@@ -259,8 +262,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.train\"]", "Chinese HUD catalog Train label must exist.");
     RequireText(chineseText, "[\"ui.catalog.trainHelp\"]", "Chinese HUD catalog Train help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.upgrades\"]", "Chinese HUD catalog Upgrades label must exist.");
-    RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"]", "Chinese HUD catalog Upgrades help text must exist.");
-    RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"]", "Chinese HUD catalog Upgrades empty text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.upgradesHelp\"] = \"研究项目\\n选择科研建筑\"", "Chinese HUD catalog Upgrades help must frame research as selected-building contextual.");
+    RequireText(chineseText, "[\"ui.catalog.upgradesEmpty\"] = \"选择科研建筑\\n项目无生产通道\"", "Chinese HUD catalog Upgrades empty text must reject provider lanes.");
+    RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"研究 / 无通道\"", "Chinese HUD catalog Upgrades overview must stay a no-provider-lane shell.");
     RequireText(chineseText, "[\"ui.catalog.abilities\"]", "Chinese HUD catalog Abilities label must exist.");
     RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese HUD catalog Abilities help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
