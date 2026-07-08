@@ -207,6 +207,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "_selection.ArmRepairCommand();", "BattleRoot repair request must arm SelectionController repair targeting.");
     RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the runtime repair command path.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
+    RequireText(hudLayer, "_sellOrCancelAction = ribbonCancel;", "Command ribbon sell action must keep a stable control reference for context affordance.");
+    RequireText(hudLayer, "RefreshSellOrCancelAction()", "Command ribbon sell action must refresh context from selection and queue state.");
+    RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.sellTooltip\")", "Command ribbon sell action must explain selected-building sell context.");
+    RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.cancelTooltip\")", "Command ribbon sell action must explain production-cancel fallback context.");
+    RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.noneTooltip\")", "Command ribbon sell action must explain empty sell/cancel context.");
     RequireText(hudLayer, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production-cancel request path.");
     RequireText(hudLayer, "Name = \"RibbonSetRally\"", "Command ribbon rally action must expose a stable node.");
     RequireText(hudLayer, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.");
@@ -262,6 +267,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.ability.armed\"]", "English ability armed status must exist.");
     RequireText(englishText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.");
     RequireText(englishText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.");
+    RequireText(englishText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.");
+    RequireText(chineseText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.");
     RequireText(chineseText, "[\"ui.catalog.build\"]", "Chinese HUD catalog Build label must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese HUD catalog Build help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildSurface\"]", "Chinese HUD catalog Build surface label must exist.");

@@ -104,6 +104,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "RibbonCancelProduction", "Command ribbon sell action must expose a stable node.", result);
         RequireText(hudLayer, "Action? SellOrCancelRequested", "HudLayer must expose the command-ribbon sell-or-cancel request.", result);
         RequireText(hudBuild, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.", result);
+        RequireText(hudBuild, "_sellOrCancelAction = ribbonCancel;", "Command ribbon sell action must keep a stable control reference for context affordance.", result);
+        RequireText(hudLayer, "RefreshSellOrCancelAction()", "Command ribbon sell action must refresh context from selection and queue state.", result);
+        RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.sellTooltip\")", "Command ribbon sell action must explain selected-building sell context.", result);
+        RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.cancelTooltip\")", "Command ribbon sell action must explain production-cancel fallback context.", result);
+        RequireText(hudLayer, "GameText.T(\"ui.sellOrCancel.noneTooltip\")", "Command ribbon sell action must explain empty sell/cancel context.", result);
         RequireText(hudBuild, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production cancel request path.", result);
         RequireText(battleRoot, "SellOrCancelRequested = OnSellOrCancelRequested", "BattleRoot must wire the command-ribbon sell-or-cancel request.", result);
         RequireText(battleRoot, "_unitBattlefield.SellSelectedBuildings", "BattleRoot sell-or-cancel request must sell selected buildings before falling back to production cancel.", result);
@@ -185,12 +190,14 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English provider summary must use a rail-safe offline code.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(englishProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.", result);
         RequireText(englishProviderText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.", result);
         ForbidText(englishProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOk\"]", "Chinese provider summary must use a rail-safe OK code.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOffline\"]", "Chinese provider summary must use a rail-safe offline code.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(chineseProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.", result);
         RequireText(chineseProviderText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.", result);
         ForbidText(chineseProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);

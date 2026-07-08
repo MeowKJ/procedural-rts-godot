@@ -29,8 +29,10 @@ public partial class HudLayer : CanvasLayer
         CurrentPalette = SoftOldCityTheme.For(state);
         _lastRepeatProductionRefreshKey = "";
         _repeatProductionStateCached = false;
+        _lastSellOrCancelRefreshKey = "";
         ApplySoftOldCityPanelStyles();
         RefreshRepeatProductionControl();
+        RefreshSellOrCancelAction();
     }
 
     public void SetSandboxDeveloperControlsVisible(bool visible)
@@ -90,6 +92,7 @@ public partial class HudLayer : CanvasLayer
         _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
         _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);
         UpdateProductionFeedback(dt);
+        RefreshSellOrCancelAction();
         LayoutDynamicHud(viewport);
     }
 
