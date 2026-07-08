@@ -125,6 +125,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "_cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();", "Right-side queue cancel must stay on the production cancel request path.", result);
         RequireText(battleRoot, "SellOrCancelRequested = OnSellOrCancelRequested", "BattleRoot must wire the command-ribbon sell-or-cancel request.", result);
         RequireText(battleRoot, "_unitBattlefield.SellSelectedBuildings", "BattleRoot sell-or-cancel request must sell selected buildings before falling back to production cancel.", result);
+        RequireText(battleRoot, "BuildingSellRefundPreview(spec)", "Selected building details must preview sell refund from the build spec.", result);
+        RequireText(battleRoot, "Mathf.RoundToInt(spec.Cost * Math.Clamp(spec.RefundRatio, 0, 1))", "Selected building sell preview must use the same cost/refund-ratio formula as selling.", result);
+        RequireText(battleRoot, "GameText.Format(\"ui.detail.building\", queue, rally, sellRefund)", "Selected building detail text must include sell refund before teardown.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingSell.cs"), "BuildSpecCatalog.For(identity.Kind)", "Selected building sell must refund from the build spec instead of production cancel constants.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldBuildingDeathInfo.cs"), "UnitBattlefieldBuildingRemovalCause", "Runtime building removals must expose a removal cause.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldBuildingDeathInfo.cs"), "Sold", "Runtime building removals must distinguish sold structures from destroyed structures.", result);
@@ -222,6 +225,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.", result);
         RequireText(englishProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.", result);
+        RequireText(englishProviderText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "English selected-building detail must reserve a sell-refund row.", result);
+        RequireText(englishProviderText, "[\"ui.detail.sellRefund\"] = \"SELL refund {0} credits\"", "English selected-building detail must preview sell refund.", result);
         RequireText(englishProviderText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.", result);
         ForbidText(englishProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOk\"]", "Chinese provider summary must use a rail-safe OK code.", result);
@@ -244,6 +249,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.", result);
         RequireText(chineseProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "Chinese selected-building detail must reserve a sell-refund row.", result);
+        RequireText(chineseProviderText, "[\"ui.detail.sellRefund\"] = \"出售返还 {0} 资金\"", "Chinese selected-building detail must preview sell refund.", result);
         RequireText(chineseProviderText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.", result);
         ForbidText(chineseProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
