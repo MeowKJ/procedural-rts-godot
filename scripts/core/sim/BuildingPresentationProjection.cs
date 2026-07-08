@@ -138,6 +138,7 @@ public readonly record struct BuildingSelectionProjection(
     float Hp,
     float MaxHp,
     float SightRange,
+    Vector2? RallyPoint,
     bool HasRallyPoint,
     IReadOnlyList<UnitProductionQueueItem> ProductionQueue,
     IconGlyph Icon,

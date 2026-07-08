@@ -178,6 +178,14 @@ static partial class Program
             0,
             unitProductionBarracksSpec.MaxHp);
         buildingSellBattlefield.SelectBuildingTargetAt(PlayerSlotId.One, buildingSellBarracks.Position, additive: false, pickPadding: 8);
+        var noRallySelectionProjection = buildingSellBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
+        if (noRallySelectionProjection.Count != 1
+            || noRallySelectionProjection[0].HasRallyPoint
+            || noRallySelectionProjection[0].RallyPoint is not null)
+        {
+            throw new InvalidOperationException("selected producer details should preserve the empty rally state when no rally destination exists");
+        }
+
         var buildingSellEvents = new List<UnitBattlefieldBuildingDeathInfo>();
         buildingSellBattlefield.BuildingsRemoved += deaths => buildingSellEvents.AddRange(deaths);
         var creditsBeforeSell = buildingSellBattlefield.Credits(PlayerSlotId.One);
@@ -209,11 +217,32 @@ static partial class Program
             || selectedBuildingSelectionProjection[0].Hp != unitProductionBarracks.Hp
             || selectedBuildingSelectionProjection[0].MaxHp != unitProductionBarracksSpec.MaxHp
             || !selectedBuildingSelectionProjection[0].HasRallyPoint
+            || selectedBuildingSelectionProjection[0].RallyPoint != new Vector2(820, 80)
             || selectedBuildingSelectionProjection[0].ProductionQueue.Count != unitProductionBattlefield.BuildingProductionQueue(unitProductionBarracks.Id).Count
             || selectedBuildingSelectionProjection[0].Icon == IconGlyph.None
             || string.IsNullOrWhiteSpace(selectedBuildingSelectionProjection[0].ShortCode))
         {
-            throw new InvalidOperationException("building selection HUD should read selected building data from UnitBattlefield EntityWorld projections instead of legacy GameState selected buildings");
+            throw new InvalidOperationException("building selection HUD should read selected building data and compact rally destinations from UnitBattlefield EntityWorld projections instead of legacy GameState selected buildings");
+        }
+
+        var previousLanguage = GameText.CurrentLanguage;
+        try
+        {
+            GameText.CurrentLanguage = GameLanguage.English;
+            if (GameText.Format("ui.rally.destination", 820, 80) != "RALLY 820,80")
+            {
+                throw new InvalidOperationException("English selected producer details should show compact rally destination coordinates");
+            }
+
+            GameText.CurrentLanguage = GameLanguage.ChineseSimplified;
+            if (GameText.Format("ui.rally.destination", 820, 80) != "集结 820,80")
+            {
+                throw new InvalidOperationException("Chinese selected producer details should show compact rally destination coordinates");
+            }
+        }
+        finally
+        {
+            GameText.CurrentLanguage = previousLanguage;
         }
 
         var selectedBuildingRallyProjection = unitProductionBattlefield.SelectedBuildingRallyProjections(PlayerSlotId.One);

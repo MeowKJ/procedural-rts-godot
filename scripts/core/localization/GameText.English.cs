@@ -243,6 +243,7 @@ public static partial class GameText
         ["harvest.unload"] = "UNLOAD",
         ["ui.rally.none"] = "RALLY --",
         ["ui.rally.set"] = "RALLY SET",
+        ["ui.rally.destination"] = "RALLY {0:0},{1:0}",
         ["ui.production.detail"] = "{0} {1}%  Q:{2}",
         ["preview.select"] = "SELECT",
         ["preview.attack"] = "ATTACK",

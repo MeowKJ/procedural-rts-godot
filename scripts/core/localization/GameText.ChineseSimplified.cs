@@ -218,6 +218,7 @@ public static partial class GameText
         ["harvest.unload"] = "卸载",
         ["ui.rally.none"] = "集结 --",
         ["ui.rally.set"] = "集结已设",
+        ["ui.rally.destination"] = "集结 {0:0},{1:0}",
         ["ui.production.detail"] = "{0} {1}%  队列:{2}",
         ["preview.select"] = "选择",
         ["preview.attack"] = "攻击",

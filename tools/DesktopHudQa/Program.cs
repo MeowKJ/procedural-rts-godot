@@ -253,6 +253,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "BuildingSellRefundPreview(spec)", "Selected building details must preview sell refund from the build spec.");
     RequireText(battleRoot, "Mathf.RoundToInt(spec.Cost * Math.Clamp(spec.RefundRatio, 0, 1))", "Selected building sell preview must use the same cost/refund-ratio formula as selling.");
     RequireText(battleRoot, "GameText.Format(\"ui.detail.building\", queue, rally, sellRefund)", "Selected building detail text must include sell refund before teardown.");
+    RequireText(battleRoot, "BuildingRallyDetail(building.RallyPoint)", "Selected building detail text must show compact rally coordinates when a rally point exists.");
+    RequireText(battleRoot, "GameText.Format(\"ui.rally.destination\", Mathf.RoundToInt(target.X), Mathf.RoundToInt(target.Y))", "Selected building rally detail must format integer rally coordinates.");
     RequireText(hudLayer, "Name = \"RibbonSetRally\"", "Command ribbon rally action must expose a stable node.");
     RequireText(hudLayer, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.");
     ForbidText(hudLayer, "Selected = category == BuildCategory.Command", "HUD production tab selected state must not be a fixed initialization-only value.");
@@ -353,9 +355,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.");
     RequireText(englishText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "English selected-building detail must reserve a sell-refund row.");
     RequireText(englishText, "[\"ui.detail.sellRefund\"] = \"SELL refund {0} credits\"", "English selected-building detail must preview sell refund.");
+    RequireText(englishText, "[\"ui.rally.destination\"] = \"RALLY {0:0},{1:0}\"", "English selected-building detail must show compact rally coordinates.");
     RequireText(chineseText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.");
     RequireText(chineseText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "Chinese selected-building detail must reserve a sell-refund row.");
     RequireText(chineseText, "[\"ui.detail.sellRefund\"] = \"出售返还 {0} 资金\"", "Chinese selected-building detail must preview sell refund.");
+    RequireText(chineseText, "[\"ui.rally.destination\"] = \"集结 {0:0},{1:0}\"", "Chinese selected-building detail must show compact rally coordinates.");
     RequireText(chineseText, "[\"ui.catalog.build\"]", "Chinese HUD catalog Build label must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese HUD catalog Build help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.buildSurface\"]", "Chinese HUD catalog Build surface label must exist.");

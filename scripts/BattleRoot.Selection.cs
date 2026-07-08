@@ -68,7 +68,7 @@ public partial class BattleRoot
         var queue = building.ProductionQueue.Count == 0
             ? GameText.T("ui.queue.empty").ToUpperInvariant()
             : ProductionDetail(building);
-        var rally = building.RallyPoint is null ? GameText.T("ui.rally.none") : GameText.T("ui.rally.set");
+        var rally = BuildingRallyDetail(building.RallyPoint);
         var sellRefund = BuildingSellRefundPreview(spec);
 
         _hud.SetSelectionInfo(
@@ -80,6 +80,13 @@ public partial class BattleRoot
             spec.Icon,
             [],
             entityAccent);
+    }
+
+    private static string BuildingRallyDetail(Vector2? rallyPoint)
+    {
+        return rallyPoint is { } target
+            ? GameText.Format("ui.rally.destination", Mathf.RoundToInt(target.X), Mathf.RoundToInt(target.Y))
+            : GameText.T("ui.rally.none");
     }
 
     private static string BuildingSellRefundPreview(BuildSpec spec)

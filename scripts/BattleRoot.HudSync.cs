@@ -476,7 +476,7 @@ public partial class BattleRoot
         var queue = building.ProductionQueue.Count == 0
             ? GameText.T("ui.queue.empty").ToUpperInvariant()
             : ProductionDetail(building.ProductionQueue);
-        var rally = building.HasRallyPoint ? GameText.T("ui.rally.set") : GameText.T("ui.rally.none");
+        var rally = BuildingRallyDetail(building.RallyPoint);
         var spec = BuildSpecCatalog.For(building.Kind);
         var sellRefund = BuildingSellRefundPreview(spec);
 

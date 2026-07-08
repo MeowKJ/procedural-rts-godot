@@ -232,6 +232,7 @@ public sealed partial class UnitBattlefield
             entityProjection.Value.Hp,
             entityProjection.Value.MaxHp,
             spec.SightRange,
+            presentationProjection.Value.RallyPoint,
             presentationProjection.Value.RallyPoint is not null,
             presentationProjection.Value.ProductionQueue,
             spec.Icon,
