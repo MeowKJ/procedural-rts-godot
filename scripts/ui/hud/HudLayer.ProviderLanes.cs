@@ -340,6 +340,7 @@ public partial class HudLayer : CanvasLayer
             state.QueueCount));
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
         RefreshRepeatProductionControl();
     }
 
@@ -354,6 +355,7 @@ public partial class HudLayer : CanvasLayer
             state.QueueCount));
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
+        RefreshCatalogOverview();
     }
 
     private void ValidateProductionProviderLaneSelection()
