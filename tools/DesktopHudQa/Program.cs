@@ -144,6 +144,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
     RequireText(hudLayer, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.");
     RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
+    RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
+    RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");
+    RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
     RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept construction provider lanes separately from Train lanes.");
     RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.");
     RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.");
@@ -261,6 +264,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.providerLane.empty\"]", "English HUD provider lane empty text must exist.");
     RequireText(englishText, "[\"ui.providerLane.summaryOk\"] = \"OK\"", "English HUD provider summary must use a rail-safe OK code.");
     RequireText(englishText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English HUD provider summary must use a rail-safe offline code.");
+    RequireText(englishText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.");
+    RequireText(englishText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.");
     ForbidText(englishText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(englishText, "\\n{2} cr  {3}s", "English catalog inspector strings must use a two-line metrics layout.");
     RequireText(englishText, "[\"ui.ability.shieldField\"]", "English ability-card ShieldField label must exist.");
@@ -303,6 +308,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.providerLane.empty\"]", "Chinese HUD provider lane empty text must exist.");
     RequireText(chineseText, "[\"ui.providerLane.summaryOk\"]", "Chinese HUD provider summary must use a rail-safe OK code.");
     RequireText(chineseText, "[\"ui.providerLane.summaryOffline\"]", "Chinese HUD provider summary must use a rail-safe offline code.");
+    RequireText(chineseText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.");
+    RequireText(chineseText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.");
     ForbidText(chineseText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(chineseText, "\\n{2} 资金", "Chinese catalog inspector strings must use a two-line metrics layout.");
     RequireText(chineseText, "[\"ui.ability.shieldField\"]", "Chinese ability-card ShieldField label must exist.");

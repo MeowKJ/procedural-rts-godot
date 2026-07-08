@@ -149,6 +149,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.", result);
         RequireText(hudBuild, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.", result);
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.", result);
+        RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.", result);
+        RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.", result);
+        RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.", result);
         RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept Build-mode construction provider lane read models separately from Train lanes.", result);
         RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.", result);
         RequireText(hudLayer, "private int? SelectedConstructionProviderId()", "Build provider lanes must expose selected specific-provider ids for Build card routing.", result);
@@ -188,6 +191,8 @@ static class BattleRootHudAllocationReviewGate
         var chineseProviderText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOk\"] = \"OK\"", "English provider summary must use a rail-safe OK code.", result);
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English provider summary must use a rail-safe offline code.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.", result);
         RequireText(englishProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.", result);
@@ -195,6 +200,8 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(englishProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOk\"]", "Chinese provider summary must use a rail-safe OK code.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOffline\"]", "Chinese provider summary must use a rail-safe offline code.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.", result);
         RequireText(chineseProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.", result);
