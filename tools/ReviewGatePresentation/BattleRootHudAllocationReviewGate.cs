@@ -384,6 +384,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.overview.scope.auto\"] = \"AUTO\"", "English catalog overview provider scope must expose Auto compactly.", result);
         RequireText(englishText, "[\"ui.catalog.upgradesCount\"] = \"{0} project cards\\nselected source required\"", "English catalog mode Upgrades count must explain selected-source project cards.", result);
         RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"]", "English catalog mode upgrade inspector text must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
+        RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.", result);
         RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.", result);
         RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);
@@ -397,6 +399,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"{0}项目 | 需来源\"", "Chinese catalog mode Upgrades overview must stay a selected-source shell.", result);
         RequireText(chineseText, "[\"ui.catalog.overview.scope.auto\"] = \"自动\"", "Chinese catalog overview provider scope must expose Auto compactly.", result);
         RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目卡\\n需要选择来源\"", "Chinese catalog mode Upgrades count must explain selected-source project cards.", result);
+        RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);
+        RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
         RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);
