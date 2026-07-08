@@ -119,7 +119,9 @@ public sealed class ProjectileSystem : ISimSystem
                     mount.MountId,
                     mount.WeaponId,
                     WeaponEngagementResolution.MuzzlePosition(context.World, interceptor, mount),
-                    projectile.Transform.Position));
+                    projectile.Transform.Position,
+                    definition.LegacyKind,
+                    WeaponEngagementResolution.FireHooks(context.World, definition)));
                 context.World.QueueRemoval(projectile.Id);
                 return true;
             }

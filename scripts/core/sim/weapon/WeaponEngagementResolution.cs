@@ -23,7 +23,9 @@ static class WeaponEngagementResolution
             mount.MountId,
             mount.WeaponId,
             MuzzlePosition(context.World, attacker, mount),
-            target.Transform.Position));
+            target.Transform.Position,
+            weaponDef.LegacyKind,
+            FireHooks(context.World, weaponDef)));
 
         if (ShouldSpawnProjectile(context.World, weaponDef))
         {
@@ -57,7 +59,9 @@ static class WeaponEngagementResolution
             mount.MountId,
             mount.WeaponId,
             MuzzlePosition(context.World, attacker, mount),
-            targetPoint));
+            targetPoint,
+            weaponDef.LegacyKind,
+            FireHooks(context.World, weaponDef)));
 
         if (!context.World.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
             || !WeaponEngagementQueries.CanAttackGround(weaponDef, ammo))
@@ -102,6 +106,11 @@ static class WeaponEngagementResolution
     {
         return world.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo)
             && ammo.Behavior == ProjectileBehavior.Tracking;
+    }
+
+    public static SpecialAttackHook FireHooks(EntityWorld world, WeaponDefinition weaponDef)
+    {
+        return weaponDef.Hooks | (world.TryGetAmmoDefinition(weaponDef.AmmoId, out var ammo) ? ammo.Hooks : SpecialAttackHook.None);
     }
 
     public static void ApplyProjectileImpact(

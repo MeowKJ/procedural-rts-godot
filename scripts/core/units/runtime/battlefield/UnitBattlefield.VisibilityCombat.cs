@@ -332,7 +332,8 @@ public sealed partial class UnitBattlefield
             weapon.Id,
             MuzzlePosition(unit, primaryMount),
             target.Position,
-            weapon.LegacyKind));
+            weapon.LegacyKind,
+            WeaponEngagementResolution.FireHooks(_entityWorld, weapon)));
         ApplyDamage(unit, target, weapon);
     }
 

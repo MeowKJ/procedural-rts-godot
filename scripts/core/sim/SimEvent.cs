@@ -30,7 +30,8 @@ public sealed record WeaponFiredEvent(
     string WeaponId,
     Vector2 Muzzle,
     Vector2 TargetPosition,
-    WeaponKind? LegacyWeaponKind = null) : SimEvent(Tick)
+    WeaponKind? LegacyWeaponKind = null,
+    SpecialAttackHook Hooks = SpecialAttackHook.None) : SimEvent(Tick)
 {
     public WeaponFiredEvent(
         int Tick,

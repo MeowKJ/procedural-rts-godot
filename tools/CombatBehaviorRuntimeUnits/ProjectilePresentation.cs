@@ -52,13 +52,15 @@ static partial class Program
         if (tankShot is null
             || muzzleDistance < 18f
             || tankShot.Muzzle.DistanceTo(expectedMuzzle) > 0.5f
+            || (tankShot.Hooks & SpecialAttackHook.Targeting) == 0
+            || (tankShot.Hooks & SpecialAttackHook.Impact) == 0
             || !ShotTrailVfxMath.ShouldCreate(WeaponKind.VectorCannon)
             || ShotTrailVfxMath.ShouldCreate(WeaponKind.NeedleRifle)
             || !shotStyle.Draw
             || shotStyle.Width <= shotStyle.CoreWidth
             || tankProjectileBattlefield.ProjectileProjections().Any(projectile => projectile.LegacyAmmoKind == AmmoKind.BallisticCannon))
         {
-            throw new InvalidOperationException("rotating-turret tanks should expose visible ballistic shot presentation from the independent mount muzzle");
+            throw new InvalidOperationException("rotating-turret tanks should expose visible ballistic shot presentation and generic special-attack hook data from the independent mount muzzle");
         }
     }
 }
