@@ -150,14 +150,14 @@ public sealed partial class GameState
     {
         MatchConfig = matchConfig;
         Options = matchConfig.ToSkirmishOptions();
-        WorldSize = matchConfig.WorldSize;
+        WorldSize = matchConfig.AuthoredMap?.WorldSize.ToVector2() ?? matchConfig.WorldSize;
         FogQuality = fogQuality;
         FogOfWar = new FogOfWarMap(fogQuality);
         SignalNodes = SignalNetworkMath.CreateDefaultNetwork(WorldSize).ToList();
         ResourceInventories[Owner.Player] = new ResourceInventory { Credits = matchConfig.StartingCredits };
         ResourceInventories[Owner.Enemy] = new ResourceInventory { Credits = matchConfig.StartingCredits };
         Seed();
-        if (matchConfig.LaunchMode == LaunchMode.Sandbox)
+        if (matchConfig.LaunchMode == LaunchMode.Sandbox && matchConfig.AuthoredMap is null)
         {
             ConfigureDeveloperSandbox();
         }

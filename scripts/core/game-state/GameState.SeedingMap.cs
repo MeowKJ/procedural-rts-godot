@@ -29,19 +29,30 @@ public sealed partial class GameState
         return unit;
     }
 
-    private BuildingModel AddBuilding(string kind, Owner owner, Vector2 position, float facing = 0, FactionId? factionId = null)
+    private BuildingModel AddBuilding(
+        string kind,
+        Owner owner,
+        Vector2 position,
+        float facing = 0,
+        FactionId? factionId = null,
+        int? legacyId = null,
+        float? hp = null,
+        float buildProgress = 1)
     {
         var spec = BuildSpecCatalog.For(kind);
+        var id = legacyId ?? _nextBuildingId++;
+        _nextBuildingId = Math.Max(_nextBuildingId, id + 1);
         var building = new BuildingModel
         {
-            Id = _nextBuildingId++,
+            Id = id,
             Kind = kind,
             Owner = owner,
             FactionId = factionId ?? MatchConfig.FactionForOwner(owner),
             Position = position,
             Facing = facing,
             TurretFacing = facing,
-            Hp = spec.MaxHp,
+            Hp = hp ?? spec.MaxHp,
+            BuildProgress = buildProgress,
         };
 
         Buildings.Add(building);
@@ -107,6 +118,12 @@ public sealed partial class GameState
 
     private void Seed()
     {
+        if (MatchConfig.AuthoredMap is { } authoredMap)
+        {
+            SeedAuthoredMap(authoredMap);
+            return;
+        }
+
         var map = SkirmishMapGenerator.Generate(MatchConfig);
         _mapObstacles.Clear();
         _mapObstacles.AddRange(map.Obstacles);
@@ -121,6 +138,52 @@ public sealed partial class GameState
         SeedOwnerLoadout(MatchStartLoadouts.For(Owner.Enemy, MatchConfig.AiFaction, map));
     }
 
+    private void SeedAuthoredMap(MapSpec spec)
+    {
+        _mapObstacles.Clear();
+        foreach (var obstacle in spec.Obstacles)
+        {
+            _mapObstacles.Add(obstacle.ToPlacementObstacle());
+        }
+
+        foreach (var start in spec.OwnerStarts)
+        {
+            ResourceInventories[LegacyOwnerFor(start.OwnerId)].Credits = start.StartingCredits;
+        }
+
+        foreach (var resource in spec.Resources)
+        {
+            AddResourceField(
+                resource.Position.ToVector2(),
+                resource.Radius,
+                resource.Amount,
+                resource.Accent.ToColor());
+        }
+
+        foreach (var building in spec.Buildings)
+        {
+            AddBuilding(
+                building.Kind,
+                LegacyOwnerFor(building.OwnerId),
+                building.Position.ToVector2(),
+                building.Facing,
+                building.Faction,
+                building.LegacyId,
+                building.Hp,
+                building.BuildProgress);
+        }
+
+        foreach (var unit in spec.Units)
+        {
+            AddUnit(
+                unit.DesignId,
+                LegacyOwnerFor(unit.OwnerId),
+                unit.Position.ToVector2(),
+                unit.Facing,
+                AuthoredFactionFor(spec, unit.OwnerId));
+        }
+    }
+
     private void SeedOwnerLoadout(MatchStartOwnerLoadout loadout)
     {
         foreach (var building in loadout.Buildings)
@@ -132,6 +195,29 @@ public sealed partial class GameState
         {
             AddUnit(unit.DesignId, loadout.Owner, unit.Position, unit.Facing, loadout.Faction);
         }
+    }
+
+    private static Owner LegacyOwnerFor(OwnerId ownerId)
+    {
+        return ownerId.Value switch
+        {
+            1 => Owner.Player,
+            2 => Owner.Enemy,
+            _ => throw new InvalidOperationException($"Legacy GameState authored maps support owner ids 1 and 2, not {ownerId.Value}."),
+        };
+    }
+
+    private FactionId AuthoredFactionFor(MapSpec spec, OwnerId ownerId)
+    {
+        foreach (var start in spec.OwnerStarts)
+        {
+            if (start.OwnerId == ownerId)
+            {
+                return start.Faction;
+            }
+        }
+
+        return MatchConfig.FactionForOwner(LegacyOwnerFor(ownerId));
     }
 
     private void ConfigureDeveloperSandbox()

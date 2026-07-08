@@ -69,7 +69,11 @@ public partial class BattleRoot
         _unitBattlefield.SetCredits(PlayerSlotId.Two, _state.Credits(ProceduralRts.Core.Owner.Enemy));
         _unitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
 
-        if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+        if (_state.MatchConfig.AuthoredMap is not null)
+        {
+            SpawnAuthoredUnitBattlefieldUnits();
+        }
+        else if (_state.Options.LaunchMode == LaunchMode.Sandbox)
         {
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(820, 1180), new Vector2(58, 0));
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0));
@@ -88,6 +92,15 @@ public partial class BattleRoot
             }
 
             AddUnitInstanceView(unit);
+        }
+    }
+
+    private void SpawnAuthoredUnitBattlefieldUnits()
+    {
+        foreach (var seed in _state.Units)
+        {
+            var unit = _unitBattlefield.Spawn(seed.DesignId, ToPlayerSlot(seed.Owner), seed.Position, seed.Facing);
+            SetUnitInstanceFacing(unit, seed.Facing);
         }
     }
 

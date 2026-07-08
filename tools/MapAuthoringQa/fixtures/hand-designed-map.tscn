@@ -24,6 +24,9 @@ metadata/map_kind = "building"
 metadata/building_kind = "building.headquarters"
 metadata/owner_id = 1
 metadata/faction = "Dog"
+metadata/hp = 725
+metadata/build_progress = 0.95
+metadata/legacy_id = 77
 position = Vector2(260, 320)
 
 [node name="CatHQ" type="Node2D"]

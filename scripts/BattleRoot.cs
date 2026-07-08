@@ -51,7 +51,7 @@ public partial class BattleRoot : Node2D
         "cat.crescent_artillery",
     ];
 
-    private readonly GameState _state = new(SkirmishSetupState.PendingOptions);
+    private readonly GameState _state = new(SkirmishSetupState.PendingMatchConfig);
     private readonly UnitBattlefield _unitBattlefield = new();
     // Fixed-tick EntityWorld core for deterministic gameplay systems and live
     // presentation projections.

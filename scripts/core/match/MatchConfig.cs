@@ -9,7 +9,8 @@ public sealed record MatchConfig(
     Vector2 WorldSize,
     FactionId PlayerFaction,
     FactionId AiFaction,
-    LaunchMode LaunchMode = LaunchMode.Skirmish)
+    LaunchMode LaunchMode = LaunchMode.Skirmish,
+    MapSpec? AuthoredMap = null)
 {
     public static readonly Vector2 DefaultWorldSize = new(3600, 2400);
 

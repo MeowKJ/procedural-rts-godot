@@ -26,10 +26,12 @@ public partial class SkirmishFlowQaRoot : Node
 
 public partial class SkirmishFlowQaRunner : Node
 {
-    private const int TimeoutFrames = 600;
+    private const int TimeoutFrames = 900;
     private int _frames;
     private int _cleanupFrames;
     private bool _startedBattle;
+    private bool _startedAuthoredBattle;
+    private bool _validatedAuthoredBattle;
     private bool _cleanupStarted;
 
     public override void _Ready()
@@ -68,13 +70,22 @@ public partial class SkirmishFlowQaRunner : Node
                 return;
             }
 
-            if (_startedBattle && GetTree().CurrentScene is BattleRoot battle)
+            if (_startedBattle && !_startedAuthoredBattle && GetTree().CurrentScene is BattleRoot battle)
             {
                 GD.Print("Skirmish flow QA: validating Battle.");
                 AssertBattleState(battle.State);
                 AssertBattleRuntime(battle);
                 GD.Print("Skirmish flow QA: main menu setup launched Battle with selected faction, seed, credits, and difficulty.");
                 battle.QueueFree();
+                _cleanupStarted = true;
+            }
+            else if (_startedAuthoredBattle && !_validatedAuthoredBattle && GetTree().CurrentScene is BattleRoot authoredBattle)
+            {
+                GD.Print("Skirmish flow QA: validating authored Battle.");
+                AssertAuthoredBattle(authoredBattle);
+                GD.Print("Skirmish flow QA: authored MapSpec launched Battle with authored state and runtime units.");
+                authoredBattle.QueueFree();
+                _validatedAuthoredBattle = true;
                 _cleanupStarted = true;
             }
         }
@@ -132,6 +143,89 @@ public partial class SkirmishFlowQaRunner : Node
         }
     }
 
+    private static void AssertAuthoredBattle(BattleRoot battle)
+    {
+        var state = battle.State;
+        var spec = state.MatchConfig.AuthoredMap
+            ?? throw new InvalidOperationException("authored battle did not preserve AuthoredMap on MatchConfig");
+        if (state.WorldSize != spec.WorldSize.ToVector2()
+            || state.Credits(ProceduralRts.Core.Owner.Player) != 1800
+            || state.Credits(ProceduralRts.Core.Owner.Enemy) != 2100
+            || state.Buildings.Count != 2
+            || state.Units.Count != 2
+            || state.ResourceFields.Count != 1
+            || state.MapObstacles.Count != 1)
+        {
+            throw new InvalidOperationException("authored battle did not seed GameState from the supplied MapSpec");
+        }
+
+        var playerDesignIds = battle.DebugUnitBattlefieldDesignIds(PlayerSlotId.One);
+        var enemyDesignIds = battle.DebugUnitBattlefieldDesignIds(PlayerSlotId.Two);
+        if (!playerDesignIds.SequenceEqual(new[] { "dog.guard_tank" })
+            || !enemyDesignIds.SequenceEqual(new[] { "cat.tank" }))
+        {
+            throw new InvalidOperationException("authored battle did not seed runtime UnitBattlefield from authored units");
+        }
+    }
+
+    private void LaunchAuthoredBattle()
+    {
+        SkirmishSetupState.PendingMatchConfig = AuthoredMatchConfig(AuthoredQaMap());
+        _startedAuthoredBattle = true;
+        _cleanupStarted = false;
+        _cleanupFrames = 0;
+        var error = GetTree().ChangeSceneToFile("res://scenes/Battle.tscn");
+        if (error != Error.Ok)
+        {
+            throw new InvalidOperationException($"Failed to load authored battle for skirmish flow QA: {error}");
+        }
+    }
+
+    private static MatchConfig AuthoredMatchConfig(MapSpec spec)
+    {
+        return new MatchConfig(
+            StartingCredits: 0,
+            MapSeed: spec.Seed,
+            EnemyDifficulty: EnemyDifficulty.Normal,
+            WorldSize: spec.WorldSize.ToVector2(),
+            PlayerFaction: FactionId.Dog,
+            AiFaction: FactionId.Cat,
+            AuthoredMap: spec);
+    }
+
+    private static MapSpec AuthoredQaMap()
+    {
+        return new MapSpec
+        {
+            Id = "qa.authored-flow",
+            Seed = 20260709,
+            WorldSize = new MapSize(1600, 1000),
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(260, 320), 0, 1800),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(1260, 680), Mathf.Pi, 2100),
+            ],
+            Resources =
+            [
+                new("center", new MapPoint(780, 230), 130, 2800, new MapColor("#8fffe1")),
+            ],
+            Obstacles =
+            [
+                new("courtyard", new MapRect(690, 450, 220, 120)),
+            ],
+            Buildings =
+            [
+                new(BuildingDesignIds.Headquarters, new OwnerId(1), FactionId.Dog, new MapPoint(260, 320), 0),
+                new(BuildingDesignIds.Headquarters, new OwnerId(2), FactionId.Cat, new MapPoint(1260, 680), Mathf.Pi),
+            ],
+            Units =
+            [
+                new("dog.guard_tank", new OwnerId(1), new MapPoint(380, 320)),
+                new("cat.tank", new OwnerId(2), new MapPoint(1140, 680), Mathf.Pi),
+            ],
+        };
+    }
+
     private static void SelectOption<TEnum>(Node root, string name, TEnum value)
         where TEnum : struct, Enum
     {
@@ -167,7 +261,13 @@ public partial class SkirmishFlowQaRunner : Node
             throw new InvalidOperationException("Skirmish flow QA leaked a BattleRoot after cleanup.");
         }
 
-        GD.Print("Skirmish flow QA passed: battle scene cleaned up after setup flow.");
+        if (!_startedAuthoredBattle)
+        {
+            LaunchAuthoredBattle();
+            return;
+        }
+
+        GD.Print("Skirmish flow QA passed: battle scene cleaned up after setup and authored-map flows.");
         GetTree().Quit(0);
     }
 

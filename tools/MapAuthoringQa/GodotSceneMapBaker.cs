@@ -25,7 +25,15 @@ static class GodotSceneMapBaker
                 .Select(node => new MapObstacleSpec(Name(node), Rect(node)))
                 .ToArray(),
             Buildings = NodesOf(nodes, "building")
-                .Select(node => new MapBuildingSeedSpec(Text(node, "building_kind"), OwnerId(node), Faction(node), Position(node), Number(node, "facing")))
+                .Select(node => new MapBuildingSeedSpec(
+                    Text(node, "building_kind"),
+                    OwnerId(node),
+                    Faction(node),
+                    Position(node),
+                    Number(node, "facing"),
+                    OptionalNumber(node, "hp"),
+                    Number(node, "build_progress", 1),
+                    OptionalInt(node, "legacy_id")))
                 .ToArray(),
             Units = NodesOf(nodes, "unit")
                 .Select(node => new MapUnitSeedSpec(Text(node, "design_id"), OwnerId(node), Position(node), Number(node, "facing")))
@@ -121,9 +129,19 @@ static class GodotSceneMapBaker
         return node.TryGetValue(key, out var value) ? int.Parse(value, CultureInfo.InvariantCulture) : fallback;
     }
 
+    private static int? OptionalInt(Dictionary<string, string> node, string key)
+    {
+        return node.TryGetValue(key, out var value) ? int.Parse(value, CultureInfo.InvariantCulture) : null;
+    }
+
     private static float Number(Dictionary<string, string> node, string key, float fallback = 0)
     {
         return node.TryGetValue(key, out var value) ? Parse(value) : fallback;
+    }
+
+    private static float? OptionalNumber(Dictionary<string, string> node, string key)
+    {
+        return node.TryGetValue(key, out var value) ? Parse(value) : null;
     }
 
     private static bool Bool(Dictionary<string, string> node, string key, bool fallback = false)

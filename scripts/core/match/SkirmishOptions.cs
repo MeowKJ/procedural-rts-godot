@@ -41,5 +41,17 @@ public sealed record SkirmishOptions(
 
 public static class SkirmishSetupState
 {
-    public static SkirmishOptions PendingOptions { get; set; } = SkirmishOptions.Default;
+    private static MatchConfig _pendingMatchConfig = SkirmishOptions.Default.ToMatchConfig();
+
+    public static SkirmishOptions PendingOptions
+    {
+        get => _pendingMatchConfig.ToSkirmishOptions();
+        set => _pendingMatchConfig = value.ToMatchConfig();
+    }
+
+    public static MatchConfig PendingMatchConfig
+    {
+        get => _pendingMatchConfig;
+        set => _pendingMatchConfig = value;
+    }
 }
