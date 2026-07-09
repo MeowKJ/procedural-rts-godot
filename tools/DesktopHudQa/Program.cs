@@ -98,9 +98,13 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
+    RequireText(hudLayer, "Name = \"CommandFeedbackRail\"", "Right command panel must expose a stable command feedback rail node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
+    RequireText(hudLayer, "new Vector2(14, 76), new Vector2(92, 14), FontTiny", "Command feedback rail must reuse the top strip without colliding with the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
+    RequireText(hudLayer, "RefreshCommandFeedbackRail()", "Right command panel must refresh compact command hints when mode or provider scope changes.");
+    RequireText(hudLayer, "SelectCatalogMode(_selectedCatalogMode);\n        RefreshCommandFeedbackRail();", "Right command panel must initialize the compact command feedback rail on first draw.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Build provider lane state changes must feed the catalog overview path.");
@@ -290,6 +294,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.");
+    RequireText(englishText, "[\"ui.commandFeedback.build\"] = \"PLACE\"", "English Build command feedback rail text must exist.");
+    RequireText(englishText, "[\"ui.commandFeedback.train\"] = \"Q+SHIFT\"", "English Train command feedback rail text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.abilitiesEmpty\"] = \"Select support unit\\nno ability source\"", "English Abilities empty state must explain the missing selected-unit ability source.");
     RequireText(englishText, "[\"ui.ability.grammar.self\"] = \"SELF\"", "English ability cards must expose self-target grammar.");
@@ -379,6 +385,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.");
+    RequireText(chineseText, "[\"ui.commandFeedback.build\"] = \"放置\"", "Chinese Build command feedback rail text must exist.");
+    RequireText(chineseText, "[\"ui.commandFeedback.train\"] = \"排队+SHIFT\"", "Chinese Train command feedback rail text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectAbility\"]", "Chinese HUD catalog ability inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}资 {1}s\"", "Chinese upgrade shell cards must expose compact visible cost/time metrics.");
     RequireText(chineseText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] 来源 {2}", "Chinese HUD catalog upgrade inspector text must include source context.");

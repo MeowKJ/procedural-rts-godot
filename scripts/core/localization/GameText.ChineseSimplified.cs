@@ -87,6 +87,8 @@ public static partial class GameText
         ["ui.catalog.inspectTrain"] = "{0} 来自 {1}\n{2} 资金  {3}s  队列{4}  {5}\n{6}",
         ["ui.catalog.inputHint.build"] = "点击放置 | 通道: 自动/指定",
         ["ui.catalog.inputHint.train"] = "点击排队 | Shift x5 | 通道",
+        ["ui.commandFeedback.build"] = "放置",
+        ["ui.commandFeedback.train"] = "排队+SHIFT",
         ["ui.catalog.inspectAbility"] = "{0} [{1}]\n{2}  {3}",
         ["ui.catalog.inspectUpgrade"] = "{0} [{1}] 来源 {2}\n{3}资金/{4}s  {5}  {6}",
         ["ui.upgrade.project.focusedMunitions"] = "聚焦弹药",

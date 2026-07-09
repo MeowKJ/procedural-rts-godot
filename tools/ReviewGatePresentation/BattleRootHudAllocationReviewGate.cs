@@ -67,8 +67,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player))", "BattleRoot must feed build option snapshots into the HUD catalog.", result);
         RequireText(hudLayer, "List<BuildOptionSnapshot> _buildCardStates", "HudLayer build catalog cards must keep reusable build option state storage.", result);
         RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
+        RequireText(hudLayer, "Label _commandFeedbackRailValue", "HudLayer must own a compact command feedback rail readout.", result);
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
+        RequireText(hudBuild, "Name = \"CommandFeedbackRail\"", "Right command panel command feedback rail must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "RefreshCommandFeedbackRail()", "Right command panel must refresh compact command hints when mode or provider scope changes.", result);
+        RequireText(hudBuild, "SelectCatalogMode(_selectedCatalogMode);\n        RefreshCommandFeedbackRail();", "Right command panel must initialize compact command feedback on first draw.", result);
         RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
@@ -412,6 +416,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.", result);
+        RequireText(englishText, "[\"ui.commandFeedback.build\"] = \"PLACE\"", "English Build command feedback rail text must exist.", result);
+        RequireText(englishText, "[\"ui.commandFeedback.train\"] = \"Q+SHIFT\"", "English Train command feedback rail text must exist.", result);
         RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.", result);
         RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);
@@ -429,6 +435,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.", result);
+        RequireText(chineseText, "[\"ui.commandFeedback.build\"] = \"放置\"", "Chinese Build command feedback rail text must exist.", result);
+        RequireText(chineseText, "[\"ui.commandFeedback.train\"] = \"排队+SHIFT\"", "Chinese Train command feedback rail text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
         RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);

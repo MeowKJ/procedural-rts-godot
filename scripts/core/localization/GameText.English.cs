@@ -112,6 +112,8 @@ public static partial class GameText
         ["ui.catalog.inspectTrain"] = "{0} via {1}\n{2} cr  {3}s  Q{4}  {5}\n{6}",
         ["ui.catalog.inputHint.build"] = "Click: place | lane: auto/specific",
         ["ui.catalog.inputHint.train"] = "Click: queue | Shift x5 | lane",
+        ["ui.commandFeedback.build"] = "PLACE",
+        ["ui.commandFeedback.train"] = "Q+SHIFT",
         ["ui.catalog.inspectAbility"] = "{0} [{1}]\n{2}  {3}",
         ["ui.catalog.inspectUpgrade"] = "{0} [{1}] via {2}\n{3} cr/{4}s  {5}  {6}",
         ["ui.upgrade.project.focusedMunitions"] = "Focused Munitions",

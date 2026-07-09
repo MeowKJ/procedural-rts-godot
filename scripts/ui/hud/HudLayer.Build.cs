@@ -209,6 +209,9 @@ public partial class HudLayer : CanvasLayer
         _catalogOverviewValue.Name = "CatalogOverview";
         _catalogOverviewValue.HorizontalAlignment = HorizontalAlignment.Right;
         _rightProductionPanel.AddChild(_catalogOverviewValue);
+        _commandFeedbackRailValue = MakeSizedLabel("", new Vector2(14, 76), new Vector2(92, 14), FontTiny, InkMuted);
+        _commandFeedbackRailValue.Name = "CommandFeedbackRail";
+        _rightProductionPanel.AddChild(_commandFeedbackRailValue);
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
@@ -248,6 +251,7 @@ public partial class HudLayer : CanvasLayer
         _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
         _rightProductionPanel.AddChild(_cancelProduction);
         SelectCatalogMode(_selectedCatalogMode);
+        RefreshCommandFeedbackRail();
 
         _rightDetailPanel = MakePanel("UnitDetailPanel", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorder);
         _rightDetailPanel.SetAnchorsPreset(Control.LayoutPreset.BottomRight);

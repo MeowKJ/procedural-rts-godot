@@ -11,6 +11,7 @@ public partial class HudLayer : CanvasLayer
     private CatalogModeKind _selectedCatalogMode = CatalogModeKind.Train;
     private BuildCategory _selectedBuildCategory = BuildCategory.Command;
     private ProductionCategory _selectedProductionCategory = ProductionCategory.Infantry;
+    private Label _commandFeedbackRailValue = null!;
 
     private void RegisterCatalogModeButton(CatalogModeButton button)
     {
@@ -68,6 +69,7 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
+        RefreshCommandFeedbackRail();
     }
 
     private void SelectProductionTab(BuildCategory category)
@@ -81,6 +83,7 @@ public partial class HudLayer : CanvasLayer
 
         RefreshCommandCards();
         RefreshCatalogOverview();
+        RefreshCommandFeedbackRail();
     }
 
     private static string CatalogModeSurfaceText(CatalogModeKind mode)
@@ -146,6 +149,7 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
+        RefreshCommandFeedbackRail();
     }
 
     private void RefreshCatalogOverview()
@@ -175,6 +179,33 @@ public partial class HudLayer : CanvasLayer
                 CatalogOverviewUpgradeProjectCount()),
             _ => "",
         };
+    }
+
+    private void RefreshCommandFeedbackRail()
+    {
+        if (_commandFeedbackRailValue is null)
+        {
+            return;
+        }
+
+        var showCommandFeedback = _selectedCatalogMode is CatalogModeKind.Build or CatalogModeKind.Train;
+        _commandFeedbackRailValue.Visible = showCommandFeedback;
+        if (_catalogSurfaceLabel is not null)
+        {
+            _catalogSurfaceLabel.Visible = !showCommandFeedback;
+        }
+
+        _commandFeedbackRailValue.Text = _selectedCatalogMode switch
+        {
+            CatalogModeKind.Build => CommandFeedbackRailText(buildMode: true),
+            CatalogModeKind.Train => CommandFeedbackRailText(buildMode: false),
+            _ => "",
+        };
+    }
+
+    private static string CommandFeedbackRailText(bool buildMode)
+    {
+        return GameText.T(buildMode ? "ui.commandFeedback.build" : "ui.commandFeedback.train");
     }
 
     private int CatalogOverviewBuildStartableCount()
