@@ -8,9 +8,11 @@ public partial class HudLayer : CanvasLayer
     private readonly List<CatalogModeButton> _catalogModeButtons = [];
     private readonly List<ProductionTab> _productionTabs = [];
     private readonly List<ProductionCategoryTab> _trainCategoryTabs = [];
+    private readonly List<UpgradeCategoryTab> _upgradeCategoryTabs = [];
     private CatalogModeKind _selectedCatalogMode = CatalogModeKind.Train;
     private BuildCategory _selectedBuildCategory = BuildCategory.Command;
     private ProductionCategory _selectedProductionCategory = ProductionCategory.Infantry;
+    private UpgradeProjectAccentKind _selectedUpgradeCategory = UpgradeProjectAccentKind.Combat;
 
     private void RegisterCatalogModeButton(CatalogModeButton button)
     {
@@ -32,6 +34,13 @@ public partial class HudLayer : CanvasLayer
         _trainCategoryTabs.Add(tab);
     }
 
+    private void RegisterUpgradeCategoryTab(UpgradeCategoryTab tab)
+    {
+        tab.SetSelected(tab.Category == _selectedUpgradeCategory);
+        tab.Visible = _selectedCatalogMode == CatalogModeKind.Upgrades;
+        _upgradeCategoryTabs.Add(tab);
+    }
+
     private void SelectCatalogMode(CatalogModeKind mode)
     {
         _selectedCatalogMode = mode;
@@ -51,6 +60,12 @@ public partial class HudLayer : CanvasLayer
         {
             var tab = _trainCategoryTabs[index];
             tab.Visible = mode == CatalogModeKind.Train;
+        }
+
+        for (var index = 0; index < _upgradeCategoryTabs.Count; index++)
+        {
+            var tab = _upgradeCategoryTabs[index];
+            tab.Visible = mode == CatalogModeKind.Upgrades;
         }
 
         if (_catalogSurfaceLabel is not null)
@@ -148,6 +163,19 @@ public partial class HudLayer : CanvasLayer
         RefreshCatalogOverview();
     }
 
+    private void SelectUpgradeCategory(UpgradeProjectAccentKind category)
+    {
+        _selectedUpgradeCategory = category;
+        for (var index = 0; index < _upgradeCategoryTabs.Count; index++)
+        {
+            var tab = _upgradeCategoryTabs[index];
+            tab.SetSelected(tab.Category == category);
+        }
+
+        RefreshCommandCards();
+        RefreshCatalogOverview();
+    }
+
     private void RefreshCatalogOverview()
     {
         if (_catalogOverviewValue is null)
@@ -234,9 +262,9 @@ public partial class HudLayer : CanvasLayer
         return count;
     }
 
-    private static int CatalogOverviewUpgradeProjectCount()
+    private int CatalogOverviewUpgradeProjectCount()
     {
-        return Math.Min(DefaultUpgradeProjectShellStates.Length, 12);
+        return Math.Min(VisibleUpgradeProjectShellCount(), 12);
     }
 
     private static string CatalogOverviewProviderScopeText(ProductionProviderLaneScope scope)

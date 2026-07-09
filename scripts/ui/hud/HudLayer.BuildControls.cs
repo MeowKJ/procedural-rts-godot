@@ -198,6 +198,25 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(tab);
     }
 
+    private void AddUpgradeCategoryTab(Control parent, IconGlyph glyph, string tooltip, Vector2 position, UpgradeProjectAccentKind category)
+    {
+        var tab = new UpgradeCategoryTab
+        {
+            Name = $"UpgradeCategory{category}",
+            Glyph = glyph,
+            Category = category,
+            Position = position,
+            CustomMinimumSize = new Vector2(31, 32),
+            FocusMode = Control.FocusModeEnum.Click,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+            TooltipText = tooltip,
+        };
+        tab.Size = tab.CustomMinimumSize;
+        RegisterUpgradeCategoryTab(tab);
+        tab.Pressed += () => SelectUpgradeCategory(category);
+        parent.AddChild(tab);
+    }
+
     private CommandButton AddCommandButton(Control parent, string optionId)
     {
         var button = new CommandButton

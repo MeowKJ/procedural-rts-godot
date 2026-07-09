@@ -153,6 +153,29 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
+    private partial class UpgradeCategoryTab : Button
+    {
+        public required IconGlyph Glyph { get; init; }
+        public required UpgradeProjectAccentKind Category { get; init; }
+        private bool _selected;
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            var rect = new Rect2(Vector2.Zero, CustomMinimumSize);
+            var style = UiFactory.GetHudProductionTabDrawStyle(Glyph, active: true, _selected, CurrentPalette);
+            DrawRect(rect, style.Fill, true);
+            DrawRect(rect.Grow(-2), style.AccentFill, true);
+            DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
+            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+        }
+    }
+
     private partial class IconOnlyButton : Button
     {
         public required IconGlyph Glyph { get; init; }
