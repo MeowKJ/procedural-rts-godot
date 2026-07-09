@@ -169,6 +169,11 @@ public partial class HudLayer : CanvasLayer
         _providerLaneSummaryValue.Name = "ProviderLaneSummary";
         _providerLaneSummaryValue.VerticalAlignment = VerticalAlignment.Top;
         _rightRail.AddChild(_providerLaneSummaryValue);
+
+        _providerQueueMiniStackValue = MakeSizedLabel(GameText.T("ui.providerLane.stack.empty"), new Vector2(4, 382), new Vector2(40, 58), FontTiny, InkMuted);
+        _providerQueueMiniStackValue.Name = "ProviderQueueMiniStack";
+        _providerQueueMiniStackValue.VerticalAlignment = VerticalAlignment.Top;
+        _rightRail.AddChild(_providerQueueMiniStackValue);
     }
 
     private void BuildRightDrawer(Control root)

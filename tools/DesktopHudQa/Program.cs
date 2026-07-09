@@ -163,7 +163,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.");
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
     RequireText(hudLayer, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.");
+    RequireText(hudLayer, "Name = \"ProviderQueueMiniStack\"", "Selected provider queue mini-stack must expose a stable node name for QA.");
     RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
+    RequireText(hudLayer, "RefreshProviderQueueMiniStack(state, visible: true)", "Selected provider lane summary refresh must update the queue mini-stack from read-only lane state.");
+    RequireText(hudLayer, "ProviderQueueMiniStackText(ProductionProviderLaneState? state)", "Selected provider queue mini-stack must format from ProductionProviderLaneState without duplicating production rules.");
+    RequireText(hudLayer, "GameText.Format(\"ui.providerLane.stack.active\", state.QueueCount, progress)", "Selected provider queue mini-stack must expose active progress and queue count.");
     RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
     RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
@@ -336,6 +340,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.providerLane.empty\"]", "English HUD provider lane empty text must exist.");
     RequireText(englishText, "[\"ui.providerLane.summaryOk\"] = \"OK\"", "English HUD provider summary must use a rail-safe OK code.");
     RequireText(englishText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English HUD provider summary must use a rail-safe offline code.");
+    RequireText(englishText, "[\"ui.providerLane.stack.active\"] = \"QUEUE\\nQ{0}\\n{1}%\"", "English selected-provider queue mini-stack active text must exist.");
+    RequireText(englishText, "[\"ui.providerLane.stack.queued\"] = \"QUEUE\\nQ{0}\\nIDLE\"", "English selected-provider queue mini-stack queued text must exist.");
+    RequireText(englishText, "[\"ui.providerLane.stack.empty\"] = \"QUEUE\\n--\\nNONE\"", "English selected-provider queue mini-stack empty text must exist.");
+    RequireText(englishText, "[\"ui.providerLane.stack.unavailable\"] = \"QUEUE\\n--\\n{0}\"", "English selected-provider queue mini-stack unavailable text must exist.");
     RequireText(englishText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(englishText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.");
     ForbidText(englishText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
@@ -414,6 +422,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.providerLane.empty\"]", "Chinese HUD provider lane empty text must exist.");
     RequireText(chineseText, "[\"ui.providerLane.summaryOk\"]", "Chinese HUD provider summary must use a rail-safe OK code.");
     RequireText(chineseText, "[\"ui.providerLane.summaryOffline\"]", "Chinese HUD provider summary must use a rail-safe offline code.");
+    RequireText(chineseText, "[\"ui.providerLane.stack.active\"] = \"队列\\nQ{0}\\n{1}%\"", "Chinese selected-provider queue mini-stack active text must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.stack.queued\"] = \"队列\\nQ{0}\\n空闲\"", "Chinese selected-provider queue mini-stack queued text must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.stack.empty\"] = \"队列\\n--\\n无源\"", "Chinese selected-provider queue mini-stack empty text must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.stack.unavailable\"] = \"队列\\n--\\n{0}\"", "Chinese selected-provider queue mini-stack unavailable text must exist.");
     RequireText(chineseText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(chineseText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.");
     ForbidText(chineseText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");

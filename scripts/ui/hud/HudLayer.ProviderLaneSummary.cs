@@ -5,6 +5,8 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
+    private Label _providerQueueMiniStackValue = null!;
+
     private void RefreshProductionProviderLaneSummary()
     {
         if (_providerLaneSummaryValue is null)
@@ -17,6 +19,7 @@ public partial class HudLayer : CanvasLayer
             _providerLaneSummaryValue.Visible = true;
             _providerLaneSummaryValue.Text = NonProviderLaneRailHintText();
             SetLabelColor(_providerLaneSummaryValue, InkMuted);
+            RefreshProviderQueueMiniStack(null, visible: false);
             return;
         }
 
@@ -26,6 +29,7 @@ public partial class HudLayer : CanvasLayer
             ? CurrentProviderLaneEmptyText()
             : ProviderLaneSummaryText(state);
         SetLabelColor(_providerLaneSummaryValue, state is null || !state.Available ? InkMuted : Ink);
+        RefreshProviderQueueMiniStack(state, visible: true);
     }
 
     private ProductionProviderLaneState? CurrentProviderLaneState()
@@ -106,6 +110,44 @@ public partial class HudLayer : CanvasLayer
             state.QueueCount,
             progress,
             availability);
+    }
+
+    private void RefreshProviderQueueMiniStack(ProductionProviderLaneState? state, bool visible)
+    {
+        if (_providerQueueMiniStackValue is null)
+        {
+            return;
+        }
+
+        _providerQueueMiniStackValue.Visible = visible;
+        if (!visible)
+        {
+            _providerQueueMiniStackValue.Text = "";
+            return;
+        }
+
+        _providerQueueMiniStackValue.Text = ProviderQueueMiniStackText(state);
+        SetLabelColor(_providerQueueMiniStackValue, state is null || !state.Available ? InkMuted : Mint);
+    }
+
+    private static string ProviderQueueMiniStackText(ProductionProviderLaneState? state)
+    {
+        if (state is null)
+        {
+            return GameText.T("ui.providerLane.stack.empty");
+        }
+
+        if (!state.Available)
+        {
+            return GameText.Format(
+                "ui.providerLane.stack.unavailable",
+                ProviderLaneSummaryDisabledReason(state.DisabledReasonKey));
+        }
+
+        var progress = state.ActiveProgress > 0 ? Mathf.RoundToInt(state.ActiveProgress * 100) : 0;
+        return progress > 0
+            ? GameText.Format("ui.providerLane.stack.active", state.QueueCount, progress)
+            : GameText.Format("ui.providerLane.stack.queued", state.QueueCount);
     }
 
     private static string ProviderLaneSummaryDisabledReason(string disabledReasonKey)

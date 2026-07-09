@@ -166,7 +166,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.", result);
         RequireText(hudBuild, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.", result);
         RequireText(hudBuild, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.", result);
+        RequireText(hudBuild, "Name = \"ProviderQueueMiniStack\"", "Selected provider queue mini-stack must expose a stable node name for QA.", result);
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.", result);
+        RequireText(hudLayer, "RefreshProviderQueueMiniStack(state, visible: true)", "Selected provider lane summary refresh must update the queue mini-stack from read-only lane state.", result);
+        RequireText(hudLayer, "ProviderQueueMiniStackText(ProductionProviderLaneState? state)", "Selected provider queue mini-stack must format from ProductionProviderLaneState without duplicating production rules.", result);
+        RequireText(hudLayer, "GameText.Format(\"ui.providerLane.stack.active\", state.QueueCount, progress)", "Selected provider queue mini-stack must expose active progress and queue count.", result);
         RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.", result);
         RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.", result);
@@ -229,6 +233,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.ability.state.active\"] = \"ON\"", "English ability cards must expose compact active state.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.auto\"]", "English Build provider lane Auto label must exist.", result);
         RequireText(englishProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.stack.active\"] = \"QUEUE\\nQ{0}\\n{1}%\"", "English selected-provider queue mini-stack active text must exist.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.stack.queued\"] = \"QUEUE\\nQ{0}\\nIDLE\"", "English selected-provider queue mini-stack queued text must exist.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.stack.empty\"] = \"QUEUE\\n--\\nNONE\"", "English selected-provider queue mini-stack empty text must exist.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.stack.unavailable\"] = \"QUEUE\\n--\\n{0}\"", "English selected-provider queue mini-stack unavailable text must exist.", result);
         RequireText(englishProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.", result);
         RequireText(englishProviderText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "English selected-building detail must reserve a sell-refund row.", result);
         RequireText(englishProviderText, "[\"ui.detail.sellRefund\"] = \"SELL refund {0} credits\"", "English selected-building detail must preview sell refund.", result);
@@ -253,6 +261,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.ability.state.active\"] = \"开启\"", "Chinese ability cards must expose compact active state.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.auto\"]", "Chinese Build provider lane Auto label must exist.", result);
         RequireText(chineseProviderText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.stack.active\"] = \"队列\\nQ{0}\\n{1}%\"", "Chinese selected-provider queue mini-stack active text must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.stack.queued\"] = \"队列\\nQ{0}\\n空闲\"", "Chinese selected-provider queue mini-stack queued text must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.stack.empty\"] = \"队列\\n--\\n无源\"", "Chinese selected-provider queue mini-stack empty text must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.stack.unavailable\"] = \"队列\\n--\\n{0}\"", "Chinese selected-provider queue mini-stack unavailable text must exist.", result);
         RequireText(chineseProviderText, "[\"ui.sellOrCancel.sellTooltip\"]", "Chinese sell/cancel ribbon context tooltip must exist.", result);
         RequireText(chineseProviderText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "Chinese selected-building detail must reserve a sell-refund row.", result);
         RequireText(chineseProviderText, "[\"ui.detail.sellRefund\"] = \"出售返还 {0} 资金\"", "Chinese selected-building detail must preview sell refund.", result);
