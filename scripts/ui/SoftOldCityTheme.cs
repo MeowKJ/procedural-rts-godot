@@ -68,6 +68,22 @@ public static class SoftOldCityTheme
         Shadow: new Color(SoftOldCityPalette.NightBackground, 0.48f),
         Dark: true);
 
+    public static readonly SoftOldCityHudPalette NightRadar = new(
+        PanelFill: new Color(SoftOldCityPalette.NightBackground, 0.78f),
+        PanelStrongFill: new Color(SoftOldCityPalette.NightGround, 0.92f),
+        PanelSubtleFill: new Color(SoftOldCityPalette.NightWater, 0.42f),
+        PanelBorder: new Color(SoftOldCityPalette.NightRadarSoft, 0.22f),
+        PanelBorderStrong: new Color(SoftOldCityPalette.NightRadar, 0.64f),
+        Text: new Color(SoftOldCityPalette.NightRadarSoft, 0.96f),
+        TextMuted: new Color(SoftOldCityPalette.NightMuted, 0.80f),
+        TextDim: new Color(SoftOldCityPalette.NightMuted, 0.58f),
+        DogCommand: SoftOldCityPalette.NightRadar,
+        CatRoute: SoftOldCityPalette.DuskRoute,
+        Repair: SoftOldCityPalette.DuskRepair,
+        Danger: SoftOldCityPalette.DuskDanger,
+        Shadow: new Color(SoftOldCityPalette.NightBackground, 0.56f),
+        Dark: true);
+
     public static SoftOldCityHudPalette For(WorldVisualThemeState state)
     {
         var current = For(state.Current);
@@ -84,7 +100,8 @@ public static class SoftOldCityTheme
         return theme switch
         {
             WorldVisualTheme.FogMorning => Fog,
-            WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk,
+            WorldVisualTheme.DuskDefense => Dusk,
+            WorldVisualTheme.NightRadar => NightRadar,
             _ => Day,
         };
     }
