@@ -97,6 +97,15 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
+    RequireText(hudLayer, "Name = \"CommandResult\"", "Right command panel must expose a stable command-result feedback node.");
+    RequireText(hudLayer, "BuildCommandResult(_rightProductionPanel)", "Right command panel must build a compact result strip without changing command routing.");
+    RequireText(hudLayer, "public void SetCommandPanelResult(string status)", "HUD must expose a presentation-only command result setter.");
+    RequireText(hudLayer, "_commandResultValue.Text = CompactMultiline(result, 24)", "Command result feedback must stay compact inside the right command panel.");
+    RequireText(hudLayer, "CommandPanelResultColor(result)", "Command result feedback must distinguish accepted and rejected results visually.");
+    RequireText(hudLayer, "_commandResultPulse", "Command result feedback must pulse independently from queue and inspector feedback.");
+    RequireText(battleRoot, "_hud.SetCommandPanelResult(status)", "Build/Train command handlers must surface final status in the command result strip.");
+    RequireText(battleRoot, "_hud.SetCommandPanelResult(BuildCommandPanelResultText(kind))", "Build card selection must surface placement readiness in the command result strip.");
+    RequireText(battleRoot, "BuildCommandPanelResultText(string kind)", "Build card command-result text must derive from existing build preview localization.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");

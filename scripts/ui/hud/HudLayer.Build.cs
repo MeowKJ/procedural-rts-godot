@@ -212,6 +212,7 @@ public partial class HudLayer : CanvasLayer
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
+        BuildCommandResult(_rightProductionPanel);
 
         _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);
         _rightProductionPanel.AddChild(_queueValue);

@@ -212,6 +212,7 @@ public partial class BattleRoot
             {
                 _hud.SetStatus(status);
                 _hud.SetProductionStatus(status);
+                _hud.SetCommandPanelResult(status);
                 RefreshCommandCard();
                 return;
             }
@@ -221,12 +222,27 @@ public partial class BattleRoot
 
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
+        _hud.SetCommandPanelResult(status);
         RefreshCommandCard();
     }
 
     private void OnBuildKindRequested(string kind, int? constructionProviderId)
     {
-        _buildPlacement.SelectBuildKind(kind, constructionProviderId);
+        if (_buildPlacement.SelectBuildKind(kind, constructionProviderId))
+        {
+            _hud.SetCommandPanelResult(BuildCommandPanelResultText(kind));
+        }
+    }
+
+    private string BuildCommandPanelResultText(string kind)
+    {
+        var spec = BuildSpecCatalog.For(kind);
+        var key = spec.ConstructionPolicy?
+            .DefaultMethodFor(ToUnitFaction(_state.Options.PlayerFaction))
+            .PlacementMode == BuildPlacementMode.SidebarPlacement
+            ? "build.queuePreview"
+            : "build.preview";
+        return GameText.Format(key, spec.Label);
     }
 
     private void OnRallyRequested()

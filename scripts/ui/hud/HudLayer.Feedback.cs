@@ -29,5 +29,16 @@ public partial class HudLayer : CanvasLayer
             _queueValue.Modulate = Colors.White;
             _cancelProduction.Modulate = Colors.White;
         }
+
+        if (_commandResultPulse > 0)
+        {
+            _commandResultPulse = Mathf.Max(0, _commandResultPulse - dt * 2.8f);
+            var lift = _commandResultPulse * 0.18f;
+            _commandResultValue.Modulate = new Color(1f + lift, 1f + lift, 1f + lift, 1);
+        }
+        else if (_commandResultValue is not null)
+        {
+            _commandResultValue.Modulate = Colors.White;
+        }
     }
 }

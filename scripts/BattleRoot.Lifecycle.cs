@@ -158,7 +158,7 @@ public partial class BattleRoot
             Camera = _camera,
             LocalPlayerSlotId = PlayerSlotId.One,
             LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),
-            StatusChanged = OnStatusChanged,
+            StatusChanged = OnBuildPlacementStatusChanged,
             CommandAcknowledged = QueueCommandAcknowledgementEvent,
         };
         AddChild(_buildPlacement);

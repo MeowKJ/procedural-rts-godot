@@ -14,6 +14,12 @@ public partial class BattleRoot
         AddStatusAlert(status);
     }
 
+    private void OnBuildPlacementStatusChanged(string status)
+    {
+        OnStatusChanged(status);
+        _hud.SetCommandPanelResult(status);
+    }
+
     private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
     {
         foreach (var death in deaths)
@@ -239,6 +245,7 @@ public partial class BattleRoot
         status = ProductionBatchStatus(queued, attempts, status);
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
+        _hud.SetCommandPanelResult(status);
         AddStatusAlert(status);
         RefreshCommandCard();
     }
@@ -261,6 +268,7 @@ public partial class BattleRoot
         status = ProductionBatchStatus(queued, attempts, status);
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
+        _hud.SetCommandPanelResult(status);
         AddStatusAlert(status);
         RefreshCommandCard();
     }
@@ -302,6 +310,7 @@ public partial class BattleRoot
         var accepted = _unitBattlefield.ToggleRepeatProductionForProvider(designId, PlayerSlotId.One, providerId, out var status);
         _hud.SetStatus(status);
         _hud.SetProductionStatus(status);
+        _hud.SetCommandPanelResult(status);
         if (accepted)
         {
             AddStatusAlert(status);
