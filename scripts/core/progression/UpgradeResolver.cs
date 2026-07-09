@@ -30,9 +30,41 @@ public static class UpgradeResolver
         return baseDamage * ModifierFor(world, owner).DamageMultiplier;
     }
 
+    public static float Damage(EntityWorld world, OwnerId owner, string damageElementId, float baseDamage)
+    {
+        var modifier = ModifierFor(world, owner);
+        return baseDamage * modifier.DamageMultiplier * modifier.OutgoingElementDamageMultiplierFor(damageElementId);
+    }
+
     public static float Damage(EntityWorld world, EntityInstance entity, float baseDamage)
     {
         return baseDamage * ModifierFor(world, entity).DamageMultiplier;
+    }
+
+    public static float Damage(EntityWorld world, EntityInstance entity, string damageElementId, float baseDamage)
+    {
+        var modifier = ModifierFor(world, entity);
+        return baseDamage * modifier.DamageMultiplier * modifier.OutgoingElementDamageMultiplierFor(damageElementId);
+    }
+
+    public static float IncomingElementDamageMultiplier(EntityWorld world, OwnerId owner, string damageElementId)
+    {
+        return ModifierFor(world, owner).IncomingElementDamageMultiplierFor(damageElementId);
+    }
+
+    public static float IncomingElementDamageMultiplier(EntityWorld world, EntityInstance entity, string damageElementId)
+    {
+        return ModifierFor(world, entity).IncomingElementDamageMultiplierFor(damageElementId);
+    }
+
+    public static IReadOnlyList<string> VisualDeltaIds(EntityWorld world, OwnerId owner)
+    {
+        return ModifierFor(world, owner).VisualDeltaIds;
+    }
+
+    public static IReadOnlyList<string> VisualDeltaIds(EntityWorld world, EntityInstance entity)
+    {
+        return ModifierFor(world, entity).VisualDeltaIds;
     }
 
     public static float WeaponRange(EntityWorld world, EntityInstance entity, float baseRange)

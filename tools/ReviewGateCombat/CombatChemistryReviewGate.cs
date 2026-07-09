@@ -8,6 +8,11 @@ static class CombatChemistryReviewGate
         var defenses = ReviewGateSource.Read(root, "scripts", "core", "combat", "ElementDefenseProfile.cs");
         var traits = ReviewGateSource.Read(root, "scripts", "core", "combat", "TargetTraitProfile.cs");
         var counters = ReviewGateSource.Read(root, "scripts", "core", "combat", "CounterRuleProfile.cs");
+        var upgradeDefinition = ReviewGateSource.Read(root, "scripts", "core", "progression", "UpgradeDefinition.cs");
+        var upgradeCatalog = ReviewGateSource.Read(root, "scripts", "core", "progression", "UpgradeCatalog.cs");
+        var upgradeResolver = ReviewGateSource.Read(root, "scripts", "core", "progression", "UpgradeResolver.cs");
+        var weaponMath = ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs");
+        var balanceReport = ReviewGateSource.Read(root, "tools", "BalanceReport", "Program.cs");
         var statusDefinition = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementStatusDefinition.cs");
         var reactionDefinition = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementReactionDefinition.cs");
         var statusCatalog = ReviewGateSource.Read(root, "scripts", "core", "combat", "elements", "ElementStatusCatalog.cs");
@@ -48,7 +53,24 @@ static class CombatChemistryReviewGate
         RequireText(elementPresentation, "DamageElementIds.Resonance", "ElementPresentationCatalog must include Resonance styling.", result);
         RequireText(elementPresentation, "BadgeFor(string damageElementId)", "ElementPresentationCatalog must expose UI badge data.", result);
         RequireText(resolver, "targetElementDefense", "DamageResolver must accept target-side element defense.", result);
+        RequireText(resolver, "targetIncomingElementDamageMultiplier", "DamageResolver must accept resolver-composed incoming element modifiers.", result);
         RequireText(resolver, "CounterRules.MultiplierFor", "DamageResolver must apply counter rules through the resolver spine.", result);
+        RequireText(upgradeDefinition, "OutgoingElementDamageMultipliers", "UpgradeModifier must expose element-specific outgoing damage data.", result);
+        RequireText(upgradeDefinition, "IncomingElementDamageMultipliers", "UpgradeModifier must expose element-specific incoming damage data.", result);
+        RequireText(upgradeDefinition, "VisualDeltaIds", "UpgradeModifier must expose visual delta ids for future presentation.", result);
+        RequireText(upgradeDefinition, "OutgoingElementDamageMultiplierFor(string damageElementId)", "UpgradeModifier must resolve outgoing element modifiers by stable element id.", result);
+        RequireText(upgradeDefinition, "IncomingElementDamageMultiplierFor(string damageElementId)", "UpgradeModifier must resolve incoming element modifiers by stable element id.", result);
+        RequireText(upgradeCatalog, "UpgradeIds.EnergyCapacitors", "UpgradeCatalog must include one authored element-upgrade probe.", result);
+        RequireText(upgradeCatalog, "DamageElementIds.Energy", "Element upgrade probe must target a real authored damage element.", result);
+        RequireText(upgradeCatalog, "visual.delta.energy_capacitors", "Element upgrade probe must expose a visual delta id.", result);
+        RequireText(upgradeResolver, "Damage(EntityWorld world, OwnerId owner, string damageElementId, float baseDamage)", "UpgradeResolver must compose owner-scoped outgoing element damage.", result);
+        RequireText(upgradeResolver, "IncomingElementDamageMultiplier(EntityWorld world, OwnerId owner, string damageElementId)", "UpgradeResolver must compose owner-scoped incoming element damage.", result);
+        RequireText(upgradeResolver, "VisualDeltaIds(EntityWorld world, OwnerId owner)", "UpgradeResolver must expose completed visual delta ids.", result);
+        RequireText(weaponMath, "UpgradeResolver.Damage(world, attackerOwner, ammo.DamageElementId, 1f)", "Owner-based weapon damage must use element-aware upgrade composition.", result);
+        RequireText(weaponMath, "UpgradeResolver.Damage(world, attacker, ammo.DamageElementId, 1f)", "Entity-based weapon damage must use element-aware upgrade composition.", result);
+        RequireText(weaponMath, "UpgradeResolver.IncomingElementDamageMultiplier(world, target, ammo.DamageElementId)", "Weapon damage must compose target-side element upgrade modifiers.", result);
+        RequireText(balanceReport, "ValidateElementUpgradeModifiers", "BalanceReport must pin element upgrade modifier behavior.", result);
+        RequireText(balanceReport, "visual.delta.energy_capacitors", "BalanceReport must pin visual delta id exposure.", result);
 
         var ammo = ReviewGateSource.Read(root, "scripts", "core", "combat", "AmmoDefinition.cs");
         RequireText(ammo, "public string DamageElementId", "AmmoDefinition must carry a data-driven damage element id.", result);
@@ -56,7 +78,7 @@ static class CombatChemistryReviewGate
         RequireText(ammo, "DamageElementCatalog.For(this.DamageElementId)", "AmmoDefinition must validate its damage element id through the catalog.", result);
         RequireAmmoElementMappings(root, result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "UnitSpec.cs"), "TargetTraitProfile? TargetTraits", "StatsSpec must carry target trait profiles.", result);
-        RequireText(ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs"), "DamageResolver.Resolve(ammo", "Generic weapon damage must route through DamageResolver.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "sim", "weapon", "WeaponMath.cs"), "DamageResolver.Resolve(", "Generic weapon damage must route through DamageResolver.", result);
         RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs")), "DamageResolver.Resolve(", "Legacy GameState damage must route through DamageResolver.", result);
         RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs")), "DamageResolver.Resolve(", "UnitBattlefield legacy damage must route through DamageResolver.", result);
         ReviewGateSource.RequireAnyText(root, result, "RunElementReactionScenario", "tools/SimReplay");

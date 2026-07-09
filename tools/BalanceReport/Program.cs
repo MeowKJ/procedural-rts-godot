@@ -121,6 +121,40 @@ void PrintCombatChemistryCoverage(List<string> failures)
     RequireCoverage(Nearly(resistanceProbe.MultiplierFor(DamageElementIds.Energy), 0.75f), "Element defense probe must cover sparse resistance multipliers.", failures);
     RequireCoverage(overload?.ReactionId == ElementReactionIds.Overload, "Element reaction coverage must include EnergyCharge + Explosive -> Overload.", failures);
     RequireCoverage(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "Every damage element must have presentation metadata.", failures);
+    ValidateElementUpgradeModifiers(failures);
+}
+
+void ValidateElementUpgradeModifiers(List<string> failures)
+{
+    var owner = new OwnerId(41);
+    var world = new EntityWorld(4100);
+    var energyAmmo = WeaponCatalog.AmmoDefinitions.Values.First(ammo => ammo.DamageElementId == DamageElementIds.Energy);
+    var explosiveAmmo = WeaponCatalog.AmmoDefinitions.Values.First(ammo => ammo.DamageElementId == DamageElementIds.Explosive);
+    var baselineEnergy = DamageResolver.Resolve(energyAmmo, UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle);
+    var baselineExplosive = DamageResolver.Resolve(explosiveAmmo, UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle);
+
+    world.Upgrades(owner).Complete(UpgradeIds.EnergyCapacitors);
+    var upgradedEnergy = DamageResolver.Resolve(
+        energyAmmo,
+        UnitWeightClass.Medium,
+        MovementDomain.Land,
+        ArmorTag.Vehicle,
+        attackerDamageMultiplier: UpgradeResolver.Damage(world, owner, energyAmmo.DamageElementId, 1f));
+    var unaffectedKinetic = UpgradeResolver.Damage(world, owner, DamageElementIds.Kinetic, 1f);
+    var protectedExplosive = DamageResolver.Resolve(
+        explosiveAmmo,
+        UnitWeightClass.Medium,
+        MovementDomain.Land,
+        ArmorTag.Vehicle,
+        targetIncomingElementDamageMultiplier: UpgradeResolver.IncomingElementDamageMultiplier(world, owner, explosiveAmmo.DamageElementId));
+    var visualDeltaIds = UpgradeResolver.VisualDeltaIds(world, owner);
+
+    Console.WriteLine($"  upgrade modifiers {UpgradeIds.EnergyCapacitors}: outgoing energy {upgradedEnergy / baselineEnergy:0.00}, incoming explosive {protectedExplosive / baselineExplosive:0.00}, visual {string.Join(",", visualDeltaIds)}");
+
+    RequireCoverage(Nearly(upgradedEnergy, baselineEnergy * 1.18f), "Element upgrade probe must increase outgoing Energy damage through UpgradeResolver and DamageResolver.", failures);
+    RequireCoverage(Nearly(unaffectedKinetic, 1f), "Element upgrade probe must not leak outgoing Energy modifiers into Kinetic damage.", failures);
+    RequireCoverage(Nearly(protectedExplosive, baselineExplosive * 0.9f), "Element upgrade probe must apply incoming Explosive protection through UpgradeResolver and DamageResolver.", failures);
+    RequireCoverage(visualDeltaIds.Contains("visual.delta.energy_capacitors"), "Element upgrade probe must expose visual delta ids for presentation.", failures);
 }
 
 IEnumerable<string> DefenseEntries(string owner, ElementDefenseProfile? defense)
