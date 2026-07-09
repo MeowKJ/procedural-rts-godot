@@ -92,19 +92,25 @@ public partial class HudLayer : CanvasLayer
     {
         _upgradeProjectCardActiveIds.Clear();
         _upgradeProjectCardStaleIds.Clear();
-        var visibleCount = Math.Min(DefaultUpgradeProjectShellStates.Length, 12);
-        for (var index = 0; index < visibleCount; index++)
+        var visibleIndex = 0;
+        for (var index = 0; index < DefaultUpgradeProjectShellStates.Length && visibleIndex < 12; index++)
         {
             var state = DefaultUpgradeProjectShellStates[index];
+            if (state.Accent != _selectedUpgradeCategory)
+            {
+                continue;
+            }
+
             _upgradeProjectCardActiveIds.Add(state.Id);
             if (!_upgradeProjectCards.TryGetValue(state.Id, out var card))
             {
                 card = AddUpgradeProjectCard(_rightProductionPanel, state.Id);
             }
 
-            card.Position = ProductionButtonPosition(index);
+            card.Position = ProductionButtonPosition(visibleIndex);
             card.SetState(state);
             RefreshCatalogInspectorItem(UpgradeInspectorItemId(state.Id), card.InspectorText);
+            visibleIndex++;
         }
 
         foreach (var key in _upgradeProjectCards.Keys)
@@ -169,12 +175,26 @@ public partial class HudLayer : CanvasLayer
         Support,
     }
 
-    private static string UpgradeProjectCatalogStatusText()
+    private string UpgradeProjectCatalogStatusText()
     {
         return GameText.Format(
             "ui.catalog.upgradesCount",
-            Math.Min(DefaultUpgradeProjectShellStates.Length, 12),
+            Math.Min(VisibleUpgradeProjectShellCount(), 12),
             GameText.T("ui.upgrade.source.researchBuilding"));
+    }
+
+    private int VisibleUpgradeProjectShellCount()
+    {
+        var count = 0;
+        for (var index = 0; index < DefaultUpgradeProjectShellStates.Length; index++)
+        {
+            if (DefaultUpgradeProjectShellStates[index].Accent == _selectedUpgradeCategory)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private static string UpgradeProjectCardMetricText(UpgradeProjectCardState state)
