@@ -407,6 +407,7 @@ public static partial class GameText
         ["settings.impactShakeDisabled"] = "Impact shake disabled",
         ["settings.controls"] = "CONTROLS",
         ["settings.controls.tooltip"] = "Read-only controls overview; remapping will be wired in a later slice",
+        ["settings.controls.sectionStatus"] = "{0} selected; remap later",
         ["settings.masterAudio"] = "MASTER AUDIO",
         ["settings.masterAudio.tooltip"] = "Master volume",
         ["settings.close"] = "CLOSE",

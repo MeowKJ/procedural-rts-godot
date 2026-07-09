@@ -362,6 +362,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
     {
         _selectedControlsSectionIndex = Mathf.Clamp((int)index, 0, ControlBindingCatalog.Sections.Count - 1);
         _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
+        _status.Text = SettingsControlsSectionStatusText(_selectedControlsSectionIndex);
     }
 
     private void OnLanguageSelected(long index)
@@ -443,6 +444,18 @@ public partial class SettingsOverlayLayer : CanvasLayer
         }
 
         return string.Join('\n', rows);
+    }
+
+    private static string SettingsControlsSectionStatusText(int sectionIndex)
+    {
+        if (sectionIndex < 0 || sectionIndex >= ControlBindingCatalog.Sections.Count)
+        {
+            sectionIndex = 0;
+        }
+
+        return GameText.Format(
+            "settings.controls.sectionStatus",
+            GameText.T(ControlBindingCatalog.Sections[sectionIndex].TitleKey));
     }
 
     private partial class SettingsBackdrop : Control
