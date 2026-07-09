@@ -25,4 +25,10 @@ public sealed record UnitSpecRuntimeDescriptor(
     int TechTier,
     IReadOnlySet<UnitRoleTag> RoleTags,
     ElementDefenseProfile? ElementDefense,
-    TargetTraitProfile? TargetTraits);
+    TargetTraitProfile? TargetTraits,
+    int Cost,
+    ProductionCategory? ProductionCategory,
+    float? ProductionDuration,
+    string? ProducerKind,
+    int? ProductionLaneIndex,
+    string? ProductionLaneKey);
