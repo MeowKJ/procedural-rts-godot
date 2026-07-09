@@ -70,6 +70,14 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
         RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
+        RequireText(hudLayer, "Grammar = CatalogModeGrammarText(mode)", "Catalog mode buttons must expose a compact interaction grammar chip.", result);
+        RequireText(hudLayer, "private static string CatalogModeGrammarText(CatalogModeKind mode)", "Catalog mode grammar chips must be mode-specific and localized.", result);
+        RequireText(hudLayer, "private const float GrammarChipWidth = 24f", "Catalog mode grammar chip must reserve enough width for compact two-glyph codes.", result);
+        RequireText(hudLayer, "private const float GrammarLabelWidth = 38f", "Catalog mode labels must reserve geometry so they cannot draw underneath grammar chips.", result);
+        RequireText(hudLayer, "private const float GrammarDetailWidth = 20f", "Catalog mode detail text must keep a compact lane separate from the grammar chip.", result);
+        RequireText(hudLayer, "rect.Size.X - GrammarChipWidth - GrammarChipInset, 16", "Catalog mode grammar chip must sit below the primary label to avoid text overlap.", result);
+        RequireText(hudLayer, "CustomMinimumSize = new Vector2(72, 28)", "Catalog mode buttons must be wide enough for label, detail, and grammar chip.", result);
+        RequireText(hudBuild, "new Vector2(224, 8)", "Catalog mode strip must keep the fourth 72px button within the right panel width.", result);
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
         RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page in the inspector.", result);
@@ -408,6 +416,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.overview.scope.auto\"] = \"AUTO\"", "English catalog overview provider scope must expose Auto compactly.", result);
         RequireText(englishText, "[\"ui.catalog.upgradesCount\"] = \"{0} project shells\\nsource: {1}; read-only\"", "English catalog mode Upgrades count must explain read-only selected-source project shells.", result);
         RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English catalog mode upgrade inspector text must include source context.", result);
+        RequireText(englishText, "[\"ui.catalog.grammar.build\"] = \"LN\"", "English Build mode grammar chip must describe lane-backed construction.", result);
+        RequireText(englishText, "[\"ui.catalog.grammar.train\"] = \"GR\"", "English Train mode grammar chip must describe the action grid.", result);
+        RequireText(englishText, "[\"ui.catalog.grammar.upgrades\"] = \"PJ\"", "English Upgrades mode grammar chip must describe project-only research.", result);
+        RequireText(englishText, "[\"ui.catalog.grammar.abilities\"] = \"UN\"", "English Abilities mode grammar chip must describe selected-unit context.", result);
         RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
@@ -425,6 +437,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"{0}壳 | 无通道\"", "Chinese catalog mode Upgrades overview must stay a non-provider project shell.", result);
         RequireText(chineseText, "[\"ui.catalog.overview.scope.auto\"] = \"自动\"", "Chinese catalog overview provider scope must expose Auto compactly.", result);
         RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese catalog mode Upgrades count must explain read-only selected-source project shells.", result);
+        RequireText(chineseText, "[\"ui.catalog.grammar.build\"] = \"通道\"", "Chinese Build mode grammar chip must describe lane-backed construction.", result);
+        RequireText(chineseText, "[\"ui.catalog.grammar.train\"] = \"格组\"", "Chinese Train mode grammar chip must describe the action grid.", result);
+        RequireText(chineseText, "[\"ui.catalog.grammar.upgrades\"] = \"项目\"", "Chinese Upgrades mode grammar chip must describe project-only research.", result);
+        RequireText(chineseText, "[\"ui.catalog.grammar.abilities\"] = \"单位\"", "Chinese Abilities mode grammar chip must describe selected-unit context.", result);
         RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);

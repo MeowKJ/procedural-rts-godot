@@ -63,9 +63,15 @@ public partial class HudLayer : CanvasLayer
 
     private partial class CatalogModeButton : Button
     {
+        private const float GrammarChipWidth = 24f;
+        private const float GrammarChipInset = 5f;
+        private const float GrammarLabelWidth = 38f;
+        private const float GrammarDetailWidth = 20f;
+
         public required CatalogModeKind Mode { get; init; }
         public required string Label { get; init; }
         public required string Detail { get; init; }
+        public required string Grammar { get; init; }
         public required string HelpText { get; init; }
         private bool _selected;
 
@@ -100,8 +106,19 @@ public partial class HudLayer : CanvasLayer
             DrawIconGlyph(this, glyph, new Vector2(11, rect.Size.Y * 0.5f), 14, new Color(accent, textStrong ? 1f : 0.72f));
 
             var labelFont = UiFontProfile.DrawFont(UiFontRole.Compact);
-            DrawString(labelFont, new Vector2(22, 12), Label, HorizontalAlignment.Left, rect.Size.X - 26, 10, new Color(Ink, textStrong ? 1f : 0.82f));
-            DrawString(labelFont, new Vector2(22, 22), Detail, HorizontalAlignment.Left, rect.Size.X - 26, 8, new Color(focused ? Ink : InkMuted, focused ? 0.92f : 0.82f));
+            DrawString(labelFont, new Vector2(22, 12), Label, HorizontalAlignment.Left, GrammarLabelWidth, 10, new Color(Ink, textStrong ? 1f : 0.82f));
+            DrawString(labelFont, new Vector2(22, 22), Detail, HorizontalAlignment.Left, GrammarDetailWidth, 8, new Color(focused ? Ink : InkMuted, focused ? 0.92f : 0.82f));
+            var chip = new Rect2(new Vector2(rect.Size.X - GrammarChipWidth - GrammarChipInset, 16), new Vector2(GrammarChipWidth, 9));
+            DrawRect(chip, new Color(accent, textStrong ? 0.26f : 0.16f), true);
+            DrawRect(chip, new Color(accent, textStrong ? 0.72f : 0.42f), false, 1, true);
+            DrawString(
+                labelFont,
+                chip.Position + new Vector2(2, 7),
+                Grammar,
+                HorizontalAlignment.Center,
+                chip.Size.X - 4,
+                7,
+                new Color(accent, textStrong ? 1f : 0.82f));
         }
     }
 

@@ -160,10 +160,11 @@ public partial class HudLayer : CanvasLayer
             Mode = mode,
             Label = label,
             Detail = detail,
+            Grammar = CatalogModeGrammarText(mode),
             HelpText = helpText,
             Position = position,
-            CustomMinimumSize = new Vector2(66, 28),
-            Size = new Vector2(66, 28),
+            CustomMinimumSize = new Vector2(72, 28),
+            Size = new Vector2(72, 28),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             TooltipText = helpText,
@@ -176,6 +177,18 @@ public partial class HudLayer : CanvasLayer
         button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));
         button.FocusExited += RestoreCatalogStatusText;
         parent.AddChild(button);
+    }
+
+    private static string CatalogModeGrammarText(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => GameText.T("ui.catalog.grammar.build"),
+            CatalogModeKind.Train => GameText.T("ui.catalog.grammar.train"),
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.grammar.upgrades"),
+            CatalogModeKind.Abilities => GameText.T("ui.catalog.grammar.abilities"),
+            _ => "",
+        };
     }
 
     private void AddTrainCategoryTab(Control parent, IconGlyph glyph, string tooltip, Vector2 position, ProductionCategory category, bool active)
