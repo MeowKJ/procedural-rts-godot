@@ -174,7 +174,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.", result);
         RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.", result);
-        RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.", result);
+        RequireText(hudLayer, "CatalogModeKind.Abilities => AbilityRailSourceContextText()", "Abilities catalog mode must explain selected-unit ability context in the right rail.", result);
         RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept Build-mode construction provider lane read models separately from Train lanes.", result);
         RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.", result);
         RequireText(hudLayer, "private int? SelectedConstructionProviderId(string? buildKind)", "Build provider lanes must expose selected provider ids for Build card routing.", result);
@@ -227,7 +227,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}cr {1}s\"", "English upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(englishProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English upgrade inspector text must include source context.", result);
         RequireText(englishProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"NO\\nABIL\\nSRC\"", "English Abilities rail no-source context must exist.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"UNIT\\nABIL\\n{0}\"", "English Abilities rail selected-source context must exist.", result);
+        RequireText(englishProviderText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"MIX\\nSRC\\n{0}\"", "English Abilities rail mixed-source context must exist.", result);
         RequireText(englishProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"Select support unit\\nno ability source\"", "English Abilities empty state must explain the missing selected-unit ability source.", result);
+        RequireText(englishProviderText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"Selected source\\n{0} ability cards\"", "English Abilities selected-source status must exist.", result);
+        RequireText(englishProviderText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} selected sources\\n{1} ability cards\"", "English Abilities mixed-source status must exist.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.self\"] = \"SELF\"", "English ability cards must expose self-target grammar.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.point\"] = \"POINT\"", "English ability cards must expose point-target grammar.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.target\"] = \"TARGET\"", "English ability cards must expose generic target grammar.", result);
@@ -251,7 +256,12 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}资 {1}s\"", "Chinese upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] 来源 {2}", "Chinese upgrade inspector text must include source context.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"无\\n能力\\n来源\"", "Chinese Abilities rail no-source context must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"单位\\n能力\\n{0}\"", "Chinese Abilities rail selected-source context must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"混合\\n来源\\n{0}\"", "Chinese Abilities rail mixed-source context must exist.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"选择支援单位\\n无能力来源\"", "Chinese Abilities empty state must explain the missing selected-unit ability source.", result);
+        RequireText(chineseProviderText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"已选来源\\n{0} 张能力卡\"", "Chinese Abilities selected-source status must exist.", result);
+        RequireText(chineseProviderText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} 个能力来源\\n{1} 张能力卡\"", "Chinese Abilities mixed-source status must exist.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.self\"] = \"自身\"", "Chinese ability cards must expose self-target grammar.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.point\"] = \"地点\"", "Chinese ability cards must expose point-target grammar.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.target\"] = \"目标\"", "Chinese ability cards must expose generic target grammar.", result);
@@ -268,6 +278,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.", result);
         ForbidText(chineseProviderText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.", result);
         RequireText(hudSync, "CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer)", "Runtime selection HUD sync must fill the reusable selected-unit buffer.", result);
+        RequireText(hudSync, "RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount)", "BattleRoot must collect selected-unit ability source counts beside ability cards.", result);
+        RequireText(hudSync, "_hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount)", "BattleRoot must feed selected ability source context into the HUD.", result);
+        RequireText(hudSync, "unitContributedAbility = true", "BattleRoot ability source count must be driven by the same HUD ability filter as ability cards.", result);
+        RequireText(hudSync, "abilitySourceUnitCount++", "BattleRoot must count selected units that contribute HUD abilities.", result);
         RequireText(hudSync, "private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)", "Runtime selection HUD sync must expose a reusable selected-unit collector.", result);
         RequireText(hudSync, "spec.TryGetAbility(AbilityKind.ShieldField, out var shieldField)", "Runtime selected-unit details must surface ShieldField units from authored AbilitySpec data.", result);
         RequireText(hudSync, "GameText.Format(\n                \"ui.detail.shieldField\"", "Runtime selected-unit details must render localized ShieldField radius and absorb text.", result);
