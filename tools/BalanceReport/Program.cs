@@ -63,6 +63,8 @@ Console.WriteLine();
 var failures = new List<string>();
 PrintCombatChemistryCoverage(failures);
 Console.WriteLine();
+PrintUnitProductionCoverage(failures);
+Console.WriteLine();
 
 foreach (var scenario in scenarios)
 {
@@ -121,6 +123,59 @@ void PrintCombatChemistryCoverage(List<string> failures)
     RequireCoverage(Nearly(resistanceProbe.MultiplierFor(DamageElementIds.Energy), 0.75f), "Element defense probe must cover sparse resistance multipliers.", failures);
     RequireCoverage(overload?.ReactionId == ElementReactionIds.Overload, "Element reaction coverage must include EnergyCharge + Explosive -> Overload.", failures);
     RequireCoverage(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "Every damage element must have presentation metadata.", failures);
+}
+
+void PrintUnitProductionCoverage(List<string> failures)
+{
+    var specs = UnitDesignCatalog.Designs.Values
+        .Select(design => design.ToSpec())
+        .OrderBy(spec => spec.Faction)
+        .ThenBy(spec => spec.Stats.TechTier)
+        .ThenBy(spec => spec.Id, StringComparer.Ordinal)
+        .ToArray();
+    var productionSpecs = specs
+        .Where(spec => spec.Production is not null)
+        .ToArray();
+    var nonProductionSpecs = specs
+        .Where(spec => spec.Production is null)
+        .Select(spec => $"{spec.Id}(tier {spec.Stats.TechTier})")
+        .ToArray();
+    var byFaction = productionSpecs
+        .GroupBy(spec => spec.Faction)
+        .OrderBy(group => group.Key)
+        .Select(group => $"{group.Key}={group.Count()}")
+        .ToArray();
+    var byCategory = productionSpecs
+        .GroupBy(spec => spec.Production!.Category)
+        .OrderBy(group => group.Key)
+        .Select(group => $"{group.Key}={group.Count()}")
+        .ToArray();
+    var byTier = productionSpecs
+        .GroupBy(spec => spec.Stats.TechTier)
+        .OrderBy(group => group.Key)
+        .Select(group => $"T{group.Key}={group.Count()}")
+        .ToArray();
+
+    Console.WriteLine("Unit production tuning coverage");
+    Console.WriteLine($"  production units {productionSpecs.Length}/{specs.Length}; by faction {string.Join(", ", byFaction)}");
+    Console.WriteLine($"  by category {string.Join(", ", byCategory)}; by tier {string.Join(", ", byTier)}");
+    Console.WriteLine($"  non-production units: {(nonProductionSpecs.Length == 0 ? "none" : string.Join(", ", nonProductionSpecs))}");
+
+    foreach (var spec in productionSpecs)
+    {
+        var production = spec.Production!;
+        RequireCoverage(spec.Stats.Cost > 0, $"{spec.Id}: production unit must have positive cost.", failures);
+        RequireCoverage(spec.Stats.TechTier >= 0, $"{spec.Id}: production unit must have non-negative tech tier.", failures);
+        RequireCoverage(production.Duration > 0, $"{spec.Id}: production duration must be positive.", failures);
+        RequireCoverage(production.LaneIndex >= 0, $"{spec.Id}: production lane index must be non-negative.", failures);
+        RequireCoverage(!string.IsNullOrWhiteSpace(production.LaneKey), $"{spec.Id}: production lane key must be authored.", failures);
+        RequireCoverage(!string.IsNullOrWhiteSpace(production.ProducerKind), $"{spec.Id}: producer kind must be authored.", failures);
+    }
+
+    RequireCoverage(productionSpecs.Length > 0, "Unit production tuning coverage must include at least one production unit.", failures);
+    RequireCoverage(byFaction.Length > 0, "Unit production tuning coverage must group production units by faction.", failures);
+    RequireCoverage(byCategory.Length > 0, "Unit production tuning coverage must group production units by production category.", failures);
+    RequireCoverage(byTier.Length > 0, "Unit production tuning coverage must group production units by tech tier.", failures);
 }
 
 IEnumerable<string> DefenseEntries(string owner, ElementDefenseProfile? defense)
