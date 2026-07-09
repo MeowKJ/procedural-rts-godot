@@ -59,6 +59,7 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitBattlefieldVisionSource> _visionSourceBuffer = [];
     private readonly List<UnitBattlefieldResourcePip> _resourcePipBuffer = [];
     private readonly List<UnitBattlefieldResourcePip> _resourcePipSecondaryBuffer = [];
+    private readonly List<RepairOrderProjection> _repairOrderProjectionBuffer = [];
     private readonly List<UnitMinimapPip> _unitMinimapPipBuffer = [];
     private readonly List<UnitMinimapPip> _unitMinimapPipSecondaryBuffer = [];
     private readonly List<UnitSelectionSummaryItem> _selectionSummaryBuffer = [];

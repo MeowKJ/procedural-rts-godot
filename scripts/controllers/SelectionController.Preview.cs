@@ -41,6 +41,11 @@ public partial class SelectionController
                 return new CommandPreviewState(CommandPreviewKind.Repair, RepairUnitPreviewLabel(), screenPosition, hoveredUnitInstance.Position, true);
             }
 
+            if (UnitBattlefield.NeedsRepairSupport(LocalPlayerSlotId, hoveredUnitInstance))
+            {
+                return new CommandPreviewState(CommandPreviewKind.Repair, RepairNeedsSupportPreviewLabel(), screenPosition, hoveredUnitInstance.Position, false);
+            }
+
             return new CommandPreviewState(CommandPreviewKind.TargetHover, relation == PlayerRelation.Hostile ? GameText.T("preview.enemy") : GameText.T("preview.unit"), screenPosition, hoveredUnitInstance.Position, true);
         }
 
@@ -66,6 +71,11 @@ public partial class SelectionController
             if (UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, buildingProjection.Id))
             {
                 return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, buildingProjection.Position, true);
+            }
+
+            if (UnitBattlefield.NeedsRepairSupportBuilding(LocalPlayerSlotId, buildingProjection.Id))
+            {
+                return new CommandPreviewState(CommandPreviewKind.Repair, RepairNeedsSupportPreviewLabel(), screenPosition, buildingProjection.Position, false);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, buildingProjection.Position, true);
