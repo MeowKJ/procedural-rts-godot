@@ -468,7 +468,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.");
     RequireText(englishText, "[\"preview.repair.unit\"] = \"REPAIR UNIT\"", "English repair preview must distinguish unit repair targets.");
     RequireText(englishText, "[\"preview.repair.structure\"] = \"REPAIR STRUCTURE\"", "English repair preview must distinguish structure repair targets.");
+    RequireText(englishText, "[\"preview.repair.needSupport\"] = \"NEED REPAIRER\"", "English repair preview must expose missing repair support.");
     RequireText(englishText, "[\"preview.repair.invalid\"] = \"NO REPAIR TARGET\"", "English repair preview must label invalid repair targets.");
+    RequireText(englishText, "[\"repair.stalled.noCredits\"] = \"Repair stalled: need credits\"", "English repair status must expose insufficient-credit stalls.");
     RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.");
     RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.");
     RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.");
@@ -552,7 +554,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.");
     RequireText(chineseText, "[\"preview.repair.unit\"] = \"修理单位\"", "Chinese repair preview must distinguish unit repair targets.");
     RequireText(chineseText, "[\"preview.repair.structure\"] = \"修理建筑\"", "Chinese repair preview must distinguish structure repair targets.");
+    RequireText(chineseText, "[\"preview.repair.needSupport\"] = \"需要修理单位\"", "Chinese repair preview must expose missing repair support.");
     RequireText(chineseText, "[\"preview.repair.invalid\"] = \"无法修理\"", "Chinese repair preview must label invalid repair targets.");
+    RequireText(chineseText, "[\"repair.stalled.noCredits\"] = \"修理暂停：资金不足\"", "Chinese repair status must expose insufficient-credit stalls.");
     RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.");

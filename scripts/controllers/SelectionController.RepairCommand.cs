@@ -95,6 +95,11 @@ public partial class SelectionController
         return GameText.T("preview.repair.invalid");
     }
 
+    private static string RepairNeedsSupportPreviewLabel()
+    {
+        return GameText.T("preview.repair.needSupport");
+    }
+
     private void FinishArmedRepairCommand(Vector2 screenPoint)
     {
         FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true);
@@ -110,7 +115,7 @@ public partial class SelectionController
             var accepted = SubmitRuntimeCommand(
                 PlayerCommandKind.Repair,
                 PlayerCommandPayload.ForEntityTarget(SelectedRuntimeUnitSubjects(), hoveredUnit.EntityId));
-            StatusChanged?.Invoke(GameText.T("ui.context.repair"));
+            StatusChanged?.Invoke(accepted ? RepairCommandStatusText(hoveredUnit.EntityId) : GameText.T("ui.context.repair"));
             AcknowledgeCommand(
                 accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
                 hoveredUnit.Position,
@@ -121,11 +126,18 @@ public partial class SelectionController
         if (UnitBattlefield.PickAnyBuildingHoverProjection(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } hoveredBuilding
             && UnitBattlefield.CanRepairSelectedBuilding(LocalPlayerSlotId, hoveredBuilding.Id))
         {
-            var accepted = UnitBattlefield.BuildingEntityIdByTargetId(hoveredBuilding.Id) is { } targetEntity
-                && SubmitRuntimeCommand(
+            var targetEntity = UnitBattlefield.BuildingEntityIdByTargetId(hoveredBuilding.Id);
+            var accepted = false;
+            if (targetEntity is { } repairTarget)
+            {
+                accepted = SubmitRuntimeCommand(
                     PlayerCommandKind.Repair,
-                    PlayerCommandPayload.ForEntityTarget(SelectedRuntimeUnitSubjects(), targetEntity, CombatTargetKind.Building));
-            StatusChanged?.Invoke(GameText.T("ui.context.repair"));
+                    PlayerCommandPayload.ForEntityTarget(SelectedRuntimeUnitSubjects(), repairTarget, CombatTargetKind.Building));
+            }
+
+            StatusChanged?.Invoke(accepted && targetEntity is { } acceptedTarget
+                ? RepairCommandStatusText(acceptedTarget)
+                : GameText.T("ui.context.repair"));
             AcknowledgeCommand(
                 accepted ? CommandAcknowledgementKind.Repair : CommandAcknowledgementKind.Invalid,
                 hoveredBuilding.Position,
@@ -148,6 +160,20 @@ public partial class SelectionController
         ClearDrag();
         StatusChanged?.Invoke(GameText.T("ui.status.ready"));
         QueueRedraw();
+    }
+
+    private string RepairCommandStatusText(EntityId targetEntity)
+    {
+        foreach (var projection in UnitBattlefield!.RepairOrderProjections(LocalPlayerSlotId))
+        {
+            if (projection.Target == targetEntity
+                && projection.StallReason == RepairOrderStallReason.InsufficientCredits)
+            {
+                return GameText.T("repair.stalled.noCredits");
+            }
+        }
+
+        return GameText.T("ui.context.repair");
     }
 
     private bool HasSelectedRuntimeRepairer()
