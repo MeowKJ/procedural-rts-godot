@@ -39,7 +39,8 @@ public partial class BattleRoot
             _hud.SetProductionQueueSummary(
                 RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
                 canCancel);
-            _hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates());
+            var selectedAbilityCards = RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount);
+            _hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount);
             return;
         }
 
@@ -61,9 +62,10 @@ public partial class BattleRoot
         }
     }
 
-    private IReadOnlyList<HudLayer.AbilityCardState> RuntimeSelectedAbilityCardStates()
+    private IReadOnlyList<HudLayer.AbilityCardState> RuntimeSelectedAbilityCardStates(out int abilitySourceUnitCount)
     {
         _selectedAbilityCardBuffer.Clear();
+        abilitySourceUnitCount = 0;
         CollectSelectedUnitInstances(PlayerSlotId.One, _selectedUnitInstanceBuffer);
         foreach (var unit in _selectedUnitInstanceBuffer)
         {
@@ -73,6 +75,7 @@ public partial class BattleRoot
             }
 
             var entity = _unitBattlefield.UnitEntityByInstanceId(unit.Id);
+            var unitContributedAbility = false;
             foreach (var ability in unit.Spec.Abilities)
             {
                 if (!IsHudAbility(ability.Kind))
@@ -80,10 +83,16 @@ public partial class BattleRoot
                     continue;
                 }
 
+                unitContributedAbility = true;
                 AddOrMergeSelectedAbilityCard(
                     ability,
                     AbilityCooldownRemaining(entity, ability.Kind),
                     IsAbilityActive(entity, ability.Kind));
+            }
+
+            if (unitContributedAbility)
+            {
+                abilitySourceUnitCount++;
             }
         }
 

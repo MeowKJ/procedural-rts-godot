@@ -107,6 +107,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogOverviewBuildStartableCount()", "Build catalog overview must summarize startable cards for the selected build category.");
     RequireText(hudLayer, "CatalogOverviewTrainQueueableCount()", "Train catalog overview must summarize queueable cards for the selected train category.");
     RequireText(hudLayer, "CatalogOverviewReadyAbilityCount(visibleCount)", "Abilities catalog overview must summarize ready or active selected-unit abilities.");
+    RequireText(hudLayer, "AbilityCatalogSourceContextText(visibleCount)", "Abilities catalog status must explain selected-unit source context.");
+    RequireText(hudLayer, "AbilityRailSourceContextText()", "Abilities right rail must expose selected-unit source context instead of provider lanes.");
     RequireText(hudLayer, "CatalogOverviewProviderScopeText(_selectedProductionProviderLaneScope)", "Train catalog overview must expose the selected provider scope.");
     RequireText(hudLayer, "RefreshProductionProviderLaneButtons();\n        RefreshCatalogOverview();\n        RefreshRepeatProductionControl();", "Train provider lane clicks must immediately refresh provider-scope overview text.");
     RequireText(hudLayer, "RefreshProductionProviderLaneButtons();\n        RefreshCatalogOverview();\n    }\n\n    private void ValidateProductionProviderLaneSelection()", "Build provider lane clicks must immediately refresh provider-scope overview text.");
@@ -150,6 +152,9 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.");
     ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
+    RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states, int sourceUnitCount)", "HUD must accept selected ability source counts without duplicating ability rules.");
+    RequireText(hudLayer, "SetAbilityCardState(states, 0)", "Legacy ability-card callers must not invent selected-unit source context.");
+    RequireText(hudLayer, "_abilitySourceUnitCount = Math.Max(0, sourceUnitCount)", "HUD ability source context must clamp source counts safely.");
     RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
     RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated ability cards.");
     RequireText(hudLayer, "Name = $\"AbilityCard{kind}\"", "Ability cards must expose stable node names for structure/screenshot QA.");
@@ -166,7 +171,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
     RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
     RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");
-    RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
+    RequireText(hudLayer, "CatalogModeKind.Abilities => AbilityRailSourceContextText()", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
     RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept construction provider lanes separately from Train lanes.");
     RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.");
     RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.");
@@ -222,7 +227,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "GameText.T(\"ui.catalog.train\")", "Right command panel Train mode label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.trainSurface\")", "Right command panel train grid section label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.abilities\")", "Right command panel Abilities mode label must be i18n-backed.");
-    RequireText(hudLayer, "GameText.T(\"ui.catalog.abilitiesEmpty\")", "Abilities mode empty state must be i18n-backed.");
+    RequireText(hudLayer, "GameText.T(\"ui.catalog.abilitiesSourceNone\")", "Abilities mode empty source state must be i18n-backed.");
     RequireText(hudLayer, "96 + row * 58", "Right command panel production cells must keep fixed grid spacing below the catalog strip.");
     RequireText(hudLayer, "_visibleCommandCardStates.Count >= 12", "Right command panel must cap production cells to the 12-slot fixed grid.");
     RequireText(hudLayer, "Math.Min(_abilityCardStates.Count, 12)", "Abilities mode must use the same fixed 12-slot grid cap.");
@@ -338,6 +343,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English HUD provider summary must use a rail-safe offline code.");
     RequireText(englishText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(englishText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.");
+    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"NO\\nABIL\\nSRC\"", "English Abilities rail no-source context must exist.");
+    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"UNIT\\nABIL\\n{0}\"", "English Abilities rail selected-source context must exist.");
+    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"MIX\\nSRC\\n{0}\"", "English Abilities rail mixed-source context must exist.");
+    RequireText(englishText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"Selected source\\n{0} ability cards\"", "English Abilities selected-source status must exist.");
+    RequireText(englishText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} selected sources\\n{1} ability cards\"", "English Abilities mixed-source status must exist.");
     ForbidText(englishText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(englishText, "\\n{2} cr  {3}s", "English catalog inspector strings must use a two-line metrics layout.");
     RequireText(englishText, "[\"ui.ability.shieldField\"]", "English ability-card ShieldField label must exist.");
@@ -416,6 +426,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.providerLane.summaryOffline\"]", "Chinese HUD provider summary must use a rail-safe offline code.");
     RequireText(chineseText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(chineseText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.");
+    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"无\\n能力\\n来源\"", "Chinese Abilities rail no-source context must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"单位\\n能力\\n{0}\"", "Chinese Abilities rail selected-source context must exist.");
+    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"混合\\n来源\\n{0}\"", "Chinese Abilities rail mixed-source context must exist.");
+    RequireText(chineseText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"已选来源\\n{0} 张能力卡\"", "Chinese Abilities selected-source status must exist.");
+    RequireText(chineseText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} 个能力来源\\n{1} 张能力卡\"", "Chinese Abilities mixed-source status must exist.");
     ForbidText(chineseText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(chineseText, "\\n{2} 资金", "Chinese catalog inspector strings must use a two-line metrics layout.");
     RequireText(chineseText, "[\"ui.ability.shieldField\"]", "Chinese ability-card ShieldField label must exist.");
@@ -428,7 +443,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.");
-    RequireText(hudSync, "_hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates())", "BattleRoot must feed selected-unit ability cards into the HUD.");
+    RequireText(hudSync, "RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount)", "BattleRoot must collect selected-unit ability source counts beside ability cards.");
+    RequireText(hudSync, "_hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount)", "BattleRoot must feed selected ability source context into the HUD.");
+    RequireText(hudSync, "unitContributedAbility = true", "BattleRoot ability source count must be driven by the same HUD ability filter as ability cards.");
+    RequireText(hudSync, "abilitySourceUnitCount++", "BattleRoot must count selected units that contribute HUD abilities.");
     RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
     RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");
     RequireText(hudSync, "AddOrMergeSelectedAbilityCard(", "BattleRoot must aggregate HUD ability cards across multi-selected support units.");

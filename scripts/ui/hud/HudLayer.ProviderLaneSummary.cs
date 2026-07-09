@@ -88,7 +88,7 @@ public partial class HudLayer : CanvasLayer
         return _selectedCatalogMode switch
         {
             CatalogModeKind.Upgrades => GameText.T("ui.providerLane.upgradesNone"),
-            CatalogModeKind.Abilities => GameText.T("ui.providerLane.abilitiesNone"),
+            CatalogModeKind.Abilities => AbilityRailSourceContextText(),
             _ => "",
         };
     }
