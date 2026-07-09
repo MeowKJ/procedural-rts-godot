@@ -35,6 +35,7 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
     private Label _providerLaneSummaryValue = null!;
+    private Label _stanceContextValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _repeatProductionStateValue = null!;
@@ -81,6 +82,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
+    private int _selectedUnitStanceCount;
     private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedProductionProviderId;
     private ProductionProviderLaneScope _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
@@ -578,11 +580,58 @@ public partial class HudLayer : CanvasLayer
 
     public void SetSelectedUnitStance(UnitStance? stance)
     {
+        SetSelectedUnitStance(stance, _selectedUnitStanceCount);
+    }
+
+    public void SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)
+    {
         _selectedUnitStance = stance;
+        _selectedUnitStanceCount = Math.Max(0, selectedUnitCount);
         foreach (var button in _stanceModeButtons)
         {
             button.SetSelected(stance is not null && button.Stance == stance.Value);
         }
+
+        RefreshStanceContext();
+    }
+
+    private void RefreshStanceContext()
+    {
+        if (_stanceContextValue is null)
+        {
+            return;
+        }
+
+        _stanceContextValue.Text = CompactText(StanceContextText(_selectedUnitStance, _selectedUnitStanceCount), 24);
+        var color = _selectedUnitStanceCount == 0
+            ? InkMuted
+            : _selectedUnitStance is { } stance ? UiFactory.HudStanceAccent(stance, CurrentPalette) : Amber;
+        SetLabelColor(_stanceContextValue, color);
+    }
+
+    private static string StanceContextText(UnitStance? stance, int selectedUnitCount)
+    {
+        if (selectedUnitCount <= 0)
+        {
+            return GameText.T("stance.context.none");
+        }
+
+        return stance is null
+            ? GameText.Format("stance.context.mixed", selectedUnitCount)
+            : GameText.Format("stance.context.uniform", selectedUnitCount, StanceContextLabel(stance.Value));
+    }
+
+    private static string StanceContextLabel(UnitStance stance)
+    {
+        return stance switch
+        {
+            UnitStance.Hold => GameText.T("stance.hold"),
+            UnitStance.Aggressive => GameText.T("stance.aggressive"),
+            UnitStance.ReturnGuard => GameText.T("stance.returnGuard"),
+            UnitStance.PassiveRetaliate => GameText.T("stance.passive"),
+            UnitStance.Ignore => GameText.T("stance.ignore"),
+            _ => GameText.T("stance.context.none"),
+        };
     }
 
     public readonly record struct MinimapUnit(Vector2 Position, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);

@@ -116,6 +116,11 @@ public partial class HudLayer : CanvasLayer
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Attack, IconGlyph.AttackMove, GameText.T("ui.tooltip.attackMove"), new Vector2(320, 6));
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Ignore, IconGlyph.IgnoreMove, GameText.T("ui.tooltip.ignoreMove"), new Vector2(366, 6));
 
+        _stanceContextValue = MakeSizedLabel(GameText.T("stance.context.none"), new Vector2(424, 9), new Vector2(190, 28), FontTiny, InkMuted);
+        _stanceContextValue.Name = "RibbonStanceContext";
+        _stanceContextValue.HorizontalAlignment = HorizontalAlignment.Center;
+        _commandRibbon.AddChild(_stanceContextValue);
+
         AddSeparator(_commandRibbon, new Vector2(642, 8));
         var ribbonRepair = AddIconActionButton(_commandRibbon, IconGlyph.Repair, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
         ribbonRepair.Name = "RibbonRepair";

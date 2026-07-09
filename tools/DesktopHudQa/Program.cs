@@ -264,6 +264,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(uiFactory, "ApplyHudLabelStyle", "UiFactory must own HUD label color, outline, and shadow styling.");
     RequireText(uiFactory, "ApplyHudMoveModeButtonTheme", "UiFactory must own HUD move-mode button styling.");
     RequireText(uiFactory, "ApplyHudStanceButtonTheme", "UiFactory must own HUD stance button styling.");
+    RequireText(hudLayer, "Name = \"RibbonStanceContext\"", "Command ribbon must expose compact selected-stance context.");
+    RequireText(hudLayer, "public void SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)", "HUD stance context must distinguish no unit selection from mixed selected stances.");
+    RequireText(hudSync, "_hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnitInstances), selectedUnitInstances.Count)", "Runtime HUD sync must pass selected-unit count into stance context.");
+    RequireText(englishText, "[\"stance.context.mixed\"] = \"STANCE MIX x{0}\"", "English selected-stance context must expose mixed stance copy.");
+    RequireText(chineseText, "[\"stance.context.mixed\"] = \"姿态 混合 x{0}\"", "Chinese selected-stance context must expose mixed stance copy.");
     RequireText(englishText, "[\"ui.catalog.build\"]", "English HUD catalog Build label must exist.");
     RequireText(englishText, "[\"ui.catalog.buildHelp\"]", "English HUD catalog Build help text must exist.");
     RequireText(englishText, "[\"ui.catalog.buildSurface\"]", "English HUD catalog Build surface label must exist.");

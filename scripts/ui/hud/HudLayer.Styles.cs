@@ -56,6 +56,7 @@ public partial class HudLayer : CanvasLayer
             UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, button.Stance, FontTiny);
             button.QueueRedraw();
         }
+        RefreshStanceContext();
 
         foreach (var button in _commandButtons.Values)
         {

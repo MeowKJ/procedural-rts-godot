@@ -141,6 +141,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "_selection.ArmRepairCommand();", "BattleRoot repair request must arm the SelectionController repair command mode.", result);
         RequireText(selectionController, "public void ArmRepairCommand()", "SelectionController must expose one-shot repair command arming for the command ribbon.", result);
         RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the existing runtime repair command path on click.", result);
+        RequireText(hudBuild, "Name = \"RibbonStanceContext\"", "Command ribbon must expose compact selected-stance context.", result);
+        RequireText(hudLayer, "public void SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)", "HUD stance context must distinguish no unit selection from mixed selected stances.", result);
+        RequireText(hudSync, "_hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnitInstances), selectedUnitInstances.Count)", "Runtime HUD sync must pass selected-unit count into stance context.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs"), "[\"stance.context.mixed\"] = \"STANCE MIX x{0}\"", "English selected-stance context must expose mixed stance copy.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"), "[\"stance.context.mixed\"] = \"姿态 混合 x{0}\"", "Chinese selected-stance context must expose mixed stance copy.", result);
         RequireText(hudLayer, "Action? RallyRequested", "HudLayer must expose the command-ribbon rally request.", result);
         RequireText(hudBuild, "RibbonSetRally", "Command ribbon rally action must expose a stable node.", result);
         RequireText(hudBuild, "ribbonRally.Pressed += () => RallyRequested?.Invoke();", "Command ribbon rally action must route through the rally request path.", result);

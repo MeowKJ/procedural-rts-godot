@@ -394,7 +394,7 @@ public partial class BattleRoot
                 return;
             }
 
-            _hud.SetSelectedUnitStance(stance);
+            _hud.SetSelectedUnitStance(stance, changed);
             _hud.SetStatus(GameText.Format("stance.changed", changed, StanceLabel(stance)));
             PlayAudioCue(TacticalAudioCue.Selection);
             return;
@@ -409,7 +409,7 @@ public partial class BattleRoot
         }
 
         _state.SetSelectedStance(stance);
-        _hud.SetSelectedUnitStance(stance);
+        _hud.SetSelectedUnitStance(stance, selectedCount);
         _hud.SetStatus(GameText.Format("stance.changed", selectedCount, StanceLabel(stance)));
         PlayAudioCue(TacticalAudioCue.Selection);
     }
