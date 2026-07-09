@@ -27,6 +27,24 @@ public sealed partial class UnitBattlefield
         return SubmitSelectionBuffer(playerSlotId);
     }
 
+    public int CountSelectionRectCandidates(PlayerSlotId playerSlotId, Rect2 worldRect)
+    {
+        var normalizedRect = worldRect.Abs();
+        var includeEconomy = ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect);
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.PlayerSlotId == playerSlotId
+                && UnitOverlapsSelectionRect(normalizedRect, unit)
+                && (!unit.Spec.RoleTags.Contains(UnitRoleTag.Economy) || includeEconomy))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public IReadOnlyList<UnitInstance> SelectUnitsByIds(PlayerSlotId playerSlotId, IEnumerable<int> unitIds)
     {
         CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer);

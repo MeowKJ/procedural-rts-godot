@@ -49,6 +49,8 @@ public static partial class GameText
         ["selection.noArmy"] = "No army units available",
         ["selection.idleHarvesterSelected"] = "Idle harvester selected",
         ["selection.noIdleHarvester"] = "No idle harvesters",
+        ["selection.dragFeedback.select"] = "SELECT {0}",
+        ["selection.dragFeedback.add"] = "ADD {0}",
         ["ui.queue.empty"] = "QUEUE empty",
         ["ui.queue.summary"] = "QUEUE {0} {1}%  TOTAL {2}\nCANCEL refunds {3}",
         ["ui.cancel"] = "CANCEL",

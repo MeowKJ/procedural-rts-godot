@@ -6,12 +6,13 @@ internal static partial class SelectionStressSuite
         var battlefieldPickCaseCount = RunUnitBattlefieldPickingQueries();
         var battlefieldSelectionCaseCount = RunUnitBattlefieldSelectionCommandScenarios();
         var battlefieldGroupCommandCaseCount = RunUnitBattlefieldGroupCommandSubjectScenarios();
+        var selectionCandidateCaseCount = RunSelectionCandidateCountScenarios();
 
         RunGroupCommandScenarios();
         RunCameraCommandScenarios();
         RunEconomyCommandScenarios();
         RunPathingQueries();
 
-        Console.WriteLine($"Selection stress passed: {selectionCaseCount + battlefieldPickCaseCount + battlefieldSelectionCaseCount + battlefieldGroupCommandCaseCount + 20} cases");
+        Console.WriteLine($"Selection stress passed: {selectionCaseCount + battlefieldPickCaseCount + battlefieldSelectionCaseCount + battlefieldGroupCommandCaseCount + selectionCandidateCaseCount + 20} cases");
     }
 }

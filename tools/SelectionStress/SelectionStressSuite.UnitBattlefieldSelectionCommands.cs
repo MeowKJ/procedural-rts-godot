@@ -37,4 +37,54 @@ internal static partial class SelectionStressSuite
 
         return 3;
     }
+
+    private static int RunSelectionCandidateCountScenarios()
+    {
+        var legacyState = new GameState();
+        legacyState.Units.Clear();
+        legacyState.Buildings.Clear();
+        legacyState.ResourceFields.Clear();
+        legacyState.Projectiles.Clear();
+        legacyState.Beams.Clear();
+        legacyState.Units.AddRange(
+        [
+            SelectionStressUnit(1, "generic.light_tank", Owner.Player, new Vector2(100, 100)),
+            SelectionStressUnit(2, "generic.harvester", Owner.Player, new Vector2(140, 100)),
+            SelectionStressUnit(3, "generic.light_tank", Owner.Enemy, new Vector2(110, 100)),
+        ]);
+        var focusedRect = new Rect2(80, 80, 100, 80);
+        var legacyCandidates = legacyState.CountSelectionRectCandidates(focusedRect);
+        var legacySelected = legacyState.SelectRect(focusedRect, additive: false);
+        if (legacyCandidates != legacySelected || legacyCandidates != 2)
+        {
+            throw new InvalidOperationException("legacy drag feedback candidates must mirror filtered SelectRect unit selection");
+        }
+
+        var runtimeBattlefield = new UnitBattlefield();
+        runtimeBattlefield.Spawn<DogInfantry>(PlayerSlotId.One, new Vector2(100, 100));
+        runtimeBattlefield.Spawn<DogHarvester>(PlayerSlotId.One, new Vector2(140, 100));
+        runtimeBattlefield.Spawn<CatTank>(PlayerSlotId.Two, new Vector2(110, 100));
+        var runtimeCandidates = runtimeBattlefield.CountSelectionRectCandidates(PlayerSlotId.One, focusedRect);
+        var runtimeSelected = runtimeBattlefield.SelectRect(PlayerSlotId.One, focusedRect, additive: false);
+        if (runtimeCandidates != runtimeSelected || runtimeCandidates != 2)
+        {
+            throw new InvalidOperationException("runtime drag feedback candidates must mirror filtered SelectRect unit selection");
+        }
+
+        return 2;
+    }
+
+    private static UnitModel SelectionStressUnit(int id, string designId, Owner owner, Vector2 position)
+    {
+        return new UnitModel
+        {
+            Id = id,
+            DesignId = designId,
+            Owner = owner,
+            FactionId = owner == Owner.Player ? FactionId.Dog : FactionId.Cat,
+            Position = position,
+            AnchorPosition = position,
+            Hp = UnitDesignCatalog.Spec(designId).Stats.MaxHp,
+        };
+    }
 }

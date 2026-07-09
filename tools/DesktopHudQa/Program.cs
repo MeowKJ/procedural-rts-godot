@@ -240,6 +240,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(selectionController, "RepairUnitPreviewLabel()", "Repair preview must distinguish damaged friendly units from generic repair.");
     RequireText(selectionController, "RepairStructurePreviewLabel()", "Repair preview must distinguish damaged friendly structures from generic repair.");
     RequireText(selectionController, "RepairInvalidPreviewLabel()", "Armed repair preview must label invalid repair targets distinctly.");
+    RequireText(selectionController, "DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift))", "Drag selection must surface live candidate feedback and additive state while the marquee is active.");
+    RequireText(selectionController, "CountSelectionRectCandidates", "Drag selection feedback must mirror the authoritative selection-rect candidate rules.");
+    RequireText(selectionController, "selection.dragFeedback.add", "Drag selection feedback must localize additive candidate labels.");
+    RequireText(selectionController, "selection.dragFeedback.select", "Drag selection feedback must localize select candidate labels.");
+    RequireText(selectionController, "SelectionMath.ScreenPixelsToWorld", "Drag selection feedback must keep readable screen-space sizing across camera zoom.");
     RequireText(selectionController, "GameText.T(\"preview.rally.point\")", "Armed rally preview must distinguish point targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must distinguish resource targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must distinguish friendly-unit targets.");

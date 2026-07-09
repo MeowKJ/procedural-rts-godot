@@ -188,6 +188,29 @@ public sealed partial class GameState
         return SelectedUnitCount();
     }
 
+    public int CountSelectionRectCandidates(Rect2 worldRect)
+    {
+        var normalizedRect = NormalizedSelectionRect(worldRect);
+        CollectSelectionRectUnits(normalizedRect, _legacySelectionRectHarvesters, _legacySelectionRectCombatUnits);
+        var includeHarvesters = ShouldIncludeHarvestersInSelectionRect(
+            normalizedRect,
+            _legacySelectionRectHarvesters,
+            _legacySelectionRectCombatUnits);
+
+        var count = 0;
+        foreach (var unit in Units)
+        {
+            if (unit.Owner == Owner.Player
+                && UnitOverlapsSelectionRect(normalizedRect, unit)
+                && (!IsHarvesterUnit(unit) || includeHarvesters))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public int SelectedUnitCount()
     {
         var count = 0;
