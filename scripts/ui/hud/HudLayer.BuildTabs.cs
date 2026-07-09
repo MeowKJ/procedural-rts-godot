@@ -150,6 +150,7 @@ public partial class HudLayer : CanvasLayer
 
     private void RefreshCatalogOverview()
     {
+        RefreshCommandPanelState();
         if (_catalogOverviewValue is null)
         {
             return;
@@ -174,6 +175,34 @@ public partial class HudLayer : CanvasLayer
                 "ui.catalog.overview.upgrades",
                 CatalogOverviewUpgradeProjectCount()),
             _ => "",
+        };
+    }
+
+    private void RefreshCommandPanelState()
+    {
+        CommandPanelState = new BattleCommandPanelState(
+            ToCommandPanelMode(_selectedCatalogMode),
+            _buildCardStates.ToArray(),
+            _visibleBuildCardStates.ToArray(),
+            _constructionProviderLaneStates.ToArray(),
+            _selectedConstructionProviderLaneScope,
+            _selectedConstructionProviderId,
+            _commandCardStates.ToArray(),
+            _visibleCommandCardStates.ToArray(),
+            _productionProviderLaneStates.ToArray(),
+            _selectedProductionProviderLaneScope,
+            _selectedProductionProviderId);
+    }
+
+    private static BattleCommandPanelMode ToCommandPanelMode(CatalogModeKind mode)
+    {
+        return mode switch
+        {
+            CatalogModeKind.Build => BattleCommandPanelMode.Build,
+            CatalogModeKind.Train => BattleCommandPanelMode.Train,
+            CatalogModeKind.Upgrades => BattleCommandPanelMode.Upgrades,
+            CatalogModeKind.Abilities => BattleCommandPanelMode.Abilities,
+            _ => BattleCommandPanelMode.Train,
         };
     }
 

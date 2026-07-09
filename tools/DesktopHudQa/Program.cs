@@ -60,6 +60,7 @@ static void AssertHudFactoryExtraction(string root)
     var settingsOverlay = File.ReadAllText(Path.Combine(root, "scripts", "ui", "SettingsOverlayLayer.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
     var chineseText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"));
+    var commandPanelState = File.ReadAllText(Path.Combine(root, "scripts", "ui", "hud", "BattleCommandPanelState.cs"));
 
     RequireText(cursorCatalog, "public enum BattleCursorState", "Battle cursor states must live in a central catalog.");
     RequireText(cursorCatalog, "BuildValid and BuildInvalid must share a hotspot", "Cursor catalog validation must guard build valid/invalid hotspot parity.");
@@ -104,6 +105,19 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Build provider lane state changes must feed the catalog overview path.");
+    RequireText(hudLayer, "public BattleCommandPanelState CommandPanelState { get; private set; } = BattleCommandPanelState.Empty;", "HUD must expose a read-only command panel state adapter for Battle UI consumers.");
+    RequireText(hudLayer, "RefreshCommandPanelState()", "Build/Train HUD state updates must refresh the Battle UI command panel adapter.");
+    RequireText(hudLayer, "_buildCardStates.ToArray()", "Command panel adapter must snapshot Build cards instead of exposing mutable HUD lists.");
+    RequireText(hudLayer, "_commandCardStates.ToArray()", "Command panel adapter must snapshot Train cards instead of exposing mutable HUD lists.");
+    RequireText(hudLayer, "_constructionProviderLaneStates.ToArray()", "Command panel adapter must snapshot Build provider lanes.");
+    RequireText(hudLayer, "_productionProviderLaneStates.ToArray()", "Command panel adapter must snapshot Train provider lanes.");
+    RequireText(commandPanelState, "public sealed record BattleCommandPanelState", "Battle command panel state must be a compact immutable adapter.");
+    RequireText(commandPanelState, "IReadOnlyList<BuildOptionSnapshot> BuildCards", "Battle command panel state must expose Build card snapshots.");
+    RequireText(commandPanelState, "IReadOnlyList<ProductionOptionState> TrainCards", "Battle command panel state must expose Train card snapshots.");
+    RequireText(commandPanelState, "IReadOnlyList<ProductionProviderLaneState> ConstructionProviderLanes", "Battle command panel state must expose construction provider lane snapshots.");
+    RequireText(commandPanelState, "IReadOnlyList<ProductionProviderLaneState> ProductionProviderLanes", "Battle command panel state must expose production provider lane snapshots.");
+    RequireText(commandPanelState, "public int StartableBuildCount", "Battle command panel state must expose Build availability without forcing UI scans.");
+    RequireText(commandPanelState, "public int QueueableTrainCount", "Battle command panel state must expose Train availability without forcing UI scans.");
     RequireText(hudLayer, "CatalogOverviewBuildStartableCount()", "Build catalog overview must summarize startable cards for the selected build category.");
     RequireText(hudLayer, "CatalogOverviewTrainQueueableCount()", "Train catalog overview must summarize queueable cards for the selected train category.");
     RequireText(hudLayer, "CatalogOverviewReadyAbilityCount(visibleCount)", "Abilities catalog overview must summarize ready or active selected-unit abilities.");
