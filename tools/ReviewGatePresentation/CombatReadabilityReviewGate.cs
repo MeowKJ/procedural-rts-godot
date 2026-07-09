@@ -5,7 +5,7 @@ static class CombatReadabilityReviewGate
         var math = ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "CombatReadabilityMath.cs");
         var layer = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.cs");
         var visibility = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.Visibility.cs");
-        var battleProcess = ReviewGateSource.Read(root, "scripts", "BattleRoot.Process.cs");
+        var battleProcess = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Process.cs");
         var impact = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.ImpactFlashes.cs");
         var death = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.DeathEffects.cs");
         var muzzle = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.MuzzleFlashes.cs");

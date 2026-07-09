@@ -32,7 +32,7 @@ static class PresentationReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "world", "BuildingView.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "world", "FogOfWarLayer.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "world", "GridLayer.cs");
-        ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/world", "scripts/BattleRoot.EntityWorld.cs");
+        ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/world", "scripts/battle-root/BattleRoot.EntityWorld.cs");
         ReviewGateSource.RequireAnyText(root, result, "RedrawSignature", "scripts/world");
     }
 

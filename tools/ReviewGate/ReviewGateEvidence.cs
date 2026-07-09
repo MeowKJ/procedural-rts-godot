@@ -108,6 +108,11 @@ static class ReviewGateEvidence
 
     private static string? DomainDirectoryName(string sourceName)
     {
+        if (sourceName.Equals("BattleRoot", StringComparison.Ordinal))
+        {
+            return "battle-root";
+        }
+
         const string systemSuffix = "System";
         return sourceName.EndsWith(systemSuffix, StringComparison.Ordinal)
             && sourceName.Length > systemSuffix.Length

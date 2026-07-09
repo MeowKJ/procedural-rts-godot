@@ -53,7 +53,7 @@ static class ProjectileImpactReviewGate
         RequireText(combatDraw, "foreach (var beam in _beamEffects)", "CombatEffectsLayer must draw live presentation beam effects.", result);
         RequireText(combatDraw, "private void DrawBeam(", "Legacy and live beam paths must share the same draw helper.", result);
 
-        var battleRootEvents = ReviewGateSource.Read(root, "scripts", "BattleRoot.Events.cs");
+        var battleRootEvents = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Events.cs");
         RequireText(battleRootEvents, "AddBeamIfNeeded", "BattleRoot attack callbacks must bridge live UnitBattlefield attacks into beam effects.", result);
 
         var battleRootBeams = ReviewGateSource.Read(root, "scripts", "battle", "BattleRoot.BeamEffects.cs");

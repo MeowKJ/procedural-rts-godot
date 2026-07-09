@@ -112,6 +112,22 @@ static string ReadSourceWithPartials(string sourcePath)
                 parts.Add(File.ReadAllText(partialPath));
             }
         }
+
+        if (sourceName.Equals("BattleRoot", StringComparison.Ordinal))
+        {
+            var battleRootDirectory = Path.Combine(directory, "battle-root");
+            if (Directory.Exists(battleRootDirectory))
+            {
+                foreach (var partialPath in Directory.EnumerateFiles(battleRootDirectory, "*.cs", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => path))
+                {
+                    if (addedPaths.Add(partialPath))
+                    {
+                        parts.Add(File.ReadAllText(partialPath));
+                    }
+                }
+            }
+        }
     }
 
     return string.Join("\n\n", parts);

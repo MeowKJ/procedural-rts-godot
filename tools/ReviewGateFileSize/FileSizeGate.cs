@@ -18,6 +18,7 @@ static class FileSizeGate
             .ToArray();
 
         FileSizeStructureChecks.CheckStableEntrypoints(root, result);
+        FileSizeBattleRootLayoutChecks.Check(root, result);
         FileSizeStructureChecks.CheckReviewGateStructure(root, files, result);
         FileSizeToolBudgetChecks.Check(files, result);
         FileSizeEvidenceRecordChecks.Check(files, result);
