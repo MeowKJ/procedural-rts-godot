@@ -33,6 +33,7 @@ public partial class HudLayer : CanvasLayer
     private SelectionIconSummary _drawerIconSummary = null!;
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
+    private Label _catalogEmptyHintValue = null!;
     private Label _statusValue = null!;
     private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
@@ -517,54 +518,6 @@ public partial class HudLayer : CanvasLayer
                 : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
             _ => string.IsNullOrWhiteSpace(_lastProductionStatus) ? GameText.T("ui.status.ready") : _lastProductionStatus,
         });
-    }
-
-    private void RefreshBuildCards()
-    {
-        for (var index = 0; index < _visibleBuildCardStates.Count; index++)
-        {
-            var state = _visibleBuildCardStates[index];
-            var optionId = BuildOptionId(state);
-            if (!_commandButtons.TryGetValue(optionId, out var button))
-            {
-                button = AddCommandButton(_rightProductionPanel, optionId);
-            }
-
-            button.Hotkey = ProductionHotkey(index);
-            button.Position = ProductionButtonPosition(index);
-
-            var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
-            button.SetBuildState(state, disabledReason);
-        }
-    }
-
-    private void RefreshProductionCards()
-    {
-        for (var index = 0; index < _visibleCommandCardStates.Count; index++)
-        {
-            var state = _visibleCommandCardStates[index];
-            var optionId = ProductionOptionId(state);
-            if (!_commandButtons.TryGetValue(optionId, out var button))
-            {
-                button = AddCommandButton(_rightProductionPanel, optionId);
-            }
-
-            button.Hotkey = ProductionHotkey(index);
-            button.Position = ProductionButtonPosition(index);
-            button.Kind = state.Kind;
-            button.UnitDesignId = state.UnitDesignId;
-
-            var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
-            button.SetState(state, disabledReason);
-        }
-
-    }
-
-    private static string LocalizedDisabledReason(string disabledReasonKey, int cost)
-    {
-        return disabledReasonKey == "ui.needCredits"
-            ? GameText.Format("ui.needCredits", cost)
-            : string.IsNullOrWhiteSpace(disabledReasonKey) ? "" : GameText.T(disabledReasonKey);
     }
 
     public void SetMoveCommandMode(MoveCommandMode mode)

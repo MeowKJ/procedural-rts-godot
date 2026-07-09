@@ -24,6 +24,7 @@ public partial class HudLayer : CanvasLayer
         SetLabelColor(_statusValue, Ink);
         SetLabelColor(_providerLaneSummaryValue, InkMuted);
         SetLabelColor(_productionValue, Ink);
+        SetLabelColor(_catalogEmptyHintValue, InkMuted);
         SetLabelColor(_queueValue, InkMuted);
         SetLabelColor(_outcomeDetail, Ink);
         if (_outcomeTitle is not null)

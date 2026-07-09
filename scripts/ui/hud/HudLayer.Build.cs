@@ -213,6 +213,12 @@ public partial class HudLayer : CanvasLayer
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
 
+        _catalogEmptyHintValue = MakeSizedLabel("", new Vector2(14, 166), new Vector2(270, 72), FontSmall, InkMuted);
+        _catalogEmptyHintValue.Name = "CatalogEmptyHint";
+        _catalogEmptyHintValue.VerticalAlignment = VerticalAlignment.Top;
+        _catalogEmptyHintValue.Visible = false;
+        _rightProductionPanel.AddChild(_catalogEmptyHintValue);
+
         _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);
         _rightProductionPanel.AddChild(_queueValue);
 

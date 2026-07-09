@@ -76,6 +76,7 @@ public partial class HudLayer : CanvasLayer
         SetCatalogStatusText(visibleCount == 0
             ? GameText.T("ui.catalog.abilitiesEmpty")
             : GameText.Format("ui.catalog.abilitiesCount", visibleCount));
+        RefreshCatalogEmptyHint();
     }
 
     private AbilityCard AddAbilityCard(Control parent, AbilityKind kind)

@@ -31,6 +31,7 @@ public partial class HudLayer : CanvasLayer
         _repeatProductionStateCached = false;
         _lastSellOrCancelRefreshKey = "";
         ApplySoftOldCityPanelStyles();
+        RefreshCatalogEmptyHint();
         RefreshRepeatProductionControl();
         RefreshSellOrCancelAction();
     }

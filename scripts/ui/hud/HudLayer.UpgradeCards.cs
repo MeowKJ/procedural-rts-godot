@@ -105,6 +105,7 @@ public partial class HudLayer : CanvasLayer
         }
 
         SetCatalogStatusText(UpgradeProjectCatalogStatusText());
+        RefreshCatalogEmptyHint();
     }
 
     private UpgradeProjectCard AddUpgradeProjectCard(Control parent, string id)
