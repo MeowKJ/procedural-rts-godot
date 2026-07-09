@@ -26,7 +26,9 @@ static class HoverTooltipReviewGate
         RequireText(preview, "LegacyBuildingAttackPreviewLabel(hoveredBuilding)", "Legacy hostile structure hover must surface matchup text through the command preview.", result);
         RequireText(preview, "CommandPreviewKind.Repair", "Selection preview must expose repair affordance state.", result);
         RequireText(preview, "RepairUnitPreviewLabel()", "Smart repair hover must label damaged friendly unit targets distinctly.", result);
-        RequireText(preview, "RepairStructurePreviewLabel()", "Smart repair hover must label damaged friendly structure targets distinctly.", result);
+        RequireText(preview, "RepairBuildingPreviewLabel(buildingProjection.Id)", "Smart repair hover must route repairable buildings through the shared repair-building label helper.", result);
+        RequireText(repairCommand, "RepairStructurePreviewLabel()", "Smart repair hover must keep a distinct generic damaged-structure label.", result);
+        RequireText(repairCommand, "RepairRestartObjectivePreviewLabel()", "Armed repair preview must label restart/capture objective targets distinctly.", result);
         RequireText(repairCommand, "RepairInvalidPreviewLabel()", "Armed repair preview must label invalid repair targets distinctly.", result);
         RequireText(preview, "CommandPreviewKind.Harvest", "Selection preview must expose harvester resource state.", result);
         RequireText(preview, "CommandPreviewKind.Rally", "Selection preview must expose producer rally state.", result);
@@ -58,12 +60,14 @@ static class HoverTooltipReviewGate
         RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.", result);
         RequireText(englishText, "[\"preview.repair.unit\"] = \"REPAIR UNIT\"", "English repair preview must distinguish unit repair targets.", result);
         RequireText(englishText, "[\"preview.repair.structure\"] = \"REPAIR STRUCTURE\"", "English repair preview must distinguish structure repair targets.", result);
+        RequireText(englishText, "[\"preview.repair.restartObjective\"] = \"RESTART OBJECTIVE\"", "English repair preview must distinguish restart/capture objectives.", result);
         RequireText(englishText, "[\"preview.repair.invalid\"] = \"NO REPAIR TARGET\"", "English repair preview must label invalid repair targets.", result);
         RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.", result);
         RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.", result);
         RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.", result);
         RequireText(chineseText, "[\"preview.repair.unit\"] = \"修理单位\"", "Chinese repair preview must distinguish unit repair targets.", result);
         RequireText(chineseText, "[\"preview.repair.structure\"] = \"修理建筑\"", "Chinese repair preview must distinguish structure repair targets.", result);
+        RequireText(chineseText, "[\"preview.repair.restartObjective\"] = \"重启目标\"", "Chinese repair preview must distinguish restart/capture objectives.", result);
         RequireText(chineseText, "[\"preview.repair.invalid\"] = \"无法修理\"", "Chinese repair preview must label invalid repair targets.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);

@@ -74,7 +74,7 @@ public partial class SelectionController
 
         if (_hoveredBuildingProjection is { } building && UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, building.Id))
         {
-            return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, building.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.Repair, RepairBuildingPreviewLabel(building.Id), screenPosition, building.Position, true);
         }
 
         return new CommandPreviewState(CommandPreviewKind.Repair, RepairInvalidPreviewLabel(), screenPosition, worldPosition, false);
@@ -90,9 +90,21 @@ public partial class SelectionController
         return GameText.T("preview.repair.structure");
     }
 
+    private static string RepairRestartObjectivePreviewLabel()
+    {
+        return GameText.T("preview.repair.restartObjective");
+    }
+
     private static string RepairInvalidPreviewLabel()
     {
         return GameText.T("preview.repair.invalid");
+    }
+
+    private string RepairBuildingPreviewLabel(int buildingId)
+    {
+        return UnitBattlefield!.IsRestartCaptureObjectiveBuilding(buildingId)
+            ? RepairRestartObjectivePreviewLabel()
+            : RepairStructurePreviewLabel();
     }
 
     private void FinishArmedRepairCommand(Vector2 screenPoint)

@@ -77,7 +77,15 @@ public sealed partial class UnitBattlefield
 
     public bool CanRepairSelectedBuilding(PlayerSlotId playerSlotId, int buildingId)
     {
-        return IsRepairableBuildingTargetCore(playerSlotId, buildingId) && HasSelectedCommandUnit(playerSlotId, IsRepairer);
+        return (IsRestartCaptureRepairTargetCore(playerSlotId, buildingId)
+                || IsRepairableBuildingTargetCore(playerSlotId, buildingId))
+            && HasSelectedCommandUnit(playerSlotId, IsRepairer);
+    }
+
+    public bool IsRestartCaptureObjectiveBuilding(int buildingId)
+    {
+        return BuildingEntityByTargetId(buildingId) is { } target
+            && IsRestartCaptureObjective(target);
     }
 
     public bool CommandRepairSelected(PlayerSlotId playerSlotId, UnitInstance target, out string status)
@@ -113,7 +121,8 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        if (!IsRepairableBuildingTargetCore(playerSlotId, buildingId))
+        if (!IsRestartCaptureRepairTargetCore(playerSlotId, buildingId)
+            && !IsRepairableBuildingTargetCore(playerSlotId, buildingId))
         {
             return false;
         }
@@ -228,6 +237,25 @@ public sealed partial class UnitBattlefield
     private static int CompareUnitInstanceIds(UnitInstance left, UnitInstance right)
     {
         return left.Id.CompareTo(right.Id);
+    }
+
+    private bool IsRestartCaptureRepairTargetCore(PlayerSlotId playerSlotId, int buildingId)
+    {
+        return BuildingEntityByTargetId(buildingId) is { } target
+            && target.Components.TryGet<HealthComponentState>(out var health)
+            && health.Hp > 0
+            && IsRestartCaptureObjective(target)
+            && (target.OwnerId.Value == OwnerId.None.Value
+                || _entityWorld.Relations.Relation(OwnerId.FromPlayerSlot(playerSlotId), target.OwnerId) is PlayerRelation.Self or PlayerRelation.Allied);
+    }
+
+    private bool IsRestartCaptureObjective(EntityInstance target)
+    {
+        return _entityWorld.TryGetSpec(target.SpecId, out var spec)
+            && spec.Kind == EntityKind.Objective
+            && target.Components.TryGet<ConstructionComponentState>(out var construction)
+            && construction.Phase == ConstructionPhase.RestartCapture
+            && construction.Progress < 1;
     }
 
 }

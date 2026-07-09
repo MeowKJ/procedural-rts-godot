@@ -249,6 +249,7 @@ public static partial class GameText
         ["preview.attack.matchup"] = "ATTACK - {0}",
         ["preview.repair.unit"] = "REPAIR UNIT",
         ["preview.repair.structure"] = "REPAIR STRUCTURE",
+        ["preview.repair.restartObjective"] = "RESTART OBJECTIVE",
         ["preview.repair.invalid"] = "NO REPAIR TARGET",
         ["preview.matchup.good"] = "GOOD VS {0}",
         ["preview.matchup.even"] = "EVEN VS {0}",

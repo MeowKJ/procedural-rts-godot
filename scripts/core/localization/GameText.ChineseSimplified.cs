@@ -224,6 +224,7 @@ public static partial class GameText
         ["preview.attack.matchup"] = "攻击 - {0}",
         ["preview.repair.unit"] = "修理单位",
         ["preview.repair.structure"] = "修理建筑",
+        ["preview.repair.restartObjective"] = "重启目标",
         ["preview.repair.invalid"] = "无法修理",
         ["preview.matchup.good"] = "克制 {0}",
         ["preview.matchup.even"] = "均势 {0}",

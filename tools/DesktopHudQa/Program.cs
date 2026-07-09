@@ -239,6 +239,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(selectionController, "FinishRuntimeRepairCommand(ScreenToWorld(screenPoint), acknowledgeInvalidAtTarget: true)", "Armed repair mode must finish through the runtime repair command path.");
     RequireText(selectionController, "RepairUnitPreviewLabel()", "Repair preview must distinguish damaged friendly units from generic repair.");
     RequireText(selectionController, "RepairStructurePreviewLabel()", "Repair preview must distinguish damaged friendly structures from generic repair.");
+    RequireText(selectionController, "RepairRestartObjectivePreviewLabel()", "Repair preview must distinguish restart/capture objective structures from generic repair.");
+    RequireText(selectionController, "RepairBuildingPreviewLabel(buildingProjection.Id)", "Smart repair hover must route repairable buildings through the shared repair-building label helper.");
     RequireText(selectionController, "RepairInvalidPreviewLabel()", "Armed repair preview must label invalid repair targets distinctly.");
     RequireText(selectionController, "GameText.T(\"preview.rally.point\")", "Armed rally preview must distinguish point targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must distinguish resource targets.");
@@ -346,6 +348,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.");
     RequireText(englishText, "[\"preview.repair.unit\"] = \"REPAIR UNIT\"", "English repair preview must distinguish unit repair targets.");
     RequireText(englishText, "[\"preview.repair.structure\"] = \"REPAIR STRUCTURE\"", "English repair preview must distinguish structure repair targets.");
+    RequireText(englishText, "[\"preview.repair.restartObjective\"] = \"RESTART OBJECTIVE\"", "English repair preview must distinguish restart/capture objectives.");
     RequireText(englishText, "[\"preview.repair.invalid\"] = \"NO REPAIR TARGET\"", "English repair preview must label invalid repair targets.");
     RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.");
     RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.");
@@ -424,6 +427,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.");
     RequireText(chineseText, "[\"preview.repair.unit\"] = \"修理单位\"", "Chinese repair preview must distinguish unit repair targets.");
     RequireText(chineseText, "[\"preview.repair.structure\"] = \"修理建筑\"", "Chinese repair preview must distinguish structure repair targets.");
+    RequireText(chineseText, "[\"preview.repair.restartObjective\"] = \"重启目标\"", "Chinese repair preview must distinguish restart/capture objectives.");
     RequireText(chineseText, "[\"preview.repair.invalid\"] = \"无法修理\"", "Chinese repair preview must label invalid repair targets.");
     RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");

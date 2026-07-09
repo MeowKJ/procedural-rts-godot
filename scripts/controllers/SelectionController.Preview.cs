@@ -58,14 +58,14 @@ public partial class SelectionController
         if (_hoveredBuildingProjection is { } buildingProjection)
         {
             var isEnemy = buildingProjection.Relation == PlayerRelation.Hostile;
+            if (UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, buildingProjection.Id))
+            {
+                return new CommandPreviewState(CommandPreviewKind.Repair, RepairBuildingPreviewLabel(buildingProjection.Id), screenPosition, buildingProjection.Position, true);
+            }
+
             if (isEnemy && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
             {
                 return new CommandPreviewState(CommandPreviewKind.Attack, RuntimeBuildingAttackPreviewLabel(buildingProjection), screenPosition, buildingProjection.Position, true);
-            }
-
-            if (UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, buildingProjection.Id))
-            {
-                return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, buildingProjection.Position, true);
             }
 
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, buildingProjection.Position, true);
