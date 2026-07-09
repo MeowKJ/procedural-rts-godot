@@ -382,6 +382,7 @@ public static partial class GameText
         ["settings.impactShakeDisabled"] = "命中震动已关闭",
         ["settings.controls"] = "控制",
         ["settings.controls.tooltip"] = "只读控制概览；重绑定将在后续切片接入",
+        ["settings.controls.sectionStatus"] = "已选择 {0}；后续重绑定",
         ["settings.masterAudio"] = "主音量",
         ["settings.masterAudio.tooltip"] = "主音量",
         ["settings.close"] = "关闭",

@@ -423,6 +423,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.");
     RequireText(settingsOverlay, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.");
     RequireText(settingsOverlay, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.");
+    RequireText(settingsOverlay, "_status.Text = SettingsControlsSectionStatusText(_selectedControlsSectionIndex)", "Settings controls section selection must preview remap status without mutating bindings.");
+    RequireText(settingsOverlay, "SettingsControlsSectionStatusText(int sectionIndex)", "Settings controls remap status must be localized through a helper.");
     RequireText(settingsOverlay, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.");
     RequireText(settingsOverlay, "GameText.T(\"settings.controls.tooltip\")", "Settings overlay controls overview must explain its read-only remap staging state.");
     RequireText(settingsOverlay, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.");
@@ -434,6 +436,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.");
     RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
     RequireText(englishText, "[\"settings.controls.tooltip\"]", "English settings controls tooltip must exist.");
+    RequireText(englishText, "[\"settings.controls.sectionStatus\"] = \"{0} selected; remap later\"", "English controls section remap-status feedback must exist.");
     ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
     RequireText(englishText, "[\"ui.catalog.overview.build\"]", "English HUD catalog build overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.train\"]", "English HUD catalog train overview text must exist.");
@@ -517,6 +520,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.");
     RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");
     RequireText(chineseText, "[\"settings.controls.tooltip\"]", "Chinese settings controls tooltip must exist.");
+    RequireText(chineseText, "[\"settings.controls.sectionStatus\"] = \"已选择 {0}；后续重绑定\"", "Chinese controls section remap-status feedback must exist.");
     ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
     RequireText(chineseText, "[\"ui.catalog.overview.build\"]", "Chinese HUD catalog build overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"]", "Chinese HUD catalog train overview text must exist.");
