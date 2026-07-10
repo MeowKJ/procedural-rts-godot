@@ -412,6 +412,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.", result);
+        RequireText(englishText, "[\"ui.commandFailure.inline\"] = \"Blocked: {0}\"", "English blocked-command top status text must exist.", result);
+        RequireText(englishText, "[\"ui.commandFailure.reason\"] = \"BLOCKED\\n{0}\"", "English blocked-command catalog reason text must exist.", result);
         RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.", result);
         RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);
@@ -429,6 +431,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.", result);
+        RequireText(chineseText, "[\"ui.commandFailure.inline\"] = \"受阻：{0}\"", "Chinese blocked-command top status text must exist.", result);
+        RequireText(chineseText, "[\"ui.commandFailure.reason\"] = \"受阻\\n{0}\"", "Chinese blocked-command catalog reason text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese catalog mode Abilities help text must exist.", result);
         RequireText(englishText, "[\"ui.detail.shieldField\"]", "English selected-unit ShieldField detail text must exist.", result);
         RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit HUD alert text must exist.", result);

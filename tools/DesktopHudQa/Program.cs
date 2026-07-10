@@ -76,6 +76,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "AddAlert(AlertKind.Economy, GameText.T(\"ui.alert.insufficientCredits\"))", "Insufficient-credit failures must surface a localized economy alert.");
     RequireText(englishText, "[\"ui.alert.insufficientCredits\"]", "English insufficient-credit alert text must exist.");
     RequireText(chineseText, "[\"ui.alert.insufficientCredits\"]", "Chinese insufficient-credit alert text must exist.");
+    RequireText(englishText, "[\"ui.commandFailure.reason\"] = \"BLOCKED\\n{0}\"", "English blocked-command catalog reason text must exist.");
+    RequireText(chineseText, "[\"ui.commandFailure.reason\"] = \"受阻\\n{0}\"", "Chinese blocked-command catalog reason text must exist.");
     RequireText(hudLayer, "UiFactory.MakeHudPanel", "HudLayer panel creation must use UiFactory.MakeHudPanel.");
     RequireText(hudLayer, "UiFactory.MakeHudSizedLabel", "HudLayer sized labels must use UiFactory.MakeHudSizedLabel.");
     RequireText(hudLayer, "UiFactory.ApplyNamedHudPanelTheme", "HudLayer panel refresh must use UiFactory.ApplyNamedHudPanelTheme.");
@@ -100,6 +102,13 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "_statusValue.Text = CompactText(CommandFailureInlineStatusText(status), 42);", "Top status must expose compact blocked-command feedback without changing command handling.");
+    RequireText(hudLayer, "SetCatalogStatusText(CatalogCommandStatusText(status));", "Catalog inspector must format blocked command statuses with a compact reason.");
+    RequireText(hudLayer, "SetCatalogStatusText(LastProductionCatalogStatusText());", "Catalog mode changes must restore blocked command status through the same compact formatter.");
+    RequireText(hudLayer, "private static bool IsCatalogCommandFailureStatus(string status)", "HUD blocked-command feedback must use a focused status classifier.");
+    RequireText(hudLayer, "MatchesLocalizedStatusPattern(status, \"production.needCredits\")", "HUD blocked-command feedback must recognize localized production credit failures.");
+    RequireText(hudLayer, "private static bool IsLocalizedAbilityUnavailableStatus(string status)", "HUD blocked-command feedback must recognize only the known localized ability failures.");
+    RequireText(hudLayer, "GameText.Format(\"ui.ability.unavailable\", GameText.T(\"ui.ability.deploy\"))", "HUD blocked-command feedback must include the localized deploy failure.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");

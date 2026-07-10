@@ -401,6 +401,8 @@ public static partial class GameText
         ["ui.group.empty"] = "空",
         ["ui.needCredits"] = "需要 {0} 资金",
         ["ui.producerUnavailable"] = "生产建筑不可用",
+        ["ui.commandFailure.inline"] = "受阻：{0}",
+        ["ui.commandFailure.reason"] = "受阻\n{0}",
         ["move.direct"] = "直接前进",
         ["move.attack"] = "攻击前进",
         ["move.ignore"] = "无视前进",

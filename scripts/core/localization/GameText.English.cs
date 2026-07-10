@@ -444,6 +444,8 @@ public static partial class GameText
         ["ui.group.empty"] = "EMPTY",
         ["ui.needCredits"] = "Need {0} credits",
         ["ui.producerUnavailable"] = "Producer unavailable",
+        ["ui.commandFailure.inline"] = "Blocked: {0}",
+        ["ui.commandFailure.reason"] = "BLOCKED\n{0}",
         ["move.direct"] = "Direct advance",
         ["move.attack"] = "Attack advance",
         ["move.ignore"] = "Ignore advance",

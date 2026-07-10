@@ -226,7 +226,7 @@ public partial class HudLayer : CanvasLayer
 
     public void SetStatus(string status)
     {
-        _statusValue.Text = CompactText(status, 42);
+        _statusValue.Text = CompactText(CommandFailureInlineStatusText(status), 42);
     }
 
     public void SetProductionStatus(string status)
@@ -239,7 +239,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(status);
+            SetCatalogStatusText(CatalogCommandStatusText(status));
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
@@ -515,8 +515,76 @@ public partial class HudLayer : CanvasLayer
             CatalogModeKind.Abilities => _abilityCardStates.Count == 0
                 ? GameText.T("ui.catalog.abilitiesEmpty")
                 : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
-            _ => string.IsNullOrWhiteSpace(_lastProductionStatus) ? GameText.T("ui.status.ready") : _lastProductionStatus,
+            _ => LastProductionCatalogStatusText(),
         });
+    }
+
+    private string LastProductionCatalogStatusText()
+    {
+        return string.IsNullOrWhiteSpace(_lastProductionStatus)
+            ? GameText.T("ui.status.ready")
+            : CatalogCommandStatusText(_lastProductionStatus);
+    }
+
+    private static string CommandFailureInlineStatusText(string status)
+    {
+        return IsCatalogCommandFailureStatus(status)
+            ? GameText.Format("ui.commandFailure.inline", CompactText(status, 32))
+            : status;
+    }
+
+    private static string CatalogCommandStatusText(string status)
+    {
+        return IsCatalogCommandFailureStatus(status)
+            ? GameText.Format("ui.commandFailure.reason", CompactText(status, 34))
+            : status;
+    }
+
+    private static bool IsCatalogCommandFailureStatus(string status)
+    {
+        return !string.IsNullOrWhiteSpace(status)
+            && (MatchesLocalizedStatusPattern(status, "ui.needCredits")
+                || MatchesLocalizedStatusPattern(status, "ui.producerUnavailable")
+                || IsLocalizedAbilityUnavailableStatus(status)
+                || MatchesLocalizedStatusPattern(status, "stance.selectRequired")
+                || MatchesLocalizedStatusPattern(status, "build.cannotPlace")
+                || MatchesLocalizedStatusPattern(status, "build.noTicket")
+                || MatchesLocalizedStatusPattern(status, "build.sell.none")
+                || MatchesLocalizedStatusPattern(status, "harvest.selectHarvester")
+                || MatchesLocalizedStatusPattern(status, "harvest.depleted")
+                || MatchesLocalizedStatusPattern(status, "harvest.needRefinery")
+                || MatchesLocalizedStatusPattern(status, "rally.selectProducer")
+                || MatchesLocalizedStatusPattern(status, "rally.unsupported")
+                || MatchesLocalizedStatusPattern(status, "production.needProducer")
+                || MatchesLocalizedStatusPattern(status, "production.needCredits")
+                || MatchesLocalizedStatusPattern(status, "production.noneQueued"));
+    }
+
+    private static bool IsLocalizedAbilityUnavailableStatus(string status)
+    {
+        return string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.context.repair")), StringComparison.Ordinal)
+            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.repairField")), StringComparison.Ordinal)
+            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.shieldField")), StringComparison.Ordinal)
+            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.scan")), StringComparison.Ordinal)
+            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.deploy")), StringComparison.Ordinal);
+    }
+
+    private static bool MatchesLocalizedStatusPattern(string status, string key)
+    {
+        var template = GameText.T(key);
+        var firstPlaceholder = template.IndexOf('{', StringComparison.Ordinal);
+        if (firstPlaceholder < 0)
+        {
+            return string.Equals(status, template, StringComparison.Ordinal);
+        }
+
+        var prefix = template[..firstPlaceholder].Trim();
+        if (prefix.Length > 0 && status.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private void RefreshBuildCards()
