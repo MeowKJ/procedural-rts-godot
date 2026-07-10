@@ -214,15 +214,15 @@ public partial class HudLayer : CanvasLayer
         };
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
-        button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.MouseEntered += () => PreviewCatalogInspectorText(button.InspectorText);
         button.MouseEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
         button.MouseExited += RestoreCatalogStatusText;
-        button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.FocusEntered += () => PreviewCatalogInspectorText(button.InspectorText);
         button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
         button.FocusExited += () => RestoreCatalogStatusText();
         button.Pressed += () =>
         {
-            SetCatalogStatusText(button.InspectorText);
+            PinCatalogInspectorText(button.InspectorText);
             if (!string.IsNullOrWhiteSpace(button.BuildKind))
             {
                 BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind));

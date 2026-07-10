@@ -75,11 +75,17 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page in the inspector.", result);
         RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.", result);
         RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.", result);
-        RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.", result);
+        RequireText(hudLayer, "button.FocusEntered += () => PreviewCatalogInspectorText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.", result);
         RequireText(hudLayer, "button.FocusExited += () => RestoreCatalogStatusText();", "Build and Train card focus exit must restore catalog page help/status.", result);
-        RequireText(hudLayer, "card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);", "Ability card focus must show focused ability details in the catalog inspector.", result);
+        RequireText(hudLayer, "card.FocusEntered += () => PreviewCatalogInspectorText(card.InspectorText);", "Ability card focus must show focused ability details in the catalog inspector.", result);
         RequireText(hudLayer, "card.FocusExited += RestoreCatalogStatusText;", "Ability card focus exit must restore catalog ability page status.", result);
+        RequireText(hudLayer, "private string _pinnedCatalogInspectorText = \"\";", "Catalog inspector must track a pinned card readout.", result);
+        RequireText(hudLayer, "PreviewCatalogInspectorText(button.InspectorText)", "Build and Train card hover must preview inspector detail without pinning it.", result);
+        RequireText(hudLayer, "PinCatalogInspectorText(button.InspectorText)", "Build and Train card activation must pin inspector detail.", result);
+        RequireText(hudLayer, "PinCatalogInspectorText(card.InspectorText)", "Upgrade and ability card activation must pin inspector detail.", result);
+        RequireText(hudLayer, "GameText.Format(\"ui.catalog.inspectPinned\", _pinnedCatalogInspectorText)", "Pinned catalog inspector text must be visually marked before restore.", result);
+        RequireText(hudLayer, "ClearCatalogInspectorPin();", "Catalog page/category/provider changes must clear stale pinned inspector detail.", result);
         RequireText(hudLayer, "AbilityCommandGrammar(state.Ability)", "Ability cards must expose compact command grammar on the card and inspector.", result);
         RequireText(hudLayer, "AbilityTargetRuleFor(AbilitySpec ability)", "Ability cards must derive target grammar from ability target rules.", result);
         RequireText(hudLayer, "AbilityStateCode(state)", "Ability cards must expose compact ready/cooldown/active state on the card.", result);
@@ -92,7 +98,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "private partial class UpgradeProjectCard : Button", "Upgrades catalog mode must render dedicated project-shell cards instead of production cards.", result);
         RequireText(hudLayer, "Name = $\"UpgradeProjectCard{id}\"", "Upgrades project-shell cards must expose stable node names.", result);
         RequireText(hudLayer, "RefreshUpgradeProjectCards()", "Upgrades catalog mode must refresh selected-source project shell cards.", result);
-        RequireText(hudLayer, "card.Pressed += () => SetCatalogStatusText(card.InspectorText);", "Upgrades project-shell cards must update the inspector without emitting research commands.", result);
+        RequireText(hudLayer, "card.Pressed += () => PinCatalogInspectorText(card.InspectorText);", "Upgrades project-shell cards must pin the inspector without emitting research commands.", result);
         ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.", result);
         ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.", result);
         RequireText(hudLayer, "CatalogOverviewConstructionLaneCount()", "Build catalog overview must summarize construction provider lane count.", result);
@@ -408,6 +414,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.overview.scope.auto\"] = \"AUTO\"", "English catalog overview provider scope must expose Auto compactly.", result);
         RequireText(englishText, "[\"ui.catalog.upgradesCount\"] = \"{0} project shells\\nsource: {1}; read-only\"", "English catalog mode Upgrades count must explain read-only selected-source project shells.", result);
         RequireText(englishText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English catalog mode upgrade inspector text must include source context.", result);
+        RequireText(englishText, "[\"ui.catalog.inspectPinned\"] = \"PIN {0}\"", "English pinned catalog inspector prefix must exist.", result);
         RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.", result);
         RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.", result);
@@ -425,6 +432,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseText, "[\"ui.catalog.overview.upgrades\"] = \"{0}壳 | 无通道\"", "Chinese catalog mode Upgrades overview must stay a non-provider project shell.", result);
         RequireText(chineseText, "[\"ui.catalog.overview.scope.auto\"] = \"自动\"", "Chinese catalog overview provider scope must expose Auto compactly.", result);
         RequireText(chineseText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese catalog mode Upgrades count must explain read-only selected-source project shells.", result);
+        RequireText(chineseText, "[\"ui.catalog.inspectPinned\"] = \"固定 {0}\"", "Chinese pinned catalog inspector prefix must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.", result);

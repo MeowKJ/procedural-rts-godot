@@ -100,6 +100,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "private string _pinnedCatalogInspectorText = \"\";", "Catalog inspector must track a pinned card readout.");
+    RequireText(hudLayer, "PreviewCatalogInspectorText(button.InspectorText)", "Build/Train card hover must preview inspector detail without pinning it.");
+    RequireText(hudLayer, "PinCatalogInspectorText(button.InspectorText)", "Build/Train card activation must pin inspector detail.");
+    RequireText(hudLayer, "PinCatalogInspectorText(card.InspectorText)", "Upgrade and ability card activation must pin inspector detail.");
+    RequireText(hudLayer, "GameText.Format(\"ui.catalog.inspectPinned\", _pinnedCatalogInspectorText)", "Pinned catalog inspector text must be visually marked before restore.");
+    RequireText(hudLayer, "ClearCatalogInspectorPin();", "Catalog page/category/provider changes must clear stale pinned inspector detail.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
@@ -124,10 +130,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page in the inspector.");
     RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.");
     RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.");
-    RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.");
+    RequireText(hudLayer, "button.FocusEntered += () => PreviewCatalogInspectorText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.");
     RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.");
     RequireText(hudLayer, "button.FocusExited += () => RestoreCatalogStatusText();", "Build and Train card focus exit must restore catalog page help/status.");
-    RequireText(hudLayer, "card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);", "Ability card focus must show focused ability details in the catalog inspector.");
+    RequireText(hudLayer, "card.FocusEntered += () => PreviewCatalogInspectorText(card.InspectorText);", "Ability card focus must show focused ability details in the catalog inspector.");
     RequireText(hudLayer, "card.FocusExited += RestoreCatalogStatusText;", "Ability card focus exit must restore catalog ability page status.");
     RequireText(hudLayer, "tab.Pressed += () => SelectProductionCategory(category);", "Train category tabs must update the production category page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Build;", "Build category tabs must only be visible on the Build catalog page.");
@@ -146,7 +152,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private partial class UpgradeProjectCard : Button", "Upgrades mode must render dedicated project-shell cards instead of production cards.");
     RequireText(hudLayer, "Name = $\"UpgradeProjectCard{id}\"", "Upgrades project-shell cards must expose stable node names for QA.");
     RequireText(hudLayer, "RefreshUpgradeProjectCards()", "Upgrades mode must refresh project-shell cards when the catalog page is selected.");
-    RequireText(hudLayer, "card.Pressed += () => SetCatalogStatusText(card.InspectorText);", "Upgrades project-shell cards must update the inspector without emitting commands.");
+    RequireText(hudLayer, "card.Pressed += () => PinCatalogInspectorText(card.InspectorText);", "Upgrades project-shell cards must pin the inspector without emitting commands.");
     ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.");
     ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
@@ -154,8 +160,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated ability cards.");
     RequireText(hudLayer, "Name = $\"AbilityCard{kind}\"", "Ability cards must expose stable node names for structure/screenshot QA.");
     RequireText(hudLayer, "Action<AbilityKind>? AbilityRequested", "Ability cards must emit a typed request instead of routing through production cards.");
-    RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and train cards must update the catalog inspector on hover.");
-    RequireText(hudLayer, "card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);", "Ability cards must update the catalog inspector on hover.");
+    RequireText(hudLayer, "button.MouseEntered += () => PreviewCatalogInspectorText(button.InspectorText);", "Build and train cards must preview the catalog inspector on hover.");
+    RequireText(hudLayer, "card.MouseEntered += () => PreviewCatalogInspectorText(card.InspectorText);", "Ability cards must preview the catalog inspector on hover.");
     RequireText(hudLayer, "private void RestoreCatalogStatusText()", "Card hover exit must restore the catalog page status text.");
     RequireText(hudLayer, "List<ProductionProviderLaneState> _productionProviderLaneStates", "Train catalog provider lanes must keep reusable lane state storage.");
     RequireText(hudLayer, "List<ProductionProviderLaneState> _constructionProviderLaneStates", "Build catalog construction provider lanes must keep separate reusable lane state storage.");
@@ -286,6 +292,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
+    RequireText(englishText, "[\"ui.catalog.inspectPinned\"] = \"PIN {0}\"", "English pinned catalog inspector prefix must exist.");
     RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
@@ -375,6 +382,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese HUD catalog Abilities help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.inspectPinned\"] = \"固定 {0}\"", "Chinese pinned catalog inspector prefix must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");

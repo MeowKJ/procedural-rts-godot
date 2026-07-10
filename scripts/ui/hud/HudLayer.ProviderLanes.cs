@@ -382,6 +382,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectProductionProviderLane(ProductionProviderLaneState state)
     {
+        ClearCatalogInspectorPin();
         _selectedProductionProviderLaneScope = state.Scope;
         _selectedProductionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
         SetCatalogStatusText(GameText.Format(
@@ -397,6 +398,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectConstructionProviderLane(ProductionProviderLaneState state)
     {
+        ClearCatalogInspectorPin();
         _selectedConstructionProviderLaneScope = state.Scope;
         _selectedConstructionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
         SetCatalogStatusText(GameText.Format(

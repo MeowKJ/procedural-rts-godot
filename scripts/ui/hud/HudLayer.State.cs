@@ -102,6 +102,7 @@ public partial class HudLayer : CanvasLayer
     private string _focusedRepeatProductionProducerKind = "";
     private string _focusedRepeatProductionProducerLabel = "";
     private string _lastRepeatProductionRefreshKey = "";
+    private string _pinnedCatalogInspectorText = "";
     private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
 
@@ -507,8 +508,40 @@ public partial class HudLayer : CanvasLayer
         _productionValue.Text = CompactMultiline(status, 34);
     }
 
+    private void PreviewCatalogInspectorText(string status)
+    {
+        SetCatalogStatusText(status);
+    }
+
+    private void PinCatalogInspectorText(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return;
+        }
+
+        _pinnedCatalogInspectorText = status;
+        SetCatalogStatusText(GameText.Format("ui.catalog.inspectPinned", status));
+    }
+
+    private void ClearCatalogInspectorPin()
+    {
+        _pinnedCatalogInspectorText = "";
+    }
+
+    private bool HasPinnedCatalogInspectorText()
+    {
+        return !string.IsNullOrWhiteSpace(_pinnedCatalogInspectorText);
+    }
+
     private void RestoreCatalogStatusText()
     {
+        if (HasPinnedCatalogInspectorText())
+        {
+            SetCatalogStatusText(GameText.Format("ui.catalog.inspectPinned", _pinnedCatalogInspectorText));
+            return;
+        }
+
         SetCatalogStatusText(_selectedCatalogMode switch
         {
             CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),

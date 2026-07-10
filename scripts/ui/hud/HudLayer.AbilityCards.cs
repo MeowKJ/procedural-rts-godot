@@ -92,13 +92,13 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
         _abilityCards[kind] = card;
         parent.AddChild(card);
-        card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);
+        card.MouseEntered += () => PreviewCatalogInspectorText(card.InspectorText);
         card.MouseExited += RestoreCatalogStatusText;
-        card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);
+        card.FocusEntered += () => PreviewCatalogInspectorText(card.InspectorText);
         card.FocusExited += RestoreCatalogStatusText;
         card.Pressed += () =>
         {
-            SetCatalogStatusText(card.InspectorText);
+            PinCatalogInspectorText(card.InspectorText);
             AbilityRequested?.Invoke(kind);
         };
         return card;
