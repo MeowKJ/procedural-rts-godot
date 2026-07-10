@@ -73,6 +73,11 @@ public partial class HudLayer
 
     private string DefaultCatalogInspectorText()
     {
+        if (ShouldShowNoSelectionCommandHint())
+        {
+            return GameText.T("ui.noSelection.commandHint");
+        }
+
         return _selectedCatalogMode switch
         {
             CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),
@@ -81,6 +86,13 @@ public partial class HudLayer
                 : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
             _ => LastProductionCatalogStatusText(),
         };
+    }
+
+    private bool ShouldShowNoSelectionCommandHint()
+    {
+        return !_hasSelection
+            && !_buildModeActive
+            && (_selectedCatalogMode == CatalogModeKind.Build || _selectedCatalogMode == CatalogModeKind.Train);
     }
 
     private string CatalogInspectorContextId()

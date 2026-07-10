@@ -8,6 +8,7 @@ public static partial class GameText
         ["ui.noSelection.meta"] = "Awaiting command",
         ["ui.noSelection.stats"] = "HP --   ARM --   RNG --   SPD --",
         ["ui.noSelection.detail"] = "Select units or structures",
+        ["ui.noSelection.commandHint"] = "Select units/producer\nTab cycles catalog",
         ["ui.multi.title"] = "{0} SELECTED",
         ["ui.multi.meta"] = "{0} combat  {1} harvesters  {2} structures",
         ["ui.multi.stats"] = "AVG HP {0}%   CARGO {1}",

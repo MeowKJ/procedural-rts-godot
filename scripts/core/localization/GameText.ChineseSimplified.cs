@@ -8,6 +8,7 @@ public static partial class GameText
         ["ui.noSelection.meta"] = "等待命令",
         ["ui.noSelection.stats"] = "生命 --   护甲 --   射程 --   速度 --",
         ["ui.noSelection.detail"] = "选择单位或建筑",
+        ["ui.noSelection.commandHint"] = "选择单位/生产建筑\nTab 切换目录",
         ["ui.multi.title"] = "已选择 {0}",
         ["ui.multi.meta"] = "战斗 {0}  采集 {1}  建筑 {2}",
         ["ui.multi.stats"] = "平均生命 {0}%   载货 {1}",

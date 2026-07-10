@@ -175,6 +175,7 @@ public partial class HudLayer : CanvasLayer
 
     public void SetHudContext(bool hasSelection, bool hasBuildingSelection, bool buildModeActive)
     {
+        var wasShowingNoSelectionCommandHint = ShouldShowNoSelectionCommandHint();
         _hasSelection = hasSelection;
         _hasBuildingSelection = hasBuildingSelection;
         _buildModeActive = buildModeActive;
@@ -192,6 +193,11 @@ public partial class HudLayer : CanvasLayer
         if (_commandRibbon is not null)
         {
             _commandRibbon.Visible = true;
+        }
+
+        if (wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint())
+        {
+            SetCatalogInspectorDefault(DefaultCatalogInspectorText());
         }
     }
 
@@ -272,7 +278,7 @@ public partial class HudLayer : CanvasLayer
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
             ClearCatalogInspectorCommandFeedback();
-            SetCatalogInspectorDefault(GameText.T("ui.status.ready"));
+            SetCatalogInspectorDefault(DefaultCatalogInspectorText());
         }
     }
 

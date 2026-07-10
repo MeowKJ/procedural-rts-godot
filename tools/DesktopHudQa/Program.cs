@@ -94,6 +94,13 @@ static void AssertCatalogInspectorReducer()
     state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.Reset("catalog:build", "build ready"));
     Require(state.Current.Text == "build ready" && state.Hover is null && state.Pin is null && state.CommandFeedback is null,
         "Catalog context reset must clear transient layers atomically.");
+
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.Default("catalog:train", "select units"));
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.CommandFeedback("queued"));
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.Default("catalog:train", "train ready"));
+    Require(state.Current.Text == "queued", "No-selection default changes must not hide newer command feedback.");
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.ClearCommandFeedback());
+    Require(state.Current.Text == "train ready", "Clearing command feedback must reveal the current selection-context default.");
 }
 
 static void Require(bool condition, string message)
@@ -300,6 +307,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, button.InspectorText);", "Build and Train card clicks must pin their stable item projection before command dispatch.");
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, card.InspectorText);", "Ability and Upgrade card clicks must pin their stable item projection.");
     RequireText(hudLayer, "CatalogInspectorIntent.Refresh(itemId, text)", "Live card state changes must refresh matching hover/pin projections by item id.");
+    RequireText(hudLayer, "wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint()", "Selection/build-mode transitions must update only the typed inspector default.");
+    RequireText(hudLayer, "SetCatalogInspectorDefault(DefaultCatalogInspectorText());", "HUD context and failure clearing must reveal the current typed default without bypassing priority.");
+    RequireText(englishText, "[\"ui.noSelection.commandHint\"] = \"Select units/producer\\nTab cycles catalog\"", "English no-selection command hint must stay compact.");
+    RequireText(chineseText, "[\"ui.noSelection.commandHint\"] = \"选择单位/生产建筑\\nTab 切换目录\"", "Chinese no-selection command hint must stay compact.");
     RequireText(englishText, "[\"ui.catalog.inspectPinned\"] = \"PIN {0}\"", "English catalog inspector must mark pinned detail compactly.");
     RequireText(chineseText, "[\"ui.catalog.inspectPinned\"] = \"固定 {0}\"", "Chinese catalog inspector must mark pinned detail compactly.");
     RequireText(hudLayer, "BuildInspectorText(state, spec, disabledReason)", "Build cards must provide label/cost/time/disabled inspector text.");
