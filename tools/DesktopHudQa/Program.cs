@@ -77,7 +77,12 @@ static void AssertCatalogInspectorReducer()
     Require(state.Current.Text == "blocked", "Command feedback must outrank pin, hover, and default state.");
 
     state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.ClearCommandFeedback());
-    Require(state.Current.Text == "tank", "Clearing command feedback must reveal the valid pin.");
+    Require(state.Current.Text == "tank" && state.Resolved.Layer == CatalogInspectorLayer.Pin,
+        "Clearing command feedback must reveal the valid pin.");
+
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.Refresh("card:tank", "tank updated"));
+    Require(state.Current.Text == "tank updated" && state.Resolved.Layer == CatalogInspectorLayer.Pin,
+        "Refreshing a live card must update its pinned projection without changing priority.");
 
     state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.Invalidate("card:tank"));
     Require(state.Current.Text == "harvester", "Invalidating a stale pinned card must reveal the current hover.");
@@ -229,7 +234,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private partial class UpgradeProjectCard : Button", "Upgrades mode must render dedicated project-shell cards instead of production cards.");
     RequireText(hudLayer, "Name = $\"UpgradeProjectCard{id}\"", "Upgrades project-shell cards must expose stable node names for QA.");
     RequireText(hudLayer, "RefreshUpgradeProjectCards()", "Upgrades mode must refresh project-shell cards when the catalog page is selected.");
-    RequireText(hudLayer, "card.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);", "Upgrades project-shell cards must update typed inspector state without emitting commands.");
+    RequireText(hudLayer, "card.Pressed += () => PinCatalogInspectorItem(inspectorItemId, card.InspectorText);", "Upgrades project-shell cards must pin typed inspector state without emitting commands.");
     ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.");
     ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
@@ -290,7 +295,13 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.");
     RequireText(englishText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.");
     RequireText(chineseText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.");
-    RequireText(hudLayer, "CompactMultiline(state.Current.Text, 34)", "Resolved catalog inspector text must compact per line instead of single-line clipping.");
+    RequireText(hudLayer, "CompactMultiline(text, 34)", "Resolved catalog inspector text must compact per line instead of single-line clipping.");
+    RequireText(hudLayer, "resolved.Layer == CatalogInspectorLayer.Pin", "Pinned catalog detail must use the typed layer marker instead of storing decorated text.");
+    RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, button.InspectorText);", "Build and Train card clicks must pin their stable item projection before command dispatch.");
+    RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, card.InspectorText);", "Ability and Upgrade card clicks must pin their stable item projection.");
+    RequireText(hudLayer, "CatalogInspectorIntent.Refresh(itemId, text)", "Live card state changes must refresh matching hover/pin projections by item id.");
+    RequireText(englishText, "[\"ui.catalog.inspectPinned\"] = \"PIN {0}\"", "English catalog inspector must mark pinned detail compactly.");
+    RequireText(chineseText, "[\"ui.catalog.inspectPinned\"] = \"固定 {0}\"", "Chinese catalog inspector must mark pinned detail compactly.");
     RequireText(hudLayer, "BuildInspectorText(state, spec, disabledReason)", "Build cards must provide label/cost/time/disabled inspector text.");
     RequireText(hudLayer, "TrainInspectorText(state, ProducerLabel, disabledReason)", "Train cards must provide source/cost/time/queue/disabled inspector text.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.inputHint.build\")", "Build cards must append compact input hints to inspector text.");

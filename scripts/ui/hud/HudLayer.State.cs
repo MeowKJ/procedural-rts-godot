@@ -552,6 +552,7 @@ public partial class HudLayer : CanvasLayer
 
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetBuildState(state, disabledReason);
+            RefreshCatalogInspectorItem(CommandCardInspectorItemId(optionId), button.InspectorText);
         }
     }
 
@@ -573,6 +574,7 @@ public partial class HudLayer : CanvasLayer
 
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetState(state, disabledReason);
+            RefreshCatalogInspectorItem(CommandCardInspectorItemId(optionId), button.InspectorText);
         }
 
     }

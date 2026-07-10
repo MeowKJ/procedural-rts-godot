@@ -108,6 +108,7 @@ public static partial class GameText
         ["ui.catalog.inspectReady"] = "Ready",
         ["ui.catalog.inspectSelf"] = "self",
         ["ui.catalog.inspectTargeted"] = "targeted",
+        ["ui.catalog.inspectPinned"] = "PIN {0}",
         ["ui.catalog.inspectBuild"] = "{0} [{1}]\n{2} cr  {3}s  {4}\n{5}",
         ["ui.catalog.inspectTrain"] = "{0} via {1}\n{2} cr  {3}s  Q{4}  {5}\n{6}",
         ["ui.catalog.inputHint.build"] = "Click: place | lane: auto/specific",

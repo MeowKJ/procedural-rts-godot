@@ -83,6 +83,7 @@ public static partial class GameText
         ["ui.catalog.inspectReady"] = "就绪",
         ["ui.catalog.inspectSelf"] = "自身",
         ["ui.catalog.inspectTargeted"] = "需目标",
+        ["ui.catalog.inspectPinned"] = "固定 {0}",
         ["ui.catalog.inspectBuild"] = "{0} [{1}]\n{2} 资金  {3}s  {4}\n{5}",
         ["ui.catalog.inspectTrain"] = "{0} 来自 {1}\n{2} 资金  {3}s  队列{4}  {5}\n{6}",
         ["ui.catalog.inputHint.build"] = "点击放置 | 通道: 自动/指定",

@@ -8,7 +8,13 @@ public partial class BattleRoot
 
     private void OnCatalogInspectorIntentRequested(CatalogInspectorIntent intent)
     {
-        _catalogInspectorState = CatalogInspectorReducer.Apply(_catalogInspectorState, intent);
+        var next = CatalogInspectorReducer.Apply(_catalogInspectorState, intent);
+        if (next == _catalogInspectorState)
+        {
+            return;
+        }
+
+        _catalogInspectorState = next;
         _hud.SetCatalogInspectorState(_catalogInspectorState);
     }
 }

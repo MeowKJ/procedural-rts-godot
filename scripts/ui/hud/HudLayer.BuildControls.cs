@@ -224,7 +224,7 @@ public partial class HudLayer : CanvasLayer
         button.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
         button.Pressed += () =>
         {
-            ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);
+            PinCatalogInspectorItem(inspectorItemId, button.InspectorText);
             if (!string.IsNullOrWhiteSpace(button.BuildKind))
             {
                 BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind));

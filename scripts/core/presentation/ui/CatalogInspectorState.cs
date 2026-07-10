@@ -10,7 +10,16 @@ public enum CatalogInspectorIntentKind
     ClearPin,
     SetCommandFeedback,
     ClearCommandFeedback,
+    RefreshItem,
     InvalidateItem,
+}
+
+public enum CatalogInspectorLayer
+{
+    Default,
+    Hover,
+    Pin,
+    CommandFeedback,
 }
 
 public readonly record struct CatalogInspectorContent(string ItemId, string Text)
@@ -26,17 +35,27 @@ public readonly record struct CatalogInspectorState(
 {
     public static CatalogInspectorState Empty { get; } = new(new("catalog:none", ""), null, null, null);
 
-    public CatalogInspectorContent Current =>
-        Visible(CommandFeedback)
-        ?? Visible(Pin)
-        ?? Visible(Hover)
-        ?? Default;
+    public CatalogInspectorResolvedState Resolved =>
+        ResolvedContent(CatalogInspectorLayer.CommandFeedback, CommandFeedback)
+        ?? ResolvedContent(CatalogInspectorLayer.Pin, Pin)
+        ?? ResolvedContent(CatalogInspectorLayer.Hover, Hover)
+        ?? new CatalogInspectorResolvedState(CatalogInspectorLayer.Default, Default);
 
-    private static CatalogInspectorContent? Visible(CatalogInspectorContent? content)
+    public CatalogInspectorContent Current => Resolved.Content;
+
+    private static CatalogInspectorResolvedState? ResolvedContent(
+        CatalogInspectorLayer layer,
+        CatalogInspectorContent? content)
     {
-        return content is { IsVisible: true } ? content : null;
+        return content is { IsVisible: true } value
+            ? new CatalogInspectorResolvedState(layer, value)
+            : null;
     }
 }
+
+public readonly record struct CatalogInspectorResolvedState(
+    CatalogInspectorLayer Layer,
+    CatalogInspectorContent Content);
 
 public readonly record struct CatalogInspectorIntent(
     CatalogInspectorIntentKind Kind,
@@ -66,6 +85,9 @@ public readonly record struct CatalogInspectorIntent(
 
     public static CatalogInspectorIntent ClearCommandFeedback() =>
         new(CatalogInspectorIntentKind.ClearCommandFeedback);
+
+    public static CatalogInspectorIntent Refresh(string itemId, string text) =>
+        new(CatalogInspectorIntentKind.RefreshItem, itemId, text);
 
     public static CatalogInspectorIntent Invalidate(string itemId) =>
         new(CatalogInspectorIntentKind.InvalidateItem, itemId);
@@ -104,6 +126,11 @@ public static class CatalogInspectorReducer
                 CommandFeedback = ContentOrNull(intent),
             },
             CatalogInspectorIntentKind.ClearCommandFeedback => state with { CommandFeedback = null },
+            CatalogInspectorIntentKind.RefreshItem => state with
+            {
+                Hover = WithUpdatedText(state.Hover, intent),
+                Pin = WithUpdatedText(state.Pin, intent),
+            },
             CatalogInspectorIntentKind.InvalidateItem => state with
             {
                 Hover = WithoutItem(state.Hover, intent.ItemId),
@@ -125,6 +152,16 @@ public static class CatalogInspectorReducer
         return content is { } value
             && string.Equals(value.ItemId, itemId, StringComparison.Ordinal)
                 ? null
+                : content;
+    }
+
+    private static CatalogInspectorContent? WithUpdatedText(
+        CatalogInspectorContent? content,
+        CatalogInspectorIntent intent)
+    {
+        return content is { } value
+            && string.Equals(value.ItemId, intent.ItemId, StringComparison.Ordinal)
+                ? ContentOrNull(intent)
                 : content;
     }
 }

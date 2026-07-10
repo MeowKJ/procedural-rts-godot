@@ -8,7 +8,11 @@ public partial class HudLayer
     {
         if (_productionValue is not null)
         {
-            _productionValue.Text = CompactMultiline(state.Current.Text, 34);
+            var resolved = state.Resolved;
+            var text = resolved.Layer == CatalogInspectorLayer.Pin
+                ? GameText.Format("ui.catalog.inspectPinned", resolved.Content.Text)
+                : resolved.Content.Text;
+            _productionValue.Text = CompactMultiline(text, 34);
         }
     }
 
@@ -35,6 +39,16 @@ public partial class HudLayer
     private void ClearCatalogInspectorHover(string itemId)
     {
         RequestCatalogInspector(CatalogInspectorIntent.ClearHover(itemId));
+    }
+
+    private void PinCatalogInspectorItem(string itemId, string text)
+    {
+        RequestCatalogInspector(CatalogInspectorIntent.Pin(itemId, text));
+    }
+
+    private void RefreshCatalogInspectorItem(string itemId, string text)
+    {
+        RequestCatalogInspector(CatalogInspectorIntent.Refresh(itemId, text));
     }
 
     private void ShowCatalogInspectorCommandFeedback(string text)

@@ -88,6 +88,7 @@ public partial class HudLayer : CanvasLayer
 
             card.Position = ProductionButtonPosition(index);
             card.SetState(state);
+            RefreshCatalogInspectorItem(UpgradeInspectorItemId(state.Id), card.InspectorText);
         }
 
         foreach (var key in _upgradeProjectCards.Keys)
@@ -126,7 +127,7 @@ public partial class HudLayer : CanvasLayer
         card.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
         card.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
         card.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
-        card.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+        card.Pressed += () => PinCatalogInspectorItem(inspectorItemId, card.InspectorText);
         return card;
     }
 

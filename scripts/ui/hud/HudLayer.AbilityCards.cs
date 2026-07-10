@@ -57,6 +57,7 @@ public partial class HudLayer : CanvasLayer
 
             card.Position = ProductionButtonPosition(index);
             card.SetState(state);
+            RefreshCatalogInspectorItem(AbilityInspectorItemId(state.Ability.Kind), card.InspectorText);
         }
 
         foreach (var key in _abilityCards.Keys)
@@ -100,7 +101,7 @@ public partial class HudLayer : CanvasLayer
         card.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
         card.Pressed += () =>
         {
-            ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+            PinCatalogInspectorItem(inspectorItemId, card.InspectorText);
             AbilityRequested?.Invoke(kind);
         };
         return card;
