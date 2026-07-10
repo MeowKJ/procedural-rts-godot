@@ -89,10 +89,10 @@ public partial class HotkeyLegendLayer : CanvasLayer
     {
         private const int LegendColumnCount = 2;
         private const float PanelPadding = 14f;
-        private const float HeaderHeight = 52f;
+        private const float HeaderHeight = 104f;
         private const float ColumnGap = 10f;
-        private const float SectionTopGap = 14f;
-        private const float SectionGap = 8f;
+        private const float SectionTopGap = 8f;
+        private const float SectionGap = 6f;
         private const float SectionHeaderHeight = 22f;
         private const float RowHeight = 14f;
         private readonly float[] _columnY = new float[LegendColumnCount];
@@ -103,6 +103,7 @@ public partial class HotkeyLegendLayer : CanvasLayer
             DrawRect(rect, new Color("#02060a", 0.84f), true);
             DrawRect(rect, new Color("#59f1ff", 0.34f), false, 1.2f);
             DrawHeader();
+            DrawFocusStrip();
 
             var columnWidth = (Size.X - PanelPadding * 2 - ColumnGap) / LegendColumnCount;
             for (var column = 0; column < LegendColumnCount; column++)
@@ -127,6 +128,47 @@ public partial class HotkeyLegendLayer : CanvasLayer
             DrawString(UiFontProfile.DrawFont(UiFontRole.Title), new Vector2(16, 25), GameText.T("hotkeys.title"), HorizontalAlignment.Left, 180, 18, new Color("#ffffff"));
             DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(16, 44), GameText.T("hotkeys.subtitle"), HorizontalAlignment.Left, 240, 11, InkMuted);
             DrawLine(new Vector2(14, 52), new Vector2(Size.X - 14, 52), new Color("#59f1ff", 0.24f), 1, true);
+        }
+
+        private void DrawFocusStrip()
+        {
+            var focusKinds = ControlBindingCatalog.CommandOverlayFocusSections;
+            var strip = new Rect2(new Vector2(PanelPadding, 58), new Vector2(Size.X - PanelPadding * 2, 38));
+            DrawRect(strip, new Color("#071019", 0.76f), true);
+            DrawRect(strip, new Color("#8fffe1", 0.26f), false, 1, true);
+            DrawString(
+                UiFontProfile.DrawFont(UiFontRole.Compact),
+                strip.Position + new Vector2(10, 13),
+                GameText.T("hotkeys.focus.title"),
+                HorizontalAlignment.Left,
+                92,
+                10,
+                Mint);
+
+            var cellWidth = (strip.Size.X - 104) / focusKinds.Count;
+            for (var index = 0; index < focusKinds.Count; index++)
+            {
+                var section = SectionFor(focusKinds[index]);
+                var x = strip.Position.X + 104 + index * cellWidth;
+                DrawString(
+                    UiFontProfile.DrawFont(UiFontRole.Compact),
+                    new Vector2(x, strip.Position.Y + 13),
+                    GameText.T(section.TitleKey),
+                    HorizontalAlignment.Left,
+                    cellWidth - 6,
+                    9,
+                    SectionAccent(section.Kind));
+                DrawString(
+                    UiFontProfile.DrawFont(UiFontRole.Compact),
+                    new Vector2(x, strip.Position.Y + 29),
+                    FocusRowText(section),
+                    HorizontalAlignment.Left,
+                    cellWidth - 6,
+                    9,
+                    Ink);
+            }
+
+            DrawLine(new Vector2(14, HeaderHeight), new Vector2(Size.X - 14, HeaderHeight), new Color("#59f1ff", 0.18f), 1, true);
         }
 
         private void DrawSection(ControlBindingSection section, Color accent, Vector2 position, float width)
@@ -159,6 +201,35 @@ public partial class HotkeyLegendLayer : CanvasLayer
         private static float SectionHeight(int rowCount)
         {
             return SectionHeaderHeight + rowCount * RowHeight + 10f;
+        }
+
+        private static ControlBindingSection SectionFor(ControlBindingSectionKind kind)
+        {
+            for (var index = 0; index < ControlBindingCatalog.Sections.Count; index++)
+            {
+                if (ControlBindingCatalog.Sections[index].Kind == kind)
+                {
+                    return ControlBindingCatalog.Sections[index];
+                }
+            }
+
+            return ControlBindingCatalog.Sections[0];
+        }
+
+        private static string FocusRowText(ControlBindingSection section)
+        {
+            if (section.RowKeys.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var rowIndex = section.Kind switch
+            {
+                ControlBindingSectionKind.Build => Math.Min(3, section.RowKeys.Count - 1),
+                ControlBindingSectionKind.Groups => Math.Min(1, section.RowKeys.Count - 1),
+                _ => 0,
+            };
+            return GameText.T(section.RowKeys[rowIndex]);
         }
 
         private static Color SectionAccent(ControlBindingSectionKind kind)

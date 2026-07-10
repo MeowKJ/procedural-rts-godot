@@ -494,6 +494,7 @@ public static partial class GameText
         ["hotkeys.hint.close"] = "F1 CLOSE",
         ["hotkeys.title"] = "HOTKEYS",
         ["hotkeys.subtitle"] = "battle command reference",
+        ["hotkeys.focus.title"] = "BATTLE BASICS",
         ["hotkeys.camera"] = "CAMERA",
         ["hotkeys.camera.1"] = "WASD / EDGE scroll",
         ["hotkeys.camera.2"] = "WHEEL zoom",

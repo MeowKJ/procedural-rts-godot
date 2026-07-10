@@ -75,6 +75,10 @@ static class HoverTooltipReviewGate
         RequireText(hotkeys, "private const int LegendColumnCount = 2;", "Hotkey legend must use a compact two-column command reference.", result);
         RequireText(hotkeys, "var column = index % LegendColumnCount;", "Hotkey legend sections must flow into two columns instead of one tall stack.", result);
         RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.", result);
+        RequireText(hotkeys, "DrawFocusStrip()", "Hotkey legend must surface a compact battle command basics strip.", result);
+        RequireText(hotkeys, "ControlBindingCatalog.CommandOverlayFocusSections", "Hotkey legend focus strip must be driven by the shared binding catalog.", result);
+        RequireText(controlBindingCatalog, "public static IReadOnlyList<ControlBindingSectionKind> CommandOverlayFocusSections", "Shared binding catalog must define command-overlay focus sections.", result);
+        RequireText(controlBindingCatalog, "ControlBindingSectionKind.Orders,\n        ControlBindingSectionKind.Catalog,\n        ControlBindingSectionKind.Groups,\n        ControlBindingSectionKind.Build", "Command-overlay focus sections must cover command modes, catalog, groups, and Shift-batch production.", result);
         RequireText(controlBindingCatalog, "ControlBindingSectionKind.Catalog, \"hotkeys.catalog\"", "Shared binding catalog must include a right-catalog control section.", result);
         RequireText(hudLayer, "private void CycleCatalogMode(int direction)", "Right catalog pages must expose keyboard cycling through the same mode selection path.", result);
         RequireText(hudLayer, "key.Keycode == Key.Pageup", "Right catalog keyboard cycling must support PageUp.", result);
@@ -83,6 +87,7 @@ static class HoverTooltipReviewGate
         RequireText(englishText, "[\"hotkeys.catalog.1\"] = \"Tab right catalog drawer\"", "English hotkey legend must expose the right catalog drawer toggle.", result);
         RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown cycle pages\"", "English hotkey legend must expose right catalog page cycling.", result);
         RequireText(englishText, "[\"hotkeys.catalog.3\"] = \"Click cards / provider lanes\"", "English hotkey legend must expose right catalog card and provider interactions.", result);
+        RequireText(englishText, "[\"hotkeys.focus.title\"] = \"BATTLE BASICS\"", "English hotkey legend must label the command basics focus strip.", result);
         RequireText(englishText, "[\"hotkeys.orders.1\"] = \"Ribbon / RMB direct\"", "English hotkey legend must point move modes at visible ribbon controls and right-click modifiers.", result);
         RequireText(englishText, "[\"hotkeys.orders.2\"] = \"Ribbon / Alt+RMB attack\"", "English hotkey legend must point attack move at visible ribbon controls and right-click modifiers.", result);
         RequireText(englishText, "[\"hotkeys.orders.3\"] = \"Ribbon / Ctrl+RMB ignore\"", "English hotkey legend must point ignore move at visible ribbon controls and right-click modifiers.", result);
@@ -93,6 +98,7 @@ static class HoverTooltipReviewGate
         RequireText(chineseText, "[\"hotkeys.catalog.1\"] = \"Tab 右侧目录抽屉\"", "Chinese hotkey legend must expose the right catalog drawer toggle.", result);
         RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown 切换页面\"", "Chinese hotkey legend must expose right catalog page cycling.", result);
         RequireText(chineseText, "[\"hotkeys.catalog.3\"] = \"点击卡片/来源通道\"", "Chinese hotkey legend must expose right catalog card and provider interactions.", result);
+        RequireText(chineseText, "[\"hotkeys.focus.title\"] = \"战场基础\"", "Chinese hotkey legend must label the command basics focus strip.", result);
         ForbidText(selectionInput, "HandleMoveModeHotkey", "Selection input must not dispatch a second move-mode hotkey path that conflicts with help/debug keys.", result);
         ForbidText(selectionHotkeys, "HandleMoveModeHotkey", "Selection hotkeys must not keep a dead move-mode hotkey handler.", result);
         ForbidText(selectionHotkeys, "Key.F1 => MoveCommandMode", "F1 must remain owned by the hotkey legend instead of also changing move mode.", result);

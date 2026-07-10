@@ -302,8 +302,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.ability.state.active\"] = \"ON\"", "English ability cards must expose compact active state.");
     RequireText(controlBindingCatalog, "public static IReadOnlyList<ControlBindingSection> Sections", "Control binding sections must live in a shared catalog.");
     RequireText(controlBindingCatalog, "public static IReadOnlyList<string> SettingsOverviewRowKeys", "Settings controls overview must draw from the shared binding catalog.");
+    RequireText(controlBindingCatalog, "public static IReadOnlyList<ControlBindingSectionKind> CommandOverlayFocusSections", "Hotkey legend focus strip must draw focus sections from the shared binding catalog.");
+    RequireText(controlBindingCatalog, "ControlBindingSectionKind.Orders,\n        ControlBindingSectionKind.Catalog,\n        ControlBindingSectionKind.Groups,\n        ControlBindingSectionKind.Build", "Hotkey legend focus sections must cover command modes, catalog, groups, and Shift-batch production.");
     RequireText(controlBindingCatalog, "\"hotkeys.build.4\"", "Shared binding catalog must include batch production controls.");
     RequireText(hotkeys, "ControlBindingCatalog.Sections", "Hotkey legend must draw rows from the shared binding catalog.");
+    RequireText(hotkeys, "DrawFocusStrip()", "Hotkey legend must surface a compact battle command basics strip.");
+    RequireText(hotkeys, "ControlBindingCatalog.CommandOverlayFocusSections", "Hotkey legend focus strip must be driven by the shared binding catalog.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionSelect\"", "Settings overlay must expose a stable controls section selector node.");
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.");
@@ -318,6 +322,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown cycle pages\"", "English hotkey legend must expose right catalog page cycling.");
     RequireText(englishText, "[\"hotkeys.catalog.3\"] = \"Click cards / provider lanes\"", "English hotkey legend must expose right catalog card and provider interactions.");
     RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.");
+    RequireText(englishText, "[\"hotkeys.focus.title\"] = \"BATTLE BASICS\"", "English hotkey legend must label the command basics focus strip.");
     RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
     RequireText(englishText, "[\"settings.controls.tooltip\"]", "English settings controls tooltip must exist.");
     ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
@@ -396,6 +401,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"hotkeys.catalog.2\"] = \"PageUp/PageDown 切换页面\"", "Chinese hotkey legend must expose right catalog page cycling.");
     RequireText(chineseText, "[\"hotkeys.catalog.3\"] = \"点击卡片/来源通道\"", "Chinese hotkey legend must expose right catalog card and provider interactions.");
     RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.");
+    RequireText(chineseText, "[\"hotkeys.focus.title\"] = \"战场基础\"", "Chinese hotkey legend must label the command basics focus strip.");
     RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");
     RequireText(chineseText, "[\"settings.controls.tooltip\"]", "Chinese settings controls tooltip must exist.");
     ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");

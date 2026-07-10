@@ -38,4 +38,12 @@ public static class ControlBindingCatalog
         "hotkeys.build.4",
         "hotkeys.camera.3",
     ];
+
+    public static IReadOnlyList<ControlBindingSectionKind> CommandOverlayFocusSections { get; } =
+    [
+        ControlBindingSectionKind.Orders,
+        ControlBindingSectionKind.Catalog,
+        ControlBindingSectionKind.Groups,
+        ControlBindingSectionKind.Build,
+    ];
 }

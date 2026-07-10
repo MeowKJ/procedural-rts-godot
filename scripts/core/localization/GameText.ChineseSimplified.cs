@@ -451,6 +451,7 @@ public static partial class GameText
         ["hotkeys.hint.close"] = "F1 关闭",
         ["hotkeys.title"] = "热键",
         ["hotkeys.subtitle"] = "战场指挥参考",
+        ["hotkeys.focus.title"] = "战场基础",
         ["hotkeys.camera"] = "镜头",
         ["hotkeys.camera.1"] = "WASD / 边缘滚动",
         ["hotkeys.camera.2"] = "滚轮缩放",
