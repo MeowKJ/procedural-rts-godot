@@ -100,6 +100,11 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "GameText.T(\"ui.noSelection.commandHint\")", "No-selection command panel hint must be i18n-backed.");
+    RequireText(hudLayer, "private bool ShouldShowNoSelectionCommandHint()", "No-selection command panel hint must stay inside HUD presentation state.");
+    RequireText(hudLayer, "!hasSelection\n            && !buildModeActive", "No-selection command panel hint must only appear when no selection or build placement is active.");
+    RequireText(hudLayer, "if (ShouldShowNoSelectionCommandHint())\n            {\n                RestoreCatalogStatusText();", "Production status updates must not overwrite the no-selection command panel hint.");
+    RequireText(hudLayer, "wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint()", "HUD context changes must restore the no-selection command panel hint when entering or leaving build placement.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
@@ -288,6 +293,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.");
+    RequireText(englishText, "[\"ui.noSelection.commandHint\"] = \"Select units/producer\\nTab cycles catalog\"", "English no-selection command panel hint must fit the compact inspector slot.");
     RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
@@ -377,6 +383,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.");
+    RequireText(chineseText, "[\"ui.noSelection.commandHint\"] = \"选择单位/生产建筑\\nTab 切换目录\"", "Chinese no-selection command panel hint must fit the compact inspector slot.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectAbility\"]", "Chinese HUD catalog ability inspector text must exist.");

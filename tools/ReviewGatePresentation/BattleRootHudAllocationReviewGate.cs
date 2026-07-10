@@ -69,6 +69,11 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "GameText.T(\"ui.noSelection.commandHint\")", "No-selection command panel hint must be i18n-backed.", result);
+        RequireText(hudLayer, "private bool ShouldShowNoSelectionCommandHint()", "No-selection command panel hint must stay inside HUD presentation state.", result);
+        RequireText(hudLayer, "!hasSelection\n            && !buildModeActive", "No-selection command panel hint must only appear when no selection or build placement is active.", result);
+        RequireText(hudLayer, "if (ShouldShowNoSelectionCommandHint())\n            {\n                RestoreCatalogStatusText();", "Production status updates must not overwrite the no-selection command panel hint.", result);
+        RequireText(hudLayer, "wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint()", "HUD context changes must restore the no-selection command panel hint when entering or leaving build placement.", result);
         RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
@@ -219,6 +224,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English upgrade inspector text must include source context.", result);
         RequireText(englishProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(englishProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"Select support unit\\nno ability source\"", "English Abilities empty state must explain the missing selected-unit ability source.", result);
+        RequireText(englishProviderText, "[\"ui.noSelection.commandHint\"] = \"Select units/producer\\nTab cycles catalog\"", "English no-selection command panel hint must fit the compact inspector slot.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.self\"] = \"SELF\"", "English ability cards must expose self-target grammar.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.point\"] = \"POINT\"", "English ability cards must expose point-target grammar.", result);
         RequireText(englishProviderText, "[\"ui.ability.grammar.target\"] = \"TARGET\"", "English ability cards must expose generic target grammar.", result);
@@ -243,6 +249,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] 来源 {2}", "Chinese upgrade inspector text must include source context.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.abilitiesEmpty\"] = \"选择支援单位\\n无能力来源\"", "Chinese Abilities empty state must explain the missing selected-unit ability source.", result);
+        RequireText(chineseProviderText, "[\"ui.noSelection.commandHint\"] = \"选择单位/生产建筑\\nTab 切换目录\"", "Chinese no-selection command panel hint must fit the compact inspector slot.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.self\"] = \"自身\"", "Chinese ability cards must expose self-target grammar.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.point\"] = \"地点\"", "Chinese ability cards must expose point-target grammar.", result);
         RequireText(chineseProviderText, "[\"ui.ability.grammar.target\"] = \"目标\"", "Chinese ability cards must expose generic target grammar.", result);

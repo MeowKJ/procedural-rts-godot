@@ -173,6 +173,7 @@ public partial class HudLayer : CanvasLayer
 
     public void SetHudContext(bool hasSelection, bool hasBuildingSelection, bool buildModeActive)
     {
+        var wasShowingNoSelectionCommandHint = ShouldShowNoSelectionCommandHint();
         _hasSelection = hasSelection;
         _hasBuildingSelection = hasBuildingSelection;
         _buildModeActive = buildModeActive;
@@ -190,6 +191,11 @@ public partial class HudLayer : CanvasLayer
         if (_commandRibbon is not null)
         {
             _commandRibbon.Visible = true;
+        }
+
+        if (_productionValue is not null && wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint())
+        {
+            RestoreCatalogStatusText();
         }
     }
 
@@ -239,7 +245,14 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(status);
+            if (ShouldShowNoSelectionCommandHint())
+            {
+                RestoreCatalogStatusText();
+            }
+            else
+            {
+                SetCatalogStatusText(status);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
@@ -509,6 +522,12 @@ public partial class HudLayer : CanvasLayer
 
     private void RestoreCatalogStatusText()
     {
+        if (ShouldShowNoSelectionCommandHint())
+        {
+            SetCatalogStatusText(GameText.T("ui.noSelection.commandHint"));
+            return;
+        }
+
         SetCatalogStatusText(_selectedCatalogMode switch
         {
             CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),
@@ -517,6 +536,18 @@ public partial class HudLayer : CanvasLayer
                 : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
             _ => string.IsNullOrWhiteSpace(_lastProductionStatus) ? GameText.T("ui.status.ready") : _lastProductionStatus,
         });
+    }
+
+    private bool ShouldShowNoSelectionCommandHint()
+    {
+        return ShouldShowNoSelectionCommandHint(_hasSelection, _buildModeActive);
+    }
+
+    private bool ShouldShowNoSelectionCommandHint(bool hasSelection, bool buildModeActive)
+    {
+        return !hasSelection
+            && !buildModeActive
+            && (_selectedCatalogMode == CatalogModeKind.Build || _selectedCatalogMode == CatalogModeKind.Train);
     }
 
     private void RefreshBuildCards()

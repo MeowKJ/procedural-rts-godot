@@ -60,9 +60,7 @@ public partial class HudLayer : CanvasLayer
 
         if (mode != CatalogModeKind.Abilities && _productionValue is not null)
         {
-            SetCatalogStatusText(string.IsNullOrWhiteSpace(_lastProductionStatus)
-                ? GameText.T("ui.status.ready")
-                : _lastProductionStatus);
+            RestoreCatalogStatusText();
         }
 
         RefreshCommandCards();
