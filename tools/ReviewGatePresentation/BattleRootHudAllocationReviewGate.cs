@@ -68,7 +68,13 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "List<BuildOptionSnapshot> _buildCardStates", "HudLayer build catalog cards must keep reusable build option state storage.", result);
         RequireText(hudState, "Label _catalogOverviewValue", "HudLayer must own a compact catalog overview readout.", result);
         RequireText(hudBuild, "Name = \"CatalogOverview\"", "Right command panel catalog overview must expose a stable node.", result);
+        RequireText(hudBuild, "Name = \"CatalogBreadcrumb\"", "Right command panel catalog breadcrumb must expose a stable node.", result);
         RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.", result);
+        RequireText(hudLayer, "RefreshCatalogBreadcrumb()", "Catalog breadcrumb must refresh with the right catalog overview state.", result);
+        RequireText(hudLayer, "CatalogBreadcrumbProviderText(CurrentConstructionProviderLaneState(), _selectedConstructionProviderLaneScope)", "Build breadcrumb must include the selected construction provider scope.", result);
+        RequireText(hudLayer, "CatalogBreadcrumbProviderText(CurrentProductionProviderLaneState(), _selectedProductionProviderLaneScope)", "Train breadcrumb must include the selected production provider scope.", result);
+        RequireText(hudLayer, "CatalogBreadcrumbBuildCategoryText(_selectedBuildCategory)", "Build breadcrumb must include the selected Build category.", result);
+        RequireText(hudLayer, "CatalogBreadcrumbProductionCategoryText(_selectedProductionCategory)", "Train breadcrumb must include the selected Train category.", result);
         RequireText(hudLayer, "HelpText = helpText", "Catalog mode buttons must carry localized page help text.", result);
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
@@ -214,6 +220,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English provider summary must use a rail-safe offline code.", result);
         RequireText(englishProviderText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.", result);
         RequireText(englishProviderText, "[\"ui.catalog.overview.upgrades\"] = \"{0} shells | no lanes\"", "English Upgrades overview must stay a non-provider project shell.", result);
+        RequireText(englishProviderText, "[\"ui.catalog.breadcrumb.build\"] = \"BUILD/{0}/{1}\"", "English Build breadcrumb format must be compact.", result);
+        RequireText(englishProviderText, "[\"ui.catalog.breadcrumb.train\"] = \"TRAIN/{0}/{1}\"", "English Train breadcrumb format must be compact.", result);
+        RequireText(englishProviderText, "[\"ui.catalog.breadcrumb.noLane\"] = \"NO LANE\"", "English Upgrades breadcrumb must make the no-lane context explicit.", result);
         RequireText(englishProviderText, "[\"ui.catalog.upgradesCount\"] = \"{0} project shells\\nsource: {1}; read-only\"", "English Upgrades status must explain read-only selected-source project shells.", result);
         RequireText(englishProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}cr {1}s\"", "English upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(englishProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] via {2}", "English upgrade inspector text must include source context.", result);
@@ -238,6 +247,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(chineseProviderText, "[\"ui.providerLane.summaryOffline\"]", "Chinese provider summary must use a rail-safe offline code.", result);
         RequireText(chineseProviderText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.overview.upgrades\"] = \"{0}壳 | 无通道\"", "Chinese Upgrades overview must stay a non-provider project shell.", result);
+        RequireText(chineseProviderText, "[\"ui.catalog.breadcrumb.build\"] = \"建造/{0}/{1}\"", "Chinese Build breadcrumb format must be compact.", result);
+        RequireText(chineseProviderText, "[\"ui.catalog.breadcrumb.train\"] = \"训练/{0}/{1}\"", "Chinese Train breadcrumb format must be compact.", result);
+        RequireText(chineseProviderText, "[\"ui.catalog.breadcrumb.noLane\"] = \"无通道\"", "Chinese Upgrades breadcrumb must make the no-lane context explicit.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.upgradesCount\"] = \"{0} 张项目壳\\n来源: {1}; 只读\"", "Chinese Upgrades status must explain read-only selected-source project shells.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.upgradeCardMetric\"] = \"{0}资 {1}s\"", "Chinese upgrade shell cards must expose compact visible cost/time metrics.", result);
         RequireText(chineseProviderText, "[\"ui.catalog.inspectUpgrade\"] = \"{0} [{1}] 来源 {2}", "Chinese upgrade inspector text must include source context.", result);

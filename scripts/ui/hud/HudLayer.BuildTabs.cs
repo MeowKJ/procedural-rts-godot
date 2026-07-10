@@ -53,11 +53,6 @@ public partial class HudLayer : CanvasLayer
             tab.Visible = mode == CatalogModeKind.Train;
         }
 
-        if (_catalogSurfaceLabel is not null)
-        {
-            _catalogSurfaceLabel.Text = CatalogModeSurfaceText(mode);
-        }
-
         if (mode != CatalogModeKind.Abilities && _productionValue is not null)
         {
             SetCatalogStatusText(string.IsNullOrWhiteSpace(_lastProductionStatus)
@@ -150,6 +145,7 @@ public partial class HudLayer : CanvasLayer
 
     private void RefreshCatalogOverview()
     {
+        RefreshCatalogBreadcrumb();
         if (_catalogOverviewValue is null)
         {
             return;
@@ -266,5 +262,80 @@ public partial class HudLayer : CanvasLayer
         }
 
         return Math.Min(count, MaxProductionProviderLaneButtons);
+    }
+
+    private void RefreshCatalogBreadcrumb()
+    {
+        if (_catalogBreadcrumbValue is null)
+        {
+            return;
+        }
+
+        _catalogBreadcrumbValue.Text = CompactText(CatalogBreadcrumbText(), 24);
+    }
+
+    private string CatalogBreadcrumbText()
+    {
+        return _selectedCatalogMode switch
+        {
+            CatalogModeKind.Build => GameText.Format(
+                "ui.catalog.breadcrumb.build",
+                CatalogBreadcrumbBuildCategoryText(_selectedBuildCategory),
+                CatalogBreadcrumbProviderText(CurrentConstructionProviderLaneState(), _selectedConstructionProviderLaneScope)),
+            CatalogModeKind.Train => GameText.Format(
+                "ui.catalog.breadcrumb.train",
+                CatalogBreadcrumbProductionCategoryText(_selectedProductionCategory),
+                CatalogBreadcrumbProviderText(CurrentProductionProviderLaneState(), _selectedProductionProviderLaneScope)),
+            CatalogModeKind.Upgrades => GameText.Format(
+                "ui.catalog.breadcrumb.upgrades",
+                GameText.T("ui.catalog.breadcrumb.category.projects"),
+                GameText.T("ui.catalog.breadcrumb.noLane")),
+            CatalogModeKind.Abilities => GameText.Format(
+                "ui.catalog.breadcrumb.abilities",
+                _abilityCardStates.Count == 0
+                    ? GameText.T("ui.catalog.breadcrumb.abilities.none")
+                    : GameText.T("ui.catalog.breadcrumb.abilities.selected")),
+            _ => "",
+        };
+    }
+
+    private static string CatalogBreadcrumbProviderText(ProductionProviderLaneState? state, ProductionProviderLaneScope scope)
+    {
+        if (scope == ProductionProviderLaneScope.Specific && state is not null && !string.IsNullOrWhiteSpace(state.ShortLabel))
+        {
+            return state.ShortLabel;
+        }
+
+        return CatalogOverviewProviderScopeText(scope);
+    }
+
+    private static string CatalogBreadcrumbBuildCategoryText(BuildCategory category)
+    {
+        return category switch
+        {
+            BuildCategory.Command => GameText.T("ui.catalog.breadcrumb.category.command"),
+            BuildCategory.Power => GameText.T("ui.catalog.breadcrumb.category.power"),
+            BuildCategory.Economy => GameText.T("ui.catalog.breadcrumb.category.economy"),
+            BuildCategory.Infantry => GameText.T("ui.catalog.breadcrumb.category.infantry"),
+            BuildCategory.Vehicle => GameText.T("ui.catalog.breadcrumb.category.vehicle"),
+            BuildCategory.Defense => GameText.T("ui.catalog.breadcrumb.category.defense"),
+            BuildCategory.Air => GameText.T("ui.catalog.breadcrumb.category.air"),
+            BuildCategory.Naval => GameText.T("ui.catalog.breadcrumb.category.naval"),
+            _ => "",
+        };
+    }
+
+    private static string CatalogBreadcrumbProductionCategoryText(ProductionCategory category)
+    {
+        return category switch
+        {
+            ProductionCategory.Infantry => GameText.T("ui.catalog.breadcrumb.category.infantry"),
+            ProductionCategory.Vehicle => GameText.T("ui.catalog.breadcrumb.category.vehicle"),
+            ProductionCategory.Economy => GameText.T("ui.catalog.breadcrumb.category.economy"),
+            ProductionCategory.Defense => GameText.T("ui.catalog.breadcrumb.category.defense"),
+            ProductionCategory.Air => GameText.T("ui.catalog.breadcrumb.category.air"),
+            ProductionCategory.Naval => GameText.T("ui.catalog.breadcrumb.category.naval"),
+            _ => "",
+        };
     }
 }

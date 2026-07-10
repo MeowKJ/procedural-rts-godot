@@ -98,8 +98,14 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
+    RequireText(hudLayer, "Name = \"CatalogBreadcrumb\"", "Right command panel must expose a stable catalog breadcrumb node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "RefreshCatalogBreadcrumb()", "Catalog breadcrumb must refresh with the right catalog overview state.");
+    RequireText(hudLayer, "CatalogBreadcrumbProviderText(CurrentConstructionProviderLaneState(), _selectedConstructionProviderLaneScope)", "Build breadcrumb must include the selected construction provider scope.");
+    RequireText(hudLayer, "CatalogBreadcrumbProviderText(CurrentProductionProviderLaneState(), _selectedProductionProviderLaneScope)", "Train breadcrumb must include the selected production provider scope.");
+    RequireText(hudLayer, "CatalogBreadcrumbBuildCategoryText(_selectedBuildCategory)", "Build breadcrumb must include the selected Build category.");
+    RequireText(hudLayer, "CatalogBreadcrumbProductionCategoryText(_selectedProductionCategory)", "Train breadcrumb must include the selected Train category.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
@@ -288,6 +294,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.");
+    RequireText(englishText, "[\"ui.catalog.breadcrumb.build\"] = \"BUILD/{0}/{1}\"", "English Build breadcrumb format must be compact.");
+    RequireText(englishText, "[\"ui.catalog.breadcrumb.train\"] = \"TRAIN/{0}/{1}\"", "English Train breadcrumb format must be compact.");
+    RequireText(englishText, "[\"ui.catalog.breadcrumb.noLane\"] = \"NO LANE\"", "English Upgrades breadcrumb must make the no-lane context explicit.");
     RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectAbility\"]", "English HUD catalog ability inspector text must exist.");
@@ -377,6 +386,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.");
+    RequireText(chineseText, "[\"ui.catalog.breadcrumb.build\"] = \"建造/{0}/{1}\"", "Chinese Build breadcrumb format must be compact.");
+    RequireText(chineseText, "[\"ui.catalog.breadcrumb.train\"] = \"训练/{0}/{1}\"", "Chinese Train breadcrumb format must be compact.");
+    RequireText(chineseText, "[\"ui.catalog.breadcrumb.noLane\"] = \"无通道\"", "Chinese Upgrades breadcrumb must make the no-lane context explicit.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.train\"] = \"点击排队 | Shift x5 | 通道\"", "Chinese Train card input hint must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectAbility\"]", "Chinese HUD catalog ability inspector text must exist.");
