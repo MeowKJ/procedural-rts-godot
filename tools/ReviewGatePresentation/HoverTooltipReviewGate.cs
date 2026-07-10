@@ -66,6 +66,18 @@ static class HoverTooltipReviewGate
         RequireText(chineseText, "[\"preview.repair.structure\"] = \"修理建筑\"", "Chinese repair preview must distinguish structure repair targets.", result);
         RequireText(chineseText, "[\"preview.repair.invalid\"] = \"无法修理\"", "Chinese repair preview must label invalid repair targets.", result);
         RequireText(battleRootAlerts, "_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState", "BattleRoot must route active build preview ahead of selection preview.", result);
+        RequireText(hudLayer, "Name = \"RibbonTargetingContext\"", "Command ribbon must expose a stable targeting-context label.", result);
+        RequireText(hudLayer, "RefreshTargetingContext(preview)", "Command preview updates must refresh the command-ribbon targeting context.", result);
+        RequireText(hudLayer, "TargetingContextText(CommandPreviewState preview)", "Command ribbon targeting context must be derived from preview state only.", result);
+        RequireText(hudLayer, "CommandPreviewKind.BuildValid or CommandPreviewKind.BuildInvalid", "Command ribbon targeting context must cover active build placement.", result);
+        RequireText(hudLayer, "CommandPreviewKind.Rally or CommandPreviewKind.Repair", "Command ribbon targeting context must cover active rally and repair targeting.", result);
+        RequireText(hudLayer, "CommandPreviewKind.TargetHover => IsAbilityTargetingLabel(preview.Label)", "Command ribbon targeting context must admit armed ability labels without showing generic hover labels.", result);
+        RequireText(englishText, "[\"command.target.none\"] = \"TARGET --\"", "English targeting-context idle copy must exist.", result);
+        RequireText(englishText, "[\"command.target.active\"] = \"TARGET {0}\"", "English targeting-context active copy must exist.", result);
+        RequireText(englishText, "[\"command.target.blocked\"] = \"TARGET BLOCKED {0}\"", "English targeting-context blocked copy must exist.", result);
+        RequireText(chineseText, "[\"command.target.none\"] = \"目标 --\"", "Chinese targeting-context idle copy must exist.", result);
+        RequireText(chineseText, "[\"command.target.active\"] = \"目标 {0}\"", "Chinese targeting-context active copy must exist.", result);
+        RequireText(chineseText, "[\"command.target.blocked\"] = \"目标受阻 {0}\"", "Chinese targeting-context blocked copy must exist.", result);
         RequireText(tooltips, "MatchupFromScore(selectedArmed, targeters, bestScore)", "Hover matchup labels must be derived from selected-unit target coverage and combat profile score.", result);
         RequireText(tooltips, "preview.matchup.cannotTarget", "Hover matchup labels must expose cannot-target feedback.", result);
         RequireText(hotkeys, "_hint.Visible = false", "Closed hotkey legend must not leave persistent instructional HUD copy.", result);

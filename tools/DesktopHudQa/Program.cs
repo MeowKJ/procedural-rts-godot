@@ -243,6 +243,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(selectionController, "GameText.T(\"preview.rally.point\")", "Armed rally preview must distinguish point targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must distinguish resource targets.");
     RequireText(selectionController, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must distinguish friendly-unit targets.");
+    RequireText(hudLayer, "Name = \"RibbonTargetingContext\"", "Command ribbon must expose a stable targeting-context label.");
+    RequireText(hudLayer, "RefreshTargetingContext(preview)", "Command preview updates must refresh ribbon targeting context.");
+    RequireText(hudLayer, "TargetingContextText(CommandPreviewState preview)", "Ribbon targeting context must be derived from command preview state.");
+    RequireText(hudLayer, "CommandPreviewKind.BuildValid or CommandPreviewKind.BuildInvalid", "Ribbon targeting context must cover active build placement.");
+    RequireText(hudLayer, "CommandPreviewKind.Rally or CommandPreviewKind.Repair", "Ribbon targeting context must cover rally and repair targeting.");
+    RequireText(hudLayer, "CommandPreviewKind.TargetHover => IsAbilityTargetingLabel(preview.Label)", "Ribbon targeting context must admit armed ability labels without generic hover spam.");
     RequireText(hudLayer, "ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();", "Command ribbon sell action must route through the sell-or-cancel request path.");
     RequireText(hudLayer, "_sellOrCancelAction = ribbonCancel;", "Command ribbon sell action must keep a stable control reference for context affordance.");
     RequireText(hudLayer, "RefreshSellOrCancelAction()", "Command ribbon sell action must refresh context from selection and queue state.");
@@ -350,6 +356,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.");
     RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.");
     RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.");
+    RequireText(englishText, "[\"command.target.none\"] = \"TARGET --\"", "English targeting-context idle copy must exist.");
+    RequireText(englishText, "[\"command.target.active\"] = \"TARGET {0}\"", "English targeting-context active copy must exist.");
+    RequireText(englishText, "[\"command.target.blocked\"] = \"TARGET BLOCKED {0}\"", "English targeting-context blocked copy must exist.");
     RequireText(englishText, "[\"ui.sellOrCancel.sellTooltip\"]", "English sell/cancel ribbon context tooltip must exist.");
     RequireText(englishText, "[\"ui.detail.building\"] = \"{0}   {1}\\n{2}\"", "English selected-building detail must reserve a sell-refund row.");
     RequireText(englishText, "[\"ui.detail.sellRefund\"] = \"SELL refund {0} credits\"", "English selected-building detail must preview sell refund.");
@@ -428,6 +437,9 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.");
+    RequireText(chineseText, "[\"command.target.none\"] = \"目标 --\"", "Chinese targeting-context idle copy must exist.");
+    RequireText(chineseText, "[\"command.target.active\"] = \"目标 {0}\"", "Chinese targeting-context active copy must exist.");
+    RequireText(chineseText, "[\"command.target.blocked\"] = \"目标受阻 {0}\"", "Chinese targeting-context blocked copy must exist.");
     RequireText(hudSync, "_hud.SetAbilityCardState(RuntimeSelectedAbilityCardStates())", "BattleRoot must feed selected-unit ability cards into the HUD.");
     RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
     RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");

@@ -62,6 +62,7 @@ public partial class HudLayer : CanvasLayer
     private IconActionButton _settingsButton = null!;
     private MinimapSurface _minimapSurface = null!;
     private CommandPreviewOverlay _commandPreview = null!;
+    private Label _targetingContextValue = null!;
     private readonly List<AlertRow> _alertRows = [];
     private readonly List<ControlGroupSlot> _controlGroupSlots = [];
     private readonly List<MoveModeButton> _moveModeButtons = [];
@@ -104,6 +105,7 @@ public partial class HudLayer : CanvasLayer
     private string _lastRepeatProductionRefreshKey = "";
     private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
+    private CommandPreviewState _lastCommandPreview = CommandPreviewState.None;
 
     public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
     {
@@ -316,9 +318,79 @@ public partial class HudLayer : CanvasLayer
 
     public void SetCommandPreview(CommandPreviewState preview)
     {
+        _lastCommandPreview = preview;
         _commandPreview.Preview = preview;
         ApplyCommandCursor(preview);
+        RefreshTargetingContext(preview);
         _commandPreview.QueueRedraw();
+    }
+
+    private void RefreshTargetingContext(CommandPreviewState preview)
+    {
+        if (_targetingContextValue is null)
+        {
+            return;
+        }
+
+        _targetingContextValue.Text = TargetingContextText(preview);
+        SetLabelColor(_targetingContextValue, TargetingContextColor(preview));
+    }
+
+    private static string TargetingContextText(CommandPreviewState preview)
+    {
+        if (!IsCommandTargetingContext(preview))
+        {
+            return GameText.T("command.target.none");
+        }
+
+        var label = string.IsNullOrWhiteSpace(preview.Label)
+            ? GameText.T("command.target.generic")
+            : preview.Label;
+        var key = preview.IsValid && preview.Kind != CommandPreviewKind.BuildInvalid
+            ? "command.target.active"
+            : "command.target.blocked";
+        return CompactText(GameText.Format(key, label), 30);
+    }
+
+    private static bool IsCommandTargetingContext(CommandPreviewState preview)
+    {
+        return preview.Kind switch
+        {
+            CommandPreviewKind.BuildValid or CommandPreviewKind.BuildInvalid => true,
+            CommandPreviewKind.Rally or CommandPreviewKind.Repair => true,
+            CommandPreviewKind.TargetHover => IsAbilityTargetingLabel(preview.Label),
+            _ => false,
+        };
+    }
+
+    private static bool IsAbilityTargetingLabel(string label)
+    {
+        return !string.IsNullOrWhiteSpace(label)
+            && !string.Equals(label, GameText.T("preview.enemy"), StringComparison.Ordinal)
+            && !string.Equals(label, GameText.T("preview.unit"), StringComparison.Ordinal)
+            && !string.Equals(label, GameText.T("preview.attackStructure"), StringComparison.Ordinal)
+            && !string.Equals(label, GameText.T("preview.enemyStructure"), StringComparison.Ordinal)
+            && !string.Equals(label, GameText.T("preview.structure"), StringComparison.Ordinal)
+            && !string.Equals(label, GameText.T("preview.resource"), StringComparison.Ordinal);
+    }
+
+    private static Color TargetingContextColor(CommandPreviewState preview)
+    {
+        if (!IsCommandTargetingContext(preview))
+        {
+            return InkMuted;
+        }
+
+        if (!preview.IsValid || preview.Kind == CommandPreviewKind.BuildInvalid)
+        {
+            return Danger;
+        }
+
+        return preview.Kind switch
+        {
+            CommandPreviewKind.Rally or CommandPreviewKind.Repair => Mint,
+            _ => Cyan,
+        };
     }
 
     public void SetOutcomeBanner(GameOutcome outcome, string detail)
