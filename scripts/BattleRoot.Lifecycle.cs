@@ -255,6 +255,7 @@ public partial class BattleRoot
             RepairRequested = OnRepairRequested,
             AbilityRequested = OnAbilityRequested,
             BuildKindRequested = OnBuildKindRequested,
+            CatalogInspectorIntentRequested = OnCatalogInspectorIntentRequested,
             MinimapJumpRequested = OnMinimapJumpRequested,
             MoveModeRequested = OnMoveModeRequested,
             UnitStanceRequested = OnUnitStanceRequested,

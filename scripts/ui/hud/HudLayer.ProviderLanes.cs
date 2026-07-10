@@ -384,7 +384,7 @@ public partial class HudLayer : CanvasLayer
     {
         _selectedProductionProviderLaneScope = state.Scope;
         _selectedProductionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
-        SetCatalogStatusText(GameText.Format(
+        ResetCatalogInspectorContext(GameText.Format(
             "ui.providerLane.selected",
             state.Label,
             state.ProviderCount,
@@ -399,7 +399,7 @@ public partial class HudLayer : CanvasLayer
     {
         _selectedConstructionProviderLaneScope = state.Scope;
         _selectedConstructionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
-        SetCatalogStatusText(GameText.Format(
+        ResetCatalogInspectorContext(GameText.Format(
             "ui.constructionProviderLane.selected",
             state.Label,
             state.ProviderCount,
@@ -429,6 +429,7 @@ public partial class HudLayer : CanvasLayer
 
         _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
         _selectedProductionProviderId = 0;
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
     }
 
     private void ValidateConstructionProviderLaneSelection()
@@ -450,6 +451,7 @@ public partial class HudLayer : CanvasLayer
 
         _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
         _selectedConstructionProviderId = 0;
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
     }
 
     private void RefreshProductionProviderLaneButtons()

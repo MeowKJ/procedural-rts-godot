@@ -243,7 +243,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(CommandFailurePresentation.PanelText(status));
+            ShowCatalogInspectorCommandFeedback(CommandFailurePresentation.PanelText(status));
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
@@ -271,7 +271,8 @@ public partial class HudLayer : CanvasLayer
         _lastProductionStatus = "";
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(GameText.T("ui.status.ready"));
+            ClearCatalogInspectorCommandFeedback();
+            SetCatalogInspectorDefault(GameText.T("ui.status.ready"));
         }
     }
 
@@ -486,6 +487,7 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var stale in _commandCardStaleIds)
         {
+            InvalidateCatalogInspectorItem(CommandCardInspectorItemId(stale));
             _commandButtons[stale].QueueFree();
             _commandButtons.Remove(stale);
         }
@@ -525,23 +527,6 @@ public partial class HudLayer : CanvasLayer
 
         ClearUpgradeProjectCards();
         RefreshAbilityCards();
-    }
-
-    private void SetCatalogStatusText(string status)
-    {
-        _productionValue.Text = CompactMultiline(status, 34);
-    }
-
-    private void RestoreCatalogStatusText()
-    {
-        SetCatalogStatusText(_selectedCatalogMode switch
-        {
-            CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),
-            CatalogModeKind.Abilities => _abilityCardStates.Count == 0
-                ? GameText.T("ui.catalog.abilitiesEmpty")
-                : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
-            _ => LastProductionCatalogStatusText(),
-        });
     }
 
     private string LastProductionCatalogStatusText()

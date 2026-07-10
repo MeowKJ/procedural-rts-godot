@@ -59,10 +59,7 @@ public partial class HudLayer : CanvasLayer
             _catalogSurfaceLabel.Text = CatalogModeSurfaceText(mode);
         }
 
-        if (mode != CatalogModeKind.Abilities && _productionValue is not null)
-        {
-            SetCatalogStatusText(LastProductionCatalogStatusText());
-        }
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
 
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
@@ -79,6 +76,7 @@ public partial class HudLayer : CanvasLayer
             tab.SetSelected(tab.Category == category);
         }
 
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
         RefreshCommandCards();
         RefreshCatalogOverview();
     }
@@ -118,7 +116,9 @@ public partial class HudLayer : CanvasLayer
         SelectCatalogMode(next);
         _manualDrawerOpen = true;
         _drawerInactivity = 0;
-        SetCatalogStatusText(GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
+        ShowCatalogInspectorHover(
+            CatalogModeInspectorItemId(next),
+            GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
     }
 
     private static string CatalogModeLabelText(CatalogModeKind mode)
@@ -143,6 +143,7 @@ public partial class HudLayer : CanvasLayer
             tab.SetSelected(tab.Category == category);
         }
 
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
         ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();

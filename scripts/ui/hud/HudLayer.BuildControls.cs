@@ -169,12 +169,13 @@ public partial class HudLayer : CanvasLayer
             TooltipText = helpText,
         };
         RegisterCatalogModeButton(button);
+        var inspectorItemId = CatalogModeInspectorItemId(mode);
         button.Pressed += () => SelectCatalogMode(mode);
-        button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));
-        button.MouseEntered += () => SetCatalogStatusText(button.HelpText);
-        button.MouseExited += RestoreCatalogStatusText;
-        button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));
-        button.FocusExited += RestoreCatalogStatusText;
+        button.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModePageSelectedText(button));
+        button.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.HelpText);
+        button.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
+        button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModeFocusText(button));
+        button.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
         parent.AddChild(button);
     }
 
@@ -214,15 +215,16 @@ public partial class HudLayer : CanvasLayer
         };
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
-        button.MouseEntered += () => SetCatalogStatusText(button.InspectorText);
+        var inspectorItemId = CommandCardInspectorItemId(optionId);
+        button.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);
         button.MouseEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
-        button.MouseExited += RestoreCatalogStatusText;
-        button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);
+        button.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
+        button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);
         button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
-        button.FocusExited += () => RestoreCatalogStatusText();
+        button.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
         button.Pressed += () =>
         {
-            SetCatalogStatusText(button.InspectorText);
+            ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);
             if (!string.IsNullOrWhiteSpace(button.BuildKind))
             {
                 BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind));

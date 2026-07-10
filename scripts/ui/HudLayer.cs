@@ -16,6 +16,7 @@ public partial class HudLayer : CanvasLayer
     public Action? RepairRequested { get; init; }
     public Action<AbilityKind>? AbilityRequested { get; init; }
     public Action<string, int?>? BuildKindRequested { get; init; }
+    public Action<CatalogInspectorIntent>? CatalogInspectorIntentRequested { get; init; }
     public Action<Vector2>? MinimapJumpRequested { get; init; }
     public Action<MoveCommandMode>? MoveModeRequested { get; init; }
     public Action<UnitStance>? UnitStanceRequested { get; init; }
@@ -62,6 +63,7 @@ public partial class HudLayer : CanvasLayer
         BuildOutcomeBanner(root);
         BuildCommandPreview(root);
         ApplySoftOldCityPanelStyles();
+        InitializeCatalogInspector();
     }
 
     public override void _Process(double delta)
