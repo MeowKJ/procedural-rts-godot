@@ -28,15 +28,23 @@ static class MatchLifecycleReviewGate
         RequireText(settings, "Name = \"ControlsBindingOverview\"", "Settings overlay must expose a stable controls binding overview node.", result);
         RequireText(settings, "Name = \"ControlsBindingSectionSelect\"", "Settings overlay must expose a stable controls section selector node.", result);
         RequireText(settings, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.", result);
+        RequireText(settings, "Name = \"ControlsBindingSectionSummary\"", "Settings overlay must expose stable selected-section binding status.", result);
         RequireText(settings, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.", result);
         RequireText(settings, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.", result);
+        RequireText(settings, "SettingsControlsSectionSummaryText(_selectedControlsSectionIndex)", "Settings overlay controls status must refresh from the selected shared binding section.", result);
         RequireText(settings, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.", result);
+        RequireText(settings, "section.RowKeys.Count", "Settings overlay controls status must derive binding counts from the shared catalog.", result);
+        RequireText(settings, "CatalogHasBindingConflict(section)", "Settings overlay controls status must derive conflict state from the shared catalog.", result);
         RequireText(settings, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.", result);
         ForbidText(settings, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.", result);
         RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.", result);
+        RequireText(englishText, "[\"settings.controls.sectionSummary\"]", "English settings controls selected-section status must exist.", result);
+        RequireText(englishText, "[\"settings.controls.noConflicts\"]", "English settings controls conflict status must exist.", result);
         RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.", result);
         ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
         RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.", result);
+        RequireText(chineseText, "[\"settings.controls.sectionSummary\"]", "Chinese settings controls selected-section status must exist.", result);
+        RequireText(chineseText, "[\"settings.controls.noConflicts\"]", "Chinese settings controls conflict status must exist.", result);
         RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.", result);
         ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
     }

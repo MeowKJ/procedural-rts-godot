@@ -31,6 +31,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
     private Label _controlsOverview = null!;
     private OptionButton _controlsSection = null!;
     private Label _controlsSectionRows = null!;
+    private Label _controlsSectionSummary = null!;
     private Label _volumeLabel = null!;
     private HSlider _volume = null!;
     private Label _volumeValue = null!;
@@ -251,9 +252,16 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsSectionRows = UiFactory.MakeLabel(SettingsControlsSectionText(_selectedControlsSectionIndex), 10, Ink);
         _controlsSectionRows.Name = "ControlsBindingSectionRows";
         _controlsSectionRows.Position = new Vector2(204, 448);
-        _controlsSectionRows.CustomMinimumSize = new Vector2(274, 66);
+        _controlsSectionRows.CustomMinimumSize = new Vector2(274, 48);
         _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
         _panel.AddChild(_controlsSectionRows);
+
+        _controlsSectionSummary = UiFactory.MakeLabel(SettingsControlsSectionSummaryText(_selectedControlsSectionIndex), 10, Mint);
+        _controlsSectionSummary.Name = "ControlsBindingSectionSummary";
+        _controlsSectionSummary.Position = new Vector2(204, 502);
+        _controlsSectionSummary.CustomMinimumSize = new Vector2(274, 18);
+        _controlsSectionSummary.TooltipText = GameText.T("settings.controls.tooltip");
+        _panel.AddChild(_controlsSectionSummary);
 
         _volumeLabel = UiFactory.MakeLabel(GameText.T("settings.masterAudio"), 12, InkMuted);
         _volumeLabel.Position = new Vector2(32, 526);
@@ -362,6 +370,7 @@ public partial class SettingsOverlayLayer : CanvasLayer
     {
         _selectedControlsSectionIndex = Mathf.Clamp((int)index, 0, ControlBindingCatalog.Sections.Count - 1);
         _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
+        _controlsSectionSummary.Text = SettingsControlsSectionSummaryText(_selectedControlsSectionIndex);
     }
 
     private void OnLanguageSelected(long index)
@@ -410,6 +419,8 @@ public partial class SettingsOverlayLayer : CanvasLayer
         _controlsSection.Select(_selectedControlsSectionIndex);
         _controlsSectionRows.Text = SettingsControlsSectionText(_selectedControlsSectionIndex);
         _controlsSectionRows.TooltipText = GameText.T("settings.controls.tooltip");
+        _controlsSectionSummary.Text = SettingsControlsSectionSummaryText(_selectedControlsSectionIndex);
+        _controlsSectionSummary.TooltipText = GameText.T("settings.controls.tooltip");
         _volumeLabel.Text = GameText.T("settings.masterAudio");
         _volume.TooltipText = GameText.T("settings.masterAudio.tooltip");
         _close.Text = GameText.T("settings.close");
@@ -443,6 +454,51 @@ public partial class SettingsOverlayLayer : CanvasLayer
         }
 
         return string.Join('\n', rows);
+    }
+
+    private static string SettingsControlsSectionSummaryText(int sectionIndex)
+    {
+        if (sectionIndex < 0 || sectionIndex >= ControlBindingCatalog.Sections.Count)
+        {
+            sectionIndex = 0;
+        }
+
+        var section = ControlBindingCatalog.Sections[sectionIndex];
+        var coverage = section.RowKeys.Count > 0
+            ? GameText.T("settings.controls.coverageReady")
+            : GameText.T("settings.controls.coverageEmpty");
+        var conflictStatus = CatalogHasBindingConflict(section)
+            ? GameText.T("settings.controls.conflicts")
+            : GameText.T("settings.controls.noConflicts");
+        return GameText.Format("settings.controls.sectionSummary", section.RowKeys.Count, coverage, conflictStatus);
+    }
+
+    private static bool CatalogHasBindingConflict(ControlBindingSection selectedSection)
+    {
+        for (var selectedRowIndex = 0; selectedRowIndex < selectedSection.RowKeys.Count; selectedRowIndex++)
+        {
+            var selectedRowKey = selectedSection.RowKeys[selectedRowIndex];
+            var matches = 0;
+            for (var sectionIndex = 0; sectionIndex < ControlBindingCatalog.Sections.Count; sectionIndex++)
+            {
+                var section = ControlBindingCatalog.Sections[sectionIndex];
+                for (var rowIndex = 0; rowIndex < section.RowKeys.Count; rowIndex++)
+                {
+                    if (section.RowKeys[rowIndex] != selectedRowKey)
+                    {
+                        continue;
+                    }
+
+                    matches++;
+                    if (matches > 1)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private partial class SettingsBackdrop : Control
