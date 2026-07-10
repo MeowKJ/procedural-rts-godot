@@ -73,6 +73,16 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.MouseEntered += () => SetCatalogStatusText(button.HelpText);", "Catalog mode button hover must explain the page in the inspector.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style focus feedback in the inspector.", result);
         RequireText(hudLayer, "button.Pressed += () => SetCatalogStatusText(CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page in the inspector.", result);
+        RequireText(hudLayer, "return GameText.Format(\"ui.catalog.modeSelected\", button.Label, CatalogContextResetText());", "Catalog mode button press must confirm the page and include compact reset context.", result);
+        RequireText(hudLayer, "GameText.Format(\"ui.catalog.modeSelected\", CatalogModeLabelText(next), CatalogContextResetText())", "Keyboard catalog cycling must confirm the page and include compact reset context.", result);
+        RequireText(hudLayer, "private void SetCatalogContextResetText()", "HudLayer must centralize catalog context reset feedback through the catalog inspector.", result);
+        RequireText(hudLayer, "\"ui.catalog.reset.build\"", "Build context reset feedback must use localized copy.", result);
+        RequireText(hudLayer, "\"ui.catalog.reset.train\"", "Train context reset feedback must use localized copy.", result);
+        RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.reset.upgrades\")", "Upgrades context reset feedback must use localized copy.", result);
+        RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.reset.abilities\")", "Abilities context reset feedback must use localized copy.", result);
+        RequireText(hudLayer, "CatalogContextProviderText(CurrentConstructionProviderLaneState(), _selectedConstructionProviderLaneScope)", "Build reset feedback must include selected construction provider context.", result);
+        RequireText(hudLayer, "CatalogContextProviderText(CurrentProductionProviderLaneState(), _selectedProductionProviderLaneScope)", "Train reset feedback must include selected production provider context.", result);
+        RequireText(hudLayer, "state.QueueCount,\n            CatalogContextResetText()))", "Provider lane selection must preserve lane confirmation while adding reset context.", result);
         RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.", result);
         RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.", result);
         RequireText(hudLayer, "button.FocusEntered += () => SetCatalogStatusText(button.InspectorText);", "Build and Train card focus must show focused action details in the catalog inspector.", result);

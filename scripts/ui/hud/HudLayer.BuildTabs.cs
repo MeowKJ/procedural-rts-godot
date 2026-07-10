@@ -81,6 +81,7 @@ public partial class HudLayer : CanvasLayer
 
         RefreshCommandCards();
         RefreshCatalogOverview();
+        SetCatalogContextResetText();
     }
 
     private static string CatalogModeSurfaceText(CatalogModeKind mode)
@@ -95,14 +96,77 @@ public partial class HudLayer : CanvasLayer
         };
     }
 
-    private static string CatalogModePageSelectedText(CatalogModeButton button)
+    private string CatalogModePageSelectedText(CatalogModeButton button)
     {
-        return GameText.Format("ui.catalog.modeSelected", button.Label, CatalogModeSurfaceText(button.Mode));
+        return GameText.Format("ui.catalog.modeSelected", button.Label, CatalogContextResetText());
     }
 
     private static string CatalogModeFocusText(CatalogModeButton button)
     {
         return GameText.Format("ui.catalog.modeFocus", button.Label);
+    }
+
+    private void SetCatalogContextResetText()
+    {
+        SetCatalogStatusText(CatalogContextResetText());
+    }
+
+    private string CatalogContextResetText()
+    {
+        return _selectedCatalogMode switch
+        {
+            CatalogModeKind.Build => GameText.Format(
+                "ui.catalog.reset.build",
+                CatalogResetBuildCategoryText(_selectedBuildCategory),
+                CatalogContextProviderText(CurrentConstructionProviderLaneState(), _selectedConstructionProviderLaneScope)),
+            CatalogModeKind.Train => GameText.Format(
+                "ui.catalog.reset.train",
+                CatalogResetProductionCategoryText(_selectedProductionCategory),
+                CatalogContextProviderText(CurrentProductionProviderLaneState(), _selectedProductionProviderLaneScope)),
+            CatalogModeKind.Upgrades => GameText.T("ui.catalog.reset.upgrades"),
+            CatalogModeKind.Abilities => GameText.T("ui.catalog.reset.abilities"),
+            _ => "",
+        };
+    }
+
+    private static string CatalogContextProviderText(ProductionProviderLaneState? state, ProductionProviderLaneScope scope)
+    {
+        if (scope == ProductionProviderLaneScope.Specific && state is not null && !string.IsNullOrWhiteSpace(state.ShortLabel))
+        {
+            return state.ShortLabel;
+        }
+
+        return CatalogOverviewProviderScopeText(scope);
+    }
+
+    private static string CatalogResetBuildCategoryText(BuildCategory category)
+    {
+        return category switch
+        {
+            BuildCategory.Command => GameText.T("ui.tabs.command"),
+            BuildCategory.Power => GameText.T("ui.tabs.power"),
+            BuildCategory.Economy => GameText.T("ui.tabs.economy"),
+            BuildCategory.Infantry => GameText.T("ui.tabs.infantry"),
+            BuildCategory.Vehicle => GameText.T("ui.tabs.vehicle"),
+            BuildCategory.Defense => GameText.T("ui.tabs.defense"),
+            BuildCategory.Air => GameText.T("ui.tabs.air"),
+            BuildCategory.Naval => GameText.T("ui.tabs.naval"),
+            _ => "",
+        };
+    }
+
+    private static string CatalogResetProductionCategoryText(ProductionCategory category)
+    {
+        return category switch
+        {
+            ProductionCategory.Infantry => GameText.T("ui.tabs.infantry"),
+            ProductionCategory.Vehicle => GameText.T("ui.tabs.vehicle"),
+            ProductionCategory.Economy => GameText.T("ui.tabs.economy"),
+            ProductionCategory.Defense => GameText.T("ui.tabs.defense"),
+            ProductionCategory.Air => GameText.T("ui.tabs.air"),
+            ProductionCategory.Naval => GameText.T("ui.tabs.naval"),
+            _ => "",
+        };
     }
 
     private void CycleCatalogMode(int direction)
@@ -118,7 +182,7 @@ public partial class HudLayer : CanvasLayer
         SelectCatalogMode(next);
         _manualDrawerOpen = true;
         _drawerInactivity = 0;
-        SetCatalogStatusText(GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
+        SetCatalogStatusText(GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogContextResetText()));
     }
 
     private static string CatalogModeLabelText(CatalogModeKind mode)
@@ -146,6 +210,7 @@ public partial class HudLayer : CanvasLayer
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
+        SetCatalogContextResetText();
     }
 
     private void RefreshCatalogOverview()

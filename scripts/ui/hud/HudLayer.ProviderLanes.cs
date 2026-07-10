@@ -388,7 +388,8 @@ public partial class HudLayer : CanvasLayer
             "ui.providerLane.selected",
             state.Label,
             state.ProviderCount,
-            state.QueueCount));
+            state.QueueCount,
+            CatalogContextResetText()));
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
@@ -403,7 +404,8 @@ public partial class HudLayer : CanvasLayer
             "ui.constructionProviderLane.selected",
             state.Label,
             state.ProviderCount,
-            state.QueueCount));
+            state.QueueCount,
+            CatalogContextResetText()));
         RefreshProductionProviderLaneSummary();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
