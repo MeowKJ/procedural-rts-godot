@@ -76,6 +76,11 @@ static void AssertCatalogInspectorReducer()
     state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.CommandFeedback("blocked"));
     Require(state.Current.Text == "blocked", "Command feedback must outrank pin, hover, and default state.");
 
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.CommandFeedback("accepted"));
+    Require(state.Current.Text == "accepted", "A newer accepted command result must replace the previous result once.");
+    state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.CommandFeedback("localized rejection"));
+    Require(state.Current.Text == "localized rejection", "A newer localized rejection must replace the accepted result once.");
+
     state = CatalogInspectorReducer.Apply(state, CatalogInspectorIntent.ClearCommandFeedback());
     Require(state.Current.Text == "tank" && state.Resolved.Layer == CatalogInspectorLayer.Pin,
         "Clearing command feedback must reveal the valid pin.");
@@ -190,6 +195,12 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(hudLayer, "CatalogInspectorState _catalogInspectorState", "HudLayer must not own the authoritative catalog inspector reducer state.");
     RequireText(battleRoot, "CatalogInspectorReducer.Apply(_catalogInspectorState, intent)", "BattleRoot must own and reduce catalog inspector state outside the widget layer.");
     RequireText(battleRoot, "_hud.SetCatalogInspectorState(_catalogInspectorState)", "BattleRoot must feed resolved catalog inspector state back to HudLayer.");
+    RequireText(battleRoot, "LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),\n            StatusChanged = OnBuildPlacementStatusChanged,", "BuildPlacement must forward its authoritative status callback into command-panel feedback.");
+    RequireText(battleRoot, "_hud.SetCommandPanelResult(status);", "BuildPlacement status must be forwarded without reconstructing presentation text.");
+    RequireText(hudLayer, "SetCommandPanelResult(status);", "Train/repeat/cancel production status must reuse the same typed command-result entry.");
+    RequireText(hudLayer, "CommandFailurePresentation.PanelText(status)", "Command-panel results must use the shared localized failure classifier and formatter.");
+    ForbidText(battleRoot, "BuildCommandPanelResultText", "BattleRoot must not reconstruct BuildPlacement result text.");
+    ForbidText(hudLayer, "Name = \"CommandResult\"", "Command results must not create a third duplicate HUD label.");
     RequireText(hudLayer, "InvalidateCatalogInspectorItem(CommandCardInspectorItemId(stale));", "Stale Build/Train cards must invalidate inspector hover and pin state before removal.");
     ForbidText(hudLayer, "SetCatalogStatusText", "Catalog controls must not bypass the typed inspector reducer with direct label writes.");
     RequireText(hudLayer, "public void ClearCommandFailureFeedback()", "HUD must expose deterministic stale-failure clearing for context changes.");

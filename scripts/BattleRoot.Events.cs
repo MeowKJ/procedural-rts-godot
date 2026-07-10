@@ -14,6 +14,12 @@ public partial class BattleRoot
         AddStatusAlert(status);
     }
 
+    private void OnBuildPlacementStatusChanged(string status)
+    {
+        OnStatusChanged(status);
+        _hud.SetCommandPanelResult(status);
+    }
+
     private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
     {
         foreach (var death in deaths)

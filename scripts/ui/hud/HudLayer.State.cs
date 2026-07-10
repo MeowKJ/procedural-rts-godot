@@ -249,7 +249,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            ShowCatalogInspectorCommandFeedback(CommandFailurePresentation.PanelText(status));
+            SetCommandPanelResult(status);
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))

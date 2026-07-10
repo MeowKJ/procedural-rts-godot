@@ -4,6 +4,11 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer
 {
+    public void SetCommandPanelResult(string status)
+    {
+        ShowCatalogInspectorCommandFeedback(CommandFailurePresentation.PanelText(status));
+    }
+
     public void SetCatalogInspectorState(CatalogInspectorState state)
     {
         if (_productionValue is not null)
