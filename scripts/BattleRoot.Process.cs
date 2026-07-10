@@ -329,6 +329,7 @@ public partial class BattleRoot
 
     private void OnSelectionChanged(int count)
     {
+        _hud.ClearCommandFailureFeedback();
         RefreshSelectionInfo();
         if (count > 0)
         {

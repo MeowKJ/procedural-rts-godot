@@ -9,6 +9,8 @@ static class BattleRootHudAllocationReviewGate
         var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
         var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
+        var commandFailurePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandFailurePresentation.cs");
+        var commandGatewayFeedback = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandGatewayFeedback.cs");
         var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
 
         RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
@@ -414,6 +416,14 @@ static class BattleRootHudAllocationReviewGate
         RequireText(englishText, "[\"ui.catalog.inputHint.train\"] = \"Click: queue | Shift x5 | lane\"", "English Train card input hint must exist.", result);
         RequireText(englishText, "[\"ui.commandFailure.inline\"] = \"Blocked: {0}\"", "English blocked-command top status text must exist.", result);
         RequireText(englishText, "[\"ui.commandFailure.reason\"] = \"BLOCKED\\n{0}\"", "English blocked-command catalog reason text must exist.", result);
+        RequireText(hudState, "CommandFailurePresentation.InlineText(status)", "Top status must render blocked-command feedback through the presentation adapter.", result);
+        RequireText(hudState, "CommandFailurePresentation.PanelText(status)", "Catalog inspector must render blocked-command feedback through the presentation adapter.", result);
+        RequireText(hudState, "public void ClearCommandFailureFeedback()", "HUD must expose deterministic stale-failure clearing for context changes.", result);
+        RequireText(process, "_hud.ClearCommandFailureFeedback();", "Selection context changes must clear stale command failures.", result);
+        RequireText(commandFailurePresentation, "public static bool IsFailureStatus(string status)", "Command failure classification must live in a Godot-free presentation adapter.", result);
+        RequireText(commandFailurePresentation, "MatchesLocalizedTemplate(status, FailureStatusKeys[index])", "Command failure presentation must classify localized templates centrally.", result);
+        RequireText(commandGatewayFeedback, "CommandGatewayValidationError.InvalidTarget => \"ui.commandFailure.invalidTarget\"", "Gateway invalid-target errors must map to localized presentation reasons.", result);
+        RequireText(commandGatewayFeedback, "CommandGatewayValidationError.InvalidPayloadShape => \"ui.commandFailure.invalidCommand\"", "Gateway invalid-payload errors must map to localized presentation reasons.", result);
         RequireText(englishText, "[\"ui.upgrade.badge.sourceNeeded\"] = \"SRC\"", "English upgrade shell card must use a compact source-required badge.", result);
         RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English catalog mode Abilities help text must exist.", result);
         RequireText(chineseText, "[\"ui.catalog.buildHelp\"]", "Chinese catalog mode Build help text must exist.", result);

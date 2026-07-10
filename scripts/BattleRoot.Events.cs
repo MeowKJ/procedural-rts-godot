@@ -416,15 +416,7 @@ public partial class BattleRoot
 
     private static string GatewayStatus(CommandGatewayResult result, string acceptedStatus)
     {
-        foreach (var command in result.Commands)
-        {
-            if (!command.Accepted)
-            {
-                return command.Message;
-            }
-        }
-
-        return acceptedStatus;
+        return CommandGatewayFeedback.Status(result, acceptedStatus);
     }
 
     private void OnSettingsRequested()

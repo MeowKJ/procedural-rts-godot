@@ -95,6 +95,8 @@ public partial class HudLayer : CanvasLayer
     private float _drawerInactivity;
     private float _productionStatusPulse;
     private float _queueStatusPulse;
+    private bool _commandFailureVisible;
+    private bool _productionCommandFailureVisible;
     private string _lastProductionStatus = "";
     private string _lastQueueSummary = "";
     private string _focusedRepeatProductionDesignId = "";
@@ -226,11 +228,13 @@ public partial class HudLayer : CanvasLayer
 
     public void SetStatus(string status)
     {
-        _statusValue.Text = CompactText(CommandFailureInlineStatusText(status), 42);
+        _commandFailureVisible = CommandFailurePresentation.IsFailureStatus(status);
+        _statusValue.Text = CompactText(CommandFailurePresentation.InlineText(status), 42);
     }
 
     public void SetProductionStatus(string status)
     {
+        _productionCommandFailureVisible = CommandFailurePresentation.IsFailureStatus(status);
         if (!string.Equals(_lastProductionStatus, status, StringComparison.Ordinal))
         {
             _productionStatusPulse = 1f;
@@ -239,7 +243,7 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(CatalogCommandStatusText(status));
+            SetCatalogStatusText(CommandFailurePresentation.PanelText(status));
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
@@ -247,6 +251,27 @@ public partial class HudLayer : CanvasLayer
             _drawerInactivity = 0;
             _manualDrawerOpen = true;
             _productionDrawerProgress = 1f;
+        }
+    }
+
+    public void ClearCommandFailureFeedback()
+    {
+        if (_commandFailureVisible)
+        {
+            _commandFailureVisible = false;
+            _statusValue.Text = CompactText(GameText.T("ui.status.ready"), 42);
+        }
+
+        if (!_productionCommandFailureVisible)
+        {
+            return;
+        }
+
+        _productionCommandFailureVisible = false;
+        _lastProductionStatus = "";
+        if (_selectedCatalogMode != CatalogModeKind.Abilities)
+        {
+            SetCatalogStatusText(GameText.T("ui.status.ready"));
         }
     }
 
@@ -523,68 +548,7 @@ public partial class HudLayer : CanvasLayer
     {
         return string.IsNullOrWhiteSpace(_lastProductionStatus)
             ? GameText.T("ui.status.ready")
-            : CatalogCommandStatusText(_lastProductionStatus);
-    }
-
-    private static string CommandFailureInlineStatusText(string status)
-    {
-        return IsCatalogCommandFailureStatus(status)
-            ? GameText.Format("ui.commandFailure.inline", CompactText(status, 32))
-            : status;
-    }
-
-    private static string CatalogCommandStatusText(string status)
-    {
-        return IsCatalogCommandFailureStatus(status)
-            ? GameText.Format("ui.commandFailure.reason", CompactText(status, 34))
-            : status;
-    }
-
-    private static bool IsCatalogCommandFailureStatus(string status)
-    {
-        return !string.IsNullOrWhiteSpace(status)
-            && (MatchesLocalizedStatusPattern(status, "ui.needCredits")
-                || MatchesLocalizedStatusPattern(status, "ui.producerUnavailable")
-                || IsLocalizedAbilityUnavailableStatus(status)
-                || MatchesLocalizedStatusPattern(status, "stance.selectRequired")
-                || MatchesLocalizedStatusPattern(status, "build.cannotPlace")
-                || MatchesLocalizedStatusPattern(status, "build.noTicket")
-                || MatchesLocalizedStatusPattern(status, "build.sell.none")
-                || MatchesLocalizedStatusPattern(status, "harvest.selectHarvester")
-                || MatchesLocalizedStatusPattern(status, "harvest.depleted")
-                || MatchesLocalizedStatusPattern(status, "harvest.needRefinery")
-                || MatchesLocalizedStatusPattern(status, "rally.selectProducer")
-                || MatchesLocalizedStatusPattern(status, "rally.unsupported")
-                || MatchesLocalizedStatusPattern(status, "production.needProducer")
-                || MatchesLocalizedStatusPattern(status, "production.needCredits")
-                || MatchesLocalizedStatusPattern(status, "production.noneQueued"));
-    }
-
-    private static bool IsLocalizedAbilityUnavailableStatus(string status)
-    {
-        return string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.context.repair")), StringComparison.Ordinal)
-            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.repairField")), StringComparison.Ordinal)
-            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.shieldField")), StringComparison.Ordinal)
-            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.scan")), StringComparison.Ordinal)
-            || string.Equals(status, GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.deploy")), StringComparison.Ordinal);
-    }
-
-    private static bool MatchesLocalizedStatusPattern(string status, string key)
-    {
-        var template = GameText.T(key);
-        var firstPlaceholder = template.IndexOf('{', StringComparison.Ordinal);
-        if (firstPlaceholder < 0)
-        {
-            return string.Equals(status, template, StringComparison.Ordinal);
-        }
-
-        var prefix = template[..firstPlaceholder].Trim();
-        if (prefix.Length > 0 && status.StartsWith(prefix, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return false;
+            : CommandFailurePresentation.PanelText(_lastProductionStatus);
     }
 
     private void RefreshBuildCards()

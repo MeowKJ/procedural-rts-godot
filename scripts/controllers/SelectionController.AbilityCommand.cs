@@ -86,7 +86,7 @@ public partial class SelectionController
 
     private void FinishSelfAbilityCommand(AbilityKind ability)
     {
-        _lastGatewayRejectedStatus = string.Empty;
+        _lastGatewayRejection = CommandGatewayValidationError.None;
         var subjects = SelectedRuntimeUnitSubjects();
         var accepted = SubmitRuntimeCommand(PlayerCommandKind.Ability, PlayerCommandPayload.ForAbility(subjects, ability));
         StatusChanged?.Invoke(accepted
@@ -104,7 +104,7 @@ public partial class SelectionController
     {
         var worldPoint = ScreenToWorld(screenPoint);
         var payload = AbilityTargetPayload(ability, worldPoint);
-        _lastGatewayRejectedStatus = string.Empty;
+        _lastGatewayRejection = CommandGatewayValidationError.None;
         var accepted = SubmitRuntimeCommand(PlayerCommandKind.Ability, payload);
         StatusChanged?.Invoke(accepted
             ? GameText.Format("ui.ability.fired", AbilityLabel(ability))

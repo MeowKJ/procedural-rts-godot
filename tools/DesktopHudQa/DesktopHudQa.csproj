@@ -7,5 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\scripts\core\presentation\ui\HudLayoutMath.cs" Link="HudLayoutMath.cs" />
+    <Compile Include="..\..\scripts\core\presentation\ui\CommandFailurePresentation.cs" Link="CommandFailurePresentation.cs" />
+    <Compile Include="..\..\scripts\core\localization\GameLanguage.cs" Link="GameLanguage.cs" />
+    <Compile Include="..\..\scripts\core\localization\GameText.cs" Link="GameText.cs" />
+    <Compile Include="..\..\scripts\core\localization\GameText.English.cs" Link="GameText.English.cs" />
+    <Compile Include="..\..\scripts\core\localization\GameText.ChineseSimplified.cs" Link="GameText.ChineseSimplified.cs" />
   </ItemGroup>
 </Project>

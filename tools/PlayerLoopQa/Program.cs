@@ -407,6 +407,18 @@ static void AssertCommandGatewayLivePlayerLoop()
     var invalidResult = battlefield.SubmitPlayerController(localGateway, controller, PlayerSlotId.One, tick: 3);
     RequireRejected(invalidResult, CommandGatewayValidationError.InvalidPayloadShape, "malformed live move should reject");
     Require(battlefield.AppliedInputCommandCount == beforeRejected, "malformed live move should not mutate simulation state");
+    var previousLanguage = GameText.CurrentLanguage;
+    try
+    {
+        GameText.CurrentLanguage = GameLanguage.English;
+        Require(CommandGatewayFeedback.Status(invalidResult, "accepted") == "Invalid command data", "gateway feedback should localize invalid payloads in English");
+        GameText.CurrentLanguage = GameLanguage.ChineseSimplified;
+        Require(CommandGatewayFeedback.Status(invalidResult, "accepted") == "命令数据无效", "gateway feedback should localize invalid payloads in Chinese");
+    }
+    finally
+    {
+        GameText.CurrentLanguage = previousLanguage;
+    }
 
     var unauthorizedGateway = new CommandGateway();
     var unauthorizedSubmission = new CommandGatewaySubmission(

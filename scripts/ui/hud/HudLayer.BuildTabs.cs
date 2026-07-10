@@ -34,6 +34,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectCatalogMode(CatalogModeKind mode)
     {
+        ClearCommandFailureFeedback();
         _selectedCatalogMode = mode;
         for (var index = 0; index < _catalogModeButtons.Count; index++)
         {
@@ -70,6 +71,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectProductionTab(BuildCategory category)
     {
+        ClearCommandFailureFeedback();
         _selectedBuildCategory = category;
         for (var index = 0; index < _productionTabs.Count; index++)
         {
@@ -133,6 +135,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectProductionCategory(ProductionCategory category)
     {
+        ClearCommandFailureFeedback();
         _selectedProductionCategory = category;
         for (var index = 0; index < _trainCategoryTabs.Count; index++)
         {

@@ -26,9 +26,45 @@ if (failures.Count > 0)
 }
 
 var repoRoot = FindRepoRoot();
+AssertCommandFailurePresentation();
 AssertHudFactoryExtraction(repoRoot);
 
-Console.WriteLine("Desktop HUD QA passed: 1280x720, 1600x900, 1920x1080, high-DPI layout constraints, and HUD UiFactory extraction");
+Console.WriteLine("Desktop HUD QA passed: 1280x720, 1600x900, 1920x1080, high-DPI layout constraints, command failure presentation, and HUD UiFactory extraction");
+
+static void AssertCommandFailurePresentation()
+{
+    var previousLanguage = GameText.CurrentLanguage;
+    try
+    {
+        GameText.CurrentLanguage = GameLanguage.English;
+        var englishFailure = GameText.Format("production.needCredits", 500, "Tank", 100);
+        Require(CommandFailurePresentation.IsFailureStatus(englishFailure), "English production credit failure must be classified as blocked.");
+        Require(CommandFailurePresentation.InlineText(englishFailure) == $"Blocked: {englishFailure}", "English inline failure copy must be formatted behaviorally.");
+        Require(CommandFailurePresentation.PanelText(GameText.T("ui.commandFailure.invalidTarget")) == "BLOCKED\nTarget unavailable", "English gateway rejection reason must render in the panel.");
+
+        var englishSuccess = GameText.Format("production.queued", "Scout", "Barracks", 100, 900);
+        Require(!CommandFailurePresentation.IsFailureStatus(englishSuccess), "Accepted production status must not be classified as blocked.");
+        Require(CommandFailurePresentation.InlineText(englishSuccess) == englishSuccess, "Accepted production status must remain unchanged.");
+
+        GameText.CurrentLanguage = GameLanguage.ChineseSimplified;
+        var chineseFailure = GameText.Format("ui.ability.unavailable", GameText.T("ui.ability.scan"));
+        Require(CommandFailurePresentation.IsFailureStatus(chineseFailure), "Chinese ability failure must be classified as blocked.");
+        Require(CommandFailurePresentation.InlineText(chineseFailure) == $"受阻：{chineseFailure}", "Chinese inline failure copy must be formatted behaviorally.");
+        Require(CommandFailurePresentation.PanelText(GameText.T("ui.commandFailure.invalidTarget")) == "受阻\n目标不可用", "Chinese gateway rejection reason must render in the panel.");
+    }
+    finally
+    {
+        GameText.CurrentLanguage = previousLanguage;
+    }
+}
+
+static void Require(bool condition, string message)
+{
+    if (!condition)
+    {
+        throw new InvalidOperationException(message);
+    }
+}
 
 static string FindRepoRoot()
 {
@@ -102,13 +138,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
     RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
-    RequireText(hudLayer, "_statusValue.Text = CompactText(CommandFailureInlineStatusText(status), 42);", "Top status must expose compact blocked-command feedback without changing command handling.");
-    RequireText(hudLayer, "SetCatalogStatusText(CatalogCommandStatusText(status));", "Catalog inspector must format blocked command statuses with a compact reason.");
+    RequireText(hudLayer, "CommandFailurePresentation.InlineText(status)", "Top status must render compact blocked-command feedback through the presentation adapter.");
+    RequireText(hudLayer, "CommandFailurePresentation.PanelText(status)", "Catalog inspector must render blocked command feedback through the presentation adapter.");
     RequireText(hudLayer, "SetCatalogStatusText(LastProductionCatalogStatusText());", "Catalog mode changes must restore blocked command status through the same compact formatter.");
-    RequireText(hudLayer, "private static bool IsCatalogCommandFailureStatus(string status)", "HUD blocked-command feedback must use a focused status classifier.");
-    RequireText(hudLayer, "MatchesLocalizedStatusPattern(status, \"production.needCredits\")", "HUD blocked-command feedback must recognize localized production credit failures.");
-    RequireText(hudLayer, "private static bool IsLocalizedAbilityUnavailableStatus(string status)", "HUD blocked-command feedback must recognize only the known localized ability failures.");
-    RequireText(hudLayer, "GameText.Format(\"ui.ability.unavailable\", GameText.T(\"ui.ability.deploy\"))", "HUD blocked-command feedback must include the localized deploy failure.");
+    RequireText(hudLayer, "public void ClearCommandFailureFeedback()", "HUD must expose deterministic stale-failure clearing for context changes.");
+    RequireText(battleRoot, "_hud.ClearCommandFailureFeedback();", "Selection context changes must clear stale command failures.");
+    RequireText(selectionController, "CommandGatewayFeedback.RejectionStatus(_lastGatewayRejection)", "Selection command failures must localize structured gateway rejections.");
     RequireText(hudLayer, "RefreshCatalogOverview()", "Right command panel must refresh the catalog overview when page state changes.");
     RequireText(hudLayer, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "Ability state changes must feed the catalog overview path.");
     RequireText(hudLayer, "SetProductionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "Train provider lane state changes must feed the catalog overview path.");
