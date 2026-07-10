@@ -99,6 +99,14 @@ static class HoverTooltipReviewGate
         ForbidText(selectionHotkeys, "Key.F2 => MoveCommandMode", "F2 must remain available to sandbox time-scale controls instead of also changing move mode.", result);
         ForbidText(selectionHotkeys, "Key.F3 => MoveCommandMode", "F3 must remain available to debug overlays instead of also changing move mode.", result);
         RequireText(hudPreview, "Preview.ScreenPosition + new Vector2(18, 18)", "Hover guidance must remain a transient cursor-side command preview instead of persistent HUD copy.", result);
+        RequireText(hudLayer, "Name = \"CommandBreadcrumb\"", "Command ribbon must expose a stable armed-command breadcrumb node.", result);
+        RequireText(hudLayer, "new Vector2(422, 8), new Vector2(202, 30), FontTiny", "Command breadcrumb must stay in the compact gap before ribbon actions.", result);
+        RequireText(hudLayer, "_lastCommandPreview = preview;", "Command breadcrumb must cache the latest command preview state.", result);
+        RequireText(hudLayer, "RefreshCommandBreadcrumb()", "Command ribbon breadcrumb must refresh from the latest command preview.", result);
+        RequireText(hudLayer, "CommandBreadcrumbText(_lastCommandPreview)", "Command ribbon breadcrumb must derive text from the latest command preview state.", result);
+        RequireText(hudLayer, "SetMoveCommandMode(MoveCommandMode mode)", "Command breadcrumb must track idle move-mode changes.", result);
+        RequireText(englishText, "[\"ui.commandBreadcrumb.path\"] = \"{0} > {1}\"", "English command breadcrumb path text must exist.", result);
+        RequireText(chineseText, "[\"ui.commandBreadcrumb.path\"] = \"{0} > {1}\"", "Chinese command breadcrumb path text must exist.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Move:", "HUD command preview must render move as a distinct mode.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Attack:", "HUD command preview must render attack as a distinct mode.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Repair:", "HUD command preview must render repair as a distinct mode.", result);

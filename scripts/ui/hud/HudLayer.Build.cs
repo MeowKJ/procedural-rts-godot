@@ -116,6 +116,12 @@ public partial class HudLayer : CanvasLayer
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Attack, IconGlyph.AttackMove, GameText.T("ui.tooltip.attackMove"), new Vector2(320, 6));
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Ignore, IconGlyph.IgnoreMove, GameText.T("ui.tooltip.ignoreMove"), new Vector2(366, 6));
 
+        _commandBreadcrumbValue = MakeSizedLabel("", new Vector2(422, 8), new Vector2(202, 30), FontTiny, Mint);
+        _commandBreadcrumbValue.Name = "CommandBreadcrumb";
+        _commandBreadcrumbValue.VerticalAlignment = VerticalAlignment.Center;
+        _commandRibbon.AddChild(_commandBreadcrumbValue);
+        RefreshCommandBreadcrumb();
+
         AddSeparator(_commandRibbon, new Vector2(642, 8));
         var ribbonRepair = AddIconActionButton(_commandRibbon, IconGlyph.Repair, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
         ribbonRepair.Name = "RibbonRepair";

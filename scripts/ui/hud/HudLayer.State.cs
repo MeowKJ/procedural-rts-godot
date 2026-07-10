@@ -34,6 +34,7 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
+    private Label _commandBreadcrumbValue = null!;
     private Label _providerLaneSummaryValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
@@ -104,6 +105,7 @@ public partial class HudLayer : CanvasLayer
     private string _lastRepeatProductionRefreshKey = "";
     private bool _repeatProductionStateCached;
     private bool _lastCanCancelProduction;
+    private CommandPreviewState _lastCommandPreview = CommandPreviewState.None;
 
     public void SetSandboxDeveloperContext(SandboxDeveloperContext context)
     {
@@ -316,7 +318,9 @@ public partial class HudLayer : CanvasLayer
 
     public void SetCommandPreview(CommandPreviewState preview)
     {
+        _lastCommandPreview = preview;
         _commandPreview.Preview = preview;
+        RefreshCommandBreadcrumb();
         ApplyCommandCursor(preview);
         _commandPreview.QueueRedraw();
     }
@@ -574,6 +578,8 @@ public partial class HudLayer : CanvasLayer
         {
             button.SetSelected(button.Mode == mode);
         }
+
+        RefreshCommandBreadcrumb();
     }
 
     public void SetSelectedUnitStance(UnitStance? stance)
@@ -583,6 +589,68 @@ public partial class HudLayer : CanvasLayer
         {
             button.SetSelected(stance is not null && button.Stance == stance.Value);
         }
+    }
+
+    private void RefreshCommandBreadcrumb()
+    {
+        if (_commandBreadcrumbValue is null)
+        {
+            return;
+        }
+
+        _commandBreadcrumbValue.Text = CompactText(CommandBreadcrumbText(_lastCommandPreview), 30);
+    }
+
+    private string CommandBreadcrumbText(CommandPreviewState preview)
+    {
+        if (preview.Kind == CommandPreviewKind.None || preview.Kind == CommandPreviewKind.Select || preview.Kind == CommandPreviewKind.DragSelect)
+        {
+            return GameText.Format("ui.commandBreadcrumb.idle", MoveCommandModeLabel(_selectedMoveMode));
+        }
+
+        var mode = CommandBreadcrumbMode(preview.Kind);
+        var target = string.IsNullOrWhiteSpace(preview.Label)
+            ? CommandBreadcrumbTarget(preview.Kind)
+            : preview.Label;
+        var key = preview.IsValid ? "ui.commandBreadcrumb.path" : "ui.commandBreadcrumb.blocked";
+        return GameText.Format(key, mode, target);
+    }
+
+    private static string MoveCommandModeLabel(MoveCommandMode mode)
+    {
+        return mode switch
+        {
+            MoveCommandMode.Attack => GameText.T("move.attack"),
+            MoveCommandMode.Ignore => GameText.T("move.ignore"),
+            _ => GameText.T("move.direct"),
+        };
+    }
+
+    private static string CommandBreadcrumbMode(CommandPreviewKind kind)
+    {
+        return kind switch
+        {
+            CommandPreviewKind.Attack => GameText.T("preview.attack"),
+            CommandPreviewKind.Repair => GameText.T("ui.context.repair"),
+            CommandPreviewKind.Rally => GameText.T("preview.setRally"),
+            CommandPreviewKind.Harvest => GameText.T("preview.harvest"),
+            CommandPreviewKind.BuildValid or CommandPreviewKind.BuildInvalid => GameText.T("ui.tabs.build"),
+            CommandPreviewKind.TargetHover => GameText.T("ui.ability.grammar.target"),
+            CommandPreviewKind.Move => GameText.T("preview.move"),
+            _ => GameText.T("ui.tactics"),
+        };
+    }
+
+    private static string CommandBreadcrumbTarget(CommandPreviewKind kind)
+    {
+        return kind switch
+        {
+            CommandPreviewKind.BuildValid or CommandPreviewKind.BuildInvalid => GameText.T("preview.structure"),
+            CommandPreviewKind.Harvest => GameText.T("preview.resource"),
+            CommandPreviewKind.Rally => GameText.T("preview.rally.point"),
+            CommandPreviewKind.Repair => GameText.T("preview.unit"),
+            _ => GameText.T("preview.target.unit"),
+        };
     }
 
     public readonly record struct MinimapUnit(Vector2 Position, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);

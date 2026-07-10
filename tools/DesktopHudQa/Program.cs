@@ -96,6 +96,12 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "\"CatalogModeTrain\"", "Right command panel must expose a stable Train catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeUpgrades\"", "Right command panel must expose a stable Upgrades catalog mode node.");
     RequireText(hudLayer, "\"CatalogModeAbilities\"", "Right command panel must expose a stable Abilities catalog mode node.");
+    RequireText(hudLayer, "Name = \"CommandBreadcrumb\"", "Command ribbon must expose a stable armed-command breadcrumb node.");
+    RequireText(hudLayer, "new Vector2(422, 8), new Vector2(202, 30), FontTiny", "Command breadcrumb must stay in the compact gap before ribbon actions.");
+    RequireText(hudLayer, "_lastCommandPreview = preview;", "Command breadcrumb must cache the latest command preview state.");
+    RequireText(hudLayer, "RefreshCommandBreadcrumb()", "Command ribbon breadcrumb must refresh from command preview and move-mode state.");
+    RequireText(hudLayer, "CommandBreadcrumbText(_lastCommandPreview)", "Command ribbon breadcrumb must derive text from the latest command preview state.");
+    RequireText(hudLayer, "SetMoveCommandMode(MoveCommandMode mode)", "Command breadcrumb must track idle move-mode changes.");
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
@@ -286,6 +292,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.catalog.abilitiesHelp\"]", "English HUD catalog Abilities help text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectBuild\"]", "English HUD catalog build inspector text must exist.");
     RequireText(englishText, "[\"ui.catalog.inspectTrain\"]", "English HUD catalog train inspector text must exist.");
+    RequireText(englishText, "[\"ui.commandBreadcrumb.path\"] = \"{0} > {1}\"", "English command breadcrumb path text must exist.");
+    RequireText(englishText, "[\"ui.commandBreadcrumb.blocked\"] = \"{0} ! {1}\"", "English command breadcrumb blocked text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeSelected\"] = \"PAGE: {0}\\n{1}\"", "English catalog mode selected feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.modeFocus\"] = \"FOCUS: {0}\\npress to switch page\"", "English catalog mode focus feedback text must exist.");
     RequireText(englishText, "[\"ui.catalog.inputHint.build\"] = \"Click: place | lane: auto/specific\"", "English Build card input hint must exist.");
@@ -375,6 +383,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.catalog.abilitiesHelp\"]", "Chinese HUD catalog Abilities help text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectBuild\"]", "Chinese HUD catalog build inspector text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inspectTrain\"]", "Chinese HUD catalog train inspector text must exist.");
+    RequireText(chineseText, "[\"ui.commandBreadcrumb.path\"] = \"{0} > {1}\"", "Chinese command breadcrumb path text must exist.");
+    RequireText(chineseText, "[\"ui.commandBreadcrumb.blocked\"] = \"{0} ! {1}\"", "Chinese command breadcrumb blocked text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeSelected\"] = \"页面: {0}\\n{1}\"", "Chinese catalog mode selected feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.modeFocus\"] = \"焦点: {0}\\n确认切换页面\"", "Chinese catalog mode focus feedback text must exist.");
     RequireText(chineseText, "[\"ui.catalog.inputHint.build\"] = \"点击放置 | 通道: 自动/指定\"", "Chinese Build card input hint must exist.");
