@@ -4,6 +4,7 @@ $project = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $presetFile = Join-Path $project "export_presets.cfg"
 $presetName = "Windows Desktop"
 $exportPath = Join-Path $project "builds\windows\ProceduralRTS.exe"
+$artifactIgnore = Join-Path $project "artifacts\.gdignore"
 $godot = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7-stable_mono_win64\Godot_v4.7-stable_mono_win64_console.exe"
 
 function Assert-File($path, $label) {
@@ -36,12 +37,16 @@ function Get-GodotTemplateRoots {
 
 function Test-WindowsExportTemplate {
     foreach ($root in Get-GodotTemplateRoots) {
-        $templates = Get-ChildItem -Path $root -Recurse -File -ErrorAction SilentlyContinue |
-            Where-Object {
-                $_.Name -match "windows" -and
-                ($_.Name -match "release" -or $_.Name -match "template_release" -or $_.Extension -eq ".exe")
+        foreach ($version in @("4.7.stable.mono", "4.7.stable")) {
+            $versionRoot = Join-Path $root $version
+            $debugTemplate = Join-Path $versionRoot "windows_debug_x86_64.exe"
+            $releaseTemplate = Join-Path $versionRoot "windows_release_x86_64.exe"
+            if ((Test-Path $debugTemplate) -and (Test-Path $releaseTemplate)) {
+                return $true
             }
-        if ($templates) {
+        }
+
+        if (Test-Path (Join-Path $root "windows_release_x86_64.exe")) {
             return $true
         }
     }
@@ -51,6 +56,7 @@ function Test-WindowsExportTemplate {
 
 Assert-File $godot "Godot console executable"
 Assert-File $presetFile "Godot export preset file"
+Assert-File $artifactIgnore "Godot ignore marker for local QA artifacts"
 
 $projectProcessPattern = [regex]::Escape($project)
 Get-CimInstance Win32_Process -Filter "Name like 'Godot%'" |
@@ -68,6 +74,7 @@ try {
     $actualPresetName = Read-PresetValue $content "name"
     $platform = Read-PresetValue $content "platform"
     $configuredExportPath = Read-PresetValue $content "export_path"
+    $excludeFilter = Read-PresetValue $content "exclude_filter"
     $embeddedPck = Read-PresetValue $content "binary_format/embed_pck"
     $architecture = Read-PresetValue $content "binary_format/architecture"
 
@@ -81,6 +88,12 @@ try {
 
     if ($configuredExportPath -ne "builds/windows/ProceduralRTS.exe") {
         throw "Unexpected export_path '$configuredExportPath'"
+    }
+
+    foreach ($requiredExclusion in @("tools/**", "builds/**", "artifacts/**", "captures/**", "screenshots/**", "recordings/**")) {
+        if ($excludeFilter -notlike "*$requiredExclusion*") {
+            throw "Windows preset must exclude local-only path '$requiredExclusion'"
+        }
     }
 
     if ($embeddedPck -ne "true") {
@@ -114,7 +127,17 @@ try {
         throw "Exported executable is unexpectedly small: $size bytes"
     }
 
-    Write-Output "Export smoke passed: $exportPath ($size bytes)"
+    $smoke = Start-Process -FilePath $exportPath -ArgumentList "--headless", "--quit-after", "3" -PassThru
+    if (-not $smoke.WaitForExit(15000)) {
+        $smoke.Kill($true)
+        throw "Exported Windows executable did not exit within the 15-second smoke timeout"
+    }
+
+    if ($smoke.ExitCode -ne 0) {
+        throw "Exported Windows executable smoke failed with exit code $($smoke.ExitCode)"
+    }
+
+    Write-Output "Export smoke passed: $exportPath ($size bytes), runtime exit 0"
 }
 finally {
     Pop-Location
