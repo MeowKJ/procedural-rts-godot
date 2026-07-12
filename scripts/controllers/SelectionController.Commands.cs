@@ -92,7 +92,9 @@ public partial class SelectionController
                 var subjects = SelectedRuntimeUnitSubjects();
                 var commandKind = moveMode == MoveCommandMode.Attack ? PlayerCommandKind.AttackMove : PlayerCommandKind.Move;
                 var accepted = SubmitRuntimeCommand(commandKind, PlayerCommandPayload.ForPoint(subjects, worldPoint.X, worldPoint.Y, moveMode));
-                StatusChanged?.Invoke(accepted ? MoveModeStatus(moveMode) : GatewayRejectedStatus(MoveModeStatus(moveMode)));
+                StatusChanged?.Invoke(accepted
+                    ? CommandRibbonContextResolver.MoveModeLabel(moveMode)
+                    : GatewayRejectedStatus(CommandRibbonContextResolver.MoveModeLabel(moveMode)));
                 AcknowledgeCommand(
                     accepted ? CommandAcknowledgementKind.Move : CommandAcknowledgementKind.Invalid,
                     worldPoint,
@@ -142,7 +144,7 @@ public partial class SelectionController
             if (hasSelectedUnits)
             {
                 State.CommandMoveSelected(worldPoint, moveMode);
-                StatusChanged?.Invoke(MoveModeStatus(moveMode));
+                StatusChanged?.Invoke(CommandRibbonContextResolver.MoveModeLabel(moveMode));
                 AcknowledgeCommand(
                     CommandAcknowledgementKind.Move,
                     worldPoint,
@@ -169,7 +171,7 @@ public partial class SelectionController
     public void SetMoveCommandMode(MoveCommandMode mode)
     {
         CurrentMoveMode = mode;
-        StatusChanged?.Invoke(MoveModeStatus(mode));
+        StatusChanged?.Invoke(CommandRibbonContextResolver.MoveModeLabel(mode));
     }
 
     private void AcknowledgeCommand(CommandAcknowledgementKind kind, Vector2 position, CommandAcknowledgementAudioCue audioCue)
@@ -248,15 +250,6 @@ public partial class SelectionController
         return mouse.AltPressed ? MoveCommandMode.Attack : CurrentMoveMode;
     }
 
-    private static string MoveModeStatus(MoveCommandMode mode)
-    {
-        return mode switch
-        {
-            MoveCommandMode.Attack => GameText.T("move.attack"),
-            MoveCommandMode.Ignore => GameText.T("move.ignore"),
-            _ => GameText.T("move.direct"),
-        };
-    }
 
     private IReadOnlyList<EntityId> SelectedRuntimeUnitSubjects()
     {

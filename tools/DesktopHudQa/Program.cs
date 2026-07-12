@@ -28,7 +28,7 @@ if (failures.Count > 0)
 var repoRoot = FindRepoRoot();
 AssertCommandFailurePresentation();
 AssertCatalogInspectorReducer();
-UnitStancePresentationQa.AssertCatalog();
+UnitStancePresentationQa.AssertCatalog(); CommandRibbonContextQa.AssertResolver();
 AssertHudFactoryExtraction(repoRoot);
 Console.WriteLine("Desktop HUD QA passed: 1280x720, 1600x900, 1920x1080, high-DPI layout constraints, command failure presentation, catalog inspector reducer, and HUD UiFactory extraction");
 

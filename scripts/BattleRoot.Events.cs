@@ -376,12 +376,7 @@ public partial class BattleRoot
     {
         _selection.SetMoveCommandMode(mode);
         _hud.SetMoveCommandMode(mode);
-        _hud.SetStatus(mode switch
-        {
-            MoveCommandMode.Attack => GameText.T("move.attack"),
-            MoveCommandMode.Ignore => GameText.T("move.ignore"),
-            _ => GameText.T("move.direct"),
-        });
+        _hud.SetStatus(CommandRibbonContextResolver.MoveModeLabel(mode));
         PlayAudioCue(mode == MoveCommandMode.Attack ? TacticalAudioCue.Attack : TacticalAudioCue.Move);
     }
 
@@ -400,7 +395,7 @@ public partial class BattleRoot
                 return;
             }
 
-            _hud.SetSelectedUnitStance(stance);
+            _hud.SetSelectedUnitStance(stance, changed);
             _hud.SetStatus(GameText.Format("stance.changed", changed, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
             PlayAudioCue(TacticalAudioCue.Selection);
             return;
@@ -415,7 +410,7 @@ public partial class BattleRoot
         }
 
         _state.SetSelectedStance(stance);
-        _hud.SetSelectedUnitStance(stance);
+        _hud.SetSelectedUnitStance(stance, selectedCount);
         _hud.SetStatus(GameText.Format("stance.changed", selectedCount, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
         PlayAudioCue(TacticalAudioCue.Selection);
     }

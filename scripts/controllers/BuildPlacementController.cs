@@ -328,20 +328,21 @@ public partial class BuildPlacementController : Node2D
                 PlacementStatusLabel("placement.needCredits", placement.Reason, spec).ToUpperInvariant(),
                 screenPoint,
                 snapped,
-                false);
+                false,
+                CommandPreviewPhase.BuildPlacement);
         }
 
         if (queuePreview)
         {
-            return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true);
+            return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true, CommandPreviewPhase.BuildPlacement);
         }
 
         var label = HasActiveReadyTicket
             ? GameText.Format("build.placeReadyPreview", spec.Label.ToUpperInvariant())
             : GameText.Format("build.placePreview", spec.Label.ToUpperInvariant());
         return placement.IsValid
-            ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true)
-            : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false);
+            ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true, CommandPreviewPhase.BuildPlacement)
+            : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false, CommandPreviewPhase.BuildPlacement);
     }
 
     private bool HasEnoughCreditsForPreview(BuildSpec spec)

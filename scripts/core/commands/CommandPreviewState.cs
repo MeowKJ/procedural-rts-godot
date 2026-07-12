@@ -7,12 +7,14 @@ public readonly record struct CommandPreviewState(
     string Label,
     Vector2 ScreenPosition,
     Vector2 WorldPosition,
-    bool IsValid)
+    bool IsValid,
+    CommandPreviewPhase Phase = CommandPreviewPhase.PassiveHover)
 {
     public static CommandPreviewState None { get; } = new(
         CommandPreviewKind.None,
         "",
         Vector2.Zero,
         Vector2.Zero,
-        false);
+        false,
+        CommandPreviewPhase.None);
 }

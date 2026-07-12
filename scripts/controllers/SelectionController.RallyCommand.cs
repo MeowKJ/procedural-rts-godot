@@ -74,7 +74,8 @@ public partial class SelectionController
                 GameText.T("preview.rally.resource"),
                 screenPosition,
                 resourceField.Position,
-                true);
+                true,
+                CommandPreviewPhase.ArmedCommand);
         }
 
         if (_hoveredUnitInstance is { } unit && IsFriendlyRuntimeRallyTarget(unit))
@@ -84,7 +85,8 @@ public partial class SelectionController
                 GameText.T("preview.rally.friendly"),
                 screenPosition,
                 unit.Position,
-                true);
+                true,
+                CommandPreviewPhase.ArmedCommand);
         }
 
         return new CommandPreviewState(
@@ -92,7 +94,8 @@ public partial class SelectionController
             GameText.T("preview.rally.point"),
             screenPosition,
             worldPosition,
-            true);
+            true,
+            CommandPreviewPhase.ArmedCommand);
     }
 
     private void FinishArmedRallyCommand(Vector2 screenPoint)

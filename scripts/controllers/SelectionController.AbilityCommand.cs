@@ -81,7 +81,7 @@ public partial class SelectionController
         var target = _hoveredUnitInstance?.Position
             ?? _hoveredBuildingProjection?.Position
             ?? worldPosition;
-        return new CommandPreviewState(AbilityPreviewKind(ability), AbilityLabel(ability), screenPosition, target, true);
+        return new CommandPreviewState(AbilityPreviewKind(ability), AbilityLabel(ability), screenPosition, target, true, CommandPreviewPhase.ArmedCommand);
     }
 
     private void FinishSelfAbilityCommand(AbilityKind ability)

@@ -336,7 +336,7 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, presentation, FontTiny);
         button.Pressed += () =>
         {
-            SetSelectedUnitStance(presentation.Stance);
+            SetSelectedUnitStance(presentation.Stance, _selectedUnitCount);
             UnitStanceRequested?.Invoke(presentation.Stance);
         };
         button.SetSelected(_selectedUnitStance is not null && presentation.Stance == _selectedUnitStance.Value);

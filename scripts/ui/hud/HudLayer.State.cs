@@ -35,6 +35,7 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
     private Label _providerLaneSummaryValue = null!;
+    private Label _commandRibbonContextValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _repeatProductionStateValue = null!;
@@ -81,6 +82,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
+    private int _selectedUnitCount;
     private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedProductionProviderId;
     private ProductionProviderLaneScope _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
@@ -351,6 +353,7 @@ public partial class HudLayer : CanvasLayer
         _commandPreview.Preview = preview;
         ApplyCommandCursor(preview);
         _commandPreview.QueueRedraw();
+        RefreshCommandRibbonContext();
     }
 
     public void SetOutcomeBanner(GameOutcome outcome, string detail)
@@ -590,24 +593,6 @@ public partial class HudLayer : CanvasLayer
         return disabledReasonKey == "ui.needCredits"
             ? GameText.Format("ui.needCredits", cost)
             : string.IsNullOrWhiteSpace(disabledReasonKey) ? "" : GameText.T(disabledReasonKey);
-    }
-
-    public void SetMoveCommandMode(MoveCommandMode mode)
-    {
-        _selectedMoveMode = mode;
-        foreach (var button in _moveModeButtons)
-        {
-            button.SetSelected(button.Mode == mode);
-        }
-    }
-
-    public void SetSelectedUnitStance(UnitStance? stance)
-    {
-        _selectedUnitStance = stance;
-        foreach (var button in _stanceModeButtons)
-        {
-            button.SetSelected(stance is not null && button.Stance == stance.Value);
-        }
     }
 
     public readonly record struct MinimapUnit(Vector2 Position, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);

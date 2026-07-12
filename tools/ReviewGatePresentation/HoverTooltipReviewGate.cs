@@ -11,7 +11,10 @@ static class HoverTooltipReviewGate
         var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RallyCommand.cs");
         var repairCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
         var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
+        var abilityCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.AbilityCommand.cs");
         var stancePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "UnitStancePresentation.cs");
+        var ribbonContext = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandRibbonContextState.cs");
+        var previewState = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewState.cs");
         var uiFactory = ReviewGateSource.Read(root, "scripts", "ui", "UiFactory.cs");
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
@@ -38,7 +41,7 @@ static class HoverTooltipReviewGate
         RequireText(rallyCommand, "GameText.T(\"preview.rally.resource\")", "Armed rally preview must label resource targets distinctly.", result);
         RequireText(rallyCommand, "GameText.T(\"preview.rally.friendly\")", "Armed rally preview must label friendly-unit targets distinctly.", result);
         RequireText(preview, "CommandPreviewKind.Move", "Selection preview must expose move state.", result);
-        RequireText(preview, "MoveModeStatus(PreviewMoveModeFromModifiers())", "Selection move preview must reuse command-mode labels instead of generic move text.", result);
+        RequireText(preview, "CommandRibbonContextResolver.MoveModeLabel(PreviewMoveModeFromModifiers())", "Selection move preview must reuse the shared command-ribbon mode label.", result);
         RequireText(preview, "Input.IsKeyPressed(Key.Ctrl)", "Selection move preview must expose Ctrl ignore-advance modifier feedback.", result);
         RequireText(preview, "Input.IsKeyPressed(Key.Alt)", "Selection move preview must expose Alt attack-advance modifier feedback.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildValid", "Build placement preview must expose valid placement state.", result);
@@ -110,6 +113,16 @@ static class HoverTooltipReviewGate
         ForbidText(battleRoot, "StanceLabel(UnitStance stance)", "BattleRoot must not retain a duplicate stance label switch.", result);
         ForbidText(selectionHotkeys, "Key.Z => UnitStance.Hold", "SelectionController must not retain a duplicate stance hotkey switch.", result);
         ForbidText(uiFactory, "UnitStance.Hold => palette", "UiFactory must resolve catalog accent roles instead of stance values.", result);
+        RequireText(previewState, "CommandPreviewPhase Phase = CommandPreviewPhase.PassiveHover", "Command previews must classify passive hover structurally by default.", result);
+        RequireText(rallyCommand, "CommandPreviewPhase.ArmedCommand", "Armed rally previews must expose typed command phase.", result);
+        RequireText(repairCommand, "CommandPreviewPhase.ArmedCommand", "Armed repair previews must expose typed command phase.", result);
+        RequireText(abilityCommand, "CommandPreviewPhase.ArmedCommand", "Targeted ability previews must expose typed command phase.", result);
+        RequireText(buildPlacement, "CommandPreviewPhase.BuildPlacement", "Build previews must expose typed placement phase.", result);
+        RequireText(ribbonContext, "CommandPreviewPhase.ArmedCommand or CommandPreviewPhase.BuildPlacement", "Ribbon context must prioritize structurally active previews.", result);
+        RequireText(hudLayer, "Name = \"RibbonCommandContext\"", "HUD must own exactly one typed command-ribbon context node.", result);
+        RequireText(hudLayer, "CommandRibbonContextResolver.Resolve(", "HUD ribbon context must use the shared resolver.", result);
+        RequireText(hudLayer, "SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)", "HUD stance context must receive explicit selection count.", result);
+        ForbidText(ribbonContext, "previewLabel ==", "Ribbon context classification must not compare localized preview labels.", result);
         RequireText(selectionInput, "DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift))", "Active marquee must show candidate count and additive state.", result);
         RequireText(dragFeedback, "UnitBattlefield!.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)", "Runtime drag feedback must use the authoritative candidate collector.", result);
         RequireText(dragFeedback, "State.CountSelectionRectCandidates(worldRect)", "Legacy drag feedback must use the authoritative candidate collector.", result);
