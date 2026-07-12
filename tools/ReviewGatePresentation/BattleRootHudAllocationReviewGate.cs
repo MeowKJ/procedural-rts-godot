@@ -152,6 +152,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(selectionController, "FinishArmedRallyCommand(mouse.Position)", "Armed rally mode must finish through the selected-building rally backend on click.", result);
         RequireText(hudState, "Label _sandboxStateHashValue", "Sandbox developer HUD must own a state-hash readout label.", result);
         RequireText(hudBuild, "Name = \"SandboxStateHash\"", "Sandbox developer HUD must expose the state-hash readout as a stable node.", result);
+        RequireText(hudBuild, "_sandboxDeveloperPanel.Visible = false", "Sandbox developer controls must be hidden by default.", result);
+        RequireText(battleRoot, "SetSandboxDeveloperControlsVisible(_state.Options.LaunchMode == LaunchMode.Sandbox)", "Normal skirmish must not expose sandbox developer controls.", result);
         RequireText(sandbox, "SandboxDebugOverlayFlag.StateHash", "Sandbox state-hash readout must be gated by the debug overlay flag.", result);
         RequireText(sandbox, "_unitBattlefield.EntityWorld.DeterministicStateHash()", "Sandbox state-hash readout must use the live runtime EntityWorld hash.", result);
         RequireText(process, "RefreshSandboxStateHash();", "BattleRoot process must refresh sandbox state-hash overlay state.", result);
