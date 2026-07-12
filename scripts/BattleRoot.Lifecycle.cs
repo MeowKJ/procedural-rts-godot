@@ -21,7 +21,6 @@ public partial class BattleRoot
         }
 
         _state.VisualThemeChanged -= SyncEntityWorldResourceAtmosphere;
-        _hud?.ReleaseManagedResources();
         _audio?.ReleaseManagedResources();
         _state.FogOfWar.ReleaseManagedResources();
         ManagedGodotResourceCleanup.ReleaseTree(this);

@@ -7,6 +7,7 @@ public partial class HudLayer
 {
     private BattleCursorState? _activeCursorState;
     private readonly Dictionary<string, Texture2D?> _cursorTextureCache = new();
+    private readonly HashSet<Texture2D> _ownedCursorTextures = [];
 
     private void ApplyCommandCursor(CommandPreviewState preview)
     {
@@ -48,6 +49,10 @@ public partial class HudLayer
         if (image.Load(absolutePath) == Error.Ok)
         {
             texture = ImageTexture.CreateFromImage(image);
+            if (texture is not null)
+            {
+                _ownedCursorTextures.Add(texture);
+            }
         }
         else if (ResourceLoader.Exists(texturePath))
         {
@@ -56,5 +61,20 @@ public partial class HudLayer
 
         _cursorTextureCache[texturePath] = texture;
         return texture;
+    }
+
+    private void ReleaseCursorTextures()
+    {
+        Input.SetCustomMouseCursor(null, Input.CursorShape.Arrow);
+        Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
+        _activeCursorState = null;
+
+        foreach (var texture in _ownedCursorTextures)
+        {
+            ManagedGodotResourceCleanup.DisposeGodotObject(texture);
+        }
+
+        _ownedCursorTextures.Clear();
+        _cursorTextureCache.Clear();
     }
 }

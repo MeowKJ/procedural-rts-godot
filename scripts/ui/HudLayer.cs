@@ -98,6 +98,11 @@ public partial class HudLayer : CanvasLayer
         LayoutDynamicHud(viewport);
     }
 
+    public override void _ExitTree()
+    {
+        ReleaseManagedResources();
+    }
+
     public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is not InputEventKey { Pressed: true, Echo: false } key)
@@ -129,6 +134,8 @@ public partial class HudLayer : CanvasLayer
 
     public void ReleaseManagedResources()
     {
+        ReleaseCursorTextures();
+
         if (_minimapSurface is not null)
         {
             _minimapSurface.FogMask = null;
