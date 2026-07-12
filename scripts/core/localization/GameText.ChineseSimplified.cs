@@ -25,6 +25,8 @@ public static partial class GameText
         ["selection.noArmy"] = "无可用作战单位",
         ["selection.idleHarvesterSelected"] = "已选择闲置采集车",
         ["selection.noIdleHarvester"] = "无闲置采集车",
+        ["selection.dragFeedback.select"] = "选择 {0}",
+        ["selection.dragFeedback.add"] = "追加 {0}",
         ["ui.queue.empty"] = "队列空",
         ["ui.queue.summary"] = "队列 {0} {1}%  总数 {2}\n取消返还 {3}",
         ["ui.cancel"] = "取消",

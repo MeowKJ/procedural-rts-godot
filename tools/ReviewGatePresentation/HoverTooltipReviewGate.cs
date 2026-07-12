@@ -7,6 +7,7 @@ static class HoverTooltipReviewGate
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
         var controlBindingCatalog = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs");
         var selectionInput = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.cs");
+        var dragFeedback = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.DragFeedback.cs");
         var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RallyCommand.cs");
         var repairCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
         var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
@@ -98,6 +99,13 @@ static class HoverTooltipReviewGate
         ForbidText(selectionHotkeys, "Key.F1 => MoveCommandMode", "F1 must remain owned by the hotkey legend instead of also changing move mode.", result);
         ForbidText(selectionHotkeys, "Key.F2 => MoveCommandMode", "F2 must remain available to sandbox time-scale controls instead of also changing move mode.", result);
         ForbidText(selectionHotkeys, "Key.F3 => MoveCommandMode", "F3 must remain available to debug overlays instead of also changing move mode.", result);
+        RequireText(selectionInput, "DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift))", "Active marquee must show candidate count and additive state.", result);
+        RequireText(dragFeedback, "UnitBattlefield!.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)", "Runtime drag feedback must use the authoritative candidate collector.", result);
+        RequireText(dragFeedback, "State.CountSelectionRectCandidates(worldRect)", "Legacy drag feedback must use the authoritative candidate collector.", result);
+        RequireText(dragFeedback, "SelectionMath.ScreenPixelsToWorld", "Drag feedback must remain screen-space stable across zoom levels.", result);
+        ForbidText(dragFeedback, "foreach", "Drag feedback must not duplicate selection eligibility scans.", result);
+        RequireText(englishText, "[\"selection.dragFeedback.add\"] = \"ADD {0}\"", "English additive drag feedback must be localized.", result);
+        RequireText(chineseText, "[\"selection.dragFeedback.add\"] = \"追加 {0}\"", "Simplified Chinese additive drag feedback must be localized.", result);
         RequireText(hudPreview, "Preview.ScreenPosition + new Vector2(18, 18)", "Hover guidance must remain a transient cursor-side command preview instead of persistent HUD copy.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Move:", "HUD command preview must render move as a distinct mode.", result);
         RequireText(hudPreview, "case CommandPreviewKind.Attack:", "HUD command preview must render attack as a distinct mode.", result);

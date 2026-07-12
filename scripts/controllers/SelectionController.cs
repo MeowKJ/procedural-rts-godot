@@ -182,6 +182,7 @@ public partial class SelectionController : Node2D
 
         var localRect = RectFromPoints(ScreenToWorld(rect.Position), ScreenToWorld(rect.End));
         DrawSelectionBox(localRect);
+        DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift));
     }
 
     private void StartDrag(Vector2 screenPoint, MouseButton button)
