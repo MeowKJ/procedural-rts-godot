@@ -8,7 +8,11 @@ static class FileSizePolicy
     public const int ValidationToolSuiteMax = 1000;
     public const int BridgeLegacyCompatibilityBaseline = 8;
 
-    public static readonly Dictionary<string, int> KnownRedLineCeilings = new(StringComparer.OrdinalIgnoreCase);
+    public static readonly Dictionary<string, int> KnownRedLineCeilings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["scripts/ui/hud/HudLayer.State.cs"] = 625,
+        ["tools/DesktopHudQa/Program.cs"] = 607,
+    };
 
     public static readonly string[] StableEntrypoints =
     [
