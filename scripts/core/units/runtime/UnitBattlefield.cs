@@ -40,6 +40,9 @@ public sealed partial class UnitBattlefield
     private readonly Dictionary<PlayerSlotId, int> _resourceCreditsBefore = [];
     private readonly List<int> _resourceCreditOwnerIds = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
+    private readonly HashSet<EntityId> _selectionRectCandidateBuffer = [];
+    private readonly List<UnitInstance> _selectionRectEconomyUnits = [];
+    private readonly List<UnitInstance> _selectionRectCombatUnits = [];
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];
     private readonly List<int> _selectedBuildingRallyProducerIds = [];

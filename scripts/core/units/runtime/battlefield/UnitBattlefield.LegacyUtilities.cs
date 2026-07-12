@@ -297,8 +297,18 @@ public sealed partial class UnitBattlefield
         }
 
         var center = worldRect.Position + worldRect.Size / 2f;
-        var nearestEconomy = economyUnits.Min(unit => unit.Position.DistanceTo(center));
-        var nearestNonEconomy = nonEconomyUnits.Min(unit => unit.Position.DistanceTo(center));
+        var nearestEconomy = float.PositiveInfinity;
+        foreach (var unit in economyUnits)
+        {
+            nearestEconomy = MathF.Min(nearestEconomy, unit.Position.DistanceTo(center));
+        }
+
+        var nearestNonEconomy = float.PositiveInfinity;
+        foreach (var unit in nonEconomyUnits)
+        {
+            nearestNonEconomy = MathF.Min(nearestNonEconomy, unit.Position.DistanceTo(center));
+        }
+
         return nearestEconomy <= nearestNonEconomy + SelectionEconomyIntentCenterMargin;
     }
 

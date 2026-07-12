@@ -77,6 +77,7 @@ public sealed partial class GameState
     private readonly HashSet<int> _legacyRequestedSelectionIds = [];
     private readonly List<UnitModel> _legacySelectionRectHarvesters = [];
     private readonly List<UnitModel> _legacySelectionRectCombatUnits = [];
+    private readonly List<UnitModel> _legacySelectionRectCandidates = [];
 
     public Vector2 WorldSize { get; }
     public List<UnitModel> Units { get; } = [];
