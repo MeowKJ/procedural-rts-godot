@@ -193,8 +193,8 @@ public partial class HudLayer : CanvasLayer
 
     private partial class StanceModeButton : Button
     {
-        public required UnitStance Stance { get; init; }
-        public required IconGlyph Glyph { get; init; }
+        public required UnitStancePresentation Presentation { get; init; }
+        public UnitStance Stance => Presentation.Stance;
         private bool _selected;
 
         public void SetSelected(bool selected)
@@ -207,11 +207,11 @@ public partial class HudLayer : CanvasLayer
         {
             base._Draw();
             var rect = new Rect2(Vector2.Zero, Size);
-            var accent = UiFactory.HudStanceAccent(Stance, CurrentPalette);
+            var accent = UiFactory.HudStanceAccent(Presentation.AccentRole, CurrentPalette);
             var style = UiFactory.GetHudModeButtonDrawStyle(accent, _selected);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, 22, style.Icon);
+            DrawIconGlyph(this, Presentation.Glyph, rect.Size / 2f, 22, style.Icon);
         }
     }
 

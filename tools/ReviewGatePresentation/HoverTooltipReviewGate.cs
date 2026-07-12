@@ -11,6 +11,9 @@ static class HoverTooltipReviewGate
         var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RallyCommand.cs");
         var repairCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
         var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
+        var stancePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "UnitStancePresentation.cs");
+        var uiFactory = ReviewGateSource.Read(root, "scripts", "ui", "UiFactory.cs");
+        var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
         var buildPlacement = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "BuildPlacementController.cs"));
         var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
@@ -99,6 +102,14 @@ static class HoverTooltipReviewGate
         ForbidText(selectionHotkeys, "Key.F1 => MoveCommandMode", "F1 must remain owned by the hotkey legend instead of also changing move mode.", result);
         ForbidText(selectionHotkeys, "Key.F2 => MoveCommandMode", "F2 must remain available to sandbox time-scale controls instead of also changing move mode.", result);
         ForbidText(selectionHotkeys, "Key.F3 => MoveCommandMode", "F3 must remain available to debug overlays instead of also changing move mode.", result);
+        RequireText(stancePresentation, "UnitStance.Hold, \"stance.hold\", IconGlyph.StanceHold, 'Z', UnitStanceAccentRole.CatRoute", "Stance presentation catalog must preserve Hold metadata.", result);
+        RequireText(stancePresentation, "UnitStance.Ignore, \"stance.ignore\", IconGlyph.StanceIgnore, 'B', UnitStanceAccentRole.Danger", "Stance presentation catalog must preserve Ignore metadata.", result);
+        RequireText(selectionHotkeys, "UnitStancePresentationCatalog.TryDefinitionForHotkey", "Selection hotkeys must consume the shared stance presentation catalog.", result);
+        RequireText(hudLayer, "UnitStancePresentationCatalog.Definitions", "Command ribbon construction must consume the shared stance presentation catalog.", result);
+        RequireText(battleRoot, "UnitStancePresentationCatalog.DefinitionFor(stance).Label", "BattleRoot stance status must consume the shared localized label.", result);
+        ForbidText(battleRoot, "StanceLabel(UnitStance stance)", "BattleRoot must not retain a duplicate stance label switch.", result);
+        ForbidText(selectionHotkeys, "Key.Z => UnitStance.Hold", "SelectionController must not retain a duplicate stance hotkey switch.", result);
+        ForbidText(uiFactory, "UnitStance.Hold => palette", "UiFactory must resolve catalog accent roles instead of stance values.", result);
         RequireText(selectionInput, "DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift))", "Active marquee must show candidate count and additive state.", result);
         RequireText(dragFeedback, "UnitBattlefield!.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)", "Runtime drag feedback must use the authoritative candidate collector.", result);
         RequireText(dragFeedback, "State.CountSelectionRectCandidates(worldRect)", "Legacy drag feedback must use the authoritative candidate collector.", result);

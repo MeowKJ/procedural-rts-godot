@@ -321,26 +321,25 @@ public partial class HudLayer : CanvasLayer
         parent.AddChild(button);
     }
 
-    private void AddStanceModeButton(Control parent, UnitStance stance, IconGlyph glyph, string tooltip, Vector2 position)
+    private void AddStanceModeButton(Control parent, UnitStancePresentation presentation, Vector2 position)
     {
         var button = new StanceModeButton
         {
-            Stance = stance,
-            Glyph = glyph,
+            Presentation = presentation,
             Position = position,
             CustomMinimumSize = new Vector2(36, 34),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
+            TooltipText = presentation.Tooltip,
         };
         button.Size = button.CustomMinimumSize;
-        UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, stance, FontTiny);
+        UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, presentation, FontTiny);
         button.Pressed += () =>
         {
-            SetSelectedUnitStance(stance);
-            UnitStanceRequested?.Invoke(stance);
+            SetSelectedUnitStance(presentation.Stance);
+            UnitStanceRequested?.Invoke(presentation.Stance);
         };
-        button.SetSelected(_selectedUnitStance is not null && stance == _selectedUnitStance.Value);
+        button.SetSelected(_selectedUnitStance is not null && presentation.Stance == _selectedUnitStance.Value);
         _stanceModeButtons.Add(button);
         parent.AddChild(button);
     }

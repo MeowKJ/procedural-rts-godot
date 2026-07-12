@@ -521,7 +521,7 @@ public partial class BattleRoot
             : GameText.Format("ui.detail.damage", style.Descriptor.Damage);
         var detail = isEconomy
             ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
-            : GameText.Format("ui.detail.cooldown", StanceLabel(unit.Stance), style.Descriptor.AttackCooldown);
+            : GameText.Format("ui.detail.cooldown", UnitStancePresentationCatalog.DefinitionFor(unit.Stance).Label, style.Descriptor.AttackCooldown);
 
         _hud.SetSelectionInfo(
             GameText.T(style.Presentation.NameKey).ToUpperInvariant(),

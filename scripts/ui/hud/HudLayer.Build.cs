@@ -105,11 +105,11 @@ public partial class HudLayer : CanvasLayer
         _commandRibbon.Visible = true;
         root.AddChild(_commandRibbon);
 
-        AddStanceModeButton(_commandRibbon, UnitStance.Hold, IconGlyph.StanceHold, $"Z  {GameText.T("stance.hold")}", new Vector2(12, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.Aggressive, IconGlyph.StanceAggressive, $"X  {GameText.T("stance.aggressive")}", new Vector2(58, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.ReturnGuard, IconGlyph.StanceReturn, $"C  {GameText.T("stance.returnGuard")}", new Vector2(104, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.PassiveRetaliate, IconGlyph.StancePassive, $"V  {GameText.T("stance.passive")}", new Vector2(150, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.Ignore, IconGlyph.StanceIgnore, $"B  {GameText.T("stance.ignore")}", new Vector2(196, 6));
+        for (var index = 0; index < UnitStancePresentationCatalog.Definitions.Length; index++)
+        {
+            var presentation = UnitStancePresentationCatalog.Definitions[index];
+            AddStanceModeButton(_commandRibbon, presentation, new Vector2(12 + index * 46, 6));
+        }
 
         AddSeparator(_commandRibbon, new Vector2(254, 8));
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Direct, IconGlyph.Move, GameText.T("ui.tooltip.directMove"), new Vector2(274, 6));

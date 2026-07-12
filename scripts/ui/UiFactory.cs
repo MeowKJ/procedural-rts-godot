@@ -239,9 +239,9 @@ public static class UiFactory
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(palette.CatRoute, 0.24f), HudMoveModeAccent(mode, palette), fontSize);
     }
 
-    public static void ApplyHudStanceButtonTheme(Button button, SoftOldCityHudPalette palette, UnitStance stance, int fontSize)
+    public static void ApplyHudStanceButtonTheme(Button button, SoftOldCityHudPalette palette, UnitStancePresentation presentation, int fontSize)
     {
-        var accent = HudStanceAccent(stance, palette);
+        var accent = HudStanceAccent(presentation.AccentRole, palette);
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(accent, 0.22f), accent, fontSize);
     }
 
@@ -266,15 +266,15 @@ public static class UiFactory
         };
     }
 
-    public static Color HudStanceAccent(UnitStance stance, SoftOldCityHudPalette palette)
+    public static Color HudStanceAccent(UnitStanceAccentRole role, SoftOldCityHudPalette palette)
     {
-        return stance switch
+        return role switch
         {
-            UnitStance.Hold => palette.CatRoute,
-            UnitStance.Aggressive => palette.DogCommand,
-            UnitStance.ReturnGuard => palette.Repair,
-            UnitStance.PassiveRetaliate => palette.Text,
-            UnitStance.Ignore => palette.Danger,
+            UnitStanceAccentRole.CatRoute => palette.CatRoute,
+            UnitStanceAccentRole.DogCommand => palette.DogCommand,
+            UnitStanceAccentRole.Repair => palette.Repair,
+            UnitStanceAccentRole.Text => palette.Text,
+            UnitStanceAccentRole.Danger => palette.Danger,
             _ => palette.Repair,
         };
     }
