@@ -5,7 +5,7 @@ static class MatchLifecycleReviewGate
         var verifyAll = ReviewGateSource.Read(root, "tools", "VerifyAll", "Program.cs");
         var pauseQa = ReviewGateSource.Read(root, "scripts", "PauseQaRoot.cs");
         var skirmishQa = ReviewGateSource.Read(root, "scripts", "SkirmishFlowQaRoot.cs");
-        var normalExitQa = ReviewGateSource.Read(root, "scripts", "NormalExitQaRoot.cs");
+        var normalExitQa = ReviewGateSource.Read(root, "scripts", "qa", "NormalExitQaRoot.cs");
         var visualQaScript = ReviewGateSource.Read(root, "tools", "VisualQaCapture.sh");
         var pauseMenu = ReviewGateSource.Read(root, "scripts", "ui", "PauseMenuLayer.cs");
         var outcome = ReviewGateSource.Read(root, "scripts", "ui", "OutcomeScreenLayer.cs");
