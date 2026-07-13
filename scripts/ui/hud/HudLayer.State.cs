@@ -255,8 +255,7 @@ public partial class HudLayer : CanvasLayer
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
-            _manualDrawerOpen = true;
-            _productionDrawerProgress = 1f;
+            SetCommandDeckOpen(true);
         }
     }
 

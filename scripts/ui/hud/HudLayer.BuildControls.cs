@@ -173,7 +173,7 @@ public partial class HudLayer : CanvasLayer
         button.Pressed += () =>
         {
             SelectCatalogMode(mode);
-            _manualDrawerOpen = true;
+            SetCommandDeckOpen(true);
         };
         button.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModePageSelectedText(button));
         button.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.HelpText);

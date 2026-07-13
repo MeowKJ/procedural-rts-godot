@@ -225,7 +225,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must count provider lanes for the selected train category.");
     RequireText(hudLayer, "CatalogModeButton", "Right command panel mode controls must be clickable buttons, not decorative labels.");
     RequireText(hudLayer, "SelectCatalogMode(mode);", "Build/Train mode buttons must switch catalog pages.");
-    RequireText(hudLayer, "_manualDrawerOpen = true;", "Catalog page clicks must explicitly open the fixed command deck.");
+    RequireText(hudLayer, "SetCommandDeckOpen(true);", "Catalog page clicks must explicitly open the fixed command deck.");
     RequireText(hudLayer, "private void CycleCatalogMode(int direction)", "Right catalog pages must expose keyboard cycling through the same mode selection path.");
     RequireText(hudLayer, "key.Keycode == Key.Pageup", "Right catalog keyboard cycling must support PageUp.");
     RequireText(hudLayer, "key.Keycode == Key.Pagedown", "Right catalog keyboard cycling must support PageDown.");
@@ -291,6 +291,8 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(hudLayer, "TooltipText", "In-match HUD controls must not spawn pointer-following tooltip boxes.");
     ForbidText(hudLayer, "DrawLabel(position", "Command preview must remain graphical and must not draw text next to the pointer.");
     ForbidText(hudLayer, "pointerNearRail", "The command deck must not open merely because the pointer approaches the right edge.");
+    var visualQaCapture = File.ReadAllText(Path.Combine(root, "scripts", "VisualQaCaptureRoot.cs"));
+    RequireText(visualQaCapture, "battle_hud_command_deck.png", "Visual QA must capture the explicitly opened icon-first command deck.");
     RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.");
     RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.");
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");

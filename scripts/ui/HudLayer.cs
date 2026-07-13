@@ -94,7 +94,7 @@ public partial class HudLayer : CanvasLayer
 
         if (key.Keycode == Key.Tab)
         {
-            _manualDrawerOpen = !_manualDrawerOpen;
+            SetCommandDeckOpen(!_manualDrawerOpen);
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -111,6 +111,12 @@ public partial class HudLayer : CanvasLayer
             CycleCatalogMode(1);
             GetViewport().SetInputAsHandled();
         }
+    }
+
+    public void SetCommandDeckOpen(bool open)
+    {
+        _manualDrawerOpen = open;
+        _productionDrawerProgress = open ? 1f : 0f;
     }
 
     public void ReleaseManagedResources()

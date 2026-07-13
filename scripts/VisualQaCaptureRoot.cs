@@ -76,6 +76,13 @@ public partial class VisualQaCaptureRoot : Node
         }
 
         SetCaptureSize(CaptureSize);
+        var hud = RequiredNode<HudLayer>("Hud");
+        hud.SetCommandDeckOpen(true);
+        await NextFrames(4);
+        await Capture(outputPath, "battle_hud_command_deck.png");
+        hud.SetCommandDeckOpen(false);
+
+        SetCaptureSize(CaptureSize);
         await NextFrames(8);
         SetBattleTheme(WorldVisualTheme.FogMorning, "visual-qa-fog");
         await Capture(outputPath, "battle_hud_style1b_fog.png");

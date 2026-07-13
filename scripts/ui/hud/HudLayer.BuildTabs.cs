@@ -76,11 +76,7 @@ public partial class HudLayer : CanvasLayer
 
     private void ToggleCommandDeck()
     {
-        _manualDrawerOpen = !_manualDrawerOpen;
-        if (_manualDrawerOpen)
-        {
-            _productionDrawerProgress = 1f;
-        }
+        SetCommandDeckOpen(!_manualDrawerOpen);
     }
 
     private void SelectProductionTab(BuildCategory category)
@@ -131,7 +127,7 @@ public partial class HudLayer : CanvasLayer
             _ => CatalogModeKind.Train,
         };
         SelectCatalogMode(next);
-        _manualDrawerOpen = true;
+        SetCommandDeckOpen(true);
         ShowCatalogInspectorHover(
             CatalogModeInspectorItemId(next),
             GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
