@@ -26,6 +26,7 @@ static partial class Program
             || ordinaryProjectileStyle.CoreWidth < ProjectileVfxMath.MinimumCoreWidth
             || ordinaryProjectileStyle.HeadRadius < ProjectileVfxMath.MinimumHeadRadius
             || ordinaryProjectileStyle.TrailAlpha < ProjectileVfxMath.MinimumTrailAlpha
+            || ordinaryProjectileStyle.MinimumVisibleSeconds < ProjectileVfxMath.MinimumVisibleSeconds
             || projectileProjections.Any(projectile => projectile.LegacyAmmoKind == AmmoKind.SeekerRocket && projectile.Style != seekerProjectileStyle))
         {
             throw new InvalidOperationException("UnitBattlefield should expose render-ready, readable EntityWorld projectile projections for CombatEffectsLayer");
@@ -48,17 +49,35 @@ static partial class Program
         var expectedMuzzle = tankCenter
             + mountSpec.Anchor.Rotated(tankProjectileAttacker.Facing)
             + mountSpec.MuzzleOffset.Rotated(mountFacing);
-        var shotStyle = ShotTrailVfxMath.StyleFor(WeaponKind.VectorCannon, tankShot?.Muzzle.DistanceTo(tankShot.TargetPosition) ?? 0);
+        var initialBallistic = tankProjectileBattlefield.EntityWorld.OrderedEntities
+            .SingleOrDefault(entity => entity.Components.TryGet<ProjectileComponentState>(out var state)
+                && state.Source == tankProjectileAttacker.EntityId
+                && state.AmmoId == WeaponCatalog.IdFor(AmmoKind.BallisticCannon));
+        var initialBallisticState = initialBallistic?.Components.Require<ProjectileComponentState>();
+        tankProjectileBattlefield.Update(1 / 30.0);
+        var ballisticProjection = tankProjectileBattlefield.ProjectileProjections()
+            .SingleOrDefault(projectile => projectile.LegacyAmmoKind == AmmoKind.BallisticCannon);
+        var simulationProjectileCount = tankProjectileBattlefield.EntityWorld.OrderedEntities
+            .Count(entity => entity.Components.Has<ProjectileComponentState>());
         if (tankShot is null
             || muzzleDistance < 18f
             || tankShot.Muzzle.DistanceTo(expectedMuzzle) > 0.5f
-            || !ShotTrailVfxMath.ShouldCreate(WeaponKind.VectorCannon)
-            || ShotTrailVfxMath.ShouldCreate(WeaponKind.NeedleRifle)
-            || !shotStyle.Draw
-            || shotStyle.Width <= shotStyle.CoreWidth
-            || tankProjectileBattlefield.ProjectileProjections().Any(projectile => projectile.LegacyAmmoKind == AmmoKind.BallisticCannon))
+            || initialBallisticState is null
+            || initialBallisticState.Origin.DistanceTo(expectedMuzzle) > 0.5f
+            || initialBallisticState.Behavior != ProjectileBehavior.Ballistic
+            || initialBallisticState.FlightDuration < initialBallisticState.Age
+            || ballisticProjection.LegacyAmmoKind != AmmoKind.BallisticCannon
+            || ballisticProjection.Behavior != ProjectileBehavior.Ballistic
+            || ballisticProjection.HitRule != HitRule.BallisticDeviation
+            || ballisticProjection.ArcHeight <= 0
+            || !ballisticProjection.HasGroundShadow
+            || tankProjectileBattlefield.ProjectileProjectionCount() != simulationProjectileCount)
         {
-            throw new InvalidOperationException("rotating-turret tanks should expose visible ballistic shot presentation from the independent mount muzzle");
+            throw new InvalidOperationException(
+                $"rotating-turret tanks should expose a visible ballistic projectile arc from the independent mount muzzle without an instant duplicate trail; "
+                + $"shot={tankShot is not null}, muzzle={muzzleDistance:0.0}/{tankShot?.Muzzle.DistanceTo(expectedMuzzle):0.0}, initial={initialBallisticState is not null}, "
+                + $"behavior={initialBallisticState?.Behavior}, projection={ballisticProjection.LegacyAmmoKind}/{ballisticProjection.Behavior}/{ballisticProjection.HitRule}, "
+                + $"arc={ballisticProjection.ArcHeight:0.0}, shadow={ballisticProjection.HasGroundShadow}, counts={tankProjectileBattlefield.ProjectileProjectionCount()}/{simulationProjectileCount}");
         }
     }
 }

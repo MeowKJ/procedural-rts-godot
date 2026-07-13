@@ -28,5 +28,6 @@
     <Compile Include="..\SimReplayEconomy\**\*.cs" Link="SimReplayEconomy\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayEconomyProduction\**\*.cs" Link="SimReplayEconomyProduction\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayMovement\**\*.cs" Link="SimReplayMovement\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayProjectileLifecycle\**\*.cs" Link="SimReplayProjectileLifecycle\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

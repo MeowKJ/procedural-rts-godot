@@ -24,7 +24,7 @@ static class CombatReadabilityReviewGate
         RequireText(death, "DrawDeathFragments(effect, t, fade, readability)", "Death VFX must share combat readability scaling.", result);
         RequireText(muzzle, "ReadabilityFor(effect.Position)", "Muzzle flashes must use combat readability policy.", result);
         RequireText(combatDraw, "ReadabilityForSegment(start, end)", "Beams must use combat readability policy.", result);
-        RequireText(combatDraw, "ReadabilityForSegment(tail, position)", "Projectiles must use combat readability policy.", result);
+        RequireText(combatDraw, "ReadabilityForSegment(visibilityTail, visibilityHead)", "Projectiles must use ground-plane combat readability policy.", result);
         RequireText(pulses, "DrawHitPunch", "Hit pulses must keep their punch marks under combat readability scaling.", result);
     }
 }

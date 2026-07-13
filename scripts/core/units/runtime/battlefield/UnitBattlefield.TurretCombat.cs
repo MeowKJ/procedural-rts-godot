@@ -24,22 +24,13 @@ public sealed partial class UnitBattlefield
         SyncBuildingTargetEntities();
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
-        StepCombatBridgeWithProjectiles(context, _turretCombatSystem);
-        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
-        ApplyTurretCombatEvents(_simEventDrainBuffer);
-        _simEventDrainBuffer.Clear();
+        StepCombatBridge(context, _turretCombatSystem);
     }
 
     private void ApplyTurretCombatEvents(IReadOnlyList<SimEvent> events)
     {
         foreach (var simEvent in events)
         {
-            if (simEvent is WeaponFiredEvent fired)
-            {
-                WeaponFired?.Invoke(fired);
-                continue;
-            }
-
             if (simEvent is not EntityDamagedEvent damaged)
             {
                 continue;

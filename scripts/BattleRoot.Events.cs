@@ -162,6 +162,31 @@ public partial class BattleRoot
         _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
     }
 
+    private void OnProjectileImpacted(ProjectileImpactEvent impact)
+    {
+        if (!WeaponCatalog.AmmoDefinitions.TryGetValue(impact.AmmoId, out var ammo))
+        {
+            return;
+        }
+
+        var radius = ammo.SplashRadius > 0
+            ? Mathf.Clamp(ammo.SplashRadius * 0.42f, 14f, 32f)
+            : 12f;
+        var style = _combatEffects.AddImpactFlash(
+            impact.Position,
+            radius,
+            ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent),
+            ammo.Behavior == ProjectileBehavior.Ballistic ? UnitWeightClass.Heavy : UnitWeightClass.Light,
+            MovementDomain.Land,
+            ammo.BaseDamage,
+            ammo.LegacyKind,
+            ammo.DamageElementId);
+        if (ammo.Behavior == ProjectileBehavior.Ballistic || ammo.SplashRadius > 0)
+        {
+            RequestImpactShake(impact.Position, style);
+        }
+    }
+
     private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
     {
         OnOutcomeChanged(outcome);

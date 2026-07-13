@@ -103,16 +103,49 @@ public static partial class SimInvariants
             Add(entity, "Projectile.Source", "source id must identify the original shooter", violations);
         }
 
-        CheckEntityReference(world, entity, "Projectile.Target", projectile.Target.Value, violations);
+        if (!world.TryGetWeaponDefinition(projectile.WeaponId, out _))
+        {
+            Add(entity, "Projectile.WeaponId", $"weapon definition '{projectile.WeaponId}' must exist", violations);
+        }
+
+        if (!world.TryGetAmmoDefinition(projectile.AmmoId, out var ammo))
+        {
+            Add(entity, "Projectile.AmmoId", $"ammo definition '{projectile.AmmoId}' must exist", violations);
+        }
+        else if (projectile.Behavior != ammo.Behavior || projectile.HitRule != ammo.HitRule)
+        {
+            Add(entity, "Projectile", $"state behavior/hit rule {projectile.Behavior}/{projectile.HitRule} must match ammo {ammo.Behavior}/{ammo.HitRule}", violations);
+        }
+
+        if (!Enum.IsDefined(projectile.Behavior) || projectile.Behavior == ProjectileBehavior.Beam)
+        {
+            Add(entity, "Projectile.Behavior", $"projectile behavior must be a non-beam value, got {projectile.Behavior}", violations);
+        }
+
+        if (!Enum.IsDefined(projectile.HitRule))
+        {
+            Add(entity, "Projectile.HitRule", $"hit rule must be valid, got {projectile.HitRule}", violations);
+        }
+
+        CheckFinite(entity, "Projectile.Origin", projectile.Origin, violations);
+        CheckFinite(entity, "Projectile.AimPoint", projectile.AimPoint, violations);
         CheckFinite(entity, "Projectile.Damage", projectile.Damage, violations);
         CheckFinite(entity, "Projectile.Velocity", projectile.Velocity, violations);
         CheckFinite(entity, "Projectile.Speed", projectile.Speed, violations);
         CheckFinite(entity, "Projectile.TrackingStrength", projectile.TrackingStrength, violations);
         CheckFinite(entity, "Projectile.HitRadius", projectile.HitRadius, violations);
+        CheckFinite(entity, "Projectile.Age", projectile.Age, violations);
+        CheckFinite(entity, "Projectile.FlightDuration", projectile.FlightDuration, violations);
         CheckFinite(entity, "Projectile.LifetimeRemaining", projectile.LifetimeRemaining, violations);
-        if (projectile.Damage < 0 || projectile.Speed <= 0 || projectile.HitRadius < 0 || projectile.LifetimeRemaining < 0)
+        if (projectile.Damage < 0
+            || projectile.Speed <= 0
+            || projectile.TrackingStrength < 0
+            || projectile.HitRadius < 0
+            || projectile.Age < 0
+            || projectile.FlightDuration <= 0
+            || projectile.LifetimeRemaining < 0)
         {
-            Add(entity, "Projectile", "damage, speed, hit radius, and lifetime must stay valid", violations);
+            Add(entity, "Projectile", "damage, speed, hit radius, age, flight duration, and lifetime must stay valid", violations);
         }
     }
 

@@ -48,6 +48,14 @@ public sealed record WeaponFiredEvent(
         ?? throw new InvalidOperationException($"Weapon fired event uses non-legacy weapon '{WeaponId}'.");
 }
 
+public sealed record ProjectileImpactEvent(
+    int Tick,
+    EntityId Projectile,
+    EntityId Source,
+    string AmmoId,
+    Vector2 Position,
+    bool HitPrimary) : SimEvent(Tick);
+
 public sealed record CommandAcknowledgedEvent(
     int Tick,
     OwnerId Owner,

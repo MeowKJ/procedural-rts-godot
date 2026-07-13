@@ -105,8 +105,8 @@ static class RegressionReviewGate
         RequireText(draw, "ProjectileProjections(_projectileProjections)", "CombatEffectsLayer.DrawProjectiles must fill the reusable projectile projection buffer.", result);
         RequireText(draw, "ProjectileVfxMath.StyleFor(projectile.AmmoKind)", "Legacy projectiles must use the shared projectile readability style.", result);
         RequireText(draw, "projectile.Style", "ECS projectiles must carry the shared projectile readability style.", result);
-        RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding)", "Projectile culling must include the tracer segment, not only the head point.", result);
-        RequireText(draw, "IsProjectileVisibleToPlayer(tail, position)", "Projectiles drawn above fog must remain gated by player visibility.", result);
+        RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding + arcHeight)", "Projectile culling must include the tracer segment and ballistic arc height.", result);
+        RequireText(draw, "IsProjectileVisibleToPlayer(visibilityTail, visibilityHead)", "Projectiles drawn above fog must remain gated by ground-plane player visibility.", result);
         ForbidRegex(draw, @"UnitBattlefield\s*\.\s*ProjectileProjections\s*\(\s*\)", "CombatEffectsLayer.DrawProjectiles must not call the allocating projectile projection API.", result);
         var projector = ReviewGateSource.Read(root, "scripts", "core", "sim", "ProjectilePresentationProjection.cs");
         RequireText(projector, "ProjectInto(EntityWorld world, PlayerSlotId viewer, List<ProjectilePresentationProjection> result)", "ProjectilePresentationProjector must expose a caller-owned buffer API.", result);

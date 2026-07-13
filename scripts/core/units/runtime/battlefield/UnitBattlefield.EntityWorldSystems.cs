@@ -4,11 +4,78 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void StepCombatBridgeWithProjectiles(SimContext context, ISimSystem combatSystem)
+    private void StepCombatBridge(SimContext context, ISimSystem combatSystem)
     {
         combatSystem.Step(context);
-        _entityWorld.FlushQueuedSpawns();
+    }
+
+    private void UpdateProjectilesFromEntityWorld(float dt)
+    {
+        var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
         _projectileSystem.Step(context);
+        _entityWorld.FlushQueuedSpawns();
+        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
+
+        foreach (var simEvent in _simEventDrainBuffer)
+        {
+            if (simEvent is WeaponFiredEvent fired)
+            {
+                WeaponFired?.Invoke(fired);
+            }
+            else if (simEvent is ProjectileImpactEvent impact)
+            {
+                ProjectileImpacted?.Invoke(impact);
+            }
+        }
+
+        ApplyUnitCombatEvents(_simEventDrainBuffer);
+        ApplyBuildingTargetCombatEvents(_simEventDrainBuffer);
+        ApplyTurretCombatEvents(_simEventDrainBuffer);
+        _simEventDrainBuffer.Clear();
+    }
+
+    private void ApplyUnitCombatEvents(IReadOnlyList<SimEvent> events)
+    {
+        foreach (var simEvent in events)
+        {
+            if (simEvent is not EntityDamagedEvent damaged
+                || UnitByEntityId(damaged.Target) is not { } target)
+            {
+                continue;
+            }
+
+            if (_entityWorld.TryGet(target.EntityId, out var targetEntity)
+                && targetEntity.Components.TryGet<HealthComponentState>(out var health))
+            {
+                target.Hp = health.Hp;
+            }
+            else
+            {
+                target.Hp -= damaged.Damage;
+            }
+
+            var attacker = UnitByEntityId(damaged.Attacker);
+            var ammoKind = attacker is not null
+                ? PrimaryWeapon(attacker).AmmoKind
+                : AmmoKindForProjectileEntity(damaged.Attacker);
+            target.LastDamageAmount = damaged.Damage;
+            target.LastDamageAmmoKind = ammoKind;
+            target.DeathOverkillDamage = MathF.Max(0, -target.Hp);
+            target.HitPulse = 1;
+            target.AlertPulse = 1;
+            if (attacker is not null)
+            {
+                UnitAttacked?.Invoke(target, attacker);
+            }
+        }
+    }
+
+    private AmmoKind? AmmoKindForProjectileEntity(EntityId entityId)
+    {
+        return _entityWorld.TryGet(entityId, out var entity)
+            && entity.Components.TryGet<ProjectileComponentState>(out var projectile)
+                ? WeaponCatalog.LegacyKindForAmmo(projectile.AmmoId)
+                : null;
     }
 
     private void UpdateConstructionFromEntityWorld(float dt)

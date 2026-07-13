@@ -11,6 +11,7 @@
     <Compile Include="..\ReviewGateDomains\**\*.cs" Link="ReviewGateDomains\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateFileSize\**\*.cs" Link="ReviewGateFileSize\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGatePresentation\**\*.cs" Link="ReviewGatePresentation\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ReviewGateProjectile\**\*.cs" Link="ReviewGateProjectile\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateRuntime\**\*.cs" Link="ReviewGateRuntime\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

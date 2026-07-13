@@ -33,6 +33,7 @@ public partial class VisualQaCaptureRoot : Node
             await CaptureMainMenu(outputPath);
             await CaptureMainMenuSettings(outputPath);
             await CaptureBattleHud(outputPath);
+            await CaptureProjectileLifecycle(outputPath);
             await CapturePause(outputPath);
             await CaptureOutcome(outputPath);
             await UnloadActiveScene();
@@ -99,6 +100,93 @@ public partial class VisualQaCaptureRoot : Node
         var pause = RequiredNode<PauseMenuLayer>("PauseMenu");
         pause.SetPaused(true);
         await Capture(outputPath, "pause_menu.png");
+    }
+
+    private async Task CaptureProjectileLifecycle(string outputPath)
+    {
+        await LoadScene(BattleScenePath);
+        SetCaptureSize(CaptureSize);
+        SetBattleTheme(WorldVisualTheme.DuskDefense, "visual-qa-projectiles");
+        if (_activeScene is not BattleRoot battle)
+        {
+            throw new InvalidOperationException("BattleRoot was not active for projectile visual QA.");
+        }
+
+        var focus = battle.DebugConfigureProjectileVisualQaScenario();
+        var combatEffects = RequiredNode<CombatEffectsLayer>("CombatEffects");
+        var battlefield = combatEffects.UnitBattlefield
+            ?? throw new InvalidOperationException("Projectile visual QA requires the live UnitBattlefield.");
+        RequiredNode<Control>("CommandPreview").Visible = false;
+        var previousMouseMode = Input.MouseMode;
+        Input.MouseMode = Input.MouseModeEnum.Hidden;
+        Input.WarpMouse(new Vector2(20, 20));
+        try
+        {
+            var capturedDirect = false;
+            var capturedBallistic = false;
+            var capturedTracking = false;
+            for (var frame = 0; frame < 240; frame++)
+            {
+                var visible = battlefield.ProjectileProjections(PlayerSlotId.One);
+                var hasDirect = false;
+                var hasBallistic = false;
+                var hasTracking = false;
+                foreach (var projectile in visible)
+                {
+                    var isMidFlight = projectile.FlightProgress is >= 0.25f and <= 0.75f;
+                    hasDirect |= isMidFlight && projectile.Behavior == ProjectileBehavior.Direct;
+                    hasBallistic |= isMidFlight && projectile.Behavior == ProjectileBehavior.Ballistic;
+                    hasTracking |= isMidFlight && projectile.Behavior == ProjectileBehavior.Tracking;
+                }
+
+                if (!capturedDirect && hasDirect)
+                {
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_direct.png", battle, focus);
+                    capturedDirect = true;
+                }
+
+                if (!capturedBallistic && hasBallistic)
+                {
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_ballistic.png", battle, focus);
+                    capturedBallistic = true;
+                }
+
+                if (!capturedTracking && hasTracking)
+                {
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_tracking.png", battle, focus);
+                    capturedTracking = true;
+                }
+
+                if (capturedDirect && capturedBallistic && capturedTracking)
+                {
+                    return;
+                }
+
+                await NextFrames(1);
+            }
+
+            throw new InvalidOperationException(
+                "Projectile visual QA did not capture Direct, Ballistic, and Tracking rounds at mid-flight within 240 frames.");
+        }
+        finally
+        {
+            Input.MouseMode = previousMouseMode;
+        }
+    }
+
+    private async Task CaptureProjectileFrame(string outputPath, string fileName, BattleRoot battle, Vector2 focus)
+    {
+        battle.State.FogOfWar.Update(battle.State.WorldSize, [(focus, 900f)]);
+        RequiredNode<FogOfWarLayer>("FogOfWar").QueueRedraw();
+        GetTree().Paused = true;
+        try
+        {
+            await Capture(outputPath, fileName);
+        }
+        finally
+        {
+            GetTree().Paused = false;
+        }
     }
 
     private async Task CaptureOutcome(string outputPath)
