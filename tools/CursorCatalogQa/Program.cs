@@ -36,7 +36,12 @@ var hudCursor = File.ReadAllText(Path.Combine(root, "scripts", "ui", "hud", "Hud
 var hudLayer = File.ReadAllText(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
 var battleLifecycle = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.Lifecycle.cs"));
 RequireText(hudCursor, "HashSet<Texture2D> _ownedCursorTextures", "HudLayer should distinguish owned ImageTexture cursors from ResourceLoader textures.", failures);
+RequireText(hudCursor, "HashSet<Input.CursorShape> _customCursorShapes", "HudLayer should track every Input shape that receives a custom cursor texture.", failures);
 RequireText(hudCursor, "_ownedCursorTextures.Add(texture)", "Source-PNG cursor textures should be registered for teardown.", failures);
+RequireText(hudCursor, "_customCursorShapes.Add(shape)", "Custom cursor assignment should register the affected Input shape.", failures);
+RequireText(hudCursor, "foreach (var shape in _customCursorShapes)", "Cursor teardown should visit every registered custom Input shape.", failures);
+RequireText(hudCursor, "Input.SetCustomMouseCursor(null, shape)", "Cursor teardown should clear each registered Input shape before disposing textures.", failures);
+RequireText(hudCursor, "_customCursorShapes.Clear()", "Cursor teardown should clear the registered Input shape set.", failures);
 RequireText(hudCursor, "Input.SetCustomMouseCursor(null, Input.CursorShape.Arrow)", "Cursor teardown should clear Input's custom cursor reference before disposing textures.", failures);
 RequireText(hudCursor, "ManagedGodotResourceCleanup.DisposeGodotObject(texture)", "Cursor teardown should dispose HUD-owned textures explicitly.", failures);
 RequireText(hudCursor, "_cursorTextureCache.Clear()", "Cursor teardown should clear cached references.", failures);

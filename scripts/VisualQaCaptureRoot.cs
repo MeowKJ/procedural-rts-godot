@@ -20,12 +20,12 @@ public partial class VisualQaCaptureRoot : Node
     ];
 
     private Node? _activeScene;
+    private Vector2I _captureSize = CaptureSize;
 
     public override async void _Ready()
     {
         try
         {
-            SetCaptureSize(CaptureSize);
             GetViewport().SetEmbeddingSubwindows(false);
             var outputPath = Path.Combine(ProjectSettings.GlobalizePath("res://"), OutputDirectory);
             Directory.CreateDirectory(outputPath);
@@ -35,6 +35,7 @@ public partial class VisualQaCaptureRoot : Node
             await CaptureBattleHud(outputPath);
             await CapturePause(outputPath);
             await CaptureOutcome(outputPath);
+            await UnloadActiveScene();
 
             GD.Print($"Visual QA screenshots saved to {outputPath}");
             GetTree().Quit();
@@ -49,12 +50,14 @@ public partial class VisualQaCaptureRoot : Node
     private async Task CaptureMainMenu(string outputPath)
     {
         await LoadScene(MainMenuScenePath);
+        SetCaptureSize(CaptureSize);
         await Capture(outputPath, "main_menu.png");
     }
 
     private async Task CaptureMainMenuSettings(string outputPath)
     {
         await LoadScene(MainMenuScenePath);
+        SetCaptureSize(CaptureSize);
         var settings = RequiredNode<SettingsOverlayLayer>("Settings");
         settings.Open();
         await Capture(outputPath, "main_menu_settings.png");
@@ -62,8 +65,8 @@ public partial class VisualQaCaptureRoot : Node
 
     private async Task CaptureBattleHud(string outputPath)
     {
-        SetCaptureSize(CaptureSize);
         await LoadScene(BattleScenePath);
+        SetCaptureSize(CaptureSize);
         await Capture(outputPath, "battle_hud.png");
         foreach (var size in BattleHudCaptureSizes)
         {
@@ -84,8 +87,8 @@ public partial class VisualQaCaptureRoot : Node
 
     private async Task CapturePause(string outputPath)
     {
-        SetCaptureSize(CaptureSize);
         await LoadScene(BattleScenePath);
+        SetCaptureSize(CaptureSize);
         var pause = RequiredNode<PauseMenuLayer>("PauseMenu");
         pause.SetPaused(true);
         await Capture(outputPath, "pause_menu.png");
@@ -93,8 +96,8 @@ public partial class VisualQaCaptureRoot : Node
 
     private async Task CaptureOutcome(string outputPath)
     {
-        SetCaptureSize(CaptureSize);
         await LoadScene(BattleScenePath);
+        SetCaptureSize(CaptureSize);
         var outcome = RequiredNode<OutcomeScreenLayer>("OutcomeScreen");
         outcome.ShowOutcome(GameOutcome.Victory, GameText.T("ui.outcome.enemyHqDestroyed"));
         await Capture(outputPath, "outcome_victory.png");
@@ -103,17 +106,24 @@ public partial class VisualQaCaptureRoot : Node
     private async Task LoadScene(string scenePath)
     {
         GetTree().Paused = false;
-        if (_activeScene is not null)
-        {
-            _activeScene.QueueFree();
-            _activeScene = null;
-            await NextFrames(2);
-        }
+        await UnloadActiveScene();
 
         var packed = GD.Load<PackedScene>(scenePath);
         _activeScene = packed.Instantiate();
         AddChild(_activeScene);
         await NextFrames(8);
+    }
+
+    private async Task UnloadActiveScene()
+    {
+        if (_activeScene is null)
+        {
+            return;
+        }
+
+        _activeScene.QueueFree();
+        _activeScene = null;
+        await NextFrames(3);
     }
 
     private T RequiredNode<T>(string name) where T : Node
@@ -136,6 +146,18 @@ public partial class VisualQaCaptureRoot : Node
     {
         await NextFrames(6);
         var image = GetViewport().GetTexture().GetImage();
+        GD.Print(
+            $"Capture metrics {fileName}: requested {_captureSize.X}x{_captureSize.Y}, " +
+            $"window {GetTree().Root.Size.X}x{GetTree().Root.Size.Y}, " +
+            $"content {GetTree().Root.ContentScaleSize.X}x{GetTree().Root.ContentScaleSize.Y}, " +
+            $"viewport {GetViewport().GetVisibleRect().Size.X}x{GetViewport().GetVisibleRect().Size.Y}, " +
+            $"image {image.GetWidth()}x{image.GetHeight()}.");
+        if (image.GetWidth() != _captureSize.X || image.GetHeight() != _captureSize.Y)
+        {
+            throw new InvalidOperationException(
+                $"Screenshot {fileName} resolved to {image.GetWidth()}x{image.GetHeight()}, expected {_captureSize.X}x{_captureSize.Y}.");
+        }
+
         var path = Path.Combine(outputPath, fileName);
         var error = image.SavePng(path);
         if (error != Error.Ok)
@@ -160,8 +182,13 @@ public partial class VisualQaCaptureRoot : Node
         }
     }
 
-    private static void SetCaptureSize(Vector2I size)
+    private void SetCaptureSize(Vector2I size)
     {
+        var window = GetTree().Root;
+        window.ContentScaleMode = Window.ContentScaleModeEnum.Disabled;
+        window.ContentScaleSize = size;
         DisplayServer.WindowSetSize(size);
+        window.Size = size;
+        _captureSize = size;
     }
 }

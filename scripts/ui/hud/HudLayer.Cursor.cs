@@ -8,6 +8,7 @@ public partial class HudLayer
     private BattleCursorState? _activeCursorState;
     private readonly Dictionary<string, Texture2D?> _cursorTextureCache = new();
     private readonly HashSet<Texture2D> _ownedCursorTextures = [];
+    private readonly HashSet<Input.CursorShape> _customCursorShapes = [];
 
     private void ApplyCommandCursor(CommandPreviewState preview)
     {
@@ -24,10 +25,12 @@ public partial class HudLayer
         if (texture is not null)
         {
             Input.SetCustomMouseCursor(texture, shape, new Vector2(definition.HotspotX, definition.HotspotY));
+            _customCursorShapes.Add(shape);
             return;
         }
 
         Input.SetCustomMouseCursor(null, shape);
+        _customCursorShapes.Remove(shape);
         Input.SetDefaultCursorShape(shape);
     }
 
@@ -65,6 +68,12 @@ public partial class HudLayer
 
     private void ReleaseCursorTextures()
     {
+        foreach (var shape in _customCursorShapes)
+        {
+            Input.SetCustomMouseCursor(null, shape);
+        }
+
+        _customCursorShapes.Clear();
         Input.SetCustomMouseCursor(null, Input.CursorShape.Arrow);
         Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
         _activeCursorState = null;
