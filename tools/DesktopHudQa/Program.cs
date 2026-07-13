@@ -306,7 +306,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.");
     RequireText(englishText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.");
     RequireText(chineseText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.");
-    RequireText(hudLayer, "CompactMultiline(text, 34)", "Resolved catalog inspector text must compact per line instead of single-line clipping.");
+    RequireText(hudLayer, "CompactText(text.Replace('\\n', ' '), 46)", "Resolved catalog inspector text must remain on one fixed line above the card grid.");
     RequireText(hudLayer, "resolved.Layer == CatalogInspectorLayer.Pin", "Pinned catalog detail must use the typed layer marker instead of storing decorated text.");
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, button.InspectorText);", "Build and Train card clicks must pin their stable item projection before command dispatch.");
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, card.InspectorText);", "Ability and Upgrade card clicks must pin their stable item projection.");

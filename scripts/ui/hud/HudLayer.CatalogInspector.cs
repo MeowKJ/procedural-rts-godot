@@ -17,7 +17,7 @@ public partial class HudLayer
             var text = resolved.Layer == CatalogInspectorLayer.Pin
                 ? GameText.Format("ui.catalog.inspectPinned", resolved.Content.Text)
                 : resolved.Content.Text;
-            _productionValue.Text = CompactMultiline(text, 34);
+            _productionValue.Text = CompactText(text.Replace('\n', ' '), 46);
         }
     }
 
