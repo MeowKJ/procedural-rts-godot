@@ -15,6 +15,7 @@ public sealed class VehicleFactoryBuilding : BuildingDesign
             "Vector Foundry",
             860,
             new Vector2(168, 124),
+            new PlacementGridFootprint(6, 4),
             460,
             ArmorTag.Structure,
             null,

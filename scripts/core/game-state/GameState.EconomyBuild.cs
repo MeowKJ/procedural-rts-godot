@@ -244,7 +244,7 @@ public sealed partial class GameState
         ResourceInventoryChanged?.Invoke(owner, inventory);
     }
 
-    public PlacementResult ValidateBuildingPlacement(string kind, Vector2 desiredPosition)
+    public PlacementResult ValidateBuildingPlacement(string kind, Vector2 desiredPosition, float facing = 0)
     {
         var spec = BuildSpecCatalog.For(kind);
         CollectBuildingObstacles(_legacyPlacementObstacles);
@@ -255,10 +255,13 @@ public sealed partial class GameState
             spec.Footprint.Y,
             WorldSize.X,
             WorldSize.Y,
-            _legacyPlacementObstacles);
+            _legacyPlacementObstacles,
+            padding: 0,
+            logicalFootprint: spec.FootprintCells,
+            facing: facing);
     }
 
-    public PlacementResult ValidateBuildingPlacement(string kind, Owner owner, Vector2 desiredPosition)
+    public PlacementResult ValidateBuildingPlacement(string kind, Owner owner, Vector2 desiredPosition, float facing = 0)
     {
         var spec = BuildSpecCatalog.For(kind);
         var requiresBuildAuthority = spec.RequiredProducer is not null || spec.RequiredBuildings.Count > 0;
@@ -274,7 +277,9 @@ public sealed partial class GameState
             BuildPlacementAnchors(owner),
             _legacyPlacementObstacles,
             requiresBuildAuthority: requiresBuildAuthority,
-            padding: 12);
+            padding: 0,
+            logicalFootprint: spec.FootprintCells,
+            facing: facing);
     }
 
     private List<PlacementBuildAnchor> BuildPlacementAnchors(Owner owner)
@@ -285,7 +290,7 @@ public sealed partial class GameState
 
     public BuildingModel? PlaceBuilding(string kind, Owner owner, Vector2 desiredPosition, float facing = 0)
     {
-        var placement = ValidateBuildingPlacement(kind, desiredPosition);
+        var placement = ValidateBuildingPlacement(kind, desiredPosition, facing);
         if (!placement.IsValid)
         {
             return null;
@@ -296,7 +301,7 @@ public sealed partial class GameState
 
     public BuildingModel? PlaceBuildingWithinBuildRadius(string kind, Owner owner, Vector2 desiredPosition, float facing = 0)
     {
-        var placement = ValidateBuildingPlacement(kind, owner, desiredPosition);
+        var placement = ValidateBuildingPlacement(kind, owner, desiredPosition, facing);
         if (!placement.IsValid)
         {
             return null;

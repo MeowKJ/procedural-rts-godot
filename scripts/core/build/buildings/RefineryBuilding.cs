@@ -15,6 +15,7 @@ public sealed class RefineryBuilding : BuildingDesign
             "Ion Refinery",
             780,
             new Vector2(152, 118),
+            new PlacementGridFootprint(5, 4),
             430,
             ArmorTag.Structure,
             null,

@@ -15,6 +15,7 @@ public sealed class AirfieldBuilding : BuildingDesign
             "Sky Relay Airfield",
             760,
             new Vector2(184, 132),
+            new PlacementGridFootprint(6, 5),
             520,
             ArmorTag.Structure,
             null,

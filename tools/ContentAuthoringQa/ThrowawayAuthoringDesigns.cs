@@ -89,6 +89,7 @@ public sealed class ThrowawayProbeBuildingDesign : BuildingDesign
             "Throwaway Probe Building",
             180,
             new Vector2(64, 56),
+            new PlacementGridFootprint(2, 2),
             280,
             ArmorTag.Structure,
             null,

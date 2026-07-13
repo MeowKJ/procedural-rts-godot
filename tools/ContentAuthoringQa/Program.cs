@@ -233,6 +233,10 @@ static void ValidateBuildingCatalog(List<string> failures)
         Require(entitySpec.Display.RoleKey == spec.RoleKey, $"{spec.Kind} must carry its BuildSpec RoleKey into EntitySpec display.", failures);
         RequireHasTranslation(spec.NameKey, $"{spec.Kind} name key", failures);
         RequireHasTranslation(spec.RoleKey, $"{spec.Kind} role key", failures);
+        Require(spec.FootprintCells.IsValid, $"{spec.Kind} must declare a positive logical FootprintCells value.", failures);
+        var logicalFootprint = spec.LogicalFootprint();
+        Require(logicalFootprint.X >= spec.Footprint.X && logicalFootprint.Y >= spec.Footprint.Y,
+            $"{spec.Kind} logical FootprintCells must contain its visual Footprint.", failures);
         Require(spec.RequiredProducer is null || BuildSpecCatalog.Definitions.ContainsKey(spec.RequiredProducer), $"{spec.Kind} has a missing required producer.", failures);
         ValidateElementDefense(spec.ElementDefense, $"{spec.Kind} build spec", failures);
         foreach (var required in spec.RequiredBuildings)
@@ -346,12 +350,13 @@ static void ValidateThrowawayAuthoringPath(List<string> failures)
 
 static IEnumerable<EntityComponentState> ThrowawayBuildingComponents(BuildSpec spec)
 {
+    var logicalFootprint = spec.LogicalFootprint();
     yield return new ConstructionIdentityComponentState(spec.Kind);
     yield return new HealthComponentState(spec.MaxHp, spec.MaxHp);
     yield return new SelectableComponentState();
     yield return new VisionComponentState(spec.SightRange);
-    yield return new CollisionComponentState(MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f, 8, 100, BlocksMovement: true);
-    yield return new FootprintComponentState(spec.Footprint, spec.PlacementDomain);
+    yield return new CollisionComponentState(MathF.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f, 8, 100, BlocksMovement: true);
+    yield return new FootprintComponentState(logicalFootprint, spec.PlacementDomain);
     yield return new ConstructionComponentState(0, spec.BuildTime, spec.Cost, spec.RefundRatio);
     yield return new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true);
 }

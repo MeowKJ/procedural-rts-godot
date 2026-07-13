@@ -43,14 +43,15 @@ internal static class CounterReadabilityWorldSetup
 
     public static EntityInstance SpawnBuilding(EntityWorld world, BuildSpec spec, OwnerId owner, Vector2 position, float facing)
     {
-        var radius = MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f;
+        var logicalFootprint = spec.LogicalFootprint(facing);
+        var radius = MathF.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f;
         var components = new List<EntityComponentState>
         {
             new HealthComponentState(spec.MaxHp, spec.MaxHp),
             new SelectableComponentState(),
             new VisionComponentState(spec.SightRange),
             new CollisionComponentState(radius, 8, 100, BlocksMovement: true),
-            new FootprintComponentState(spec.Footprint, spec.PlacementDomain),
+            new FootprintComponentState(logicalFootprint, spec.PlacementDomain),
             new ConstructionComponentState(1, spec.BuildTime, spec.Cost, spec.RefundRatio),
             new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true),
             new PresentationPulseComponentState(),

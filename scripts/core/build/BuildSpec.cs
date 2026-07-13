@@ -101,6 +101,7 @@ public sealed record BuildSpec(
     string Label,
     float MaxHp,
     Vector2 Footprint,
+    PlacementGridFootprint FootprintCells,
     float SightRange,
     ArmorTag ArmorTag,
     WeaponKind? WeaponKind,
@@ -120,6 +121,8 @@ public sealed record BuildSpec(
     ElementDefenseProfile? ElementDefense = null,
     TargetTraitProfile? TargetTraits = null)
 {
+    public Vector2 LogicalFootprint(float facing = 0) => FootprintCells.Rotated(facing).WorldSize;
+
     public BuildConstructionPolicy ConstructionMethods => ConstructionPolicy ?? BuildConstructionPolicy.Standard;
 
     public IReadOnlyList<ConstructionMethod> ConstructionMethodMetadata => ConstructionMethods.MethodMetadata;
