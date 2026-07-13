@@ -289,11 +289,13 @@ public partial class HudLayer : CanvasLayer
             _queueStatusPulse = 1f;
             _lastQueueSummary = summary;
             _lastCanCancelProduction = canCancel;
+            var lineBreak = summary.IndexOf('\n');
+            var surfaceSummary = lineBreak >= 0 ? summary[..lineBreak] : summary;
+            _queueValue.Text = CompactText(surfaceSummary, 28);
+            _cancelProduction.FixedHoverText = canCancel ? summary : GameText.T("ui.cancel.none");
         }
 
-        _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
-        _cancelProduction.FixedHoverText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
         RefreshProductionProviderLaneSummary();
     }
 

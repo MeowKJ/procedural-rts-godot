@@ -30,7 +30,10 @@ static class RightCommandDeckQa
         RequireText(hudLayer, "ProviderLaneSummaryText(state)", "Train provider lane summary must render selected provider count, queue count, progress, and availability.");
         RequireText(hudLayer, "ProviderLaneSummaryDisabledReason(state.DisabledReasonKey)", "Train provider lane summary must use rail-safe disabled reason codes.");
         RequireText(hudLayer, "BindFixedHoverText", "HUD hover/focus help must route into a fixed information surface.");
+        RequireText(hudLayer, "var lineBreak = summary.IndexOf('\\n');", "The live queue surface must collapse localized multi-line summaries to one compact line.");
+        RequireText(hudLayer, "_cancelProduction.FixedHoverText = canCancel ? summary", "Complete queue detail must remain available through the fixed inspector rather than overflowing the drawer.");
         ForbidText(hudLayer, "TooltipText", "In-match HUD controls must not spawn pointer-following tooltip boxes.");
+        ForbidText(hudLayer, "_queueValue.Text = CompactMultiline(summary, 28)", "The compact queue surface must not render a second line outside the drawer.");
         ForbidText(hudLayer, "DrawLabel(position", "Command preview must remain graphical and must not draw text next to the pointer.");
         ForbidText(hudLayer, "pointerNearRail", "The command deck must not open merely because the pointer approaches the right edge.");
 
