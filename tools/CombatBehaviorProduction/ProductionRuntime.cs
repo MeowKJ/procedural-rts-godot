@@ -6,7 +6,8 @@ static partial class Program
         unitProductionBattlefield.WorldSize = new Vector2(900, 700);
         unitProductionBattlefield.SetCredits(PlayerSlotId.One, 500);
         var unitProductionBarracksSpec = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
-        var unitProductionBarracksRadius = Mathf.Max(unitProductionBarracksSpec.Footprint.X, unitProductionBarracksSpec.Footprint.Y) * 0.5f;
+        var unitProductionBarracksFootprint = unitProductionBarracksSpec.LogicalFootprint();
+        var unitProductionBarracksRadius = Mathf.Max(unitProductionBarracksFootprint.X, unitProductionBarracksFootprint.Y) * 0.5f;
         var unitProductionBarracks = unitProductionBattlefield.UpsertBuildingTarget(
             88,
             BuildingDesignIds.Barracks,
@@ -53,7 +54,7 @@ static partial class Program
         if (!hiddenBuildingPips.Any(building => building.Id == unitProductionBarracks.Id)
             || hiddenBuildingPips.Any(building => building.Id == unitProductionEnemyHq.Id)
             || !exploredBuildingPips.Any(building => building.Id == unitProductionEnemyHq.Id)
-            || exploredBuildingPips.First(building => building.Id == unitProductionEnemyHq.Id).Footprint != BuildSpecCatalog.For(unitProductionEnemyHq.Kind).Footprint)
+            || exploredBuildingPips.First(building => building.Id == unitProductionEnemyHq.Id).Footprint != BuildSpecCatalog.For(unitProductionEnemyHq.Kind).LogicalFootprint(unitProductionEnemyHq.Facing))
         {
             throw new InvalidOperationException("building minimap pips should project from UnitBattlefield EntityWorld state and keep enemy buildings gated by explored fog");
         }
@@ -72,7 +73,7 @@ static partial class Program
             BuildingDesignIds.PowerPlant,
             PlayerSlotId.One,
             UnitFactionId.Dog,
-            new Vector2(180, 350),
+            new Vector2(160, 304),
             0,
             520,
             powered: true,
@@ -87,7 +88,7 @@ static partial class Program
             BuildingDesignIds.PowerPlant,
             PlayerSlotId.One,
             UnitFactionId.Dog,
-            new Vector2(180, 350),
+            new Vector2(160, 304),
             0,
             520);
         var playerPowerWithProvider = unitProductionBattlefield.PowerStatus(PlayerSlotId.One);
