@@ -105,10 +105,11 @@ public partial class VisualQaCaptureRoot : Node
             throw new InvalidOperationException("BattleRoot was not active for projectile visual QA.");
         }
 
-        battle.DebugConfigureProjectileVisualQaScenario();
+        var focus = battle.DebugConfigureProjectileVisualQaScenario();
         var combatEffects = RequiredNode<CombatEffectsLayer>("CombatEffects");
         var battlefield = combatEffects.UnitBattlefield
             ?? throw new InvalidOperationException("Projectile visual QA requires the live UnitBattlefield.");
+        RequiredNode<Control>("CommandPreview").Visible = false;
         var previousMouseMode = Input.MouseMode;
         Input.MouseMode = Input.MouseModeEnum.Hidden;
         Input.WarpMouse(new Vector2(20, 20));
@@ -129,6 +130,8 @@ public partial class VisualQaCaptureRoot : Node
 
                 if (hasDirect && hasBallistic && hasTracking)
                 {
+                    battle.State.FogOfWar.Update(battle.State.WorldSize, [(focus, 900f)]);
+                    RequiredNode<FogOfWarLayer>("FogOfWar").QueueRedraw();
                     GetTree().Paused = true;
                     try
                     {
