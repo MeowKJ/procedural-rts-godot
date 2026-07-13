@@ -18,6 +18,8 @@ foreach (var testCase in cases)
     {
         failures.Add($"{testCase.Name} {testCase.Width}x{testCase.Height} scale {testCase.UiScale:0.##}: {string.Join("; ", issues)}");
     }
+
+    RightCommandDeckQa.AppendLayoutFailures(testCase.Height, testCase.UiScale, testCase.Name, failures);
 }
 
 if (failures.Count > 0)
@@ -30,7 +32,7 @@ AssertCommandFailurePresentation();
 AssertCatalogInspectorReducer();
 UnitStancePresentationQa.AssertCatalog(); CommandRibbonContextQa.AssertResolver();
 AssertHudFactoryExtraction(repoRoot);
-Console.WriteLine("Desktop HUD QA passed: 1280x720, 1600x900, 1920x1080, high-DPI layout constraints, command failure presentation, catalog inspector reducer, and HUD UiFactory extraction");
+Console.WriteLine("Desktop HUD QA passed: 1280x720, 1600x900, 1920x1080, high-DPI layout and right-deck overlap constraints, fixed inspector behavior, command failure presentation, catalog inspector reducer, and HUD UiFactory extraction");
 
 static void AssertCommandFailurePresentation()
 {
@@ -187,7 +189,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
-    RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "new Vector2(14, 74), new Vector2(270, 20), FontTiny", "Catalog inspector must own one fixed compact information row above the cards.");
     RequireText(hudLayer, "CommandFailurePresentation.InlineText(status)", "Top status must render compact blocked-command feedback through the presentation adapter.");
     RequireText(hudLayer, "CommandFailurePresentation.PanelText(status)", "Catalog inspector must render blocked command feedback through the presentation adapter.");
     RequireText(hudLayer, "ResetCatalogInspectorContext(DefaultCatalogInspectorText());", "Catalog mode changes must atomically reset typed inspector context.");
@@ -218,7 +220,8 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "RefreshProductionProviderLaneButtons();\n        RefreshCatalogOverview();\n    }\n\n    private void ValidateProductionProviderLaneSelection()", "Build provider lane clicks must immediately refresh provider-scope overview text.");
     RequireText(hudLayer, "CatalogOverviewProductionLaneCount()", "Train catalog overview must count provider lanes for the selected train category.");
     RequireText(hudLayer, "CatalogModeButton", "Right command panel mode controls must be clickable buttons, not decorative labels.");
-    RequireText(hudLayer, "button.Pressed += () => SelectCatalogMode(mode);", "Build/Train mode buttons must switch catalog pages.");
+    RequireText(hudLayer, "SelectCatalogMode(mode);", "Build/Train mode buttons must switch catalog pages.");
+    RequireText(hudLayer, "SetCommandDeckOpen(true);", "Catalog page clicks must explicitly open the fixed command deck.");
     RequireText(hudLayer, "private void CycleCatalogMode(int direction)", "Right catalog pages must expose keyboard cycling through the same mode selection path.");
     RequireText(hudLayer, "key.Keycode == Key.Pageup", "Right catalog keyboard cycling must support PageUp.");
     RequireText(hudLayer, "key.Keycode == Key.Pagedown", "Right catalog keyboard cycling must support PageDown.");
@@ -268,17 +271,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private partial class ProductionProviderLaneButton : Button", "Train catalog provider lanes must render through stable lane buttons.");
     RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.");
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
-    RequireText(hudLayer, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.");
-    RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
-    RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
-    RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");
-    RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
-    RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept construction provider lanes separately from Train lanes.");
-    RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.");
-    RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.");
-    RequireText(hudLayer, "ui.constructionProviderLane.tooltip", "Build provider lane tooltips must use construction-specific copy.");
-    RequireText(hudLayer, "ProviderLaneSummaryText(state)", "Train provider lane summary must render selected provider count, queue count, progress, and availability.");
-    RequireText(hudLayer, "ProviderLaneSummaryDisabledReason(state.DisabledReasonKey)", "Train provider lane summary must use rail-safe disabled reason codes.");
+    RightCommandDeckQa.AssertSource(root, hudLayer);
     RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.");
     RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.");
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");
@@ -313,7 +306,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(battleRoot, "TryCreateProductionDesignPayloadForProvider", "BattleRoot must route specific provider lane production through a scoped payload helper.");
     RequireText(englishText, "[\"production.repeatEnabled\"]", "English repeat-production status text must exist.");
     RequireText(chineseText, "[\"production.repeatEnabled\"]", "Chinese repeat-production status text must exist.");
-    RequireText(hudLayer, "CompactMultiline(text, 34)", "Resolved catalog inspector text must compact per line instead of single-line clipping.");
+    RequireText(hudLayer, "CompactText(text.Replace('\\n', ' '), 46)", "Resolved catalog inspector text must remain on one fixed line above the card grid.");
     RequireText(hudLayer, "resolved.Layer == CatalogInspectorLayer.Pin", "Pinned catalog detail must use the typed layer marker instead of storing decorated text.");
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, button.InspectorText);", "Build and Train card clicks must pin their stable item projection before command dispatch.");
     RequireText(hudLayer, "PinCatalogInspectorItem(inspectorItemId, card.InspectorText);", "Ability and Upgrade card clicks must pin their stable item projection.");

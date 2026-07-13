@@ -70,26 +70,8 @@ public partial class HudLayer : CanvasLayer
     {
         var dt = (float)delta;
         var viewport = GetViewport().GetVisibleRect().Size;
-        var mouse = GetViewport().GetMousePosition();
-        var pointerNearRail = mouse.X >= viewport.X - 72;
-        var productionForcedOpen = _hasBuildingSelection || _buildModeActive || pointerNearRail;
-
-        if (productionForcedOpen)
-        {
-            _drawerInactivity = 0;
-        }
-        else
-        {
-            _drawerInactivity += dt;
-        }
-
-        if (_drawerInactivity > 2.4f)
-        {
-            _manualDrawerOpen = false;
-        }
-
-        var holdAfterActivity = _productionDrawerProgress > 0.02f && _drawerInactivity <= 2.4f;
-        var productionTarget = productionForcedOpen || _manualDrawerOpen || holdAfterActivity ? 1f : 0f;
+        var productionForcedOpen = _hasBuildingSelection || _buildModeActive;
+        var productionTarget = productionForcedOpen || _manualDrawerOpen ? 1f : 0f;
         var detailTarget = _hasSelection ? 1f : 0f;
         _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
         _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);
@@ -112,8 +94,7 @@ public partial class HudLayer : CanvasLayer
 
         if (key.Keycode == Key.Tab)
         {
-            _manualDrawerOpen = !_manualDrawerOpen;
-            _drawerInactivity = _manualDrawerOpen ? 0 : 3;
+            SetCommandDeckOpen(!_manualDrawerOpen);
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -130,6 +111,12 @@ public partial class HudLayer : CanvasLayer
             CycleCatalogMode(1);
             GetViewport().SetInputAsHandled();
         }
+    }
+
+    public void SetCommandDeckOpen(bool open)
+    {
+        _manualDrawerOpen = open;
+        _productionDrawerProgress = open ? 1f : 0f;
     }
 
     public void ReleaseManagedResources()

@@ -27,7 +27,7 @@ public partial class HudLayer
 
     private void RefreshCommandRibbonContext()
     {
-        if (_commandRibbonContextValue is null)
+        if (_commandRibbonContextValue is null || !string.IsNullOrEmpty(_fixedHoverOwner))
         {
             return;
         }

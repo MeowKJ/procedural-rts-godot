@@ -22,7 +22,6 @@ public partial class HudLayer : CanvasLayer
         SetLabelColor(_drawerSelectedStats, Ink);
         SetLabelColor(_drawerSelectedDetail, InkMuted);
         SetLabelColor(_statusValue, Ink);
-        SetLabelColor(_providerLaneSummaryValue, InkMuted);
         RefreshCommandRibbonContext();
         SetLabelColor(_productionValue, Ink);
         SetLabelColor(_queueValue, InkMuted);
@@ -30,11 +29,6 @@ public partial class HudLayer : CanvasLayer
         if (_outcomeTitle is not null)
         {
             SetLabelColor(_outcomeTitle, Mint);
-        }
-
-        if (_cancelProduction is not null)
-        {
-            UiFactory.ApplyHudCancelButtonTheme(_cancelProduction, CurrentPalette, FontSmall);
         }
 
         foreach (var button in _sandboxDeveloperButtons)

@@ -111,7 +111,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons explicitly.", result);
         RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train cards must render compact availability badges.", result);
         RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card badges must derive from enabled, queue, progress, and disabled-reason state.", result);
-        RequireText(hudLayer, "new Rect2(new Vector2(5, 21), new Vector2(36, 12))", "Train card status badges must avoid the right-side role glyph lane.", result);
+        RequireText(hudLayer, "new Rect2(new Vector2(3, 5), new Vector2(3, size.Y - 10))", "Train card state must render as a text-free status strip away from the role glyph lane.", result);
         RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.", result);
         RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind))", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
         ForbidText(hudLayer, "BuildCategoryRequested?.Invoke(category);", "Build category tabs must filter build cards without arming placement.", result);
@@ -169,7 +169,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "private partial class ProductionProviderLaneButton : Button", "Train catalog provider lanes must render through stable lane buttons.", result);
         RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.", result);
         RequireText(hudBuild, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.", result);
-        RequireText(hudBuild, "Name = \"ProviderLaneSummary\"", "Train provider lane summary must expose a stable node name for QA.", result);
+        RequireText(hudBuild, "Name = \"QueueMiniStack\"", "Train provider state must render through a stable icon-first queue mini-stack.", result);
+        RequireText(hudLayer, "private partial class QueueMiniStack : Control", "Queue presentation must use a dedicated icon/progress/badge control instead of narrow multiline text.", result);
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.", result);
         RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.", result);
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.", result);
@@ -178,9 +179,13 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.", result);
         RequireText(hudLayer, "private int? SelectedConstructionProviderId(string? buildKind)", "Build provider lanes must expose selected provider ids for Build card routing.", result);
         RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.", result);
-        RequireText(hudLayer, "ui.constructionProviderLane.tooltip", "Build provider lane tooltips must use construction-specific copy.", result);
+        RequireText(hudLayer, "ui.constructionProviderLane.tooltip", "Build provider lanes must keep construction-specific copy for the fixed inspector.", result);
         RequireText(hudLayer, "ProviderLaneSummaryText(state)", "Train provider lane summary must render selected provider count, queue count, progress, and availability.", result);
         RequireText(hudLayer, "ProviderLaneSummaryDisabledReason(state.DisabledReasonKey)", "Train provider lane summary must use rail-safe disabled reason codes.", result);
+        RequireText(hudLayer, "BindFixedHoverText", "HUD hover/focus help must route into a fixed information surface.", result);
+        ForbidText(hudLayer, "TooltipText", "In-match HUD controls must not spawn pointer-following tooltip boxes.", result);
+        ForbidText(hudLayer, "DrawLabel(position", "Command preview must remain graphical and must not draw text next to the pointer.", result);
+        ForbidText(hudLayer, "pointerNearRail", "The command deck must not open merely because the pointer approaches the right edge.", result);
         RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.", result);
         RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.", result);
         RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.", result);
@@ -345,7 +350,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudCommandControls, "DrawTrainCardMetadata(size)", "Train catalog cards must render source/role metadata in the card surface.", result);
         RequireText(hudCommandControls, "ProducerShortCode = \"\";", "Build cards must clear train-only producer metadata.", result);
         RequireText(hudCommandControls, "Duration = 0;", "Build cards must clear train-only duration metadata.", result);
-        RequireText(hudCommandControls, "CompactCardText(_disabledReason, 11)", "Train catalog cards must surface compact disabled reasons without expanding the layout.", result);
+        RequireText(hudCommandControls, "InspectorText = TrainInspectorText", "Train catalog cards must route disabled reasons to the fixed inspector.", result);
+        ForbidText(hudCommandControls, "CompactCardText(_disabledReason", "Train catalog cards must not draw disabled-reason text over icon content.", result);
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);

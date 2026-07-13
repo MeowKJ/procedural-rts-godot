@@ -32,7 +32,7 @@ public partial class HudLayer : CanvasLayer
 
         _sellOrCancelAction.Disabled = disabled;
         _sellOrCancelAction.Accent = accent;
-        _sellOrCancelAction.TooltipText = tooltip;
+        _sellOrCancelAction.FixedHoverText = tooltip;
         UiFactory.ApplyHudActionButtonTheme(_sellOrCancelAction, CurrentPalette, accent, FontTiny);
         _sellOrCancelAction.QueueRedraw();
         _lastSellOrCancelRefreshKey = mode;

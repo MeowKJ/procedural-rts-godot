@@ -5,7 +5,7 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
-    private static IconActionButton AddIconActionButton(
+    private IconActionButton AddIconActionButton(
         Control parent,
         IconGlyph glyph,
         string tooltip,
@@ -21,11 +21,12 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = size,
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
+            FixedHoverText = tooltip,
         };
         button.Size = size;
         UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, accent, FontTiny);
         parent.AddChild(button);
+        BindFixedHoverText(button, $"icon.{button.GetInstanceId()}", () => button.FixedHoverText, () => button.Accent);
         return button;
     }
 
@@ -45,12 +46,12 @@ public partial class HudLayer : CanvasLayer
             Size = size,
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
         };
         UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, accent, FontTiny);
         button.Pressed += pressed;
         _sandboxDeveloperButtons.Add(button);
         _sandboxDeveloperPanel.AddChild(button);
+        BindFixedHoverText(button, $"sandbox.{name}", () => tooltip, () => accent);
         return button;
     }
 
@@ -133,7 +134,6 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = new Vector2(31, 32),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
             Disabled = !active,
         };
         tab.Size = tab.CustomMinimumSize;
@@ -142,6 +142,7 @@ public partial class HudLayer : CanvasLayer
         {
             SelectProductionTab(category);
         };
+        BindFixedHoverText(tab, $"build-tab.{category}", () => tooltip, () => Cyan);
         parent.AddChild(tab);
     }
 
@@ -162,15 +163,18 @@ public partial class HudLayer : CanvasLayer
             Detail = detail,
             HelpText = helpText,
             Position = position,
-            CustomMinimumSize = new Vector2(66, 28),
-            Size = new Vector2(66, 28),
+            CustomMinimumSize = new Vector2(66, 34),
+            Size = new Vector2(66, 34),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = helpText,
         };
         RegisterCatalogModeButton(button);
         var inspectorItemId = CatalogModeInspectorItemId(mode);
-        button.Pressed += () => SelectCatalogMode(mode);
+        button.Pressed += () =>
+        {
+            SelectCatalogMode(mode);
+            SetCommandDeckOpen(true);
+        };
         button.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModePageSelectedText(button));
         button.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.HelpText);
         button.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
@@ -190,12 +194,12 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = new Vector2(31, 32),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
             Disabled = !active,
         };
         tab.Size = tab.CustomMinimumSize;
         RegisterTrainCategoryTab(tab);
         tab.Pressed += () => SelectProductionCategory(category);
+        BindFixedHoverText(tab, $"train-tab.{category}", () => tooltip, () => Mint);
         parent.AddChild(tab);
     }
 
@@ -274,9 +278,9 @@ public partial class HudLayer : CanvasLayer
         {
             Name = $"ProductionProviderLane{index}",
             Index = index,
-            Position = new Vector2(4, 52 + index * 28),
-            CustomMinimumSize = new Vector2(40, 24),
-            Size = new Vector2(40, 24),
+            Position = new Vector2(8, 52 + index * 28),
+            CustomMinimumSize = new Vector2(56, 24),
+            Size = new Vector2(56, 24),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             Visible = false,
@@ -286,6 +290,7 @@ public partial class HudLayer : CanvasLayer
         {
             SelectProviderLane(button.State);
         };
+        BindFixedHoverText(button, $"provider.{index}", () => button.FixedHoverText, () => button.Accent);
         _productionProviderLaneButtons.Add(button);
         parent.AddChild(button);
     }
@@ -307,7 +312,6 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = new Vector2(36, 34),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
         };
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudMoveModeButtonTheme(button, CurrentPalette, mode, FontTiny);
@@ -317,6 +321,7 @@ public partial class HudLayer : CanvasLayer
             MoveModeRequested?.Invoke(mode);
         };
         button.SetSelected(mode == _selectedMoveMode);
+        BindFixedHoverText(button, $"move.{mode}", () => tooltip, () => Cyan);
         _moveModeButtons.Add(button);
         parent.AddChild(button);
     }
@@ -330,7 +335,6 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = new Vector2(36, 34),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = presentation.Tooltip,
         };
         button.Size = button.CustomMinimumSize;
         UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, presentation, FontTiny);
@@ -340,6 +344,7 @@ public partial class HudLayer : CanvasLayer
             UnitStanceRequested?.Invoke(presentation.Stance);
         };
         button.SetSelected(_selectedUnitStance is not null && presentation.Stance == _selectedUnitStance.Value);
+        BindFixedHoverText(button, $"stance.{presentation.Stance}", () => presentation.Tooltip, () => UiFactory.HudStanceAccent(presentation.AccentRole, CurrentPalette));
         _stanceModeButtons.Add(button);
         parent.AddChild(button);
     }
