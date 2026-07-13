@@ -36,6 +36,9 @@ static class RightCommandDeckQa
 
         var visualQaCapture = File.ReadAllText(Path.Combine(root, "scripts", "VisualQaCaptureRoot.cs"));
         RequireText(visualQaCapture, "battle_hud_command_deck.png", "Visual QA must capture the explicitly opened icon-first command deck.");
+        RequireText(visualQaCapture, "battle_hud_command_deck_queue.png", "Visual QA must capture the command deck with a populated production queue.");
+        RequireText(visualQaCapture, "SetProductionProviderLaneState", "Populated queue Visual QA must seed provider-lane progress and count state.");
+        RequireText(visualQaCapture, "SetProductionQueueSummary", "Populated queue Visual QA must expose the real cancel-enabled queue summary surface.");
     }
 
     private static void RequireText(string source, string required, string message)

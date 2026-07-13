@@ -81,6 +81,7 @@ public partial class VisualQaCaptureRoot : Node
         hud.SetCommandDeckOpen(true);
         await NextFrames(4);
         await Capture(outputPath, "battle_hud_command_deck.png");
+        await CapturePopulatedCommandDeck(outputPath, hud);
         hud.SetCommandDeckOpen(false);
 
         SetCaptureSize(CaptureSize);
@@ -91,6 +92,77 @@ public partial class VisualQaCaptureRoot : Node
         await Capture(outputPath, "battle_hud_style1c_dusk.png");
         SetBattleTheme(WorldVisualTheme.DayCommand, "visual-qa-day");
         await NextFrames(2);
+    }
+
+    private async Task CapturePopulatedCommandDeck(string outputPath, HudLayer hud)
+    {
+        GetTree().Paused = true;
+        try
+        {
+            hud.SetCommandCardState(
+            [
+                new ProductionOptionState(
+                    ProductionKind.InfantrySquad,
+                    ProductionCategory.Infantry,
+                    BuildingDesignIds.Barracks,
+                    "cat.basic",
+                    "CB",
+                    IconGlyph.Infantry,
+                    IconGlyph.Infantry,
+                    new Color("#55d6c2"),
+                    120,
+                    5.2f,
+                    true,
+                    true,
+                    4,
+                    0.56f,
+                    ""),
+            ]);
+            hud.SetProductionProviderLaneState(
+            [
+                new ProductionProviderLaneState(
+                    ProductionProviderLaneScope.Auto,
+                    0,
+                    BuildingDesignIds.Barracks,
+                    GameText.T("ui.providerLane.auto"),
+                    "A",
+                    2,
+                    4,
+                    0.56f,
+                    true,
+                    ""),
+                new ProductionProviderLaneState(
+                    ProductionProviderLaneScope.All,
+                    0,
+                    BuildingDesignIds.Barracks,
+                    GameText.T("ui.providerLane.all"),
+                    "ALL",
+                    2,
+                    4,
+                    0.56f,
+                    true,
+                    ""),
+                new ProductionProviderLaneState(
+                    ProductionProviderLaneScope.Specific,
+                    101,
+                    BuildingDesignIds.Barracks,
+                    GameText.Format("ui.providerLane.specific", "Barracks", 1),
+                    "B1",
+                    1,
+                    4,
+                    0.56f,
+                    true,
+                    ""),
+            ]);
+            hud.SetProductionQueueSummary(
+                GameText.Format("ui.queue.summary", "ALLEY RUNNER", 56, 4, 160),
+                canCancel: true);
+            await Capture(outputPath, "battle_hud_command_deck_queue.png");
+        }
+        finally
+        {
+            GetTree().Paused = false;
+        }
     }
 
     private async Task CapturePause(string outputPath)
