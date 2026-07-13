@@ -47,6 +47,7 @@ for file_name in \
   battle_hud.png \
   battle_hud_style1b_fog.png \
   battle_hud_style1c_dusk.png \
+  battle_projectile_lifecycle.png \
   pause_menu.png \
   outcome_victory.png
 do

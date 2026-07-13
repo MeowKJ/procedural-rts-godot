@@ -33,6 +33,7 @@ public partial class VisualQaCaptureRoot : Node
             await CaptureMainMenu(outputPath);
             await CaptureMainMenuSettings(outputPath);
             await CaptureBattleHud(outputPath);
+            await CaptureProjectileLifecycle(outputPath);
             await CapturePause(outputPath);
             await CaptureOutcome(outputPath);
             await UnloadActiveScene();
@@ -92,6 +93,55 @@ public partial class VisualQaCaptureRoot : Node
         var pause = RequiredNode<PauseMenuLayer>("PauseMenu");
         pause.SetPaused(true);
         await Capture(outputPath, "pause_menu.png");
+    }
+
+    private async Task CaptureProjectileLifecycle(string outputPath)
+    {
+        await LoadScene(BattleScenePath);
+        SetCaptureSize(CaptureSize);
+        SetBattleTheme(WorldVisualTheme.DuskDefense, "visual-qa-projectiles");
+        if (_activeScene is not BattleRoot battle)
+        {
+            throw new InvalidOperationException("BattleRoot was not active for projectile visual QA.");
+        }
+
+        battle.DebugConfigureActiveBattlePerformanceScenario();
+        var combatEffects = RequiredNode<CombatEffectsLayer>("CombatEffects");
+        var battlefield = combatEffects.UnitBattlefield
+            ?? throw new InvalidOperationException("Projectile visual QA requires the live UnitBattlefield.");
+        for (var frame = 0; frame < 240; frame++)
+        {
+            var visible = battlefield.ProjectileProjections(PlayerSlotId.One);
+            var hasDirect = false;
+            var hasBallistic = false;
+            var hasTracking = false;
+            foreach (var projectile in visible)
+            {
+                hasDirect |= projectile.Behavior == ProjectileBehavior.Direct;
+                hasBallistic |= projectile.Behavior == ProjectileBehavior.Ballistic;
+                hasTracking |= projectile.Behavior == ProjectileBehavior.Tracking;
+            }
+
+            if (hasDirect && hasBallistic && hasTracking)
+            {
+                GetTree().Paused = true;
+                try
+                {
+                    await Capture(outputPath, "battle_projectile_lifecycle.png");
+                }
+                finally
+                {
+                    GetTree().Paused = false;
+                }
+
+                return;
+            }
+
+            await NextFrames(1);
+        }
+
+        throw new InvalidOperationException(
+            "Projectile visual QA did not observe Direct, Ballistic, and Tracking rounds together within 240 frames.");
     }
 
     private async Task CaptureOutcome(string outputPath)

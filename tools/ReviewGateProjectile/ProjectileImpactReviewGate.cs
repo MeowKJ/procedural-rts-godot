@@ -74,6 +74,11 @@ static class ProjectileImpactReviewGate
         RequireText(battleRootBeams, "ammo.Behavior != ProjectileBehavior.Beam", "Beam bridge must be gated by ammo behavior data.", result);
         RequireText(battleRootBeams, "AmmoKindForPrimaryWeapon", "Building-target beam bridge must resolve attacker weapon ammo data.", result);
 
+        var visualQa = ReviewGateSource.Read(root, "scripts", "VisualQaCaptureRoot.cs");
+        RequireText(visualQa, "battle_projectile_lifecycle.png", "Visual QA must capture the live mixed projectile lifecycle.", result);
+        RequireText(visualQa, "hasDirect && hasBallistic && hasTracking", "Projectile Visual QA must prove all non-beam behaviors are visible together.", result);
+        ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_lifecycle.png", "tools", "VisualQaCapture.sh");
+
         ReviewGateSource.RequireTextInFile(root, result, "projectile-splash", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
         ReviewGateSource.RequireTextInFile(root, result, "projectile-intercept", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
         ReviewGateSource.RequireTextInFile(root, result, "weapon-state-machine", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
