@@ -132,7 +132,6 @@ public partial class HudLayer : CanvasLayer
         };
         SelectCatalogMode(next);
         _manualDrawerOpen = true;
-        _drawerInactivity = 0;
         ShowCatalogInspectorHover(
             CatalogModeInspectorItemId(next),
             GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));

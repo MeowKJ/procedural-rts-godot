@@ -95,7 +95,6 @@ public partial class HudLayer : CanvasLayer
         if (key.Keycode == Key.Tab)
         {
             _manualDrawerOpen = !_manualDrawerOpen;
-            _drawerInactivity = _manualDrawerOpen ? 0 : 3;
             GetViewport().SetInputAsHandled();
             return;
         }

@@ -95,7 +95,6 @@ public partial class HudLayer : CanvasLayer
     private bool _manualDrawerOpen;
     private float _productionDrawerProgress;
     private float _detailDrawerProgress;
-    private float _drawerInactivity;
     private float _productionStatusPulse;
     private float _queueStatusPulse;
     private bool _commandFailureVisible;
@@ -189,7 +188,6 @@ public partial class HudLayer : CanvasLayer
 
         if (hasBuildingSelection || buildModeActive)
         {
-            _drawerInactivity = 0;
             _productionDrawerProgress = 1f;
         }
 
@@ -257,7 +255,6 @@ public partial class HudLayer : CanvasLayer
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
-            _drawerInactivity = 0;
             _manualDrawerOpen = true;
             _productionDrawerProgress = 1f;
         }
