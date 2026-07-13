@@ -75,11 +75,15 @@ static class ProjectileImpactReviewGate
         RequireText(battleRootBeams, "AmmoKindForPrimaryWeapon", "Building-target beam bridge must resolve attacker weapon ammo data.", result);
 
         var visualQa = ReviewGateSource.Read(root, "scripts", "VisualQaCaptureRoot.cs");
-        RequireText(visualQa, "battle_projectile_lifecycle.png", "Visual QA must capture the live mixed projectile lifecycle.", result);
-        RequireText(visualQa, "hasDirect && hasBallistic && hasTracking", "Projectile Visual QA must prove all non-beam behaviors are visible together.", result);
+        RequireText(visualQa, "battle_projectile_direct.png", "Visual QA must capture a live direct round.", result);
+        RequireText(visualQa, "battle_projectile_ballistic.png", "Visual QA must capture a live ballistic round.", result);
+        RequireText(visualQa, "battle_projectile_tracking.png", "Visual QA must capture a live tracking round.", result);
+        RequireText(visualQa, "capturedDirect && capturedBallistic && capturedTracking", "Projectile Visual QA must prove every non-beam behavior was captured.", result);
         RequireText(visualQa, "projectile.FlightProgress is >= 0.25f and <= 0.75f", "Projectile Visual QA must capture each behavior away from its muzzle and impact point.", result);
         RequireText(visualQa, "DebugConfigureProjectileVisualQaScenario", "Projectile Visual QA must use its sparse three-lane combat scene.", result);
-        ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_lifecycle.png", "tools", "VisualQaCapture.sh");
+        ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_direct.png", "tools", "VisualQaCapture.sh");
+        ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_ballistic.png", "tools", "VisualQaCapture.sh");
+        ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_tracking.png", "tools", "VisualQaCapture.sh");
 
         ReviewGateSource.RequireTextInFile(root, result, "projectile-splash", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
         ReviewGateSource.RequireTextInFile(root, result, "projectile-intercept", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");

@@ -115,6 +115,9 @@ public partial class VisualQaCaptureRoot : Node
         Input.WarpMouse(new Vector2(20, 20));
         try
         {
+            var capturedDirect = false;
+            var capturedBallistic = false;
+            var capturedTracking = false;
             for (var frame = 0; frame < 240; frame++)
             {
                 var visible = battlefield.ProjectileProjections(PlayerSlotId.One);
@@ -129,20 +132,26 @@ public partial class VisualQaCaptureRoot : Node
                     hasTracking |= isMidFlight && projectile.Behavior == ProjectileBehavior.Tracking;
                 }
 
-                if (hasDirect && hasBallistic && hasTracking)
+                if (!capturedDirect && hasDirect)
                 {
-                    battle.State.FogOfWar.Update(battle.State.WorldSize, [(focus, 900f)]);
-                    RequiredNode<FogOfWarLayer>("FogOfWar").QueueRedraw();
-                    GetTree().Paused = true;
-                    try
-                    {
-                        await Capture(outputPath, "battle_projectile_lifecycle.png");
-                    }
-                    finally
-                    {
-                        GetTree().Paused = false;
-                    }
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_direct.png", battle, focus);
+                    capturedDirect = true;
+                }
 
+                if (!capturedBallistic && hasBallistic)
+                {
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_ballistic.png", battle, focus);
+                    capturedBallistic = true;
+                }
+
+                if (!capturedTracking && hasTracking)
+                {
+                    await CaptureProjectileFrame(outputPath, "battle_projectile_tracking.png", battle, focus);
+                    capturedTracking = true;
+                }
+
+                if (capturedDirect && capturedBallistic && capturedTracking)
+                {
                     return;
                 }
 
@@ -150,11 +159,26 @@ public partial class VisualQaCaptureRoot : Node
             }
 
             throw new InvalidOperationException(
-                "Projectile visual QA did not observe Direct, Ballistic, and Tracking rounds together within 240 frames.");
+                "Projectile visual QA did not capture Direct, Ballistic, and Tracking rounds at mid-flight within 240 frames.");
         }
         finally
         {
             Input.MouseMode = previousMouseMode;
+        }
+    }
+
+    private async Task CaptureProjectileFrame(string outputPath, string fileName, BattleRoot battle, Vector2 focus)
+    {
+        battle.State.FogOfWar.Update(battle.State.WorldSize, [(focus, 900f)]);
+        RequiredNode<FogOfWarLayer>("FogOfWar").QueueRedraw();
+        GetTree().Paused = true;
+        try
+        {
+            await Capture(outputPath, fileName);
+        }
+        finally
+        {
+            GetTree().Paused = false;
         }
     }
 
