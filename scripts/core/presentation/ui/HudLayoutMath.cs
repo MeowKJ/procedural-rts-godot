@@ -96,7 +96,7 @@ public static class HudLayoutMath
         var alerts = new HudRect("alert-chips", 16 * scale, 66 * scale, 280 * scale, 42 * scale);
 
         var ribbon = new HudRect("context-command-ribbon", 96 * scale, viewportHeight - 58 * scale, viewportWidth - rightColumnWidth - 108 * scale, 46 * scale);
-        var production = new HudRect("context-production-panel", viewportWidth - rightColumnWidth, ProductionPanelTop * scale, 300 * scale, ProductionPanelHeight * scale);
+        var production = new HudRect("context-production-panel", viewportWidth - rightColumnWidth - railWidth, ProductionPanelTop * scale, 300 * scale, ProductionPanelHeight * scale);
         var detail = new HudRect("context-detail-panel", viewportWidth - rightColumnWidth, viewportHeight - 170 * scale, 300 * scale, 158 * scale);
 
         var rects = new List<HudRect>
@@ -205,12 +205,19 @@ public static class HudLayoutMath
             issues.Add("right sidebar stack should order minimap, production/build grid, then unit or building details");
         }
 
-        foreach (var section in new[] { minimap, production, unitDetail })
+        foreach (var section in new[] { minimap, unitDetail })
         {
             if (section.Right > snapshot.ViewportWidth - 8 * scale || section.X < snapshot.ViewportWidth - RightColumnWidth * scale - 2 * scale)
             {
                 issues.Add($"{section.Name} should remain inside the right command column");
             }
+        }
+
+        var rail = snapshot.Rects.First(rect => rect.Name == "right-rail");
+        if (production.Right > rail.X - 8 * scale
+            || production.X < snapshot.ViewportWidth - (RightColumnWidth + RailWidth) * scale - 2 * scale)
+        {
+            issues.Add("context-production-panel should open immediately left of the persistent right rail");
         }
     }
 

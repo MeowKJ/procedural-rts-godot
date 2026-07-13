@@ -15,6 +15,10 @@ static class RightCommandDeckQa
     {
         RequireText(hudLayer, "Name = \"QueueMiniStack\"", "Train provider lane state must render through the stable icon-first queue mini-stack.");
         RequireText(hudLayer, "private partial class QueueMiniStack : Control", "Queue presentation must use a dedicated icon/progress/badge control instead of narrow multiline text.");
+        RequireText(hudLayer, "avoidRail: true", "The opened production drawer must remain left of the persistent rail.");
+        RequireText(hudLayer, "_catalogSurfaceLabel.Visible = false", "The legacy surface label must not overlap the fixed inspector row.");
+        RequireText(hudLayer, "_catalogOverviewValue.Visible = false", "The legacy overview label must not overlap the fixed inspector row.");
+        RequireText(hudLayer, "Text = \"\";", "Command cards must suppress inherited multiline button text and draw compact metrics explicitly.");
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
         RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
         RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");

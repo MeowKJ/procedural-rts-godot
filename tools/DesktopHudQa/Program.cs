@@ -189,7 +189,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "Name = \"CatalogInspector\"", "Right command panel must expose a stable catalog inspector node.");
     RequireText(hudLayer, "Name = \"CatalogOverview\"", "Right command panel must expose a stable catalog overview node.");
     RequireText(hudLayer, "new Vector2(112, 76), new Vector2(172, 14), FontTiny", "Catalog overview must use a compact row above the fixed card grid.");
-    RequireText(hudLayer, "new Vector2(70, 72), new Vector2(214, 28), FontSmall", "Catalog inspector must keep the two-line compact status slot above the cards.");
+    RequireText(hudLayer, "new Vector2(14, 74), new Vector2(270, 20), FontTiny", "Catalog inspector must own one fixed compact information row above the cards.");
     RequireText(hudLayer, "CommandFailurePresentation.InlineText(status)", "Top status must render compact blocked-command feedback through the presentation adapter.");
     RequireText(hudLayer, "CommandFailurePresentation.PanelText(status)", "Catalog inspector must render blocked command feedback through the presentation adapter.");
     RequireText(hudLayer, "ResetCatalogInspectorContext(DefaultCatalogInspectorText());", "Catalog mode changes must atomically reset typed inspector context.");

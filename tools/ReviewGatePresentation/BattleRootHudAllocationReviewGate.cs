@@ -111,7 +111,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons explicitly.", result);
         RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train cards must render compact availability badges.", result);
         RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card badges must derive from enabled, queue, progress, and disabled-reason state.", result);
-        RequireText(hudLayer, "new Rect2(new Vector2(5, 21), new Vector2(36, 12))", "Train card status badges must avoid the right-side role glyph lane.", result);
+        RequireText(hudLayer, "new Rect2(new Vector2(3, 5), new Vector2(3, size.Y - 10))", "Train card state must render as a text-free status strip away from the role glyph lane.", result);
         RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.", result);
         RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind))", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
         ForbidText(hudLayer, "BuildCategoryRequested?.Invoke(category);", "Build category tabs must filter build cards without arming placement.", result);
@@ -350,7 +350,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudCommandControls, "DrawTrainCardMetadata(size)", "Train catalog cards must render source/role metadata in the card surface.", result);
         RequireText(hudCommandControls, "ProducerShortCode = \"\";", "Build cards must clear train-only producer metadata.", result);
         RequireText(hudCommandControls, "Duration = 0;", "Build cards must clear train-only duration metadata.", result);
-        RequireText(hudCommandControls, "CompactCardText(_disabledReason, 11)", "Train catalog cards must surface compact disabled reasons without expanding the layout.", result);
+        RequireText(hudCommandControls, "InspectorText = TrainInspectorText", "Train catalog cards must route disabled reasons to the fixed inspector.", result);
+        ForbidText(hudCommandControls, "CompactCardText(_disabledReason", "Train catalog cards must not draw disabled-reason text over icon content.", result);
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);

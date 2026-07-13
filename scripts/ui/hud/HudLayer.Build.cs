@@ -217,34 +217,36 @@ public partial class HudLayer : CanvasLayer
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
 
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), GameText.T("ui.catalog.buildHelp"), new Vector2(8, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), GameText.T("ui.catalog.trainHelp"), new Vector2(78, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Upgrades, GameText.T("ui.catalog.upgrades"), GameText.T("ui.catalog.upgradesDetail"), GameText.T("ui.catalog.upgradesHelp"), new Vector2(148, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), GameText.T("ui.catalog.abilitiesHelp"), new Vector2(218, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), GameText.T("ui.catalog.buildHelp"), new Vector2(8, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), GameText.T("ui.catalog.trainHelp"), new Vector2(78, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Upgrades, GameText.T("ui.catalog.upgrades"), GameText.T("ui.catalog.upgradesDetail"), GameText.T("ui.catalog.upgradesHelp"), new Vector2(148, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), GameText.T("ui.catalog.abilitiesHelp"), new Vector2(218, 6));
 
-        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 44), BuildCategory.Command, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 44), BuildCategory.Power, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 44), BuildCategory.Economy, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 44), BuildCategory.Infantry, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 44), BuildCategory.Vehicle, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 44), BuildCategory.Defense, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 44), BuildCategory.Air, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 44), BuildCategory.Naval, active: false);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 40), BuildCategory.Command, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 40), BuildCategory.Power, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 40), BuildCategory.Economy, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 40), BuildCategory.Infantry, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 40), BuildCategory.Vehicle, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 40), BuildCategory.Defense, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 40), BuildCategory.Air, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 40), BuildCategory.Naval, active: false);
 
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(10, 44), ProductionCategory.Infantry, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(45, 44), ProductionCategory.Vehicle, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 44), ProductionCategory.Economy, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(115, 44), ProductionCategory.Defense, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(150, 44), ProductionCategory.Air, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(185, 44), ProductionCategory.Naval, active: false);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(10, 40), ProductionCategory.Infantry, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(45, 40), ProductionCategory.Vehicle, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 40), ProductionCategory.Economy, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(115, 40), ProductionCategory.Defense, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(150, 40), ProductionCategory.Air, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(185, 40), ProductionCategory.Naval, active: false);
 
         _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 76), new Vector2(92, 14), FontTiny, InkMuted);
+        _catalogSurfaceLabel.Visible = false;
         _rightProductionPanel.AddChild(_catalogSurfaceLabel);
         _catalogOverviewValue = MakeSizedLabel("", new Vector2(112, 76), new Vector2(172, 14), FontTiny, InkMuted);
         _catalogOverviewValue.Name = "CatalogOverview";
+        _catalogOverviewValue.Visible = false;
         _catalogOverviewValue.HorizontalAlignment = HorizontalAlignment.Right;
         _rightProductionPanel.AddChild(_catalogOverviewValue);
-        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
+        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(14, 74), new Vector2(270, 20), FontTiny, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
 

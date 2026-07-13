@@ -7,8 +7,8 @@ public partial class HudLayer : CanvasLayer
 {
     private void LayoutDynamicHud(Vector2 viewport)
     {
-        LayoutSlidingRightPanel(_rightProductionPanel, _productionDrawerProgress);
-        LayoutSlidingRightPanel(_rightDetailPanel, _detailDrawerProgress);
+        LayoutSlidingRightPanel(_rightProductionPanel, _productionDrawerProgress, avoidRail: true);
+        LayoutSlidingRightPanel(_rightDetailPanel, _detailDrawerProgress, avoidRail: false);
 
         if (_rightRail is not null)
         {
@@ -26,14 +26,14 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
-    private void LayoutSlidingRightPanel(Panel? panel, float progress)
+    private void LayoutSlidingRightPanel(Panel? panel, float progress, bool avoidRail)
     {
         if (panel is null)
         {
             return;
         }
 
-        var openLeft = -312f;
+        var openLeft = avoidRail ? -RailWidth - DrawerWidth - 12f : -312f;
         var closedLeft = RailWidth;
         var left = Mathf.Lerp(closedLeft, openLeft, progress);
         panel.OffsetLeft = left;

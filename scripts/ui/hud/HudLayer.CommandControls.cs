@@ -168,9 +168,7 @@ public partial class HudLayer : CanvasLayer
             _disabledReason = disabledReason;
             _statusBadgeText = CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey);
             _statusBadgeAccent = CommandCardStatusBadgeAccent(enabled, queued, _progress, disabledReasonKey);
-            Text = queued > 0
-                ? $"{Hotkey}\n\n{Cost}  x{queued}"
-                : $"{Hotkey}\n\n{Cost}";
+            Text = "";
             QueueRedraw();
         }
 
@@ -211,7 +209,16 @@ public partial class HudLayer : CanvasLayer
                 DrawTrainCardMetadata(size);
             }
 
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(8, size.Y - 12), ShortLabel, HorizontalAlignment.Left, size.X - 16, 9, style.ShortLabel);
+            var compactFont = UiFontProfile.DrawFont(UiFontRole.Compact);
+            DrawString(compactFont, new Vector2(7, size.Y - 10), CompactCardText(ShortLabel, 5), HorizontalAlignment.Left, 28, 8, style.ShortLabel);
+            DrawString(
+                compactFont,
+                new Vector2(34, size.Y - 10),
+                Cost.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                HorizontalAlignment.Center,
+                26,
+                8,
+                new Color(CurrentPalette.Text, Disabled ? 0.48f : 0.86f));
             if (_progress > 0)
             {
                 DrawRect(new Rect2(0, size.Y - 5, size.X * _progress, 5), style.Progress, true);
@@ -233,18 +240,6 @@ public partial class HudLayer : CanvasLayer
             {
                 DrawRect(new Rect2(Vector2.Zero, size), style.DisabledFill, true);
                 DrawLine(new Vector2(8, size.Y - 8), new Vector2(size.X - 8, 8), style.DisabledStrike, 2, true);
-                if (IsTrainCard && !string.IsNullOrWhiteSpace(_disabledReason))
-                {
-                    var font = UiFontProfile.DrawFont(UiFontRole.Compact);
-                    DrawString(
-                        font,
-                        new Vector2(8, size.Y - 24),
-                        CompactCardText(_disabledReason, 11),
-                        HorizontalAlignment.Left,
-                        size.X - 16,
-                        8,
-                        new Color(CurrentPalette.Danger, 0.9f));
-                }
             }
 
             DrawStatusBadge(size);
@@ -254,39 +249,26 @@ public partial class HudLayer : CanvasLayer
 
         private void DrawTrainCardMetadata(Vector2 size)
         {
-            var sourceCode = string.IsNullOrWhiteSpace(ProducerShortCode) ? "--" : ProducerShortCode;
-            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
-            var chip = new Rect2(new Vector2(5, 5), new Vector2(28, 13));
-            DrawRect(chip, new Color(CurrentPalette.PanelStrongFill, 0.74f), true);
-            DrawRect(chip, new Color(Accent, Disabled ? 0.22f : 0.42f), false, 1);
-            DrawString(
-                font,
-                chip.Position + new Vector2(3, 10),
-                CompactCardText(sourceCode, 4),
-                HorizontalAlignment.Left,
-                chip.Size.X - 5,
-                8,
-                new Color(Accent, Disabled ? 0.48f : 0.82f));
-
             if (RoleGlyph != IconGlyph.None)
             {
                 DrawIconGlyph(
                     this,
                     RoleGlyph,
-                    new Vector2(size.X - 14, 13),
-                    13,
+                    new Vector2(size.X - 11, 23),
+                    11,
                     new Color(Accent, Disabled ? 0.38f : 0.84f));
             }
 
             if (Duration > 0)
             {
+                var font = UiFontProfile.DrawFont(UiFontRole.Compact);
                 var seconds = $"{Mathf.CeilToInt(Duration)}s";
                 DrawString(
                     font,
-                    new Vector2(size.X - 30, size.Y - 12),
+                    new Vector2(size.X - 24, size.Y - 10),
                     seconds,
                     HorizontalAlignment.Right,
-                    24,
+                    20,
                     8,
                     new Color(CurrentPalette.TextMuted, Disabled ? 0.46f : 0.68f));
             }
@@ -294,25 +276,8 @@ public partial class HudLayer : CanvasLayer
 
         private void DrawStatusBadge(Vector2 size)
         {
-            if (string.IsNullOrWhiteSpace(_statusBadgeText))
-            {
-                return;
-            }
-
-            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
-            var badge = IsTrainCard
-                ? new Rect2(new Vector2(5, 21), new Vector2(36, 12))
-                : new Rect2(new Vector2(size.X - 42, 20), new Vector2(36, 12));
-            DrawRect(badge, new Color(_statusBadgeAccent, Disabled ? 0.26f : 0.18f), true);
-            DrawRect(badge, new Color(_statusBadgeAccent, Disabled ? 0.58f : 0.72f), false, 1);
-            DrawString(
-                font,
-                badge.Position + new Vector2(3, 9),
-                CompactCardText(_statusBadgeText, 6),
-                HorizontalAlignment.Center,
-                badge.Size.X - 6,
-                8,
-                new Color(_statusBadgeAccent, Disabled ? 0.9f : 0.98f));
+            var status = new Rect2(new Vector2(3, 5), new Vector2(3, size.Y - 10));
+            DrawRect(status, new Color(_statusBadgeAccent, Disabled ? 0.42f : 0.9f), true);
         }
 
         private static string CommandCardStatusBadgeText(bool enabled, int queued, float progress, string disabledReasonKey) =>
