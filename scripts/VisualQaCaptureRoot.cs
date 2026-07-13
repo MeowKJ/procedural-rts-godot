@@ -123,9 +123,10 @@ public partial class VisualQaCaptureRoot : Node
                 var hasTracking = false;
                 foreach (var projectile in visible)
                 {
-                    hasDirect |= projectile.Behavior == ProjectileBehavior.Direct;
-                    hasBallistic |= projectile.Behavior == ProjectileBehavior.Ballistic;
-                    hasTracking |= projectile.Behavior == ProjectileBehavior.Tracking;
+                    var isMidFlight = projectile.FlightProgress is >= 0.25f and <= 0.75f;
+                    hasDirect |= isMidFlight && projectile.Behavior == ProjectileBehavior.Direct;
+                    hasBallistic |= isMidFlight && projectile.Behavior == ProjectileBehavior.Ballistic;
+                    hasTracking |= isMidFlight && projectile.Behavior == ProjectileBehavior.Tracking;
                 }
 
                 if (hasDirect && hasBallistic && hasTracking)
