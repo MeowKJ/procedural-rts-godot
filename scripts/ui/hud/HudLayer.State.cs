@@ -34,7 +34,6 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
-    private Label _providerLaneSummaryValue = null!;
     private Label _commandRibbonContextValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
@@ -58,7 +57,9 @@ public partial class HudLayer : CanvasLayer
     private Button _sandboxAtmosphereButton = null!;
     private Button _sandboxOverlayButton = null!;
     private Button _sandboxStressButton = null!;
-    private Button _cancelProduction = null!;
+    private IconActionButton _deckToggle = null!;
+    private QueueMiniStack _queueMiniStack = null!;
+    private IconActionButton _cancelProduction = null!;
     private IconActionButton _repeatProduction = null!;
     private IconActionButton _settingsButton = null!;
     private MinimapSurface _minimapSurface = null!;
@@ -296,7 +297,8 @@ public partial class HudLayer : CanvasLayer
 
         _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
-        _cancelProduction.TooltipText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
+        _cancelProduction.FixedHoverText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
+        RefreshProductionProviderLaneSummary();
     }
 
     public void SetResourceCredits(int credits)

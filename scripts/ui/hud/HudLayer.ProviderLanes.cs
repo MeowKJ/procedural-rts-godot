@@ -150,7 +150,7 @@ public partial class HudLayer : CanvasLayer
         _repeatProductionStateValue.Visible = visible;
         _repeatProductionStateValue.Text = statusText;
         SetLabelColor(_repeatProductionStateValue, statusColor);
-        _repeatProduction.TooltipText = tooltip;
+        _repeatProduction.FixedHoverText = tooltip;
         _lastRepeatProductionRefreshKey = refreshKey;
         _repeatProductionStateCached = true;
         _repeatProduction.QueueRedraw();
@@ -468,7 +468,7 @@ public partial class HudLayer : CanvasLayer
                 }
 
                 var button = _productionProviderLaneButtons[visibleIndex];
-                button.Position = new Vector2(4, 52 + visibleIndex * 28);
+                button.Position = new Vector2(8, 52 + visibleIndex * 28);
                 button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true);
                 button.Visible = true;
                 visibleIndex++;
@@ -486,7 +486,7 @@ public partial class HudLayer : CanvasLayer
                 }
 
                 var button = _productionProviderLaneButtons[visibleIndex];
-                button.Position = new Vector2(4, 52 + visibleIndex * 28);
+                button.Position = new Vector2(8, 52 + visibleIndex * 28);
                 button.SetState(state, IsProductionProviderLaneSelected(state), IsProductionProviderLaneEnabled(state), constructionMode: false);
                 button.Visible = true;
                 visibleIndex++;

@@ -70,26 +70,8 @@ public partial class HudLayer : CanvasLayer
     {
         var dt = (float)delta;
         var viewport = GetViewport().GetVisibleRect().Size;
-        var mouse = GetViewport().GetMousePosition();
-        var pointerNearRail = mouse.X >= viewport.X - 72;
-        var productionForcedOpen = _hasBuildingSelection || _buildModeActive || pointerNearRail;
-
-        if (productionForcedOpen)
-        {
-            _drawerInactivity = 0;
-        }
-        else
-        {
-            _drawerInactivity += dt;
-        }
-
-        if (_drawerInactivity > 2.4f)
-        {
-            _manualDrawerOpen = false;
-        }
-
-        var holdAfterActivity = _productionDrawerProgress > 0.02f && _drawerInactivity <= 2.4f;
-        var productionTarget = productionForcedOpen || _manualDrawerOpen || holdAfterActivity ? 1f : 0f;
+        var productionForcedOpen = _hasBuildingSelection || _buildModeActive;
+        var productionTarget = productionForcedOpen || _manualDrawerOpen ? 1f : 0f;
         var detailTarget = _hasSelection ? 1f : 0f;
         _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
         _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);

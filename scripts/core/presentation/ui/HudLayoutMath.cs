@@ -29,14 +29,60 @@ public sealed record HudLayoutSnapshot(
 
 public static class HudLayoutMath
 {
-    public const float RailWidth = 48;
+    public const float RailWidth = 72;
     public const float DrawerWidth = 300;
     public const float RightColumnWidth = 312;
     public const float ProductionPanelTop = 190;
     public const float ProductionPanelHeight = 358;
     public const float MinimumBattlefieldWidth = 920;
     public const float MinimumBattlefieldHeight = 620;
-    public const float MaximumPersistentCoverage = 0.15f;
+    public const float MaximumPersistentCoverage = 0.16f;
+
+    public static IReadOnlyList<HudRect> CreateRightDeckControls(int viewportHeight, float uiScale = 1)
+    {
+        var scale = MathF.Max(1, uiScale);
+        var railHeight = viewportHeight / scale - ProductionPanelTop - 12;
+        var controls = new List<HudRect>
+        {
+            new("deck-toggle", 8, 6, 56, 38),
+        };
+
+        for (var index = 0; index < 8; index++)
+        {
+            controls.Add(new HudRect($"provider-{index}", 8, 52 + index * 28, 56, 24));
+        }
+
+        controls.Add(new HudRect("queue-mini-stack", 8, 282, 56, 84));
+        controls.Add(new HudRect("queue-cancel", 18, 374, 36, 32));
+        controls.Add(new HudRect("rail-bounds", 0, 0, RailWidth, railHeight));
+        return controls;
+    }
+
+    public static IReadOnlyList<string> ValidateRightDeckControls(int viewportHeight, float uiScale = 1)
+    {
+        var issues = new List<string>();
+        var controls = CreateRightDeckControls(viewportHeight, uiScale);
+        var bounds = controls.First(rect => rect.Name == "rail-bounds");
+        var visible = controls.Where(rect => rect.Name != "rail-bounds").ToArray();
+        for (var index = 0; index < visible.Length; index++)
+        {
+            var rect = visible[index];
+            if (rect.X < bounds.X || rect.Y < bounds.Y || rect.Right > bounds.Right || rect.Bottom > bounds.Bottom)
+            {
+                issues.Add($"{rect.Name} is outside right command deck bounds");
+            }
+
+            for (var otherIndex = index + 1; otherIndex < visible.Length; otherIndex++)
+            {
+                if (rect.Overlaps(visible[otherIndex]))
+                {
+                    issues.Add($"{rect.Name} overlaps {visible[otherIndex].Name}");
+                }
+            }
+        }
+
+        return issues;
+    }
 
     public static HudLayoutSnapshot Create(int viewportWidth, int viewportHeight, float uiScale = 1)
     {

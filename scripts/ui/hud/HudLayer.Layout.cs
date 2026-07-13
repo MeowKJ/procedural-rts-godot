@@ -16,7 +16,7 @@ public partial class HudLayer : CanvasLayer
             _rightRail.OffsetTop = HudLayoutMath.ProductionPanelTop;
             _rightRail.OffsetRight = 0;
             _rightRail.OffsetBottom = -12;
-            _rightRail.Modulate = new Color(1, 1, 1, Mathf.Lerp(1f, 0.58f, _productionDrawerProgress));
+            _rightRail.Modulate = Colors.White;
             _rightRail.Visible = true;
         }
 

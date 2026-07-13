@@ -167,15 +167,43 @@ public partial class HudLayer : CanvasLayer
         _rightRail.OffsetBottom = -12;
         _rightRail.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightRail);
+
+        _deckToggle = AddIconActionButton(
+            _rightRail,
+            CatalogModeGlyph(_selectedCatalogMode),
+            CatalogModeSurfaceText(_selectedCatalogMode),
+            new Vector2(8, 6),
+            new Vector2(56, 38),
+            CatalogModeAccent(_selectedCatalogMode));
+        _deckToggle.Name = "CommandDeckToggle";
+        _deckToggle.Pressed += ToggleCommandDeck;
+
         for (var index = 0; index < MaxProductionProviderLaneButtons; index++)
         {
             AddProductionProviderLaneButton(_rightRail, index);
         }
 
-        _providerLaneSummaryValue = MakeSizedLabel(GameText.T("ui.providerLane.empty"), new Vector2(4, 284), new Vector2(40, 92), FontTiny, InkMuted);
-        _providerLaneSummaryValue.Name = "ProviderLaneSummary";
-        _providerLaneSummaryValue.VerticalAlignment = VerticalAlignment.Top;
-        _rightRail.AddChild(_providerLaneSummaryValue);
+        _queueMiniStack = new QueueMiniStack
+        {
+            Name = "QueueMiniStack",
+            Position = new Vector2(8, 282),
+            CustomMinimumSize = new Vector2(56, 84),
+            Size = new Vector2(56, 84),
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        _rightRail.AddChild(_queueMiniStack);
+        BindFixedHoverText(_queueMiniStack, "queue-mini-stack", CurrentQueueDeckInspectorText, () => QueueMiniStackAccent(CurrentProviderLaneState()));
+
+        _cancelProduction = AddIconActionButton(
+            _rightRail,
+            IconGlyph.Cancel,
+            GameText.T("ui.cancel.none"),
+            new Vector2(18, 374),
+            new Vector2(36, 32),
+            Danger);
+        _cancelProduction.Name = "CancelProduction";
+        _cancelProduction.Disabled = true;
+        _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
     }
 
     private void BuildRightDrawer(Control root)
@@ -220,40 +248,26 @@ public partial class HudLayer : CanvasLayer
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
 
-        _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);
+        _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(190, 20), FontSmall, InkMuted);
         _rightProductionPanel.AddChild(_queueValue);
 
         _repeatProduction = AddIconActionButton(
             _rightProductionPanel,
             IconGlyph.StanceReturn,
             GameText.T("ui.repeat.needCard"),
-            new Vector2(166, 326),
-            new Vector2(28, 28),
+            new Vector2(248, 326),
+            new Vector2(36, 28),
             Cyan);
         _repeatProduction.Name = "RepeatProduction";
         _repeatProduction.ToggleMode = true;
         _repeatProduction.Disabled = true;
         _repeatProduction.Pressed += RequestFocusedProductionRepeat;
 
-        _repeatProductionStateValue = MakeSizedLabel(GameText.T("ui.repeat.state.needCard"), new Vector2(156, 306), new Vector2(48, 14), FontTiny, InkMuted);
+        _repeatProductionStateValue = MakeSizedLabel(GameText.T("ui.repeat.state.needCard"), new Vector2(204, 306), new Vector2(80, 14), FontTiny, InkMuted);
         _repeatProductionStateValue.Name = "RepeatProductionState";
         _repeatProductionStateValue.HorizontalAlignment = HorizontalAlignment.Center;
         _rightProductionPanel.AddChild(_repeatProductionStateValue);
 
-        _cancelProduction = new Button
-        {
-            Name = "CancelProduction",
-            Text = GameText.T("ui.cancel"),
-            Position = new Vector2(202, 326),
-            CustomMinimumSize = new Vector2(82, 28),
-            FocusMode = Control.FocusModeEnum.Click,
-            MouseFilter = Control.MouseFilterEnum.Stop,
-            Disabled = true,
-            TooltipText = GameText.T("ui.cancel.none"),
-        };
-        UiFactory.ApplyHudCancelButtonTheme(_cancelProduction, CurrentPalette, FontSmall);
-        _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
-        _rightProductionPanel.AddChild(_cancelProduction);
         SelectCatalogMode(_selectedCatalogMode);
 
         _rightDetailPanel = MakePanel("UnitDetailPanel", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorder);

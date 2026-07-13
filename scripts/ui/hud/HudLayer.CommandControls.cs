@@ -16,26 +16,9 @@ public partial class HudLayer : CanvasLayer
                 return;
             }
 
-            var position = AvoidHud(Preview.ScreenPosition + new Vector2(18, 18));
+            var position = Preview.ScreenPosition + new Vector2(18, 18);
             var color = PreviewColor(Preview.Kind, Preview.IsValid);
             DrawGlyph(position, color);
-            DrawLabel(position + new Vector2(18, -5), color);
-        }
-
-        private Vector2 AvoidHud(Vector2 position)
-        {
-            var adjusted = position;
-            if (adjusted.X < 112 && adjusted.Y is > 150 and < 460)
-            {
-                adjusted.X = 112;
-            }
-
-            if (adjusted.Y < 128 && adjusted.X < 520)
-            {
-                adjusted.Y = 128;
-            }
-
-            return adjusted;
         }
 
         private void DrawGlyph(Vector2 position, Color color)
@@ -88,22 +71,6 @@ public partial class HudLayer : CanvasLayer
                     DrawLine(position + new Vector2(-8, 8), position + new Vector2(8, -8), color, 2, true);
                     break;
             }
-        }
-
-        private void DrawLabel(Vector2 position, Color color)
-        {
-            var text = Preview.Label;
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return;
-            }
-
-            var font = UiFontProfile.DrawFont(UiFontRole.Compact);
-            var textSize = font.GetStringSize(text, HorizontalAlignment.Left, -1, 11);
-            var rect = new Rect2(position + new Vector2(-5, -14), textSize + new Vector2(12, 18));
-            DrawRect(rect, CurrentPalette.PanelStrongFill, true);
-            DrawRect(rect, new Color(color, 0.5f), false, 1);
-            DrawString(font, position, text, HorizontalAlignment.Left, textSize.X + 4, 11, new Color(Ink, 0.9f));
         }
 
         private static Color PreviewColor(CommandPreviewKind kind, bool isValid)
@@ -204,14 +171,6 @@ public partial class HudLayer : CanvasLayer
             Text = queued > 0
                 ? $"{Hotkey}\n\n{Cost}  x{queued}"
                 : $"{Hotkey}\n\n{Cost}";
-            var label = !string.IsNullOrWhiteSpace(BuildKind)
-                ? BuildSpecCatalog.For(BuildKind).Label
-                : !string.IsNullOrWhiteSpace(UnitDesignId)
-                ? UnitDesignCatalog.Spec(UnitDesignId).Label
-                : UnitPresentationCatalog.Production[Kind].ShortCode;
-            TooltipText = enabled
-                ? CommandCardTooltip(label, Cost, ProducerLabel, Duration)
-                : CommandCardTooltip(label, Cost, ProducerLabel, Duration, disabledReason);
             QueueRedraw();
         }
 
@@ -354,14 +313,6 @@ public partial class HudLayer : CanvasLayer
                 badge.Size.X - 6,
                 8,
                 new Color(_statusBadgeAccent, Disabled ? 0.9f : 0.98f));
-        }
-
-        private static string CommandCardTooltip(string label, int cost, string producerLabel, float duration, string disabledReason = "")
-        {
-            var source = string.IsNullOrWhiteSpace(producerLabel) ? "" : $" - {producerLabel}";
-            var time = duration > 0 ? $" - {Mathf.CeilToInt(duration)}s" : "";
-            var disabled = string.IsNullOrWhiteSpace(disabledReason) ? "" : $" - {disabledReason}";
-            return $"{label} - {cost}{source}{time}{disabled}";
         }
 
         private static string CommandCardStatusBadgeText(bool enabled, int queued, float progress, string disabledReasonKey) =>
