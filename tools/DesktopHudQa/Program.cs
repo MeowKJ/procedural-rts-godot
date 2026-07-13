@@ -19,11 +19,7 @@ foreach (var testCase in cases)
         failures.Add($"{testCase.Name} {testCase.Width}x{testCase.Height} scale {testCase.UiScale:0.##}: {string.Join("; ", issues)}");
     }
 
-    var deckIssues = HudLayoutMath.ValidateRightDeckControls(testCase.Height, testCase.UiScale);
-    if (deckIssues.Count > 0)
-    {
-        failures.Add($"{testCase.Name} right command deck: {string.Join("; ", deckIssues)}");
-    }
+    RightCommandDeckQa.AppendLayoutFailures(testCase.Height, testCase.UiScale, testCase.Name, failures);
 }
 
 if (failures.Count > 0)
@@ -275,24 +271,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "private partial class ProductionProviderLaneButton : Button", "Train catalog provider lanes must render through stable lane buttons.");
     RequireText(hudLayer, "Name = $\"ProductionProviderLane{index}\"", "Train provider lane buttons must expose stable node names for QA.");
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
-    RequireText(hudLayer, "Name = \"QueueMiniStack\"", "Train provider lane state must render through the stable icon-first queue mini-stack.");
-    RequireText(hudLayer, "private partial class QueueMiniStack : Control", "Queue presentation must use a dedicated icon/progress/badge control instead of narrow multiline text.");
-    RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
-    RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");
-    RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.providerLane.upgradesNone\")", "Upgrades catalog mode must reject provider lanes in the right rail.");
-    RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.providerLane.abilitiesNone\")", "Abilities catalog mode must explain selected-unit ability context in the right rail.");
-    RequireText(hudLayer, "SetConstructionProviderLaneState(IReadOnlyList<ProductionProviderLaneState> states)", "HUD must accept construction provider lanes separately from Train lanes.");
-    RequireText(hudLayer, "SelectConstructionProviderLane(state)", "Build provider lane clicks must update construction lane selection without changing Train provider selection.");
-    RequireText(hudLayer, "button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true)", "Build catalog mode must render construction provider lanes in the right rail.");
-    RequireText(hudLayer, "ui.constructionProviderLane.tooltip", "Build provider lanes must keep construction-specific copy for the fixed inspector.");
-    RequireText(hudLayer, "ProviderLaneSummaryText(state)", "Train provider lane summary must render selected provider count, queue count, progress, and availability.");
-    RequireText(hudLayer, "ProviderLaneSummaryDisabledReason(state.DisabledReasonKey)", "Train provider lane summary must use rail-safe disabled reason codes.");
-    RequireText(hudLayer, "BindFixedHoverText", "HUD hover/focus help must route into a fixed information surface.");
-    ForbidText(hudLayer, "TooltipText", "In-match HUD controls must not spawn pointer-following tooltip boxes.");
-    ForbidText(hudLayer, "DrawLabel(position", "Command preview must remain graphical and must not draw text next to the pointer.");
-    ForbidText(hudLayer, "pointerNearRail", "The command deck must not open merely because the pointer approaches the right edge.");
-    var visualQaCapture = File.ReadAllText(Path.Combine(root, "scripts", "VisualQaCaptureRoot.cs"));
-    RequireText(visualQaCapture, "battle_hud_command_deck.png", "Visual QA must capture the explicitly opened icon-first command deck.");
+    RightCommandDeckQa.AssertSource(root, hudLayer);
     RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.");
     RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.");
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");
