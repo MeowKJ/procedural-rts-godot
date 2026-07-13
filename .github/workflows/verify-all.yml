@@ -16,6 +16,7 @@ concurrency:
 
 env:
   DOTNET_ROLL_FORWARD: Major
+  DOTNET_INSTALL_DIR: ~/.dotnet
   GODOT_VERSION: "4.7"
   GODOT_RELEASE: "stable"
 

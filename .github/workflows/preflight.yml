@@ -12,6 +12,7 @@ concurrency:
 
 env:
   DOTNET_ROLL_FORWARD: Major
+  DOTNET_INSTALL_DIR: ~/.dotnet
 
 jobs:
   preflight:
