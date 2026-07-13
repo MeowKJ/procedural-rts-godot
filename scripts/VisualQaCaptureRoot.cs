@@ -105,43 +105,53 @@ public partial class VisualQaCaptureRoot : Node
             throw new InvalidOperationException("BattleRoot was not active for projectile visual QA.");
         }
 
-        battle.DebugConfigureActiveBattlePerformanceScenario();
+        battle.DebugConfigureProjectileVisualQaScenario();
         var combatEffects = RequiredNode<CombatEffectsLayer>("CombatEffects");
         var battlefield = combatEffects.UnitBattlefield
             ?? throw new InvalidOperationException("Projectile visual QA requires the live UnitBattlefield.");
-        for (var frame = 0; frame < 240; frame++)
+        var previousMouseMode = Input.MouseMode;
+        Input.MouseMode = Input.MouseModeEnum.Hidden;
+        Input.WarpMouse(new Vector2(20, 20));
+        try
         {
-            var visible = battlefield.ProjectileProjections(PlayerSlotId.One);
-            var hasDirect = false;
-            var hasBallistic = false;
-            var hasTracking = false;
-            foreach (var projectile in visible)
+            for (var frame = 0; frame < 240; frame++)
             {
-                hasDirect |= projectile.Behavior == ProjectileBehavior.Direct;
-                hasBallistic |= projectile.Behavior == ProjectileBehavior.Ballistic;
-                hasTracking |= projectile.Behavior == ProjectileBehavior.Tracking;
-            }
-
-            if (hasDirect && hasBallistic && hasTracking)
-            {
-                GetTree().Paused = true;
-                try
+                var visible = battlefield.ProjectileProjections(PlayerSlotId.One);
+                var hasDirect = false;
+                var hasBallistic = false;
+                var hasTracking = false;
+                foreach (var projectile in visible)
                 {
-                    await Capture(outputPath, "battle_projectile_lifecycle.png");
-                }
-                finally
-                {
-                    GetTree().Paused = false;
+                    hasDirect |= projectile.Behavior == ProjectileBehavior.Direct;
+                    hasBallistic |= projectile.Behavior == ProjectileBehavior.Ballistic;
+                    hasTracking |= projectile.Behavior == ProjectileBehavior.Tracking;
                 }
 
-                return;
+                if (hasDirect && hasBallistic && hasTracking)
+                {
+                    GetTree().Paused = true;
+                    try
+                    {
+                        await Capture(outputPath, "battle_projectile_lifecycle.png");
+                    }
+                    finally
+                    {
+                        GetTree().Paused = false;
+                    }
+
+                    return;
+                }
+
+                await NextFrames(1);
             }
 
-            await NextFrames(1);
+            throw new InvalidOperationException(
+                "Projectile visual QA did not observe Direct, Ballistic, and Tracking rounds together within 240 frames.");
         }
-
-        throw new InvalidOperationException(
-            "Projectile visual QA did not observe Direct, Ballistic, and Tracking rounds together within 240 frames.");
+        finally
+        {
+            Input.MouseMode = previousMouseMode;
+        }
     }
 
     private async Task CaptureOutcome(string outputPath)

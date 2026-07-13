@@ -77,6 +77,7 @@ static class ProjectileImpactReviewGate
         var visualQa = ReviewGateSource.Read(root, "scripts", "VisualQaCaptureRoot.cs");
         RequireText(visualQa, "battle_projectile_lifecycle.png", "Visual QA must capture the live mixed projectile lifecycle.", result);
         RequireText(visualQa, "hasDirect && hasBallistic && hasTracking", "Projectile Visual QA must prove all non-beam behaviors are visible together.", result);
+        RequireText(visualQa, "DebugConfigureProjectileVisualQaScenario", "Projectile Visual QA must use its sparse three-lane combat scene.", result);
         ReviewGateSource.RequireTextInFile(root, result, "battle_projectile_lifecycle.png", "tools", "VisualQaCapture.sh");
 
         ReviewGateSource.RequireTextInFile(root, result, "projectile-splash", "tools", "SimReplayCombatTactics", "ProjectileTrackingScenarios.cs");
