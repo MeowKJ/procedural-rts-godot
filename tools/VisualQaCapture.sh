@@ -9,8 +9,9 @@ command -v xvfb-run >/dev/null
 
 output="artifacts/visual-qa"
 log="$output/visual-qa.log"
+exit_log="$output/normal-exit-qa.log"
 mkdir -p "$output"
-rm -f "$output"/*.png "$log"
+rm -f "$output"/*.png "$log" "$exit_log"
 
 xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
   "$GODOT_BIN" \
@@ -52,9 +53,31 @@ do
   assert_png_dimensions "$file_name" 1600 900
 done
 
-if grep -Eq 'Texture with GL ID|RID allocations of type .*Texture|RenderingServer::get_singleton\(\).*null|~ImageTexture' "$log"; then
-  echo "Visual QA detected a managed texture teardown regression." >&2
+run_godot_scene() {
+  local scene="$1"
+  local scene_log="$2"
+
+  xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
+    "$GODOT_BIN" \
+    --rendering-method gl_compatibility \
+    --path . \
+    --scene "$scene" \
+    2>&1 | tee "$scene_log"
+}
+
+run_godot_scene res://scenes/NormalExitQa.tscn "$exit_log"
+
+if ! grep -Fq 'Normal exit QA passed:' "$exit_log"; then
+  echo "Normal exit QA did not reach the real PauseQuitButton path." >&2
   exit 1
 fi
 
-echo "Visual QA capture passed: true 1280x720, 1600x900, and 1920x1080 screenshots with clean managed texture teardown."
+for teardown_log in "$log" "$exit_log"
+do
+  if grep -Eq 'Texture with GL ID|RID allocations of type .*Texture|RenderingServer::get_singleton\(\).*null|~ImageTexture' "$teardown_log"; then
+    echo "Visual QA detected a managed texture teardown regression in $teardown_log." >&2
+    exit 1
+  fi
+done
+
+echo "Visual QA capture passed: true 1280x720, 1600x900, and 1920x1080 screenshots plus real PauseQuitButton exit with clean managed texture teardown."
