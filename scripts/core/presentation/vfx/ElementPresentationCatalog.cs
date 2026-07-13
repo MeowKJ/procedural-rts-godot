@@ -118,6 +118,7 @@ public static partial class ElementPresentationCatalog
             ProjectileVfxMath.MinimumCoreAlpha,
             ProjectileVfxMath.MinimumHeadAlpha,
             ProjectileVfxMath.CullingPadding,
-            new Color(Flare, FlareAlpha));
+            new Color(Flare, FlareAlpha),
+            ProjectileVfxMath.MinimumVisibleSeconds);
     }
 }

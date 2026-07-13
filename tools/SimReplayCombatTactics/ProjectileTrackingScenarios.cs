@@ -2,7 +2,7 @@ static partial class Program
 {
     static void RunProjectileTrackingScenario()
     {
-        const int Ticks = 36;
+        const int Ticks = 50;
         AssertDeterministic("projectile-tracking", BuildProjectileTrackingWorld, Ticks, 6);
 
         var world = BuildProjectileTrackingWorld();
@@ -11,6 +11,8 @@ static partial class Program
         var damaged = false;
         var sourceRemoved = false;
         var sawProjectileBeforeDamage = false;
+        var trackingCorrected = false;
+        var movedTargetPosition = new Vector2(360, 300);
         var shooter = world.OrderedEntities.Single(entity => entity.SpecId == "replay.projectile.shooter");
         for (var tick = 1; tick <= Ticks; tick++)
         {
@@ -23,8 +25,18 @@ static partial class Program
                 sawProjectileBeforeDamage = true;
             }
 
+            if (sourceRemoved
+                && world.OrderedEntities.FirstOrDefault(entity => entity.Components.Has<ProjectileComponentState>()) is { } liveProjectile)
+            {
+                var state = liveProjectile.Components.Require<ProjectileComponentState>();
+                trackingCorrected |= state.AimPoint.DistanceSquaredTo(movedTargetPosition) <= 1f
+                    && MathF.Abs(state.Velocity.Y) > 1f;
+            }
+
             if (sawProjectileBeforeDamage && !damaged && !sourceRemoved)
             {
+                var movingTarget = world.OrderedEntities.Single(entity => entity.SpecId == "replay.projectile.target");
+                movingTarget.Transform = EntityTransform.At(movedTargetPosition, movingTarget.Transform.Facing);
                 world.Remove(shooter.Id);
                 sourceRemoved = true;
             }
@@ -35,6 +47,7 @@ static partial class Program
         Assert(fired, "tracking projectile scenario should fire a weapon.");
         Assert(sawProjectileBeforeDamage, "tracking ammo should exist as a projectile entity before impact damage.");
         Assert(sourceRemoved, "tracking projectile scenario should remove the source after launch.");
+        Assert(trackingCorrected, "tracking projectile should update its aim point and steering after the target moves.");
         Assert(damaged, "tracking projectile should eventually impact and damage the target.");
         Assert(targetHp < 160, $"tracking projectile should reduce target hp, got {targetHp:0.0}.");
         Assert(!world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>()), "projectile entity should be removed after impact.");
@@ -50,11 +63,16 @@ static partial class Program
         var clock = new SimClock();
         var fired = false;
         var intercepted = false;
+        var sawCounterProjectile = false;
         for (var tick = 1; tick <= Ticks; tick++)
         {
             world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
             var events = world.Events.Drain();
             fired |= events.Any(simEvent => simEvent is WeaponFiredEvent);
+            sawCounterProjectile |= world.OrderedEntities.Any(entity =>
+                entity.Components.TryGet<ProjectileComponentState>(out var projectile)
+                && projectile.Source.Value == 2
+                && projectile.Damage == 0);
             if (fired && !world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>()))
             {
                 intercepted = true;
@@ -66,6 +84,7 @@ static partial class Program
         var interceptorWeapon = interceptor.Components.Require<WeaponUserComponentState>();
         Assert(fired, "projectile intercept scenario should fire at least one weapon.");
         Assert(intercepted, "interceptor should remove the seeker projectile entity before impact.");
+        Assert(sawCounterProjectile, "non-beam interceptor fire should create its own visible counter-projectile lifecycle.");
         Assert(MathF.Abs(targetHp - 160) <= 0.001f, $"intercepted projectile should not damage the defended target, got {targetHp:0.0} hp.");
         Assert(interceptorWeapon.Mounts[0].CooldownRemaining > 0, "interceptor should consume mount cooldown when it removes a projectile.");
         Console.WriteLine($"OK [projectile-intercept]: interceptor cooldown {interceptorWeapon.Mounts[0].CooldownRemaining:0.00}, target hp {targetHp:0.0}.");
@@ -73,21 +92,27 @@ static partial class Program
 
     static void RunProjectileSplashScenario()
     {
-        const int Ticks = 4;
+        const int Ticks = 12;
         AssertDeterministic("projectile-splash", BuildProjectileSplashWorld, Ticks, 2);
 
         var world = BuildProjectileSplashWorld();
         var clock = new SimClock();
+        var sawProjectileBeforeDamage = false;
         for (var tick = 1; tick <= Ticks; tick++)
         {
             world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
-            world.Events.Drain();
+            var damaged = world.Events.Drain().Any(simEvent => simEvent is EntityDamagedEvent);
+            if (!damaged && world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>()))
+            {
+                sawProjectileBeforeDamage = true;
+            }
         }
 
         var primary = HealthOf(world, "replay.splash.primary");
         var nearbyHostile = HealthOf(world, "replay.splash.nearby_hostile");
         var nearbyAlly = HealthOf(world, "replay.splash.nearby_ally");
         var farHostile = HealthOf(world, "replay.splash.far_hostile");
+        Assert(sawProjectileBeforeDamage, "ballistic cannon should exist as a projectile before impact damage.");
         Assert(primary < 160, $"ballistic primary target should take direct damage, got {primary:0.0} hp.");
         Assert(nearbyHostile < 160, $"nearby hostile should take splash damage, got {nearbyHostile:0.0} hp.");
         Assert(MathF.Abs(nearbyAlly - 160) <= 0.001f, $"nearby allied unit should not take splash damage, got {nearbyAlly:0.0} hp.");
@@ -97,7 +122,7 @@ static partial class Program
 
     static void RunAttackGroundScenario()
     {
-        const int Ticks = 4;
+        const int Ticks = 12;
         var attackGroundLog = new List<EntityCommand>
         {
             new AttackGroundEntityCommand(new OwnerId(1), [new EntityId(1)], 1, new Vector2(260, 220)),
@@ -113,13 +138,21 @@ static partial class Program
         }
 
         var firedAtGround = false;
+        var sawGroundProjectileBeforeDamage = false;
         for (var tick = 1; tick <= Ticks; tick++)
         {
             world.Step(tick, clock.FixedDelta, buffer.DrainUpToTick(tick));
-            foreach (var simEvent in world.Events.Drain())
+            var events = world.Events.Drain();
+            foreach (var simEvent in events)
             {
                 firedAtGround |= simEvent is WeaponFiredEvent fired
                     && fired.TargetPosition.DistanceSquaredTo(new Vector2(260, 220)) <= 1f;
+            }
+
+            if (!events.Any(simEvent => simEvent is EntityDamagedEvent)
+                && world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>()))
+            {
+                sawGroundProjectileBeforeDamage = true;
             }
         }
 
@@ -127,6 +160,7 @@ static partial class Program
         var nearbyAlly = HealthOf(world, "replay.attack_ground.nearby_ally");
         var farHostile = HealthOf(world, "replay.attack_ground.far_hostile");
         Assert(firedAtGround, "attack-ground should raise a weapon fire event at the requested point.");
+        Assert(sawGroundProjectileBeforeDamage, "attack-ground ballistic shot should remain visible before splash impact.");
         Assert(nearbyHostile < 160, $"attack-ground splash should damage nearby hostile, got {nearbyHostile:0.0} hp.");
         Assert(MathF.Abs(nearbyAlly - 160) <= 0.001f, $"attack-ground splash should not damage nearby ally, got {nearbyAlly:0.0} hp.");
         Assert(MathF.Abs(farHostile - 160) <= 0.001f, $"attack-ground far hostile should stay outside splash radius, got {farHostile:0.0} hp.");
@@ -240,6 +274,7 @@ static partial class Program
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
         world.Relations.Set(new OwnerId(1), new OwnerId(3), PlayerRelation.Allied);
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
 
         var shooterSpec = ProjectileUnitSpec("replay.splash.shooter", WeaponKind.VectorCannon, 160);
         var targetSpec = ProjectileUnitSpec("replay.splash.target", null, 160);
@@ -258,6 +293,7 @@ static partial class Program
         world.Relations.Set(new OwnerId(1), new OwnerId(3), PlayerRelation.Allied);
         world.AddSystem(new CommandSystem());
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
 
         var shooterSpec = ProjectileUnitSpec("replay.attack_ground.shooter", WeaponKind.VectorCannon, 160);
         var targetSpec = ProjectileUnitSpec("replay.attack_ground.target", null, 160);
@@ -288,6 +324,7 @@ static partial class Program
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
         world.AddSystem(new CommandSystem());
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
         world.AddSystem(new MovementSystem());
 
         var shooterSpec = ProjectileUnitSpec("replay.attack_ground.moving_shooter", WeaponKind.VectorCannon, 160);
@@ -312,6 +349,7 @@ static partial class Program
             ],
             WeaponCatalog.AmmoDefinitions.Values);
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
 
         var shooterSpec = ProjectileUnitSpec("replay.weapon_state.shooter", WeaponKind.NeedleRifle, 160);
         var targetSpec = ProjectileUnitSpec("replay.weapon_state.target", null, 160);

@@ -325,15 +325,38 @@ public sealed partial class UnitBattlefield
         }
 
         unit.AttackCooldownRemaining = weapon.Cooldown;
-        WeaponFired?.Invoke(new WeaponFiredEvent(
-            _inputCommandTick,
-            unit.EntityId,
-            primaryMount?.MountId ?? "main",
+        FireUnitWeaponFromEntityWorld(unit, target, primaryMount, weapon);
+    }
+
+    private void FireUnitWeaponFromEntityWorld(
+        UnitInstance attacker,
+        UnitInstance target,
+        WeaponMountRuntimeState? mount,
+        WeaponDefinition weapon)
+    {
+        SyncOwnerRelations();
+        SyncUnitEntity(attacker);
+        SyncUnitEntity(target);
+        if (!_entityWorld.TryGet(attacker.EntityId, out var attackerEntity)
+            || !_entityWorld.TryGet(target.EntityId, out var targetEntity))
+        {
+            return;
+        }
+
+        var firingMount = mount ?? new WeaponMountRuntimeState(
+            "main",
             weapon.Id,
-            MuzzlePosition(unit, primaryMount),
-            target.Position,
-            weapon.LegacyKind));
-        ApplyDamage(unit, target, weapon);
+            attacker.Facing,
+            attacker.AttackCooldownRemaining,
+            weapon.LegacyKind);
+        var damage = WeaponMath.BaseDamage(_entityWorld, attackerEntity.OwnerId, weapon, targetEntity);
+        WeaponEngagementResolution.Fire(
+            new SimContext(_entityWorld, _inputCommandTick, 0, []),
+            attackerEntity,
+            targetEntity,
+            firingMount,
+            weapon,
+            damage);
     }
 
     private static void ResumeAttackMoveIntentIfNeeded(UnitInstance unit)
@@ -357,28 +380,6 @@ public sealed partial class UnitBattlefield
 
         unit.MoveTarget = resumeTarget;
         unit.CommandVisualTarget = intent;
-    }
-
-    private static Vector2 MuzzlePosition(UnitInstance unit, WeaponMountRuntimeState? mount)
-    {
-        var mountId = mount?.MountId;
-        if (!string.IsNullOrWhiteSpace(mountId))
-        {
-            foreach (var spec in unit.Spec.Weapons)
-            {
-                if (spec.MountId != mountId)
-                {
-                    continue;
-                }
-
-                return unit.Position
-                    + spec.Anchor.Rotated(unit.Facing)
-                    + spec.MuzzleOffset.Rotated(mount!.Facing);
-            }
-        }
-
-        var facing = mount?.Facing ?? unit.Facing;
-        return unit.Position + Vector2.FromAngle(facing) * (unit.Spec.Collision.Radius + 12);
     }
 
 }

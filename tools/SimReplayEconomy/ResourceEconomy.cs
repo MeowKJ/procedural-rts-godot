@@ -202,6 +202,7 @@ static partial class Program
         world.AddSystem(new CommandSystem());
         world.AddSystem(new ResourceSystem());
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
         world.AddSystem(new MovementSystem());
 
         var harvesterSpec = new EntitySpec

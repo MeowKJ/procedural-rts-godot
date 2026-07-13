@@ -63,11 +63,17 @@ public sealed record ProjectileComponentState(
     EntityId Target,
     string WeaponId,
     string AmmoId,
+    ProjectileBehavior Behavior,
+    HitRule HitRule,
+    Vector2 Origin,
+    Vector2 AimPoint,
     float Damage,
     Vector2 Velocity,
     float Speed,
     float TrackingStrength,
     float HitRadius,
+    float Age,
+    float FlightDuration,
     float LifetimeRemaining,
     bool Interceptable = false,
     WeaponKind? LegacyWeaponKind = null,
@@ -78,11 +84,17 @@ public sealed record ProjectileComponentState(
         EntityId Target,
         WeaponKind WeaponKind,
         AmmoKind AmmoKind,
+        ProjectileBehavior Behavior,
+        HitRule HitRule,
+        Vector2 Origin,
+        Vector2 AimPoint,
         float Damage,
         Vector2 Velocity,
         float Speed,
         float TrackingStrength,
         float HitRadius,
+        float Age,
+        float FlightDuration,
         float LifetimeRemaining,
         bool Interceptable = false)
         : this(
@@ -90,17 +102,27 @@ public sealed record ProjectileComponentState(
             Target,
             WeaponCatalog.IdFor(WeaponKind),
             WeaponCatalog.IdFor(AmmoKind),
+            Behavior,
+            HitRule,
+            Origin,
+            AimPoint,
             Damage,
             Velocity,
             Speed,
             TrackingStrength,
             HitRadius,
+            Age,
+            FlightDuration,
             LifetimeRemaining,
             Interceptable,
             WeaponKind,
             AmmoKind)
     {
     }
+
+    public float FlightProgress => FlightDuration <= 0
+        ? 1
+        : Mathf.Clamp(Age / FlightDuration, 0, 1);
 
     public WeaponKind WeaponKind => LegacyWeaponKind
         ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
