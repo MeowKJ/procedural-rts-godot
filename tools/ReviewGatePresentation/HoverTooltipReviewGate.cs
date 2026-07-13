@@ -46,7 +46,7 @@ static class HoverTooltipReviewGate
         RequireText(preview, "Input.IsKeyPressed(Key.Alt)", "Selection move preview must expose Alt attack-advance modifier feedback.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildValid", "Build placement preview must expose valid placement state.", result);
         RequireText(buildPlacement, "CommandPreviewKind.BuildInvalid", "Build placement preview must expose invalid placement state.", result);
-        RequireText(buildPlacement, "DrawPlacementCursor(rect, accent, placementValid)", "Build placement must draw a distinct placement cursor.", result);
+        RequireText(buildPlacement, "DrawPlacementCursor(footprintRect, accent, placementValid)", "Build placement must draw a distinct placement cursor around the logical footprint.", result);
         RequireText(buildPlacement, "ReadyConstructionTickets(LocalPlayerSlotId)", "Build placement cycling must surface ready sidebar construction tickets.", result);
         RequireText(buildPlacement, "QueueConstructionTicket(LocalPlayerSlotId, kind", "Sidebar construction mode must queue a ticket before placement.", result);
         RequireText(buildPlacement, "PlaceReadyConstructionTicket(", "Build placement must place ready construction tickets through the runtime backend.", result);

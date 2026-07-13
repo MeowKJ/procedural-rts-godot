@@ -33,7 +33,7 @@ public sealed partial class ConstructionSystem
             spec,
             command.Position);
         return prerequisites.IsValid
-            ? ValidatePlacementArea(world, command.Issuer, command.Position, spec, RequiresBuildAuthority(spec))
+            ? ValidatePlacementArea(world, command.Issuer, command.Position, spec, RequiresBuildAuthority(spec), command.Facing)
             : prerequisites;
     }
 
@@ -77,7 +77,7 @@ public sealed partial class ConstructionSystem
             return new PlacementResult(command.Position.X, command.Position.Y, false, reason);
         }
 
-        return ValidatePlacementArea(world, command.Issuer, command.Position, spec, requiresBuildAuthority: true);
+        return ValidatePlacementArea(world, command.Issuer, command.Position, spec, requiresBuildAuthority: true, command.Facing);
     }
 
     private PlacementResult ValidateConstructionPrerequisites(
@@ -110,7 +110,8 @@ public sealed partial class ConstructionSystem
         OwnerId issuer,
         Vector2 position,
         BuildSpec spec,
-        bool requiresBuildAuthority)
+        bool requiresBuildAuthority,
+        float facing)
     {
         BuildAnchors(world, issuer, _placementBuildAnchors);
         FootprintObstacles(world, _placementObstacles);
@@ -129,7 +130,9 @@ public sealed partial class ConstructionSystem
             terrainAt: (x, y) => TerrainLayerAt(world, x, y),
             requiresBuildAuthority: requiresBuildAuthority,
             buildVisibility: _placementVisibility,
-            requiresBuildVisibility: true);
+            requiresBuildVisibility: true,
+            logicalFootprint: spec.FootprintCells,
+            facing: facing);
     }
 
     private static bool RequiresBuildAuthority(BuildSpec spec)

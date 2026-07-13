@@ -15,6 +15,7 @@ public sealed class HeadquartersBuilding : BuildingDesign
             "Nexus Command",
             1200,
             new Vector2(170, 132),
+            new PlacementGridFootprint(6, 5),
             620,
             ArmorTag.Structure,
             WeaponKind.IonEmitter,

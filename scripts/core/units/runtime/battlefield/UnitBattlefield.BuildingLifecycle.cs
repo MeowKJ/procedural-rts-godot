@@ -25,7 +25,7 @@ public sealed partial class UnitBattlefield
         return RequiredBuildingSnapshot(target.Id);
     }
 
-    public PlacementResult ValidateBuildingPlacement(string kind, PlayerSlotId playerSlotId, Vector2 desiredPosition)
+    public PlacementResult ValidateBuildingPlacement(string kind, PlayerSlotId playerSlotId, Vector2 desiredPosition, float facing = 0)
     {
         var spec = BuildSpecCatalog.For(kind);
         var requiresBuildAuthority = spec.RequiredProducer is not null || spec.RequiredBuildings.Count > 0;
@@ -43,7 +43,9 @@ public sealed partial class UnitBattlefield
             _placementObstacles,
             terrainAt: TerrainLayerAt,
             requiresBuildAuthority: requiresBuildAuthority,
-            padding: 12);
+            padding: 0,
+            logicalFootprint: spec.FootprintCells,
+            facing: facing);
     }
 
     public bool ConstructBuilding(
@@ -86,7 +88,7 @@ public sealed partial class UnitBattlefield
             subjects,
             NextInputCommandTick(),
             kind,
-            ClampInsideWorld(position, MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 8),
+            ClampInsideWorld(position, MathF.Max(spec.LogicalFootprint(facing).X, spec.LogicalFootprint(facing).Y) * 0.5f + 8),
             facing);
         SubmitConstructionCommand(command);
 

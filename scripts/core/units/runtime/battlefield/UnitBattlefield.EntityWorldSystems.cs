@@ -231,12 +231,11 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            var footprint = BuildSpecCatalog.For(building.Kind).Footprint;
             var rect = PlacementMath.RectFromCenter(
                 building.Position.X,
                 building.Position.Y,
-                footprint.X,
-                footprint.Y);
+                building.Footprint.X,
+                building.Footprint.Y);
             result.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height));
         }
     }

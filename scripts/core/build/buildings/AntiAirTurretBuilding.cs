@@ -15,6 +15,7 @@ public sealed class AntiAirTurretBuilding : BuildingDesign
             "Skyguard Anti-Air Turret",
             480,
             new Vector2(88, 88),
+            new PlacementGridFootprint(3, 3),
             500,
             ArmorTag.Structure,
             WeaponKind.SkySpear,

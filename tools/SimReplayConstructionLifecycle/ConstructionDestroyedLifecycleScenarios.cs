@@ -96,7 +96,7 @@ static partial class Program
         yield return new ConstructionIdentityComponentState(spec.Kind);
         yield return new HealthComponentState(spec.MaxHp, spec.MaxHp);
         yield return new VisionComponentState(spec.SightRange);
-        yield return new FootprintComponentState(spec.Footprint, spec.PlacementDomain);
+        yield return new FootprintComponentState(spec.LogicalFootprint(), spec.PlacementDomain);
         yield return new ConstructionComponentState(Progress: 1, BuildTime: spec.BuildTime, Cost: spec.Cost, RefundRatio: spec.RefundRatio);
         yield return new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true);
         if (spec.BuildRadius > 0)

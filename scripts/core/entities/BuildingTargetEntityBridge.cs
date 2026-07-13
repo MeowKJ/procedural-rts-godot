@@ -28,7 +28,7 @@ public static class BuildingTargetEntityBridge
                 spec.ElementDefense,
                 spec.TargetTraits),
             Collision = new CollisionSpec(
-                Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
+                Mathf.Max(spec.LogicalFootprint().X, spec.LogicalFootprint().Y) * 0.5f,
                 8,
                 100,
                 BlocksMovement: true),
@@ -130,6 +130,7 @@ public static class BuildingTargetEntityBridge
         string? repeatOutputSpecId = null)
     {
         productionQueue ??= [];
+        var logicalFootprint = spec.LogicalFootprint(seed.Facing);
         var components = new EntityComponentState[BuildingComponentCount(seed, spec, productionQueue, rallyPoint, repeatOutputSpecId)];
         var index = 0;
         components[index++] = new BuildingIdentityComponentState(
@@ -141,12 +142,12 @@ public static class BuildingTargetEntityBridge
         components[index++] = new SelectableComponentState(selected, selectableAlertPulse);
         components[index++] = new VisionComponentState(spec.SightRange);
         components[index++] = new CollisionComponentState(
-            Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
+            Mathf.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f,
             8,
             100,
             BlocksMovement: true);
         components[index++] = new FootprintComponentState(
-            spec.Footprint,
+            logicalFootprint,
             spec.PlacementDomain);
         components[index++] = new ConstructionComponentState(
             buildProgress,
