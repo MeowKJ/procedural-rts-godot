@@ -22,7 +22,7 @@ env:
 jobs:
   verify-all:
     name: VerifyAll
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 90
 
     steps:
