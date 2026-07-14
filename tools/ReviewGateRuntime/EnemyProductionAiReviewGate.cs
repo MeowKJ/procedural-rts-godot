@@ -48,7 +48,9 @@ static class EnemyProductionAiReviewGate
         var construction = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Construction.cs");
         var offsets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ConstructionOffsets.cs");
         RequireText(construction, "CollectOwnedBuildings(battlefield, enemyPlayerSlotId, _ownedBuildingBuffer", "Enemy construction requirements must reuse owned-building storage.", result);
-        RequireText(construction, "battlefield.ConstructBuilding(enemyPlayerSlotId", "Enemy construction decisions must enter through the UnitBattlefield construction command bridge.", result);
+        RequireText(construction, "battlefield.ConstructBuilding(", "Enemy construction decisions must enter through the UnitBattlefield construction command bridge.", result);
+        RequireText(construction, "new Vector2(placement.X, placement.Y)", "Enemy construction must submit the shared authority's snapped coordinates.", result);
+        RequireText(construction, "ConstructionPlacementIntent.Direct", "Enemy construction must query the shared Direct placement intent.", result);
         RequireText(construction, "CandidateBuildOffsets(next)", "Enemy construction placement must iterate static build offsets.", result); RequireText(construction, "LiveNonEconomyUnitsNear(", "Enemy construction defense decisions must use the UnitBattlefield combat-unit count query.", result);
         RequireText(offsets, "private static readonly Vector2[] PowerPlantBuildOffsets", "Enemy construction offsets must be static data.", result);
         ForbidProductionLinq(construction, "Enemy construction", result);

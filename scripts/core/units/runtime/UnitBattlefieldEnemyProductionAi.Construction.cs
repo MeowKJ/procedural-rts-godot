@@ -22,12 +22,25 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         {
             var offset = offsets[index];
             var position = baseCenter + new Vector2(offset.X * direction, offset.Y);
-            if (!battlefield.ValidateBuildingPlacement(next, enemyPlayerSlotId, position).IsValid)
+            var placement = battlefield.ValidateBuildingPlacement(
+                next,
+                enemyPlayerSlotId,
+                position,
+                facing,
+                ConstructionPlacementIntent.Direct);
+            if (!placement.IsValid)
             {
                 continue;
             }
 
-            if (battlefield.ConstructBuilding(enemyPlayerSlotId, faction, next, position, out _, out status, facing))
+            if (battlefield.ConstructBuilding(
+                enemyPlayerSlotId,
+                faction,
+                next,
+                new Vector2(placement.X, placement.Y),
+                out _,
+                out status,
+                facing))
             {
                 status = $"Enemy construction started: {next}";
                 return true;
@@ -40,12 +53,25 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             {
                 var angle = (-0.85f + step * 0.19f) * MathF.PI;
                 var position = baseCenter + new Vector2(MathF.Cos(angle) * radius * direction, MathF.Sin(angle) * radius);
-                if (!battlefield.ValidateBuildingPlacement(next, enemyPlayerSlotId, position).IsValid)
+                var placement = battlefield.ValidateBuildingPlacement(
+                    next,
+                    enemyPlayerSlotId,
+                    position,
+                    facing,
+                    ConstructionPlacementIntent.Direct);
+                if (!placement.IsValid)
                 {
                     continue;
                 }
 
-                if (battlefield.ConstructBuilding(enemyPlayerSlotId, faction, next, position, out _, out status, facing))
+                if (battlefield.ConstructBuilding(
+                    enemyPlayerSlotId,
+                    faction,
+                    next,
+                    new Vector2(placement.X, placement.Y),
+                    out _,
+                    out status,
+                    facing))
                 {
                     status = $"Enemy construction started: {next}";
                     return true;

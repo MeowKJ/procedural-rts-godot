@@ -21,7 +21,7 @@ static partial class Program
         {
             new QueueConstructionEntityCommand(owner, [new EntityId(1)], 1, BuildingDesignIds.Barracks),
             new StartConstructionEntityCommand(owner, [new EntityId(1)], 220, BuildingDesignIds.Barracks, new Vector2(1000, 180), ReadyTicket: ticketId),
-            new StartConstructionEntityCommand(owner, [new EntityId(1)], 225, BuildingDesignIds.Barracks, new Vector2(360, 180), ReadyTicket: ticketId),
+            new StartConstructionEntityCommand(owner, [new EntityId(1)], 225, BuildingDesignIds.Barracks, new Vector2(416, 176), ReadyTicket: ticketId),
         };
 
         AssertDeterministic("construction-ready-placement", BuildReadyPlacementWorld, log, Ticks, 19);

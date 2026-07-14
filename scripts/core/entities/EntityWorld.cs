@@ -5,6 +5,7 @@ namespace ProceduralRts.Core;
 public sealed partial class EntityWorld
 {
     private readonly SortedDictionary<int, EntityInstance> _entities = [];
+    private readonly List<EntityInstance> _orderedEntities = [];
     private readonly SortedDictionary<string, EntitySpec> _specs = [];
     private readonly List<ISimSystem> _systems = [];
     private readonly List<PendingSpawn> _pendingSpawns = [];
@@ -71,7 +72,7 @@ public sealed partial class EntityWorld
     /// </summary>
     public bool SimInvariantsEnabled { get; set; } = System.Environment.GetEnvironmentVariable(SimInvariants.EnvironmentToggle) == "1";
 
-    public IReadOnlyCollection<EntityInstance> StableEntities => _entities.Values;
+    public IReadOnlyCollection<EntityInstance> StableEntities => _orderedEntities;
     public IReadOnlyCollection<EntitySpec> StableSpecs => _specs.Values;
     public int Count => _entities.Count;
 
@@ -80,7 +81,7 @@ public sealed partial class EntityWorld
     /// Systems iterate this. Safe to read while mutating component state or
     /// transforms in place; do not add or remove entities during iteration.
     /// </summary>
-    public IEnumerable<EntityInstance> OrderedEntities => _entities.Values;
+    public IReadOnlyList<EntityInstance> OrderedEntities => _orderedEntities;
 
     /// <summary>Registered systems, run in registration order each tick.</summary>
     public void AddSystem(ISimSystem system)
@@ -154,7 +155,7 @@ public sealed partial class EntityWorld
 
         foreach (var id in _pendingRemovals)
         {
-            _entities.Remove(id);
+            RemoveEntityNow(id);
         }
 
         _pendingRemovals.Clear();
@@ -208,6 +209,11 @@ public sealed partial class EntityWorld
             Transform = transform,
         };
 
+        if (_orderedEntities.Count > 0 && _orderedEntities[^1].Id.Value >= entity.Id.Value)
+        {
+            throw new InvalidOperationException("Entity IDs must remain strictly increasing in the ordered membership index.");
+        }
+
         if (initialComponents is not null)
         {
             foreach (var component in initialComponents)
@@ -216,7 +222,8 @@ public sealed partial class EntityWorld
             }
         }
 
-        _entities[entity.Id.Value] = entity;
+        _entities.Add(entity.Id.Value, entity);
+        _orderedEntities.Add(entity);
         return entity;
     }
 
@@ -227,7 +234,51 @@ public sealed partial class EntityWorld
 
     public bool Remove(EntityId id)
     {
-        return _entities.Remove(id.Value);
+        return RemoveEntityNow(id.Value);
+    }
+
+    private bool RemoveEntityNow(int id)
+    {
+        if (!_entities.TryGetValue(id, out var entity))
+        {
+            return false;
+        }
+
+        var low = 0;
+        var high = _orderedEntities.Count - 1;
+        var foundIndex = -1;
+        while (low <= high)
+        {
+            var middle = low + ((high - low) / 2);
+            var middleId = _orderedEntities[middle].Id.Value;
+            if (middleId == id)
+            {
+                foundIndex = middle;
+                break;
+            }
+
+            if (middleId < id)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle - 1;
+            }
+        }
+
+        if (foundIndex < 0 || !ReferenceEquals(_orderedEntities[foundIndex], entity))
+        {
+            throw new InvalidOperationException($"Entity {id} is missing or divergent in the ordered membership index.");
+        }
+
+        if (!_entities.Remove(id))
+        {
+            throw new InvalidOperationException($"Entity {id} disappeared during ordered membership removal.");
+        }
+
+        _orderedEntities.RemoveAt(foundIndex);
+        return true;
     }
 
     public bool ChangeOwner(EntityId id, OwnerId ownerId)
@@ -315,8 +366,9 @@ public sealed partial class EntityWorld
             }
         }
 
-        foreach (var entity in _entities.Values)
+        for (var entityIndex = 0; entityIndex < _orderedEntities.Count; entityIndex++)
         {
+            var entity = _orderedEntities[entityIndex];
             hash = EntityStateHash.Add(hash, entity.Id.Value);
             hash = EntityStateHash.Add(hash, entity.SpecId);
             hash = EntityStateHash.Add(hash, entity.OwnerId.Value);

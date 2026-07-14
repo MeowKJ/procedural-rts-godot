@@ -33,7 +33,13 @@ public sealed partial class ConstructionSystem
             spec,
             command.Position);
         return prerequisites.IsValid
-            ? ValidatePlacementArea(world, command.Issuer, command.Position, spec, RequiresBuildAuthority(spec), command.Facing)
+            ? QueryBuildingPlacement(
+                world,
+                command.Issuer,
+                spec,
+                command.Position,
+                command.Facing,
+                ConstructionPlacementIntent.Direct)
             : prerequisites;
     }
 
@@ -77,7 +83,13 @@ public sealed partial class ConstructionSystem
             return new PlacementResult(command.Position.X, command.Position.Y, false, reason);
         }
 
-        return ValidatePlacementArea(world, command.Issuer, command.Position, spec, requiresBuildAuthority: true, command.Facing);
+        return QueryBuildingPlacement(
+            world,
+            command.Issuer,
+            spec,
+            command.Position,
+            command.Facing,
+            ConstructionPlacementIntent.ReadyTicket);
     }
 
     private PlacementResult ValidateConstructionPrerequisites(
@@ -103,36 +115,6 @@ public sealed partial class ConstructionSystem
         }
 
         return new PlacementResult(position.X, position.Y, true, string.Empty);
-    }
-
-    private PlacementResult ValidatePlacementArea(
-        EntityWorld world,
-        OwnerId issuer,
-        Vector2 position,
-        BuildSpec spec,
-        bool requiresBuildAuthority,
-        float facing)
-    {
-        BuildAnchors(world, issuer, _placementBuildAnchors);
-        FootprintObstacles(world, _placementObstacles);
-        BuildVisibilitySources(world, issuer, _placementVisibility);
-
-        return PlacementMath.ValidateBuildableArea(
-            position.X,
-            position.Y,
-            spec.Footprint.X,
-            spec.Footprint.Y,
-            world.WorldWidth,
-            world.WorldHeight,
-            spec.PlacementDomain,
-            _placementBuildAnchors,
-            _placementObstacles,
-            terrainAt: (x, y) => TerrainLayerAt(world, x, y),
-            requiresBuildAuthority: requiresBuildAuthority,
-            buildVisibility: _placementVisibility,
-            requiresBuildVisibility: true,
-            logicalFootprint: spec.FootprintCells,
-            facing: facing);
     }
 
     private static bool RequiresBuildAuthority(BuildSpec spec)

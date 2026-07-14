@@ -280,7 +280,7 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
             ConstructionSubjectEntities(command.IssuerSlotId, spec),
             NextInputCommandTick(),
             command.Payload.SpecId,
-            ClampInsideWorld(ToVector2(command.Payload.TargetPoint), MathF.Max(spec.LogicalFootprint().X, spec.LogicalFootprint().Y) * 0.5f + 8));
+            ToVector2(command.Payload.TargetPoint));
 
         error = CommandGatewayValidationError.None;
         message = string.Empty;

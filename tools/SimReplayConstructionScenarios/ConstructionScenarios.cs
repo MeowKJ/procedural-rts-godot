@@ -118,8 +118,8 @@ static partial class Program
 
         var constructionLog = new List<EntityCommand>
         {
-            new StartConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 1, BuildingDesignIds.PowerPlant, new Vector2(360, 180)),
-            new StartConstructionEntityCommand(new OwnerId(2), new[] { new EntityId(2) }, 1, BuildingDesignIds.PowerPlant, new Vector2(900, 180)),
+            new StartConstructionEntityCommand(new OwnerId(1), new[] { new EntityId(1) }, 1, BuildingDesignIds.PowerPlant, new Vector2(416, 176)),
+            new StartConstructionEntityCommand(new OwnerId(2), new[] { new EntityId(2) }, 1, BuildingDesignIds.PowerPlant, new Vector2(832, 176)),
         };
         Assert(constructionLog.All(command => command is StartConstructionEntityCommand), "Dog and Cat method starts should use the same StartConstructionEntityCommand type");
         AssertDeterministic("construction-methods", BuildConstructionMethodWorld, constructionLog, constructionTicks, 1);

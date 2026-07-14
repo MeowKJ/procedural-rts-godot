@@ -119,8 +119,21 @@ public sealed record BuildSpec(
     float RefundRatio = 0.5f,
     BuildConstructionPolicy? ConstructionPolicy = null,
     ElementDefenseProfile? ElementDefense = null,
-    TargetTraitProfile? TargetTraits = null)
+    TargetTraitProfile? TargetTraits = null,
+    int PlacementClearanceCells = 1)
 {
+    private int _placementClearanceCells = PlacementClearanceCells >= 0
+        ? PlacementClearanceCells
+        : throw new ArgumentOutOfRangeException(nameof(PlacementClearanceCells));
+
+    public int PlacementClearanceCells
+    {
+        get => _placementClearanceCells;
+        init => _placementClearanceCells = value >= 0
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(value));
+    }
+
     public Vector2 LogicalFootprint(float facing = 0) => FootprintCells.Rotated(facing).WorldSize;
 
     public BuildConstructionPolicy ConstructionMethods => ConstructionPolicy ?? BuildConstructionPolicy.Standard;

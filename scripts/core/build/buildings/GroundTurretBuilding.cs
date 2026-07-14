@@ -29,6 +29,7 @@ public sealed class GroundTurretBuilding : BuildingDesign
             0,
             5,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementClearanceCells: 0);
     }
 }

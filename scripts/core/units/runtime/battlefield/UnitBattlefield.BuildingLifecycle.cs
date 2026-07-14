@@ -25,27 +25,25 @@ public sealed partial class UnitBattlefield
         return RequiredBuildingSnapshot(target.Id);
     }
 
-    public PlacementResult ValidateBuildingPlacement(string kind, PlayerSlotId playerSlotId, Vector2 desiredPosition, float facing = 0)
+    public PlacementResult ValidateBuildingPlacement(
+        string kind,
+        PlayerSlotId playerSlotId,
+        Vector2 desiredPosition,
+        float facing = 0,
+        ConstructionPlacementIntent intent = ConstructionPlacementIntent.Direct)
     {
         var spec = BuildSpecCatalog.For(kind);
-        var requiresBuildAuthority = spec.RequiredProducer is not null || spec.RequiredBuildings.Count > 0;
-        CollectBuildingBuildAnchors(playerSlotId, _placementBuildAnchors);
-        CollectBuildingPlacementObstacles(_placementObstacles);
-        return PlacementMath.ValidateBuildableArea(
-            desiredPosition.X,
-            desiredPosition.Y,
-            spec.Footprint.X,
-            spec.Footprint.Y,
-            WorldSize.X,
-            WorldSize.Y,
-            spec.PlacementDomain,
-            _placementBuildAnchors,
-            _placementObstacles,
-            terrainAt: TerrainLayerAt,
-            requiresBuildAuthority: requiresBuildAuthority,
-            padding: 0,
-            logicalFootprint: spec.FootprintCells,
-            facing: facing);
+        var owner = OwnerId.FromPlayerSlot(playerSlotId);
+        SyncOwnerRelations();
+        _entityWorld.WorldWidth = WorldSize.X;
+        _entityWorld.WorldHeight = WorldSize.Y;
+        return _constructionSystem.QueryBuildingPlacement(
+            _entityWorld,
+            owner,
+            spec,
+            desiredPosition,
+            facing,
+            intent);
     }
 
     public bool ConstructBuilding(
@@ -88,7 +86,7 @@ public sealed partial class UnitBattlefield
             subjects,
             NextInputCommandTick(),
             kind,
-            ClampInsideWorld(position, MathF.Max(spec.LogicalFootprint(facing).X, spec.LogicalFootprint(facing).Y) * 0.5f + 8),
+            position,
             facing);
         SubmitConstructionCommand(command);
 
