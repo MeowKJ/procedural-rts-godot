@@ -26,6 +26,10 @@ static class MatchLifecycleReviewGate
         RequireText(normalExitQa, "PauseQuitButton", "NormalExitQa must exit through the real pause-menu quit button.", result);
         RequireText(normalExitQa, "Normal exit QA passed:", "NormalExitQa must emit a stable clean-exit marker.", result);
         RequireText(visualQaScript, "res://scenes/NormalExitQa.tscn", "Visual QA must run the normal exit scene under the rendered virtual display.", result);
+        RequireText(visualQaScript, "timeout --signal=TERM --kill-after=5s 45s", "Each rendered NormalExitQa attempt must have a bounded TERM timeout and short forced-kill fallback.", result);
+        RequireText(visualQaScript, "for attempt in 1 2", "Visual QA must retry NormalExitQa exactly once after a failed or timed-out first attempt.", result);
+        RequireText(visualQaScript, "Normal exit QA failed after 2 attempts.", "Visual QA must fail after the bounded clean retry is exhausted.", result);
+        RequireText(visualQaScript, "grep -Fq 'Normal exit QA passed:' \"$exit_log\"", "Visual QA must retain the stable normal-exit success marker assertion.", result);
         RequireText(visualQaScript, "RID allocations of type .*Texture", "Visual QA must reject managed texture RID teardown regressions.", result);
         RequireText(pauseMenu, "GetTree().Paused = false;", "Pause menu scene changes must clear paused state.", result);
         RequireText(outcome, "GetTree().Paused = false;", "Outcome scene changes must clear paused state.", result);

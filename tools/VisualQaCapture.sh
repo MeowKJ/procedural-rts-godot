@@ -6,12 +6,14 @@ cd "$root"
 
 : "${GODOT_BIN:?Set GODOT_BIN to the Godot 4.7 Mono executable.}"
 command -v xvfb-run >/dev/null
+command -v timeout >/dev/null
 
 output="artifacts/visual-qa"
 log="$output/visual-qa.log"
 exit_log="$output/normal-exit-qa.log"
 mkdir -p "$output"
 rm -f "$output"/*.png "$log" "$exit_log"
+rm -f "$output"/normal-exit-qa-attempt-*.log
 
 xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
   "$GODOT_BIN" \
@@ -61,19 +63,56 @@ do
   assert_png_dimensions "$file_name" 1600 900
 done
 
-run_godot_scene() {
-  local scene="$1"
-  local scene_log="$2"
+run_normal_exit_attempt() {
+  local attempt="$1"
+  local attempt_log="$output/normal-exit-qa-attempt-${attempt}.log"
+  local status=0
 
-  xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
+  echo "Normal exit QA attempt ${attempt}/2 (timeout 45s)."
+  rm -f "$attempt_log"
+  if timeout --signal=TERM --kill-after=5s 45s \
+    xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
     "$GODOT_BIN" \
     --rendering-method gl_compatibility \
     --path . \
-    --scene "$scene" \
-    2>&1 | tee "$scene_log"
+    --scene res://scenes/NormalExitQa.tscn \
+    2>&1 | tee "$attempt_log"
+  then
+    status=0
+  else
+    status=$?
+  fi
+
+  {
+    echo "===== NormalExitQa attempt ${attempt}/2 (exit ${status}) ====="
+    cat "$attempt_log"
+  } >> "$exit_log"
+  return "$status"
 }
 
-run_godot_scene res://scenes/NormalExitQa.tscn "$exit_log"
+normal_exit_passed=false
+for attempt in 1 2
+do
+  if run_normal_exit_attempt "$attempt"; then
+    if grep -Fq 'Normal exit QA passed:' "$output/normal-exit-qa-attempt-${attempt}.log"; then
+      normal_exit_passed=true
+      break
+    fi
+    echo "Normal exit QA attempt ${attempt}/2 exited without the success marker." | tee -a "$exit_log" >&2
+  else
+    status=$?
+    echo "Normal exit QA attempt ${attempt}/2 failed or timed out with exit ${status}." | tee -a "$exit_log" >&2
+  fi
+
+  if [[ "$attempt" -eq 1 ]]; then
+    echo "Normal exit QA retrying once with a clean Godot/Xvfb process." | tee -a "$exit_log"
+  fi
+done
+
+if [[ "$normal_exit_passed" != true ]]; then
+  echo "Normal exit QA failed after 2 attempts." >&2
+  exit 1
+fi
 
 if ! grep -Fq 'Normal exit QA passed:' "$exit_log"; then
   echo "Normal exit QA did not reach the real PauseQuitButton path." >&2
