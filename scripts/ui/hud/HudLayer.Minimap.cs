@@ -7,6 +7,9 @@ public partial class HudLayer : CanvasLayer
 {
     private partial class MinimapSurface : Control
     {
+        private static readonly Color UnexploredSurface = new("#26313B");
+        private static readonly Color FogVeil = new("#26313B", 1.0f);
+
         public Vector2 WorldSize { get; set; } = new(3600, 2400);
         public Rect2 CameraWorldRect { get; set; }
         public IReadOnlyList<MinimapUnit> Units { get; set; } = [];
@@ -43,17 +46,17 @@ public partial class HudLayer : CanvasLayer
         public override void _Draw()
         {
             var rect = new Rect2(Vector2.Zero, CustomMinimumSize);
-            DrawRect(rect, CurrentPalette.Dark ? new Color("#121816", 0.96f) : new Color("#efe3cf", 0.78f), true);
-            DrawRect(rect, new Color(CurrentPalette.PanelBorderStrong, 0.44f), false, 1.2f);
+            DrawRect(rect, UnexploredSurface, true);
+            DrawRect(rect, new Color(CurrentPalette.PanelBorderStrong, 0.72f), false, 1.4f);
 
             for (var x = 0; x <= rect.Size.X; x += 24)
             {
-                DrawLine(new Vector2(x, 0), new Vector2(x, rect.Size.Y), new Color(CurrentPalette.TextDim, CurrentPalette.Dark ? 0.08f : 0.10f), 1, true);
+                DrawLine(new Vector2(x, 0), new Vector2(x, rect.Size.Y), new Color(CurrentPalette.TextDim, 0.12f), 1, true);
             }
 
             for (var y = 0; y <= rect.Size.Y; y += 24)
             {
-                DrawLine(new Vector2(0, y), new Vector2(rect.Size.X, y), new Color(CurrentPalette.TextDim, CurrentPalette.Dark ? 0.08f : 0.10f), 1, true);
+                DrawLine(new Vector2(0, y), new Vector2(rect.Size.X, y), new Color(CurrentPalette.TextDim, 0.12f), 1, true);
             }
 
             foreach (var resource in Resources)
@@ -99,6 +102,7 @@ public partial class HudLayer : CanvasLayer
             }
 
             DrawFog(rect);
+            DrawFogTacticalGrid(rect);
 
             foreach (var ping in AlertPings)
             {
@@ -108,8 +112,8 @@ public partial class HudLayer : CanvasLayer
             var cameraRect = WorldRectToLocal(CameraWorldRect).Intersection(rect);
             if (cameraRect.Size.X > 0 && cameraRect.Size.Y > 0)
             {
-                DrawRect(cameraRect, new Color(Ink, 0.18f), false, 1.6f);
-                DrawRect(cameraRect.Grow(-2), new Color(Cyan, 0.30f), false, 1);
+                DrawRect(cameraRect, new Color(Ink, 0.78f), false, 1.8f);
+                DrawRect(cameraRect.Grow(-2), new Color(Cyan, 0.62f), false, 1.1f);
             }
         }
 
@@ -153,7 +157,21 @@ public partial class HudLayer : CanvasLayer
                 return;
             }
 
-            DrawTextureRect(FogMask, bounds, false, new Color("#000000", 1.0f));
+            DrawTextureRect(FogMask, bounds, false, FogVeil);
+        }
+
+        private void DrawFogTacticalGrid(Rect2 bounds)
+        {
+            for (var x = 12; x < bounds.Size.X; x += 24)
+            {
+                DrawLine(new Vector2(x, 0), new Vector2(x, bounds.Size.Y), new Color(Cyan, 0.055f), 1, true);
+            }
+
+            for (var y = 12; y < bounds.Size.Y; y += 12)
+            {
+                var alpha = y % 24 == 0 ? 0.065f : 0.035f;
+                DrawLine(new Vector2(0, y), new Vector2(bounds.Size.X, y), new Color(CurrentPalette.TextDim, alpha), 1, true);
+            }
         }
 
         private void DrawAlert(Vector2 position, float pulse, float baseRadius)

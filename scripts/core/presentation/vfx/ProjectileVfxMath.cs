@@ -11,10 +11,14 @@ public static class ProjectileVfxMath
     public const float MinimumCoreAlpha = 0.82f;
     public const float MinimumHeadAlpha = 0.96f;
     public const float CullingPadding = 50f;
+    public const float MinimumVisibleSeconds = 0.10f;
 
     public static ProjectileVfxStyle StyleFor(AmmoDefinition ammo)
     {
-        return StyleFor(ammo.LegacyKind, ammo.DamageElementId);
+        return StyleFor(ammo.LegacyKind, ammo.DamageElementId) with
+        {
+            MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammo.Behavior),
+        };
     }
 
     public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind)
@@ -24,9 +28,35 @@ public static class ProjectileVfxMath
 
     public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind, string? damageElementId)
     {
-        return ElementPresentationCatalog.TryFor(damageElementId, out var element)
+        var style = ElementPresentationCatalog.TryFor(damageElementId, out var element)
             ? element.Projectile
             : LegacyStyleFor(ammoKind);
+        return style with
+        {
+            MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammoKind),
+        };
+    }
+
+    private static float MinimumVisibleSecondsFor(ProjectileBehavior behavior)
+    {
+        return behavior switch
+        {
+            ProjectileBehavior.Ballistic => 0.16f,
+            ProjectileBehavior.Tracking => 0.12f,
+            ProjectileBehavior.Direct => MinimumVisibleSeconds,
+            _ => 0,
+        };
+    }
+
+    private static float MinimumVisibleSecondsFor(AmmoKind? ammoKind)
+    {
+        return ammoKind switch
+        {
+            AmmoKind.BallisticCannon => 0.16f,
+            AmmoKind.SeekerRocket => 0.12f,
+            AmmoKind.NeedleDart => MinimumVisibleSeconds,
+            _ => MinimumVisibleSeconds,
+        };
     }
 
     private static ProjectileVfxStyle LegacyStyleFor(AmmoKind? ammoKind)
@@ -42,7 +72,8 @@ public static class ProjectileVfxMath
                 MinimumCoreAlpha,
                 MinimumHeadAlpha,
                 CullingPadding,
-                new Color("#d8fff7", 0.22f)),
+                new Color("#d8fff7", 0.22f),
+                MinimumVisibleSeconds),
             AmmoKind.SeekerRocket => new ProjectileVfxStyle(
                 34f,
                 7.6f,
@@ -52,7 +83,8 @@ public static class ProjectileVfxMath
                 0.86f,
                 MinimumHeadAlpha,
                 CullingPadding,
-                new Color("#ffefad", 0.38f)),
+                new Color("#ffefad", 0.38f),
+                0.12f),
             _ => new ProjectileVfxStyle(
                 22f,
                 8.4f,
@@ -62,7 +94,8 @@ public static class ProjectileVfxMath
                 0.84f,
                 MinimumHeadAlpha,
                 CullingPadding,
-                new Color("#fff0d2", 0.24f)),
+                new Color("#fff0d2", 0.24f),
+                MinimumVisibleSeconds),
         };
     }
 }

@@ -12,11 +12,8 @@ public sealed partial class UnitBattlefield
         SyncBuildingTargetEntities();
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
-        StepCombatBridgeWithProjectiles(context, _buildingTargetCombatSystem);
+        StepCombatBridge(context, _buildingTargetCombatSystem);
         SyncBuildingTargetCombatStateFromEntities();
-        _entityWorld.Events.DrainInto(_simEventDrainBuffer);
-        ApplyBuildingTargetCombatEvents(_simEventDrainBuffer);
-        _simEventDrainBuffer.Clear();
     }
 
     private bool HasBuildingTargetCombatWork()
@@ -73,12 +70,6 @@ public sealed partial class UnitBattlefield
 
         foreach (var simEvent in events)
         {
-            if (simEvent is WeaponFiredEvent fired)
-            {
-                WeaponFired?.Invoke(fired);
-                continue;
-            }
-
             if (simEvent is EntityDestroyedEvent destroyed)
             {
                 if (BuildingTargetIdByEntityId(destroyed.Entity) is { } destroyedBuildingId)

@@ -161,7 +161,7 @@ static partial class Program
             new ConstructionIdentityComponentState(kind),
             new HealthComponentState(spec.MaxHp, spec.MaxHp),
             new VisionComponentState(spec.SightRange),
-            new FootprintComponentState(spec.Footprint, spec.PlacementDomain),
+            new FootprintComponentState(spec.LogicalFootprint(), spec.PlacementDomain),
             new ConstructionComponentState(Progress: 1, BuildTime: spec.BuildTime, Cost: spec.Cost, RefundRatio: spec.RefundRatio),
             new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true),
         };

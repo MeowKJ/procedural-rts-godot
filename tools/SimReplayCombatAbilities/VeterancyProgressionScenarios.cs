@@ -41,6 +41,7 @@ static partial class Program
         world.Relations.Set(player, enemy, PlayerRelation.Hostile);
         world.AddSystem(new VisionSystem());
         world.AddSystem(new CombatSystem());
+        world.AddSystem(new ProjectileSystem());
 
         var attacker = world.Spawn(VeterancyAttackerSpec(), player, EntityTransform.At(new Vector2(80, 200)), new EntityComponentState[]
         {

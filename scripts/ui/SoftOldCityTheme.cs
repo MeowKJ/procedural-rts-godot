@@ -22,51 +22,45 @@ public readonly record struct SoftOldCityHudPalette(
 public static class SoftOldCityTheme
 {
     public static readonly SoftOldCityHudPalette Day = new(
-        PanelFill: new Color(SoftOldCityPalette.Paper, 0.68f),
-        PanelStrongFill: new Color(SoftOldCityPalette.PaperStrong, 0.82f),
-        PanelSubtleFill: new Color(SoftOldCityPalette.PaperSubtle, 0.44f),
-        PanelBorder: new Color(SoftOldCityPalette.Border, 0.24f),
-        PanelBorderStrong: new Color(SoftOldCityPalette.WarmCommand, 0.46f),
-        Text: new Color(SoftOldCityPalette.Text, 0.96f),
-        TextMuted: new Color(SoftOldCityPalette.InkMuted, 0.82f),
-        TextDim: new Color(SoftOldCityPalette.TextDim, 0.66f),
-        DogCommand: SoftOldCityPalette.WarmCommand,
-        CatRoute: SoftOldCityPalette.Route,
-        Repair: SoftOldCityPalette.Repair,
-        Danger: SoftOldCityPalette.HudDanger,
-        Shadow: new Color(SoftOldCityPalette.Ink, 0.16f),
-        Dark: false);
+        PanelFill: new Color(new Color("#111820"), 0.92f),
+        PanelStrongFill: new Color(new Color("#1B2530"), 0.97f),
+        PanelSubtleFill: new Color(new Color("#151E27"), 0.88f),
+        PanelBorder: new Color(new Color("#C99A52"), 0.38f),
+        PanelBorderStrong: new Color(new Color("#C99A52"), 0.76f),
+        Text: new Color("#E9E1D1"),
+        TextMuted: new Color("#94A0A8"),
+        TextDim: new Color("#74808A"),
+        DogCommand: new Color("#C99A52"),
+        CatRoute: new Color("#62C9C4"),
+        Repair: new Color("#62C9C4"),
+        Danger: new Color("#D75B5B"),
+        Shadow: new Color("#02070D", 0.72f),
+        Dark: true);
 
     public static readonly SoftOldCityHudPalette Fog = Day with
     {
-        PanelFill = new Color(SoftOldCityPalette.FogPaper, 0.70f),
-        PanelStrongFill = new Color(SoftOldCityPalette.FogPaperStrong, 0.84f),
-        PanelSubtleFill = new Color(SoftOldCityPalette.FogPaperSubtle, 0.46f),
-        PanelBorder = new Color(SoftOldCityPalette.FogBorder, 0.24f),
-        PanelBorderStrong = new Color(SoftOldCityPalette.FogCommand, 0.42f),
-        Text = new Color(SoftOldCityPalette.FogText, 0.96f),
-        TextMuted = new Color(SoftOldCityPalette.FogMuted, 0.80f),
-        TextDim = new Color(SoftOldCityPalette.FogDim, 0.64f),
-        DogCommand = SoftOldCityPalette.FogCommand,
-        CatRoute = SoftOldCityPalette.FogRoute,
-        Danger = SoftOldCityPalette.FogDanger,
+        PanelFill = new Color(new Color("#141C24"), 0.93f),
+        PanelStrongFill = new Color(new Color("#202A34"), 0.97f),
+        PanelSubtleFill = new Color(new Color("#18222B"), 0.89f),
+        PanelBorder = new Color(new Color("#B99359"), 0.36f),
+        PanelBorderStrong = new Color(new Color("#C5A066"), 0.68f),
+        DogCommand = new Color("#C5A066"),
+        CatRoute = new Color("#76C4C0"),
+        Repair = new Color("#76C4C0"),
     };
 
-    public static readonly SoftOldCityHudPalette Dusk = new(
-        PanelFill: new Color(SoftOldCityPalette.DuskPanel, 0.72f),
-        PanelStrongFill: new Color(SoftOldCityPalette.DuskPanelStrong, 0.88f),
-        PanelSubtleFill: new Color(SoftOldCityPalette.DuskPanelSubtle, 0.56f),
-        PanelBorder: new Color(SoftOldCityPalette.DuskLine, 0.20f),
-        PanelBorderStrong: new Color(SoftOldCityPalette.DuskCommand, 0.58f),
-        Text: new Color(SoftOldCityPalette.DuskText, 0.94f),
-        TextMuted: new Color(SoftOldCityPalette.DuskTextMuted, 0.76f),
-        TextDim: new Color(SoftOldCityPalette.DuskTextDim, 0.62f),
-        DogCommand: SoftOldCityPalette.DuskCommand,
-        CatRoute: SoftOldCityPalette.DuskRoute,
-        Repair: SoftOldCityPalette.DuskRepair,
-        Danger: SoftOldCityPalette.DuskDanger,
-        Shadow: new Color(SoftOldCityPalette.NightBackground, 0.48f),
-        Dark: true);
+    public static readonly SoftOldCityHudPalette Dusk = Day with
+    {
+        PanelFill = new Color(new Color("#16171D"), 0.94f),
+        PanelStrongFill = new Color(new Color("#25232A"), 0.98f),
+        PanelSubtleFill = new Color(new Color("#1B1B22"), 0.90f),
+        PanelBorder = new Color(new Color("#C99A52"), 0.42f),
+        PanelBorderStrong = new Color(new Color("#D0A05B"), 0.80f),
+        DogCommand = new Color("#D0A05B"),
+        CatRoute = new Color("#64C6C0"),
+        Repair = new Color("#64C6C0"),
+        Shadow = new Color("#02040A", 0.82f),
+    };
 
     public static SoftOldCityHudPalette For(WorldVisualThemeState state)
     {
@@ -108,6 +102,9 @@ public static class SoftOldCityTheme
             ContentMarginTop = 0,
             ContentMarginRight = 0,
             ContentMarginBottom = 0,
+            ShadowColor = new Color("#02070D", 0.46f),
+            ShadowSize = borderWidth > 1 ? 4 : 2,
+            ShadowOffset = new Vector2(0, 2),
         };
     }
 

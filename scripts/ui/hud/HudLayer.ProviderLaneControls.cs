@@ -21,6 +21,8 @@ public partial class HudLayer : CanvasLayer
             "");
         private Color _accent = Cyan;
         private bool _selected;
+        public Color Accent => _accent;
+        public string FixedHoverText { get; private set; } = "";
 
         public void SetState(ProductionProviderLaneState state, bool selected, bool enabled, bool constructionMode)
         {
@@ -32,9 +34,9 @@ public partial class HudLayer : CanvasLayer
                 ProductionProviderLaneScope.All => Mint,
                 _ => Amber,
             };
-            Text = state.ShortLabel;
+            Text = "";
             Disabled = !enabled;
-            TooltipText = enabled
+            FixedHoverText = enabled
                 ? GameText.Format(
                     constructionMode ? "ui.constructionProviderLane.tooltip" : "ui.providerLane.tooltip",
                     state.Label,
@@ -54,6 +56,26 @@ public partial class HudLayer : CanvasLayer
                 DrawRect(new Rect2(new Vector2(2, 2), Size - new Vector2(4, 4)), new Color(_accent, 0.76f), false, 1.4f);
             }
 
+            DrawIconGlyph(
+                this,
+                ScopeGlyph(State.Scope),
+                new Vector2(16, Size.Y * 0.5f),
+                24,
+                new Color(_accent, Disabled ? 0.42f : 0.92f));
+
+            var count = State.Scope == ProductionProviderLaneScope.Specific
+                ? Math.Max(1, Index - 1)
+                : State.ProviderCount;
+            var countText = Math.Min(99, Math.Max(0, count)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            DrawString(
+                UiFontProfile.DrawFont(UiFontRole.Compact),
+                new Vector2(31, Size.Y * 0.5f + 4),
+                countText,
+                HorizontalAlignment.Center,
+                15,
+                11,
+                new Color(_accent, Disabled ? 0.52f : 0.94f));
+
             if (State.ActiveProgress > 0)
             {
                 DrawRect(new Rect2(3, Size.Y - 5, (Size.X - 6) * State.ActiveProgress, 2), new Color(_accent, alpha), true);
@@ -69,6 +91,16 @@ public partial class HudLayer : CanvasLayer
                 DrawCircle(new Vector2(7, Size.Y - 7), 3.6f, new Color(Mint, Disabled ? 0.36f : 0.9f));
                 DrawArc(new Vector2(7, Size.Y - 7), 6.2f, -Mathf.Pi * 0.8f, Mathf.Pi * 1.15f, 24, new Color(Mint, Disabled ? 0.28f : 0.74f), 1.2f, true);
             }
+        }
+
+        private static IconGlyph ScopeGlyph(ProductionProviderLaneScope scope)
+        {
+            return scope switch
+            {
+                ProductionProviderLaneScope.All => IconGlyph.Group,
+                ProductionProviderLaneScope.Specific => IconGlyph.Building,
+                _ => IconGlyph.Ability,
+            };
         }
 
         private static string RepeatTooltipSuffix(ProductionProviderLaneState state)

@@ -112,7 +112,10 @@ public partial class CombatEffectsLayer : Node2D
                 projectile.Velocity,
                 projectile.Style,
                 projectile.Accent,
-                projectile.IsSeekerRocket);
+                projectile.IsSeekerRocket,
+                projectile.GroundPosition,
+                projectile.GroundVelocity,
+                projectile.ArcHeight);
         }
     }
 
@@ -121,23 +124,39 @@ public partial class CombatEffectsLayer : Node2D
         Vector2 velocity,
         ProjectileVfxStyle style,
         Color accent,
-        bool isSeekerRocket)
+        bool isSeekerRocket,
+        Vector2? groundPosition = null,
+        Vector2? groundVelocity = null,
+        float arcHeight = 0)
     {
         var direction = velocity.LengthSquared() <= 0.01f
             ? Vector2.Right
             : velocity.Normalized();
 
         var tail = position - direction * style.TailLength;
-        if (!IsSegmentVisible(tail, position, style.CullingPadding)
-            || !IsProjectileVisibleToPlayer(tail, position))
+        var visibilityHead = groundPosition ?? position;
+        var visibilityDirection = groundVelocity is { } groundMotion && groundMotion.LengthSquared() > 0.01f
+            ? groundMotion.Normalized()
+            : direction;
+        var visibilityTail = visibilityHead - visibilityDirection * style.TailLength;
+        if (!IsSegmentVisible(tail, position, style.CullingPadding + arcHeight)
+            || !IsProjectileVisibleToPlayer(visibilityTail, visibilityHead))
         {
             return;
         }
 
-        var readability = ReadabilityForSegment(tail, position);
+        var readability = ReadabilityForSegment(visibilityTail, visibilityHead);
         if (!readability.Draw)
         {
             return;
+        }
+
+        if (groundPosition is { } shadowPosition && arcHeight > 0.5f)
+        {
+            var heightRatio = Mathf.Clamp(arcHeight / 96f, 0, 1);
+            var shadowRadius = style.HeadRadius * Mathf.Lerp(1.45f, 0.72f, heightRatio);
+            DrawCircle(shadowPosition, shadowRadius, Readable(new Color("#02070d"), 0.34f - heightRatio * 0.12f, readability));
+            DrawArc(shadowPosition, shadowRadius * 1.45f, 0, Mathf.Tau, 20, Readable(accent, 0.16f, readability), ReadableWidth(1f, readability), true);
         }
 
         DrawLine(tail, position, Readable(accent, style.TrailAlpha, readability), ReadableWidth(style.TrailWidth, readability), true);

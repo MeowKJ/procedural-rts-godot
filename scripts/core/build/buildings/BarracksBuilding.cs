@@ -15,6 +15,7 @@ public sealed class BarracksBuilding : BuildingDesign
             "Infantry Matrix",
             680,
             new Vector2(126, 104),
+            new PlacementGridFootprint(4, 4),
             420,
             ArmorTag.Structure,
             null,

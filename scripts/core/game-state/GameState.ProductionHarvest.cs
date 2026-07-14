@@ -246,7 +246,8 @@ public sealed partial class GameState
     {
         var spec = BuildSpecCatalog.For(refinery.Kind);
         var forward = Vector2.FromAngle(refinery.Facing);
-        return refinery.Position + forward * (Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 54);
+        var logicalFootprint = spec.LogicalFootprint(refinery.Facing);
+        return refinery.Position + forward * (Mathf.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f + 54);
     }
 
     private Vector2 RefineryWaitPoint(BuildingModel refinery, int harvesterId)

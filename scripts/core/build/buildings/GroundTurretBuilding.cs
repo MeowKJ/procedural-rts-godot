@@ -15,6 +15,7 @@ public sealed class GroundTurretBuilding : BuildingDesign
             "Sentinel Ground Turret",
             520,
             new Vector2(84, 84),
+            new PlacementGridFootprint(3, 3),
             430,
             ArmorTag.Structure,
             WeaponKind.VectorCannon,

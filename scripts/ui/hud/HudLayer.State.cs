@@ -7,10 +7,10 @@ public partial class HudLayer : CanvasLayer
 {
     private const float DrawerWidth = HudLayoutMath.DrawerWidth;
     private const float RailWidth = HudLayoutMath.RailWidth;
-    private const int FontTiny = 9;
-    private const int FontSmall = 11;
-    private const int FontBody = 12;
-    private const int FontMeta = 13;
+    private const int FontTiny = HudLayoutMath.MinimumCompactFontSize;
+    private const int FontSmall = HudLayoutMath.MinimumBodyFontSize;
+    private const int FontBody = 13;
+    private const int FontMeta = 14;
     private const int FontValue = 15;
     private const int FontTitle = 18;
     private const int MaxProductionProviderLaneButtons = 8;
@@ -34,11 +34,11 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
-    private Label _providerLaneSummaryValue = null!;
     private Label _commandRibbonContextValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _repeatProductionStateValue = null!;
+    private ColorRect _productionFooterDivider = null!;
     private Label _alertValue = null!;
     private Label _outcomeTitle = null!;
     private Label _outcomeDetail = null!;
@@ -58,7 +58,9 @@ public partial class HudLayer : CanvasLayer
     private Button _sandboxAtmosphereButton = null!;
     private Button _sandboxOverlayButton = null!;
     private Button _sandboxStressButton = null!;
-    private Button _cancelProduction = null!;
+    private IconActionButton _deckToggle = null!;
+    private QueueMiniStack _queueMiniStack = null!;
+    private IconActionButton _cancelProduction = null!;
     private IconActionButton _repeatProduction = null!;
     private IconActionButton _settingsButton = null!;
     private MinimapSurface _minimapSurface = null!;
@@ -94,7 +96,6 @@ public partial class HudLayer : CanvasLayer
     private bool _manualDrawerOpen;
     private float _productionDrawerProgress;
     private float _detailDrawerProgress;
-    private float _drawerInactivity;
     private float _productionStatusPulse;
     private float _queueStatusPulse;
     private bool _commandFailureVisible;
@@ -188,7 +189,6 @@ public partial class HudLayer : CanvasLayer
 
         if (hasBuildingSelection || buildModeActive)
         {
-            _drawerInactivity = 0;
             _productionDrawerProgress = 1f;
         }
 
@@ -201,6 +201,8 @@ public partial class HudLayer : CanvasLayer
         {
             SetCatalogInspectorDefault(DefaultCatalogInspectorText());
         }
+
+        if (IsInsideTree()) LayoutDynamicHud(GetViewport().GetVisibleRect().Size);
     }
 
     public void SetSelectionInfo(string title, string meta, string stats, string detail, string portraitMode, IconGlyph icon = IconGlyph.None)
@@ -256,9 +258,7 @@ public partial class HudLayer : CanvasLayer
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
-            _drawerInactivity = 0;
-            _manualDrawerOpen = true;
-            _productionDrawerProgress = 1f;
+            SetCommandDeckOpen(true);
         }
     }
 
@@ -292,11 +292,14 @@ public partial class HudLayer : CanvasLayer
             _queueStatusPulse = 1f;
             _lastQueueSummary = summary;
             _lastCanCancelProduction = canCancel;
+            var lineBreak = summary.IndexOf('\n');
+            var surfaceSummary = lineBreak >= 0 ? summary[..lineBreak] : summary;
+            _queueValue.Text = CompactText(surfaceSummary, 28);
+            _cancelProduction.FixedHoverText = canCancel ? summary : GameText.T("ui.cancel.none");
         }
 
-        _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
-        _cancelProduction.TooltipText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
+        RefreshProductionProviderLaneSummary();
     }
 
     public void SetResourceCredits(int credits)

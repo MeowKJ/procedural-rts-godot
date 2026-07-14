@@ -25,6 +25,7 @@ static partial class Program
         RunVeterancyProgressionScenario();
         RunDerivedRegenerationScenario();
         RunProjectileTrackingScenario();
+        RunObservableProjectileLifecycleScenario();
         RunProjectileInterceptScenario();
         RunProjectileSplashScenario();
         RunAttackGroundScenario();

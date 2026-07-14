@@ -41,19 +41,19 @@ public static class MatchStartLoadouts
         {
             [Owner.Player] = new Dictionary<string, (Vector2 Position, float Facing)>
             {
-                [BuildingDesignIds.Headquarters] = (new Vector2(505, 610), 0),
-                [BuildingDesignIds.PowerPlant] = (new Vector2(360, 790), -0.1f),
-                [BuildingDesignIds.Barracks] = (new Vector2(520, 845), 0.1f),
-                [BuildingDesignIds.VehicleFactory] = (new Vector2(650, 965), 0.06f),
-                [BuildingDesignIds.Refinery] = (new Vector2(335, 520), 0.05f),
+                [BuildingDesignIds.Headquarters] = (new Vector2(512, 624), 0),
+                [BuildingDesignIds.PowerPlant] = (new Vector2(320, 816), 0),
+                [BuildingDesignIds.Barracks] = (new Vector2(512, 864), 0),
+                [BuildingDesignIds.VehicleFactory] = (new Vector2(512, 1024), 0),
+                [BuildingDesignIds.Refinery] = (new Vector2(304, 544), 0),
             },
             [Owner.Enemy] = new Dictionary<string, (Vector2 Position, float Facing)>
             {
-                [BuildingDesignIds.Headquarters] = (new Vector2(2860, 1535), MathF.PI),
-                [BuildingDesignIds.PowerPlant] = (new Vector2(3035, 1365), MathF.PI + 0.1f),
-                [BuildingDesignIds.Barracks] = (new Vector2(2940, 1225), MathF.PI - 0.08f),
-                [BuildingDesignIds.VehicleFactory] = (new Vector2(2810, 1290), MathF.PI - 0.08f),
-                [BuildingDesignIds.Refinery] = (new Vector2(3130, 1635), MathF.PI),
+                [BuildingDesignIds.Headquarters] = (new Vector2(2848, 1520), MathF.PI),
+                [BuildingDesignIds.PowerPlant] = (new Vector2(3040, 1328), MathF.PI),
+                [BuildingDesignIds.Barracks] = (new Vector2(2880, 1280), MathF.PI),
+                [BuildingDesignIds.VehicleFactory] = (new Vector2(2848, 1120), MathF.PI),
+                [BuildingDesignIds.Refinery] = (new Vector2(3056, 1600), MathF.PI),
             },
         };
 
@@ -92,7 +92,7 @@ public static class MatchStartLoadouts
             .Select(kind =>
             {
                 var slot = buildingSlots[kind];
-                return new MatchStartBuilding(kind, slot.Position, slot.Facing);
+                return SnappedBuilding(kind, slot.Position, slot.Facing);
             })
             .ToArray();
 
@@ -121,10 +121,29 @@ public static class MatchStartLoadouts
             owner,
             faction,
             baseLoadout.Buildings
-                .Select(building => building with { Position = start + (building.Position - reference) })
+                .Select(building => SnappedBuilding(
+                    building.Kind,
+                    start + (building.Position - reference),
+                    building.Facing))
                 .ToArray(),
             baseLoadout.Units
                 .Select(unit => unit with { Position = start + (unit.Position - reference) })
                 .ToArray());
+    }
+
+    private static MatchStartBuilding SnappedBuilding(string kind, Vector2 desiredPosition, float facing)
+    {
+        if (!PlacementMath.TryNormalizeCardinalFacing(facing, out var cardinalFacing))
+        {
+            throw new InvalidOperationException($"Starting building '{kind}' must use a cardinal facing, got {facing}.");
+        }
+
+        var footprint = BuildSpecCatalog.For(kind).FootprintCells.Rotated(cardinalFacing);
+        return new MatchStartBuilding(
+            kind,
+            new Vector2(
+                PlacementMath.SnapAnchor(desiredPosition.X, footprint.WidthCells),
+                PlacementMath.SnapAnchor(desiredPosition.Y, footprint.HeightCells)),
+            cardinalFacing);
     }
 }

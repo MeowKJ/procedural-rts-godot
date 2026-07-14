@@ -221,11 +221,17 @@ public static partial class EntityStateHash
         hash = Add(hash, state.Target.Value);
         hash = Add(hash, state.WeaponId);
         hash = Add(hash, state.AmmoId);
+        hash = Add(hash, (int)state.Behavior);
+        hash = Add(hash, (int)state.HitRule);
+        hash = Add(hash, state.Origin);
+        hash = Add(hash, state.AimPoint);
         hash = Add(hash, state.Damage);
         hash = Add(hash, state.Velocity);
         hash = Add(hash, state.Speed);
         hash = Add(hash, state.TrackingStrength);
         hash = Add(hash, state.HitRadius);
+        hash = Add(hash, state.Age);
+        hash = Add(hash, state.FlightDuration);
         hash = Add(hash, state.LifetimeRemaining);
         return Add(hash, state.Interceptable ? 1 : 0);
     }

@@ -18,7 +18,7 @@ static partial class Program
                 new ConstructionIdentityComponentState(BuildingDesignIds.Headquarters),
                 new HealthComponentState(hqSpec.MaxHp, hqSpec.MaxHp),
                 new VisionComponentState(hqSpec.SightRange),
-                new FootprintComponentState(hqSpec.Footprint, hqSpec.PlacementDomain),
+                new FootprintComponentState(hqSpec.LogicalFootprint(), hqSpec.PlacementDomain),
                 new ConstructionComponentState(Progress: 1, BuildTime: hqSpec.BuildTime, Cost: hqSpec.Cost, RefundRatio: hqSpec.RefundRatio),
                 new PowerComponentState(hqSpec.PowerProvided, hqSpec.PowerUsed, Powered: true),
                 new BuildRadiusComponentState(hqSpec.BuildRadius),
@@ -170,7 +170,7 @@ static partial class Program
                 new ConstructionIdentityComponentState(kind),
                 new HealthComponentState(spec.MaxHp, spec.MaxHp),
                 new VisionComponentState(spec.SightRange),
-                new FootprintComponentState(spec.Footprint, spec.PlacementDomain),
+                new FootprintComponentState(spec.LogicalFootprint(), spec.PlacementDomain),
                 new ConstructionComponentState(Progress: 1, BuildTime: spec.BuildTime, Cost: spec.Cost, RefundRatio: spec.RefundRatio),
                 new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true),
             };
@@ -248,7 +248,7 @@ static partial class Program
                 new ConstructionIdentityComponentState(kind),
                 new HealthComponentState(spec.MaxHp, spec.MaxHp),
                 new VisionComponentState(spec.SightRange),
-                new FootprintComponentState(spec.Footprint, spec.PlacementDomain),
+                new FootprintComponentState(spec.LogicalFootprint(), spec.PlacementDomain),
                 new ConstructionComponentState(Progress: 1, BuildTime: spec.BuildTime, Cost: spec.Cost, RefundRatio: spec.RefundRatio),
                 new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true),
             };
@@ -285,7 +285,7 @@ static partial class Program
                     new ConstructionIdentityComponentState(kind),
                     new HealthComponentState(spec.MaxHp, spec.MaxHp),
                     new VisionComponentState(spec.SightRange),
-                    new FootprintComponentState(spec.Footprint, spec.PlacementDomain),
+                    new FootprintComponentState(spec.LogicalFootprint(), spec.PlacementDomain),
                     new ConstructionComponentState(Progress: 1, BuildTime: spec.BuildTime, Cost: spec.Cost, RefundRatio: spec.RefundRatio),
                     new PowerComponentState(spec.PowerProvided, spec.PowerUsed, powered),
                 };

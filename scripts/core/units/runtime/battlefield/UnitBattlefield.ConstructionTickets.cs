@@ -99,7 +99,7 @@ public sealed partial class UnitBattlefield
             ConstructionSubjectEntities(playerSlotId, spec),
             NextInputCommandTick(),
             ticket.Kind,
-            ClampInsideWorld(position, MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 8),
+            ClampInsideWorld(position, MathF.Max(spec.LogicalFootprint(facing).X, spec.LogicalFootprint(facing).Y) * 0.5f + 8),
             facing,
             ticketId);
         SubmitConstructionCommand(command);

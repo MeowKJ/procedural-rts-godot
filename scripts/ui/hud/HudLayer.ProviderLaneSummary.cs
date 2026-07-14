@@ -7,25 +7,74 @@ public partial class HudLayer : CanvasLayer
 {
     private void RefreshProductionProviderLaneSummary()
     {
-        if (_providerLaneSummaryValue is null)
+        if (_queueMiniStack is null)
         {
             return;
         }
 
         if (_selectedCatalogMode is not (CatalogModeKind.Build or CatalogModeKind.Train))
         {
-            _providerLaneSummaryValue.Visible = true;
-            _providerLaneSummaryValue.Text = NonProviderLaneRailHintText();
-            SetLabelColor(_providerLaneSummaryValue, InkMuted);
+            _queueMiniStack.Visible = false;
+            _cancelProduction.Visible = false;
             return;
         }
 
         var state = CurrentProviderLaneState();
-        _providerLaneSummaryValue.Visible = true;
-        _providerLaneSummaryValue.Text = state is null
-            ? CurrentProviderLaneEmptyText()
-            : ProviderLaneSummaryText(state);
-        SetLabelColor(_providerLaneSummaryValue, state is null || !state.Available ? InkMuted : Ink);
+        _queueMiniStack.Visible = true;
+        _cancelProduction.Visible = _selectedCatalogMode == CatalogModeKind.Train;
+        _queueMiniStack.SetState(
+            QueueMiniStackGlyph(),
+            QueueMiniStackAccent(state),
+            state?.QueueCount ?? 0,
+            state?.ActiveProgress ?? 0,
+            state?.Available ?? false);
+    }
+
+    private IconGlyph QueueMiniStackGlyph()
+    {
+        if (_selectedCatalogMode == CatalogModeKind.Build)
+        {
+            return IconGlyph.Building;
+        }
+
+        for (var index = 0; index < _commandCardStates.Count; index++)
+        {
+            var state = _commandCardStates[index];
+            if (state.Category == _selectedProductionCategory
+                && (state.ActiveProgress > 0 || state.QueuedCount > 0))
+            {
+                return state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph;
+            }
+        }
+
+        return IconGlyph.Infantry;
+    }
+
+    private static Color QueueMiniStackAccent(ProductionProviderLaneState? state)
+    {
+        if (state is null || !state.Available)
+        {
+            return InkMuted;
+        }
+
+        return state.Scope switch
+        {
+            ProductionProviderLaneScope.All => Mint,
+            ProductionProviderLaneScope.Specific => Amber,
+            _ => Cyan,
+        };
+    }
+
+    private string CurrentQueueDeckInspectorText()
+    {
+        if (_selectedCatalogMode is not (CatalogModeKind.Build or CatalogModeKind.Train))
+        {
+            return NonProviderLaneRailHintText();
+        }
+
+        return CurrentProviderLaneState() is { } state
+            ? ProviderLaneSummaryText(state)
+            : CurrentProviderLaneEmptyText();
     }
 
     private ProductionProviderLaneState? CurrentProviderLaneState()
