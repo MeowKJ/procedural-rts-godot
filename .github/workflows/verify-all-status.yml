@@ -10,14 +10,17 @@ on:
 
 permissions:
   actions: read
-  contents: read
   issues: write
   pull-requests: read
+
+concurrency:
+  group: verify-all-pr-status-${{ github.event.workflow_run.head_repository.full_name || github.repository }}-${{ github.event.workflow_run.head_branch || github.event.workflow_run.id }}
+  cancel-in-progress: true
 
 jobs:
   pr-status:
     name: Comment VerifyAll status
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 5
 
     steps:
@@ -25,23 +28,57 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const run = context.payload.workflow_run;
-            const prs = run.pull_requests || [];
+            const eventRun = context.payload.workflow_run;
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: eventRun.id,
+            });
+
+            let prs = run.pull_requests || [];
             if (prs.length === 0) {
-              core.notice("VerifyAll run is not associated with a pull request; skipping PR status comment.");
+              const associated = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: run.head_sha,
+                  per_page: 100,
+                });
+              prs = associated.filter(candidate =>
+                candidate.state === "open" && candidate.head?.sha === run.head_sha);
+            }
+
+            if (prs.length === 0) {
+              core.notice(`VerifyAll run ${run.id} is not associated with an open pull request; skipping PR status comment.`);
               return;
             }
 
-            const pr = prs[0];
+            const prNumber = prs[0].number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            if (pr.state !== "open") {
+              core.notice(`Pull request #${prNumber} is no longer open; skipping VerifyAll status comment.`);
+              return;
+            }
+
+            if (pr.head.sha !== run.head_sha) {
+              core.notice(`VerifyAll run ${run.id} head ${run.head_sha} is stale for PR #${prNumber} head ${pr.head.sha}; skipping.`);
+              return;
+            }
+
             const marker = "<!-- verify-all-status -->";
-            const requested = context.payload.action === "requested";
+            const completed = run.status === "completed";
             const conclusion = run.conclusion || "pending";
-            const status = requested
+            const status = !completed
               ? "status:ci-pending"
               : conclusion === "success"
                 ? "status:verified"
                 : "status:needs-fix";
-            const icon = requested
+            const icon = !completed
               ? "PENDING"
               : conclusion === "success"
                 ? "PASS"
@@ -49,7 +86,7 @@ jobs:
             const runUrl = run.html_url;
             const headSha = (run.head_sha || "").slice(0, 12);
             const completedAt = run.updated_at || run.created_at;
-            const next = requested
+            const next = !completed
               ? "Codex should not wait on this run. A monitor or Integrator can poll later with `sh tools/ci-monitor.sh " + pr.number + "`."
               : conclusion === "success"
                 ? "Integrator may proceed with review/merge checks."
@@ -68,11 +105,17 @@ jobs:
             const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: pr.number,
+              issue_number: prNumber,
               per_page: 100,
             });
             const existing = comments.find(comment =>
               comment.user?.type === "Bot" && comment.body?.includes(marker));
+            const existingRunMatch = existing?.body?.match(/\*\*Run:\*\*\s*\[(\d+)\]/);
+            const existingRunId = existingRunMatch ? Number(existingRunMatch[1]) : null;
+            if (existingRunId !== null && existingRunId > run.id) {
+              core.notice(`Marker comment already references newer VerifyAll run ${existingRunId}; skipping older run ${run.id}.`);
+              return;
+            }
 
             if (existing) {
               await github.rest.issues.updateComment({
@@ -85,7 +128,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: pr.number,
+                issue_number: prNumber,
                 body,
               });
             }
