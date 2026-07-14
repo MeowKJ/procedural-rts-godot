@@ -1,4 +1,5 @@
 using Godot;
+using ProceduralRts.Core;
 
 namespace ProceduralRts.Ui;
 
@@ -22,7 +23,7 @@ public partial class HudLayer
         }
 
         _fixedHoverOwner = owner;
-        _commandRibbonContextValue.Text = CompactText(text.Replace('\n', ' '), 34);
+        _commandRibbonContextValue.Text = HudLayoutMath.CommandRibbonSurfaceText(text);
         SetLabelColor(_commandRibbonContextValue, accent);
     }
 

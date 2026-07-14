@@ -40,7 +40,7 @@ public partial class HudLayer
             _selectedUnitStance,
             _selectedUnitCount,
             _selectedMoveMode);
-        _commandRibbonContextValue.Text = CompactText(context.Text, 28);
+        _commandRibbonContextValue.Text = HudLayoutMath.CommandRibbonSurfaceText(context.Text);
         var color = context.Kind switch
         {
             CommandRibbonContextKind.ActiveCommand => Cyan,

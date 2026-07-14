@@ -278,9 +278,9 @@ public partial class HudLayer : CanvasLayer
         {
             Name = $"ProductionProviderLane{index}",
             Index = index,
-            Position = new Vector2(8, 52 + index * 28),
-            CustomMinimumSize = new Vector2(56, 24),
-            Size = new Vector2(56, 24),
+            Position = new Vector2(6, 50 + index * 44),
+            CustomMinimumSize = new Vector2(52, 44),
+            Size = new Vector2(52, 44),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
             Visible = false,
@@ -309,7 +309,7 @@ public partial class HudLayer : CanvasLayer
             Mode = mode,
             Glyph = glyph,
             Position = position,
-            CustomMinimumSize = new Vector2(36, 34),
+            CustomMinimumSize = new Vector2(44, 44),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
         };
@@ -332,7 +332,7 @@ public partial class HudLayer : CanvasLayer
         {
             Presentation = presentation,
             Position = position,
-            CustomMinimumSize = new Vector2(36, 34),
+            CustomMinimumSize = new Vector2(44, 44),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
         };

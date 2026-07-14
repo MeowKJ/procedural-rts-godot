@@ -19,7 +19,7 @@ foreach (var testCase in cases)
         failures.Add($"{testCase.Name} {testCase.Width}x{testCase.Height} scale {testCase.UiScale:0.##}: {string.Join("; ", issues)}");
     }
 
-    RightCommandDeckQa.AppendLayoutFailures(testCase.Height, testCase.UiScale, testCase.Name, failures);
+    RightCommandDeckQa.AppendLayoutFailures(testCase.Width, testCase.Height, testCase.UiScale, testCase.Name, failures);
 }
 
 if (failures.Count > 0)

@@ -59,8 +59,8 @@ public partial class HudLayer : CanvasLayer
             DrawIconGlyph(
                 this,
                 ScopeGlyph(State.Scope),
-                new Vector2(17, Size.Y * 0.5f),
-                15,
+                new Vector2(16, Size.Y * 0.5f),
+                24,
                 new Color(_accent, Disabled ? 0.42f : 0.92f));
 
             var count = State.Scope == ProductionProviderLaneScope.Specific
@@ -73,7 +73,7 @@ public partial class HudLayer : CanvasLayer
                 countText,
                 HorizontalAlignment.Center,
                 15,
-                9,
+                11,
                 new Color(_accent, Disabled ? 0.52f : 0.94f));
 
             if (State.ActiveProgress > 0)
