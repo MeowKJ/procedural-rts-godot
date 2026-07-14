@@ -4,25 +4,27 @@ namespace ProceduralRts.Tools.AiOpponentLoopQa;
 
 internal static partial class AiOpponentLoopQaProgram
 {
-    private static void PrintLoop(OpponentLoopReport report)
-    {
-        Console.WriteLine("AiOpponentLoopQa runtime loop");
-        Console.WriteLine($"  duration: {report.SimulationSeconds}s, outcome: {report.Outcome}");
-        Console.WriteLine($"  harvest: assignments {report.HarvestAssignments}, depleted {report.EnemyFieldDepleted}, credits start/peak {report.EnemyCreditsStart}/{report.EnemyCreditsPeak}, bridge commands {report.HarvestBridgeCommands}");
-        Console.WriteLine($"  builds present: {string.Join(", ", report.BuiltEnemyBuildingSpecIds)}, construction orders {report.ConstructionOrders}, bridge commands {report.ConstructionBridgeCommands}");
-        Console.WriteLine($"  production: orders {report.ProductionOrders}, queued {report.ProductionQueuedEvents}, completed {report.ProductionCompletedEvents}, bridge commands {report.ProductionBridgeCommands}");
-        Console.WriteLine($"  produced designs: {string.Join(", ", report.ProducedDesignIds)}");
-        Console.WriteLine($"  mixed combat: infantry {report.ProducedInfantry}, vehicles {report.ProducedVehicles}, max combat alive {report.MaxEnemyCombatUnitsAlive}");
-        Console.WriteLine($"  defense: building hits {report.DefenseBuildingHits}, unit hits {report.DefenseUnitHits}, raider deaths {report.RaiderDeaths}, raider damage {report.RaiderHpDamage:0}");
-        Console.WriteLine($"  attack waves: waves {report.WavesLaunched}, first tick {report.FirstWaveTick}, second tick {report.SecondWaveTick}, max manual attackers {report.MaxManualWaveAttackers}, HQ damage {report.PlayerHqDamage:0}, bridge commands {report.WaveBridgeCommands}");
-        Console.WriteLine($"  command proof: total applied {report.TotalAppliedCommands}, production status '{report.ProductionStatus}', wave status '{report.WaveStatus}'");
-    }
-
     private static void PrintBuildProbe(BuildCommandProbeReport report)
     {
         Console.WriteLine("AiOpponentLoopQa construction command probe");
         Console.WriteLine($"  commands: {report.CommandsSubmitted}, all StartConstruction build commands: {report.CommandsWereBuildCommands}");
         Console.WriteLine($"  completed: {string.Join(", ", report.CompletedBuildingSpecIds)}, rejections {report.Rejections}, credits {report.RemainingCredits}, hash {report.StateHash:X16}");
+    }
+
+    private static void PrintTournamentCase(TournamentCaseResult result)
+    {
+        if (result.Metrics is not { } metrics)
+        {
+            Console.WriteLine($"case seed={result.Config.Seed} mapping={result.Config.Mapping}: ERROR {string.Join("; ", result.Failures)}");
+            return;
+        }
+
+        Console.WriteLine(
+            $"case seed={result.Config.Seed} mapping={result.Config.Mapping}: "
+            + $"{(result.Failures.Count == 0 ? "PASS" : "FAIL")} sha256={result.FirstSha256} "
+            + $"harvest={metrics.EnemyFieldDepleted} build={metrics.ConstructionOrders} "
+            + $"production={metrics.ProductionCompletedEvents} engagement={metrics.DefenseBuildingHits + metrics.DefenseUnitHits + metrics.EnemyBuildingHitsOnPlayerBase} "
+            + $"milestone={metrics.MilestoneCompletionTick} termination={metrics.Termination}@{metrics.FinalTick} outcome={metrics.Outcome}");
     }
 }
 
@@ -31,7 +33,11 @@ internal sealed record BaseRuntime(
     UnitBattlefieldBuildingSnapshot GroundTurret);
 
 internal sealed record OpponentLoopReport(
-    int SimulationSeconds,
+    int FinalTick,
+    string Termination,
+    int? OutcomeTick,
+    double SimulationSeconds,
+    string SetupFingerprint,
     int ProductionOrders,
     int ProductionQueuedEvents,
     int ProductionCompletedEvents,
@@ -64,9 +70,24 @@ internal sealed record OpponentLoopReport(
     int ConstructionBridgeCommands,
     int ProductionBridgeCommands,
     int WaveBridgeCommands,
+    int LeftAttackCommands,
+    float LeftToRightDamage,
+    float RightToLeftDamage,
+    int LeftFinalUnitCount,
+    int RightFinalUnitCount,
+    int LeftFinalBuildingCount,
+    int RightFinalBuildingCount,
     string ProductionStatus,
     string WaveStatus,
-    GameOutcome Outcome);
+    GameOutcome Outcome,
+    int FirstHarvestTick,
+    int FirstConstructionTick,
+    int FirstProductionTick,
+    int FirstEngagementTick,
+    int MilestoneCompletionTick,
+    TournamentStateFailure? StateFailure);
+
+internal sealed record TournamentStateFailure(string Code, string Subject, int Tick);
 
 internal sealed record BuildCommandProbeReport(
     int CommandsSubmitted,
@@ -75,3 +96,41 @@ internal sealed record BuildCommandProbeReport(
     int Rejections,
     int RemainingCredits,
     ulong StateHash);
+
+internal sealed record TournamentCaseConfig(
+    int Seed,
+    string Mapping,
+    FactionId LeftFaction,
+    FactionId RightFaction)
+{
+    public string ReproductionCommand =>
+        $"dotnet run --project tools/AiOpponentLoopQa/AiOpponentLoopQa.csproj --no-restore -- --seed {Seed} --mapping {Mapping}";
+}
+
+internal sealed record TournamentCaseResult(
+    TournamentCaseConfig Config,
+    OpponentLoopReport? Metrics,
+    string? FirstSha256,
+    string? SecondSha256,
+    bool Deterministic,
+    string Termination,
+    int FinalTick,
+    int? OutcomeTick,
+    IReadOnlyList<string> Failures,
+    string ReproductionCommand);
+
+internal sealed record TournamentReport(
+    string SchemaVersion,
+    string TournamentVersion,
+    double FixedDelta,
+    int SimulationTicks,
+    IReadOnlyList<int> MatrixSeeds,
+    IReadOnlyList<string> MatrixMappings,
+    TournamentSelectedFilters SelectedFilters,
+    int PassedCaseCount,
+    int FailedCaseCount,
+    IReadOnlyList<TournamentCaseResult> Cases,
+    BuildCommandProbeReport? BuildProbe,
+    IReadOnlyList<string> Failures);
+
+internal sealed record TournamentSelectedFilters(int? Seed, string? Mapping);

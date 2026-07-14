@@ -41,38 +41,40 @@ internal static partial class AiOpponentLoopQaProgram
             BuildSpecCatalog.For(kind).MaxHp);
     }
 
-    private static ResourceFieldModel ResourceField(int id, Vector2 position, int amount)
+    private static ResourceFieldModel ResourceField(int id, MapResourceNodeSpec resource)
     {
         return new ResourceFieldModel
         {
             Id = id,
-            Position = position,
-            Radius = 86,
-            MaxAmount = amount,
-            Amount = amount,
-            Accent = new Color("#f6c55c"),
+            Position = resource.Position.ToVector2(),
+            Radius = resource.Radius,
+            MaxAmount = resource.Amount,
+            Amount = resource.Amount,
+            Accent = resource.Accent.ToColor(),
         };
     }
 
-    private static void SpawnStartingRoster(
+    private static void SpawnMapRoster(
         UnitBattlefield battlefield,
-        PlayerSlotId slot,
-        UnitFactionId faction,
-        Vector2 center,
-        int direction)
+        MapSpec map,
+        OwnerId ownerId,
+        PlayerSlotId slot)
     {
-        foreach (var spawn in UnitDesignRuntimeLoadouts.StartingUnits(faction))
+        foreach (var spawn in map.Units.Where(unit => unit.OwnerId == ownerId))
         {
-            var rotated = new Vector2(spawn.Offset.X * direction, spawn.Offset.Y);
-            var facing = direction > 0 ? spawn.FacingOffset : MathF.PI - spawn.FacingOffset;
-            battlefield.Spawn(spawn.DesignId, slot, center + rotated, facing);
+            battlefield.Spawn(spawn.DesignId, slot, spawn.Position.ToVector2(), spawn.Facing);
         }
     }
 
-    private static IReadOnlyList<UnitInstance> SpawnPlayerRaiders(UnitBattlefield battlefield, Vector2 center)
+    private static IReadOnlyList<UnitInstance> SpawnPlayerRaiders(
+        UnitBattlefield battlefield,
+        UnitFactionId faction,
+        Vector2 center)
     {
         var raiders = new List<UnitInstance>();
-        var pattern = new[] { "dog.patrol_vehicle", "dog.patrol_vehicle", "dog.rocket", "dog.infantry" };
+        var pattern = faction == UnitFactionId.Dog
+            ? new[] { "dog.patrol_vehicle", "dog.patrol_vehicle", "dog.rocket", "dog.infantry" }
+            : new[] { "cat.scout_car", "cat.scout_car", "cat.tank", "cat.basic" };
         for (var index = 0; index < pattern.Length; index++)
         {
             raiders.Add(battlefield.Spawn(
