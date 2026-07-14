@@ -38,6 +38,28 @@ public static class PlacementMath
 {
     public const float GridSize = 32;
     public const float TerrainSampleStep = 48;
+    public const float CardinalFacingTolerance = 0.0001f;
+
+    public static bool TryNormalizeCardinalFacing(
+        float facing,
+        out float cardinalFacing,
+        float tolerance = CardinalFacingTolerance)
+    {
+        cardinalFacing = 0;
+        if (!float.IsFinite(facing) || tolerance < 0)
+        {
+            return false;
+        }
+
+        var quarterTurn = MathF.PI * 0.5f;
+        var quarterTurns = (int)MathF.Round(facing / quarterTurn);
+        quarterTurns = ((quarterTurns % 4) + 4) % 4;
+        cardinalFacing = quarterTurns * quarterTurn;
+
+        var delta = facing - cardinalFacing;
+        var angularDistance = MathF.Abs(MathF.Atan2(MathF.Sin(delta), MathF.Cos(delta)));
+        return angularDistance <= tolerance;
+    }
 
     public static PlacementResult Validate(
         float desiredX,

@@ -24,15 +24,15 @@ metadata/map_kind = "building"
 metadata/building_kind = "building.headquarters"
 metadata/owner_id = 1
 metadata/faction = "Dog"
-position = Vector2(260, 320)
+position = Vector2(256, 304)
 
 [node name="CatHQ" type="Node2D"]
 metadata/map_kind = "building"
 metadata/building_kind = "building.headquarters"
 metadata/owner_id = 2
 metadata/faction = "Cat"
-metadata/facing = 3.14159
-position = Vector2(1260, 680)
+metadata/facing = 3.1415927
+position = Vector2(1248, 688)
 
 [node name="DogGuard" type="Node2D"]
 metadata/map_kind = "unit"
