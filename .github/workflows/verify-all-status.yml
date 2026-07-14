@@ -10,8 +10,7 @@ on:
 
 permissions:
   actions: read
-  issues: write
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   group: verify-all-pr-status-${{ github.event.workflow_run.head_repository.full_name || github.repository }}-${{ github.event.workflow_run.head_branch || github.event.workflow_run.id }}
