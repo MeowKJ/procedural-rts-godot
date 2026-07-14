@@ -112,6 +112,7 @@ init_sample() {
   sample[job_status]="unknown"
   sample[job_created_at]=""
   sample[job_started_at]=""
+  sample[job_started_at_interpretation]="unavailable"
   sample[job_labels]="unknown"
   sample[service_active]="unknown"
   sample[listener_count]="unknown"
@@ -154,8 +155,13 @@ finalize_sample() {
   fi
 
   if [[ "${sample[job_status]}" == "queued" ]]; then
-    if [[ -n "${sample[job_started_at]}" ]]; then
-      set_error "$1" "queued_job_has_started_at"
+    if [[ -z "${sample[job_started_at]}" ]]; then
+      sample[job_started_at_interpretation]="queued_empty"
+    elif [[ "${sample[job_started_at]}" == "${sample[job_created_at]}" ]]; then
+      sample[job_started_at_interpretation]="queued_created_at_sentinel"
+    else
+      sample[job_started_at_interpretation]="queued_mismatch"
+      set_error "$1" "queued_job_started_at_mismatch"
       return
     fi
     if [[ "${sample[at_epoch]}" =~ ^[0-9]+$ ]]; then
@@ -171,6 +177,7 @@ finalize_sample() {
       set_error "$1" "job_time_order_invalid"
       return
     fi
+    sample[job_started_at_interpretation]="actual_start"
     sample[queue_age_source]="not_queued"
     sample[queue_age_seconds]="0"
   fi
@@ -368,11 +375,11 @@ print_sample() {
     && labels_compatible "${sample[runner_labels]}" "${sample[job_labels]}"; then
     compatible="true"
   fi
-  printf 'SAMPLE_%s sample_at=%s api_ok=%s ssh_ok=%s runner_id=%s runner_status=%s runner_busy=%s runner_labels=%s job_id=%s job_status=%s job_created_at=%s job_started_at=%s job_labels=%s queue_age_source=%s queue_age_seconds=%s labels_compatible=%s service_active=%s listener_count=%s worker_count=%s error=%s\n' \
+  printf 'SAMPLE_%s sample_at=%s api_ok=%s ssh_ok=%s runner_id=%s runner_status=%s runner_busy=%s runner_labels=%s job_id=%s job_status=%s job_created_at=%s job_started_at=%s job_started_at_interpretation=%s job_labels=%s queue_age_source=%s queue_age_seconds=%s labels_compatible=%s service_active=%s listener_count=%s worker_count=%s error=%s\n' \
     "$ordinal" "${sample[at]}" "${sample[api_ok]}" "${sample[ssh_ok]}" \
     "${sample[runner_id]}" "${sample[runner_status]}" "${sample[runner_busy]}" \
     "${sample[runner_labels]}" "$job_id" "${sample[job_status]}" \
-    "${sample[job_created_at]}" "${sample[job_started_at]:-(empty)}" "${sample[job_labels]}" \
+    "${sample[job_created_at]}" "${sample[job_started_at]:-(empty)}" "${sample[job_started_at_interpretation]}" "${sample[job_labels]}" \
     "${sample[queue_age_source]}" "${sample[queue_age_seconds]}" "$compatible" \
     "${sample[service_active]}" "${sample[listener_count]}" "${sample[worker_count]}" "${sample[error]}"
 }
