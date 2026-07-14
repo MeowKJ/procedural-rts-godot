@@ -58,7 +58,8 @@ public partial class HudLayer : CanvasLayer
             var style = UiFactory.GetHudIconButtonDrawStyle(Accent, ButtonPressed, HasFocus(), Disabled);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+            var glyphSize = Mathf.Clamp(Mathf.Min(rect.Size.X, rect.Size.Y) * 0.64f, 28, 32);
+            DrawIconGlyph(this, Glyph, rect.Size / 2f, glyphSize, style.Icon);
         }
     }
 
@@ -90,41 +91,41 @@ public partial class HudLayer : CanvasLayer
             var stackDepth = Math.Min(3, Math.Max(0, _queued - 1));
             for (var index = stackDepth; index > 0; index--)
             {
-                var card = new Rect2(new Vector2(10 + index * 3, 10 + index * 3), new Vector2(36, 36));
+                var card = new Rect2(new Vector2(8 + index * 2, 8 + index * 2), new Vector2(32, 32));
                 DrawRect(card, new Color(CurrentPalette.PanelSubtleFill, 0.94f), true);
                 DrawRect(card, new Color(accent, 0.32f), false, 1, true);
             }
 
-            var active = new Rect2(new Vector2(8, 8), new Vector2(40, 40));
+            var active = new Rect2(new Vector2(6, 6), new Vector2(36, 36));
             DrawRect(active, new Color(accent, _queued > 0 ? 0.15f : 0.06f), true);
             DrawRect(active, new Color(accent, 0.72f), false, 1.4f, true);
-            DrawIconGlyph(this, _glyph, active.GetCenter(), 24, accent);
+            DrawIconGlyph(this, _glyph, active.GetCenter(), 26, accent);
 
             if (_progress > 0)
             {
-                DrawArc(active.GetCenter(), 23, -Mathf.Pi * 0.5f, -Mathf.Pi * 0.5f + Mathf.Tau * _progress, 48, new Color(accent, 0.96f), 3, true);
+                DrawArc(active.GetCenter(), 20, -Mathf.Pi * 0.5f, -Mathf.Pi * 0.5f + Mathf.Tau * _progress, 48, new Color(accent, 0.96f), 3, true);
             }
 
             if (_queued > 0)
             {
-                var badgeCenter = new Vector2(45, 13);
-                DrawCircle(badgeCenter, 10, new Color(CurrentPalette.PanelStrongFill, 0.98f));
-                DrawCircle(badgeCenter, 9, new Color(accent, 0.9f));
+                var badgeCenter = new Vector2(42, 10);
+                DrawCircle(badgeCenter, 9, new Color(CurrentPalette.PanelStrongFill, 0.98f));
+                DrawCircle(badgeCenter, 8, new Color(accent, 0.9f));
                 var text = Math.Min(99, _queued).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), badgeCenter + new Vector2(-8, 4), text, HorizontalAlignment.Center, 16, 9, new Color(CurrentPalette.PanelStrongFill));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), badgeCenter + new Vector2(-7, 4), text, HorizontalAlignment.Center, 14, 11, new Color(CurrentPalette.PanelStrongFill));
             }
 
             var remaining = Math.Max(0, _queued - 1);
             for (var index = 0; index < 3; index++)
             {
                 var filled = index < remaining;
-                var slot = new Rect2(new Vector2(8 + index * 15, 58), new Vector2(11, 12));
+                var slot = new Rect2(new Vector2(6 + index * 14, 45), new Vector2(10, 7));
                 DrawRect(slot, new Color(filled ? accent : CurrentPalette.PanelSubtleFill, filled ? 0.72f : 0.56f), true);
                 DrawRect(slot, new Color(accent, filled ? 0.76f : 0.24f), false, 1, true);
             }
 
-            DrawRect(new Rect2(new Vector2(8, 76), new Vector2(40, 3)), new Color(CurrentPalette.PanelSubtleFill, 0.88f), true);
-            DrawRect(new Rect2(new Vector2(8, 76), new Vector2(40 * _progress, 3)), new Color(accent, 0.94f), true);
+            DrawRect(new Rect2(new Vector2(6, 55), new Vector2(40, 2)), new Color(CurrentPalette.PanelSubtleFill, 0.88f), true);
+            DrawRect(new Rect2(new Vector2(6, 55), new Vector2(40 * _progress, 2)), new Color(accent, 0.94f), true);
         }
     }
 
@@ -163,7 +164,7 @@ public partial class HudLayer : CanvasLayer
             DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected || focused ? 0.78f : 0.46f), true);
 
             var glyph = CatalogModeGlyph(Mode);
-            DrawIconGlyph(this, glyph, rect.GetCenter(), 20, new Color(accent, _selected || focused ? 1f : 0.72f));
+            DrawIconGlyph(this, glyph, rect.GetCenter(), 24, new Color(accent, _selected || focused ? 1f : 0.72f));
         }
     }
 
@@ -249,7 +250,7 @@ public partial class HudLayer : CanvasLayer
             var style = UiFactory.GetHudModeButtonDrawStyle(accent, _selected);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, 22, style.Icon);
+            DrawIconGlyph(this, Glyph, rect.Size / 2f, 28, style.Icon);
         }
     }
 
@@ -273,7 +274,7 @@ public partial class HudLayer : CanvasLayer
             var style = UiFactory.GetHudModeButtonDrawStyle(accent, _selected);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            DrawIconGlyph(this, Presentation.Glyph, rect.Size / 2f, 22, style.Icon);
+            DrawIconGlyph(this, Presentation.Glyph, rect.Size / 2f, 28, style.Icon);
         }
     }
 
@@ -352,8 +353,7 @@ public partial class HudLayer : CanvasLayer
                     DynamicUnitIcon.DrawFallbackIcon(this, new Rect2(slot.Position + new Vector2(3, 1), new Vector2(26, 24)), item.Glyph, item.Accent, framed: false);
                 }
 
-                DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), slot.Position + new Vector2(3, 31), item.Label, HorizontalAlignment.Left, 30, 8, new Color(item.Accent, 0.78f));
-                DrawString(UiFontProfile.DrawFont(UiFontRole.Numeric), slot.Position + new Vector2(20, 31), item.Count.ToString(), HorizontalAlignment.Right, 10, 9, new Color(Ink, 0.88f));
+                DrawString(UiFontProfile.DrawFont(UiFontRole.Numeric), slot.Position + new Vector2(6, 32), item.Count.ToString(), HorizontalAlignment.Right, 22, 11, new Color(Ink, 0.88f));
             }
         }
     }
@@ -422,8 +422,8 @@ public partial class HudLayer : CanvasLayer
             _countLabel.CustomMinimumSize = new Vector2(28, 18);
             AddChild(_countLabel);
 
-            _contentsLabel = MakeLabel(GameText.T("ui.group.empty"), new Vector2(6, 20), 9, style.Contents);
-            _contentsLabel.CustomMinimumSize = new Vector2(50, 12);
+            _contentsLabel = MakeLabel(GameText.T("ui.group.empty"), new Vector2(6, 20), 11, style.Contents);
+            _contentsLabel.CustomMinimumSize = new Vector2(50, 14);
             AddChild(_contentsLabel);
         }
 
@@ -473,8 +473,8 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect, CurrentPalette.PanelFill, true);
             DrawRect(new Rect2(0, 0, 4, rect.Size.Y), new Color(color, alpha), true);
             DrawRect(new Rect2(6, rect.Size.Y - 2, Mathf.Clamp(alert.RemainingRatio, 0, 1) * (rect.Size.X - 8), 2), new Color(color, 0.58f), true);
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(10, 12), AlertPrefix(alert.Kind), HorizontalAlignment.Left, 58, 10, new Color(color, alpha));
-            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(70, 12), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72, 10, new Color(Ink, alpha));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(10, 13), AlertPrefix(alert.Kind), HorizontalAlignment.Left, 58, 11, new Color(color, alpha));
+            DrawString(UiFontProfile.DrawFont(UiFontRole.Compact), new Vector2(70, 13), alert.Text, HorizontalAlignment.Left, rect.Size.X - 72, 11, new Color(Ink, alpha));
         }
 
         private static string AlertPrefix(AlertKind kind)

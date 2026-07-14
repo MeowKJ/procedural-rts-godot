@@ -3,6 +3,7 @@ static class PresentationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireHudAndTheme(root, result);
+        CommandConsoleReviewGate.Check(root, result);
         RequireWorldPresentation(root, result);
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);
@@ -25,7 +26,6 @@ static class PresentationReviewGate
         ReviewGateSource.RequireTextInFile(root, result, "Owner", "scripts", "core", "entities", "EntityRenderPalette.cs");
         ReviewGateSource.RequireTextInFile(root, result, "WorldVisualThemeState", "scripts", "core", "presentation", "theme", "WorldVisualThemeState.cs");
     }
-
     private static void RequireWorldPresentation(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "world", "UnitInstanceView.cs");

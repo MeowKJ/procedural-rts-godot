@@ -73,8 +73,8 @@ public partial class HudLayer : CanvasLayer
         var productionForcedOpen = _hasBuildingSelection || _buildModeActive;
         var productionTarget = productionForcedOpen || _manualDrawerOpen ? 1f : 0f;
         var detailTarget = _hasSelection ? 1f : 0f;
-        _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
-        _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);
+        _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 6.25f);
+        _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 7.0f);
         UpdateProductionFeedback(dt);
         RefreshSellOrCancelAction();
         LayoutDynamicHud(viewport);

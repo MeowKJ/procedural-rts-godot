@@ -78,11 +78,16 @@ public partial class VisualQaCaptureRoot : Node
 
         SetCaptureSize(CaptureSize);
         var hud = RequiredNode<HudLayer>("Hud");
+        hud.SetMoveCommandMode(MoveCommandMode.Direct);
+        await NextFrames(2);
+        await Capture(outputPath, "battle_hud_command_ribbon.png");
         hud.SetCommandDeckOpen(true);
         await NextFrames(4);
-        await Capture(outputPath, "battle_hud_command_deck.png");
+        await CaptureSparseCommandDeck(outputPath, hud);
         await CapturePopulatedCommandDeck(outputPath, hud);
         hud.SetCommandDeckOpen(false);
+        await NextFrames(4);
+        await CaptureSelectionDetail(outputPath, hud);
 
         SetCaptureSize(CaptureSize);
         await NextFrames(8);
@@ -92,6 +97,44 @@ public partial class VisualQaCaptureRoot : Node
         await Capture(outputPath, "battle_hud_style1c_dusk.png");
         SetBattleTheme(WorldVisualTheme.DayCommand, "visual-qa-day");
         await NextFrames(2);
+    }
+
+    private async Task CaptureSparseCommandDeck(string outputPath, HudLayer hud)
+    {
+        GetTree().Paused = true;
+        try
+        {
+            hud.SetCommandCardState([]);
+            hud.SetProductionProviderLaneState([]);
+            hud.SetProductionQueueSummary(GameText.T("ui.queue.empty"), canCancel: false);
+            hud.SetHudContext(hasSelection: false, hasBuildingSelection: false, buildModeActive: false);
+            await Capture(outputPath, "battle_hud_command_deck.png");
+        }
+        finally
+        {
+            GetTree().Paused = false;
+        }
+    }
+
+    private async Task CaptureSelectionDetail(string outputPath, HudLayer hud)
+    {
+        GetTree().Paused = true;
+        try
+        {
+            hud.SetHudContext(hasSelection: true, hasBuildingSelection: false, buildModeActive: false);
+            hud.SetSelectionInfo(
+                "ALLEY RUNNER",
+                GameText.T("ui.status.ready"),
+                "HP 180  SPD 92  RNG 140",
+                "Recon infantry / direct fire",
+                "unit",
+                IconGlyph.Infantry);
+            await Capture(outputPath, "battle_hud_selection_detail.png");
+        }
+        finally
+        {
+            GetTree().Paused = false;
+        }
     }
 
     private async Task CapturePopulatedCommandDeck(string outputPath, HudLayer hud)
@@ -157,7 +200,34 @@ public partial class VisualQaCaptureRoot : Node
             hud.SetProductionQueueSummary(
                 GameText.Format("ui.queue.summary", "ALLEY RUNNER", 56, 4, 160),
                 canCancel: true);
+            hud.SetHudContext(hasSelection: false, hasBuildingSelection: false, buildModeActive: false);
             await Capture(outputPath, "battle_hud_command_deck_queue.png");
+
+            var denseStates = UnitDesignCatalog.Designs.Values
+                .Select(design => design.ToSpec())
+                .Where(spec => spec.Production?.Category == ProductionCategory.Infantry)
+                .Take(9)
+                .Select((spec, index) => new ProductionOptionState(
+                    ProductionKind.InfantrySquad,
+                    ProductionCategory.Infantry,
+                    spec.Production!.ProducerKind,
+                    spec.Id,
+                    spec.ShortCode,
+                    spec.Icon,
+                    spec.Production.CategoryIcon,
+                    new Color("#62C9C4"),
+                    spec.Stats.Cost,
+                    spec.Production.Duration,
+                    true,
+                    true,
+                    index % 4,
+                    index % 3 * 0.28f,
+                    ""))
+                .ToArray();
+            hud.SetCommandCardState(denseStates);
+            hud.SetHudContext(hasSelection: false, hasBuildingSelection: false, buildModeActive: false);
+            await NextFrames(3);
+            await Capture(outputPath, "battle_hud_command_deck_dense.png");
         }
         finally
         {

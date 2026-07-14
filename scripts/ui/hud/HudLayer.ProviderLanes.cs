@@ -135,7 +135,7 @@ public partial class HudLayer : CanvasLayer
             disabled: !enabled,
             active: active,
             accent: active ? Mint : Cyan,
-            statusText: RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
+            statusText: hasDesign ? RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active) : "",
             statusColor: active ? Mint : enabled ? Cyan : InkMuted,
             tooltip: RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
             refreshKey: refreshKey);
@@ -147,7 +147,7 @@ public partial class HudLayer : CanvasLayer
         _repeatProduction.Disabled = disabled;
         _repeatProduction.ButtonPressed = active;
         _repeatProduction.Accent = accent;
-        _repeatProductionStateValue.Visible = visible;
+        _repeatProductionStateValue.Visible = visible && !string.IsNullOrWhiteSpace(statusText);
         _repeatProductionStateValue.Text = statusText;
         SetLabelColor(_repeatProductionStateValue, statusColor);
         _repeatProduction.FixedHoverText = tooltip;

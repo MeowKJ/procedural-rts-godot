@@ -45,8 +45,11 @@ for file_name in \
   main_menu.png \
   main_menu_settings.png \
   battle_hud.png \
+  battle_hud_command_ribbon.png \
   battle_hud_command_deck.png \
   battle_hud_command_deck_queue.png \
+  battle_hud_command_deck_dense.png \
+  battle_hud_selection_detail.png \
   battle_hud_style1b_fog.png \
   battle_hud_style1c_dusk.png \
   battle_projectile_direct.png \

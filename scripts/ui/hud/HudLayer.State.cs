@@ -7,10 +7,10 @@ public partial class HudLayer : CanvasLayer
 {
     private const float DrawerWidth = HudLayoutMath.DrawerWidth;
     private const float RailWidth = HudLayoutMath.RailWidth;
-    private const int FontTiny = 9;
-    private const int FontSmall = 11;
-    private const int FontBody = 12;
-    private const int FontMeta = 13;
+    private const int FontTiny = HudLayoutMath.MinimumCompactFontSize;
+    private const int FontSmall = HudLayoutMath.MinimumBodyFontSize;
+    private const int FontBody = 13;
+    private const int FontMeta = 14;
     private const int FontValue = 15;
     private const int FontTitle = 18;
     private const int MaxProductionProviderLaneButtons = 8;
@@ -38,6 +38,7 @@ public partial class HudLayer : CanvasLayer
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _repeatProductionStateValue = null!;
+    private ColorRect _productionFooterDivider = null!;
     private Label _alertValue = null!;
     private Label _outcomeTitle = null!;
     private Label _outcomeDetail = null!;
@@ -200,6 +201,8 @@ public partial class HudLayer : CanvasLayer
         {
             SetCatalogInspectorDefault(DefaultCatalogInspectorText());
         }
+
+        if (IsInsideTree()) LayoutDynamicHud(GetViewport().GetVisibleRect().Size);
     }
 
     public void SetSelectionInfo(string title, string meta, string stats, string detail, string portraitMode, IconGlyph icon = IconGlyph.None)
