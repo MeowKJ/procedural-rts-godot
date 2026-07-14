@@ -12,6 +12,25 @@ static partial class Program
         Assert(rotated == new PlacementGridFootprint(3, 4), $"quarter turn should swap 4x3 to 3x4, got {rotated}");
         Assert(footprint.Rotated(Mathf.Pi) == footprint, "half turn should preserve footprint dimensions");
 
+        var cardinalFacings = new[] { 0f, Mathf.Pi * 0.5f, Mathf.Pi, Mathf.Pi * 1.5f };
+        for (var index = 0; index < cardinalFacings.Length; index++)
+        {
+            var facing = cardinalFacings[index];
+            Assert(PlacementMath.TryNormalizeCardinalFacing(facing, out var normalized),
+                $"quarter turn {index} should be accepted as a cardinal building facing");
+            Assert(Math.Abs(normalized - facing) < 0.0001f,
+                $"quarter turn {index} should normalize without changing its facing");
+            var expected = index % 2 == 0 ? footprint : new PlacementGridFootprint(3, 4);
+            Assert(footprint.Rotated(normalized) == expected,
+                $"quarter turn {index} should use footprint {expected}, got {footprint.Rotated(normalized)}");
+        }
+
+        Assert(PlacementMath.TryNormalizeCardinalFacing(-Mathf.Pi * 0.5f, out var wrappedFacing)
+            && Math.Abs(wrappedFacing - Mathf.Pi * 1.5f) < 0.0001f,
+            "negative quarter turn should normalize to the equivalent four-way facing");
+        Assert(!PlacementMath.TryNormalizeCardinalFacing(0.1f, out _),
+            "seeded micro-rotation should not be accepted as a cardinal building facing");
+
         var evenOdd = PlacementMath.ValidateBuildableArea(
             101,
             101,
@@ -112,8 +131,144 @@ static partial class Program
         }
 
         AssertRotatedBuildingFootprintLifecycle();
+        AssertGridSafeStartingBases();
 
-        Console.WriteLine("OK [placement-grid]: parity, quarter-turn validation, preview/runtime footprint, adjacency, overlap, and 8 authored footprints.");
+        Console.WriteLine("OK [placement-grid]: parity, four-way validation, four fixed plus 12 generated grid-safe bases, and blocking-unit clearance.");
+    }
+
+    private static void AssertGridSafeStartingBases()
+    {
+        foreach (var owner in new[] { Owner.Player, Owner.Enemy })
+        {
+            foreach (var faction in new[] { FactionId.Dog, FactionId.Cat })
+            {
+                var loadout = MatchStartLoadouts.For(owner, faction);
+                var ownerId = new OwnerId(owner == Owner.Player ? 1 : 2);
+                var map = new MapSpec
+                {
+                    Id = $"placement-grid.{owner}.{faction}",
+                    Seed = 535,
+                    WorldSize = new MapSize(3600, 2400),
+                    OwnerStarts =
+                    [
+                        new(ownerId, faction, loadout.Buildings[0].Position.ToMapPoint(), loadout.Buildings[0].Facing, 0),
+                    ],
+                    Buildings = loadout.Buildings
+                        .Select(building => new MapBuildingSeedSpec(
+                            building.Kind,
+                            ownerId,
+                            faction,
+                            building.Position.ToMapPoint(),
+                            building.Facing))
+                        .ToArray(),
+                    Units = loadout.Units
+                        .Select(unit => new MapUnitSeedSpec(
+                            unit.DesignId,
+                            ownerId,
+                            unit.Position.ToMapPoint(),
+                            unit.Facing))
+                        .ToArray(),
+                };
+
+                AssertGridSafeStartingMap(map, $"{owner}/{faction} starting base");
+            }
+        }
+
+        foreach (var seed in new[] { 535, 10535, SkirmishOptions.SandboxMapSeed })
+        {
+            foreach (var factions in new[]
+            {
+                (Player: FactionId.Dog, Enemy: FactionId.Cat),
+                (Player: FactionId.Cat, Enemy: FactionId.Dog),
+            })
+            {
+                var config = MatchConfig.Default with
+                {
+                    MapSeed = seed,
+                    PlayerFaction = factions.Player,
+                    AiFaction = factions.Enemy,
+                };
+                var generated = SkirmishMapGenerator.GenerateSpec(config);
+                AssertGridSafeStartingMap(
+                    generated,
+                    $"generated seed {seed} {factions.Player}/{factions.Enemy}");
+            }
+        }
+
+        var unsafeEnemyDog = SkirmishMapGenerator.GenerateSpec(MatchConfig.Default with
+        {
+            PlayerFaction = FactionId.Cat,
+            AiFaction = FactionId.Dog,
+        });
+        unsafeEnemyDog = unsafeEnemyDog with
+        {
+            Buildings = unsafeEnemyDog.Buildings
+                .Select(building => building.OwnerId == new OwnerId(2) && building.Kind == BuildingDesignIds.Barracks
+                    ? building with { Position = new MapPoint(2848, 1280) }
+                    : building)
+                .ToArray(),
+        };
+        var regressionConflicts = InitialBlockingUnitBuildingConflicts(unsafeEnemyDog);
+        Assert(regressionConflicts.Any(conflict =>
+                conflict.Contains("owner=2 faction=Dog unit=dog.harvester", StringComparison.Ordinal)
+                && conflict.Contains($"building={BuildingDesignIds.Barracks}", StringComparison.Ordinal)),
+            "initial blocking-unit diagnostics should identify the owner, faction, unit, and building for the former Enemy/Dog overlap");
+    }
+
+    private static void AssertGridSafeStartingMap(MapSpec map, string label)
+    {
+        var buildingConflicts = MapBuildingPlacementValidator.Validate(map);
+        Assert(buildingConflicts.Count == 0,
+            $"{label} should be snapped, cardinal, inside, non-overlapping, and 32-unit clear; got {string.Join("; ", buildingConflicts)}");
+
+        var unitConflicts = InitialBlockingUnitBuildingConflicts(map);
+        Assert(unitConflicts.Count == 0,
+            $"{label} blocking units should clear every building hard footprint; got {string.Join("; ", unitConflicts)}");
+    }
+
+    private static IReadOnlyList<string> InitialBlockingUnitBuildingConflicts(MapSpec map)
+    {
+        var conflicts = new List<string>();
+        foreach (var unit in map.Units)
+        {
+            var unitSpec = UnitDesignCatalog.Spec(unit.DesignId);
+            if (!unitSpec.Collision.BlocksMovement || unitSpec.Collision.Radius <= 0)
+            {
+                continue;
+            }
+
+            var faction = map.OwnerStarts.First(start => start.OwnerId == unit.OwnerId).Faction;
+            foreach (var building in map.Buildings)
+            {
+                var buildingSpec = BuildSpecCatalog.For(building.Kind);
+                PlacementMath.TryNormalizeCardinalFacing(building.Facing, out var cardinalFacing);
+                var footprint = buildingSpec.LogicalFootprint(cardinalFacing);
+                var rect = PlacementMath.RectFromCenter(
+                    building.Position.X,
+                    building.Position.Y,
+                    footprint.X,
+                    footprint.Y);
+                if (!CircleIntersectsRect(unit.Position, unitSpec.Collision.Radius, rect))
+                {
+                    continue;
+                }
+
+                conflicts.Add(
+                    $"owner={unit.OwnerId.Value} faction={faction} unit={unit.DesignId} "
+                    + $"building={building.Kind}@owner={building.OwnerId.Value}");
+            }
+        }
+
+        return conflicts;
+    }
+
+    private static bool CircleIntersectsRect(MapPoint center, float radius, PlacementRect rect)
+    {
+        var closestX = Math.Clamp(center.X, rect.X, rect.EndX);
+        var closestY = Math.Clamp(center.Y, rect.Y, rect.EndY);
+        var deltaX = center.X - closestX;
+        var deltaY = center.Y - closestY;
+        return deltaX * deltaX + deltaY * deltaY <= radius * radius;
     }
 
     private static void AssertRotatedBuildingFootprintLifecycle()
