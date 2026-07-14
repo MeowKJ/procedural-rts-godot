@@ -15,12 +15,58 @@ mkdir -p "$output"
 rm -f "$output"/*.png "$log" "$exit_log"
 rm -f "$output"/normal-exit-qa-attempt-*.log
 
-xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
+capture_started_seconds=$SECONDS
+capture_start_line="Visual QA capture starting: timeout 180s, signal TERM, kill-after 5s; elapsed=0s capture_status=pending tee_status=pending."
+printf '%s\n' "$capture_start_line"
+printf '%s\n' "$capture_start_line" > "$log"
+set +e
+timeout --signal=TERM --kill-after=5s 180s \
+  xvfb-run -a -s '-screen 0 1920x1080x24 -nolisten tcp' \
   "$GODOT_BIN" \
   --rendering-method gl_compatibility \
   --path . \
   --scene res://scenes/VisualQaCapture.tscn \
-  2>&1 | tee "$log"
+  2>&1 | tee -a "$log"
+capture_pipeline_status=("${PIPESTATUS[@]}")
+set -e
+capture_status="${capture_pipeline_status[0]}"
+tee_status="${capture_pipeline_status[1]}"
+capture_elapsed_seconds=$((SECONDS - capture_started_seconds))
+
+if ((capture_status != 0 || tee_status != 0)); then
+  if ((capture_status != 0)); then
+    final_status="$capture_status"
+    case "$capture_status" in
+      124)
+        failure_reason="timed out after 180s; TERM"
+        ;;
+      137)
+        failure_reason="forced KILL after 5s grace"
+        ;;
+      *)
+        failure_reason="capture child or timeout invocation failed"
+        ;;
+    esac
+    if ((tee_status != 0)); then
+      failure_reason="${failure_reason}; tee also failed"
+    fi
+  else
+    final_status="$tee_status"
+    failure_reason="capture succeeded but tee failed"
+  fi
+
+  failure_line="Visual QA capture failed: ${failure_reason}; elapsed=${capture_elapsed_seconds}s capture_status=${capture_status} tee_status=${tee_status}."
+  printf '%s\n' "$failure_line" >&2
+  set +e
+  printf '%s\n' "$failure_line" >> "$log"
+  failure_log_status=$?
+  set -e
+  if ((failure_log_status != 0)); then
+    printf 'Visual QA capture diagnostic append failed with status %s; preserving exit %s.\n' \
+      "$failure_log_status" "$final_status" >&2
+  fi
+  exit "$final_status"
+fi
 
 assert_png_dimensions() {
   local file_name="$1"
