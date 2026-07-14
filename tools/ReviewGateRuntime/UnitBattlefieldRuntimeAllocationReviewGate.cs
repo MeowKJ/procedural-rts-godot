@@ -153,8 +153,8 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
     {
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(battlefield, "List<PlacementBuildAnchor> _placementBuildAnchors", "UnitBattlefield placement validation must reuse build-anchor storage.", result);
-        RequireText(battlefield, "List<PlacementObstacle> _placementObstacles", "UnitBattlefield placement validation must reuse obstacle storage.", result);
+        ForbidText(battlefield, "_placementBuildAnchors", "UnitBattlefield must not retain a second placement build-anchor preprocessing path.", result);
+        ForbidText(battlefield, "_placementObstacles", "UnitBattlefield must not retain a second placement obstacle preprocessing path.", result);
 
         var lifecycle = ReviewGateSource.Read(
             root,
@@ -164,8 +164,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             "runtime",
             "battlefield",
             "UnitBattlefield.BuildingLifecycle.cs");
-        RequireText(lifecycle, "CollectBuildingBuildAnchors(playerSlotId, _placementBuildAnchors)", "ValidateBuildingPlacement must fill reusable build-anchor storage.", result);
-        RequireText(lifecycle, "CollectBuildingPlacementObstacles(_placementObstacles)", "ValidateBuildingPlacement must fill reusable obstacle storage.", result);
+        RequireText(lifecycle, "_constructionSystem.QueryBuildingPlacement(", "ValidateBuildingPlacement must delegate to the shared ConstructionSystem spatial authority.", result);
 
         var systems = ReviewGateSource.Read(
             root,
@@ -175,8 +174,9 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             "runtime",
             "battlefield",
             "UnitBattlefield.EntityWorldSystems.cs");
-        RequireText(systems, "CollectBuildingBuildAnchors(PlayerSlotId playerSlotId, List<PlacementBuildAnchor> result)", "Building build-anchor collection must use a caller-owned buffer.", result);
-        RequireText(systems, "CollectBuildingPlacementObstacles(List<PlacementObstacle> result)", "Building placement obstacle collection must use a caller-owned buffer.", result);
+        ForbidText(systems, "CollectBuildingBuildAnchors(", "UnitBattlefield must not retain its former build-anchor collector.", result);
+        ForbidText(systems, "CollectBuildingPlacementObstacles(", "UnitBattlefield must not retain its former placement-obstacle collector.", result);
+        ForbidText(systems, "private TerrainLayer TerrainLayerAt(", "UnitBattlefield must not retain its former placement-only terrain preprocessing helper.", result);
         ForbidText(systems, "private IReadOnlyList<SpawnObstacle> SpawnObstacles", "UnitBattlefield must not keep the unused spawn-obstacle allocation helper.", result);
         ForbidText(systems, "private IReadOnlyList<PlacementBuildAnchor> BuildingBuildAnchors", "Building build-anchor collection must not allocate lists per placement validation.", result);
         ForbidText(systems, "private IReadOnlyList<PlacementObstacle> BuildingPlacementObstacles", "Building placement obstacle collection must not allocate lists per placement validation.", result);

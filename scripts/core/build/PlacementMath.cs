@@ -8,13 +8,19 @@ public readonly record struct PlacementRect(float X, float Y, float Width, float
     public float EndY => Y + Height;
 }
 
-public readonly record struct PlacementObstacle(float X, float Y, float Width, float Height);
+public readonly record struct PlacementObstacle(float X, float Y, float Width, float Height, int ClearanceCells = 0);
 
 public readonly record struct PlacementBuildAnchor(float X, float Y, float Radius, bool Powered = true);
 
 public readonly record struct PlacementBuildVisibility(float X, float Y, float Radius, bool AllowsConstruction = true);
 
 public readonly record struct PlacementResult(float X, float Y, bool IsValid, string Reason);
+
+public enum ConstructionPlacementIntent
+{
+    Direct,
+    ReadyTicket,
+}
 
 public readonly record struct PlacementGridFootprint(int WidthCells, int HeightCells)
 {

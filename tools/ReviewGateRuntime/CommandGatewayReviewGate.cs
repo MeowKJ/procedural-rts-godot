@@ -30,5 +30,26 @@ static class CommandGatewayReviewGate
         ForbidText(payloadValidation, "subjects.Any(subject => !subject.IsValid)", "CommandGateway payload validation must not allocate invalid-subject LINQ predicates.", result);
         ForbidText(gateway, "slots.Any(candidate => candidate == slot)", "CommandGateway slot ownership must not allocate LINQ predicates.", result);
         ForbidText(results, "Commands.Count(command => command.Accepted)", "CommandGatewayResult must not allocate predicate Count iterators.", result);
+
+        var battlefieldGateway = ReviewGateSource.Read(
+            root,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.PlayerCommandGateway.cs");
+        var buildStart = battlefieldGateway.IndexOf("private bool TryApplyBuildCommand(", StringComparison.Ordinal);
+        var buildEnd = battlefieldGateway.IndexOf("private static bool TryGetProductionSpec(", buildStart, StringComparison.Ordinal);
+        if (buildStart < 0 || buildEnd <= buildStart)
+        {
+            result.Errors.Add("UnitBattlefield PlayerCommand gateway must retain a focused TryApplyBuildCommand method.");
+            return;
+        }
+
+        var buildPath = battlefieldGateway[buildStart..buildEnd];
+        RequireText(buildPath, "ToVector2(command.Payload.TargetPoint)", "Build gateway must submit the original desired point for simulation placement authority.", result);
+        RequireText(buildPath, "new StartConstructionEntityCommand(", "Build gateway must continue bridging accepted player intent to the construction command.", result);
+        ForbidText(buildPath, "ClampInsideWorld(", "Build gateway must not preprocess or drift the desired placement point.", result);
     }
 }

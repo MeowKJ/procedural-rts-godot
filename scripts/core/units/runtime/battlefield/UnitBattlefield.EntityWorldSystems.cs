@@ -259,65 +259,6 @@ public sealed partial class UnitBattlefield
         return ProductionKindDesignBridge.ProductionKindFor(spec);
     }
 
-    private void CollectBuildingBuildAnchors(PlayerSlotId playerSlotId, List<PlacementBuildAnchor> result)
-    {
-        result.Clear();
-        CollectBuildingTargetIds(_buildingTargetIdBuffer);
-        foreach (var buildingId in _buildingTargetIdBuffer)
-        {
-            if (BuildingSnapshot(buildingId) is not { } building
-                || building.PlayerSlotId != playerSlotId
-                || building.Hp <= 0
-                || BuildingBuildProgress(building.Id) < 1)
-            {
-                continue;
-            }
-
-            var spec = BuildSpecCatalog.For(building.Kind);
-            if (spec.BuildRadius <= 0)
-            {
-                continue;
-            }
-
-            result.Add(new PlacementBuildAnchor(
-                building.Position.X,
-                building.Position.Y,
-                spec.BuildRadius,
-                BuildingPowered(building.Id)));
-        }
-    }
-
-    private void CollectBuildingPlacementObstacles(List<PlacementObstacle> result)
-    {
-        result.Clear();
-        CollectBuildingTargetIds(_buildingTargetIdBuffer);
-        foreach (var buildingId in _buildingTargetIdBuffer)
-        {
-            if (BuildingSnapshot(buildingId) is not { } building || building.Hp <= 0)
-            {
-                continue;
-            }
-
-            var rect = PlacementMath.RectFromCenter(
-                building.Position.X,
-                building.Position.Y,
-                building.Footprint.X,
-                building.Footprint.Y);
-            result.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height));
-        }
-    }
-
-    private TerrainLayer TerrainLayerAt(float x, float y)
-    {
-        var kind = TerrainFloorMath.KindAt(new Vector2(x, y), WorldSize);
-        return kind switch
-        {
-            TerrainFloorKind.Water => TerrainLayer.Water,
-            TerrainFloorKind.Coast => TerrainLayer.Coast,
-            _ => TerrainLayer.Ground,
-        };
-    }
-
     private float BuildingTargetRadiusCore(int buildingId)
     {
         var identity = BuildingIdentity(buildingId);

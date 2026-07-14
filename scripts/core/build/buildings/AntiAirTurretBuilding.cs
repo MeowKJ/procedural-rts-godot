@@ -29,6 +29,7 @@ public sealed class AntiAirTurretBuilding : BuildingDesign
             0,
             6,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementClearanceCells: 0);
     }
 }

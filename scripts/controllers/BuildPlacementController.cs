@@ -91,7 +91,12 @@ public partial class BuildPlacementController : Node2D
             var kind = CurrentKind();
             var spec = CurrentSpec();
             var mouseWorld = ScreenToWorld(mouse.Position);
-            var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld, _previewRotation);
+            var placement = UnitBattlefield.ValidateBuildingPlacement(
+                kind,
+                LocalPlayerSlotId,
+                mouseWorld,
+                _previewRotation,
+                CurrentPlacementIntent());
             bool accepted;
             string status;
             if (HasActiveReadyTicket)
@@ -151,7 +156,12 @@ public partial class BuildPlacementController : Node2D
 
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(GetViewport().GetMousePosition());
-        var placement = UnitBattlefield.ValidateBuildingPlacement(CurrentKind(), LocalPlayerSlotId, mouseWorld, _previewRotation);
+        var placement = UnitBattlefield.ValidateBuildingPlacement(
+            CurrentKind(),
+            LocalPlayerSlotId,
+            mouseWorld,
+            _previewRotation,
+            CurrentPlacementIntent());
         var queuePreview = ShouldQueueConstructionTicket(CurrentKind()) && !HasActiveReadyTicket;
         var placementValid = HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid);
         var accent = placementValid ? spec.Accent : new Color("#ff5d75");
@@ -322,7 +332,12 @@ public partial class BuildPlacementController : Node2D
         var kind = CurrentKind();
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(screenPoint);
-        var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld, _previewRotation);
+        var placement = UnitBattlefield.ValidateBuildingPlacement(
+            kind,
+            LocalPlayerSlotId,
+            mouseWorld,
+            _previewRotation,
+            CurrentPlacementIntent());
         var snapped = new Vector2(placement.X, placement.Y);
         var queuePreview = ShouldQueueConstructionTicket(kind) && !HasActiveReadyTicket;
         if (!HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid))
@@ -354,6 +369,13 @@ public partial class BuildPlacementController : Node2D
         return HasActiveReadyTicket || UnitBattlefield.Credits(LocalPlayerSlotId) >= spec.Cost;
     }
 
+    private ConstructionPlacementIntent CurrentPlacementIntent()
+    {
+        return HasActiveReadyTicket
+            ? ConstructionPlacementIntent.ReadyTicket
+            : ConstructionPlacementIntent.Direct;
+    }
+
     private static string PlacementStatusLabel(string status, string fallbackReason, BuildSpec spec)
     {
         return status == "placement.needCredits"
@@ -365,8 +387,10 @@ public partial class BuildPlacementController : Node2D
     {
         return reason switch
         {
+            "placement.rotation" => GameText.T("placement.rotation"),
             "placement.outside" => GameText.T("placement.outside"),
             "placement.blocked" => GameText.T("placement.blocked"),
+            "placement.clearance" => GameText.T("placement.clearance"),
             "placement.outsideBuildRadius" => GameText.T("placement.outsideBuildRadius"),
             "placement.unpowered" => GameText.T("placement.unpowered"),
             "placement.impassable" => GameText.T("placement.impassable"),
