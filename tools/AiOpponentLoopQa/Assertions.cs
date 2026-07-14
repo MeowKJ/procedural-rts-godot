@@ -6,6 +6,43 @@ internal static partial class AiOpponentLoopQaProgram
 {
     private static void AssertOpponentLoop(OpponentLoopReport report, List<string> failures)
     {
+        if (report.FinalTick <= 0 || report.FinalTick > SimulationTicks)
+        {
+            failures.Add($"case final tick should be within 1..{SimulationTicks}; got {report.FinalTick}.");
+        }
+
+        if (report.Termination == "outcome")
+        {
+            if (report.Outcome == GameOutcome.InProgress || report.OutcomeTick != report.FinalTick)
+            {
+                failures.Add($"outcome termination should record the terminal outcome tick; outcome {report.Outcome}, outcome/final {report.OutcomeTick}/{report.FinalTick}.");
+            }
+        }
+        else if (report.Termination != "tick_limit"
+            || report.FinalTick != SimulationTicks
+            || report.Outcome != GameOutcome.InProgress
+            || report.OutcomeTick is not null)
+        {
+            failures.Add($"tick-limit termination should end in progress at tick {SimulationTicks}; got {report.Termination}/{report.FinalTick}/{report.Outcome}/{report.OutcomeTick}.");
+        }
+
+        if (report.StateFailure is not null)
+        {
+            failures.Add($"case should keep every live state finite and in bounds; {report.StateFailure.Code}/{report.StateFailure.Subject}@{report.StateFailure.Tick}.");
+        }
+
+        if (report.FirstHarvestTick < 0
+            || report.FirstConstructionTick < 0
+            || report.FirstProductionTick < 0
+            || report.FirstEngagementTick < 0
+            || report.MilestoneCompletionTick > 30 * 60)
+        {
+            failures.Add(
+                $"case milestones stalled; harvest/build/production/engagement ticks "
+                + $"{report.FirstHarvestTick}/{report.FirstConstructionTick}/{report.FirstProductionTick}/{report.FirstEngagementTick}, "
+                + $"completion {report.MilestoneCompletionTick}.");
+        }
+
         if (report.HarvestAssignments < 1 || report.EnemyFieldDepleted <= 0)
         {
             failures.Add($"AI harvest loop should assign harvesters and deplete resources; assignments {report.HarvestAssignments}, depleted {report.EnemyFieldDepleted}.");
@@ -63,6 +100,24 @@ internal static partial class AiOpponentLoopQaProgram
         if (report.WaveBridgeCommands < report.WavesLaunched)
         {
             failures.Add($"AI attack waves should enter through CommandAttackUnits/command buffer; bridge/waves = {report.WaveBridgeCommands}/{report.WavesLaunched}.");
+        }
+
+        if (report.LeftAttackCommands < 1 || report.WaveBridgeCommands < 1)
+        {
+            failures.Add($"both sides should submit attack commands; left/right command deltas {report.LeftAttackCommands}/{report.WaveBridgeCommands}.");
+        }
+
+        if (report.LeftToRightDamage <= 0 || report.RightToLeftDamage <= 0)
+        {
+            failures.Add($"both sides should cause HP damage; left-to-right/right-to-left {report.LeftToRightDamage:0.0}/{report.RightToLeftDamage:0.0}.");
+        }
+
+        if (report.LeftFinalUnitCount < 0
+            || report.RightFinalUnitCount < 0
+            || report.LeftFinalBuildingCount < 0
+            || report.RightFinalBuildingCount < 0)
+        {
+            failures.Add("final unit/building counts should be non-negative for both sides.");
         }
 
         if (report.TotalAppliedCommands <= report.HarvestBridgeCommands + report.ProductionBridgeCommands + report.WaveBridgeCommands - 1)
