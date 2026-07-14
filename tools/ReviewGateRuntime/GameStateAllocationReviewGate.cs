@@ -22,7 +22,6 @@ static class GameStateAllocationReviewGate
         RequireText(gameState, "List<(Vector2 Position, float SightRange)> _legacyFogVisionSources", "Legacy GameState fog updates must reuse vision source storage.", result);
         RequireText(gameState, "List<LocalAvoidanceBody> _legacyLocalAvoidanceBodies", "Legacy GameState local avoidance must reuse body storage.", result);
         RequireText(gameState, "Dictionary<GridObstacle, List<LocalAvoidanceBody>> _legacyLocalAvoidanceHash", "Legacy GameState local avoidance must reuse hash bucket storage.", result);
-
         var economy = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.EconomyBuild.cs");
         RequireText(economy, "CollectProductionSpecsFor(MatchConfig.FactionForOwner(owner), _legacyProductionSpecBuffer)", "Legacy GameState production option states must fill reusable spec storage.", result);
         RequireText(economy, "_legacyProductionOptionStates.Clear()", "Legacy GameState production option states must clear reusable result storage.", result);
@@ -43,7 +42,6 @@ static class GameStateAllocationReviewGate
         ForbidText(economy, ".ThenBy(option => option.Producer.Id)", "Legacy GameState production enqueue must not allocate producer id tie-break ordering chains.", result);
         ForbidText(economy, ".Where(building => building.Owner == owner)", "Legacy GameState production cancel must not allocate owner filter chains.", result);
         ForbidText(economy, ".OrderBy(building => building.ProductionQueue[0].Id)", "Legacy GameState production cancel must not allocate queue item ordering chains.", result);
-
         var productionSnapshots = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.ProductionSnapshots.cs");
         RequireText(productionSnapshots, "CollectProductionLaneSnapshots(owner, _legacyProductionLaneSnapshotBuffer)", "Legacy GameState production lane snapshots must fill reusable lane storage.", result);
         RequireText(productionSnapshots, "ProductionQueueSnapshotBufferFor(building.Id)", "Legacy GameState production lane snapshots must reuse per-producer queue storage.", result);
@@ -53,7 +51,6 @@ static class GameStateAllocationReviewGate
         ForbidText(productionSnapshots, ".Select(item =>", "Legacy GameState production queue snapshots must not allocate item projection queries.", result);
         ForbidText(productionSnapshots, ".ToHashSet()", "Legacy GameState build option snapshots must not allocate prerequisite hashsets.", result);
         ForbidText(productionSnapshots, "RequiredBuildings.All", "Legacy GameState build option snapshots must scan prerequisites explicitly.", result);
-
         var picking = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.RelationsPickingFog.cs");
         RequireText(picking, "private void CollectBuildingBuildAnchors(Owner owner, List<PlacementBuildAnchor> result)", "Legacy GameState build-anchor collection must use caller-owned storage.", result);
         RequireText(picking, "CollectFogVisionSources(extraUnitSources, includeLegacyUnitSources, _legacyFogVisionSources)", "Legacy GameState fog updates must collect into reusable source storage.", result);
@@ -69,7 +66,6 @@ static class GameStateAllocationReviewGate
         ForbidText(picking, ".Where(candidate => candidate.Distance <= candidate.Radius)", "Legacy GameState pick helpers must not allocate candidate filter queries.", result);
         ForbidText(picking, ".OrderBy(candidate => candidate.Distance / Mathf.Max(candidate.Radius, 1))", "Legacy GameState pick helpers must not allocate ordered candidate queries.", result);
         ForbidText(picking, ".Select(candidate => candidate.", "Legacy GameState pick helpers must not allocate candidate projection queries.", result);
-
         var pathObstacles = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathObstacles.cs");
         RequireText(pathObstacles, "CollectPathPlacementObstacles(movingUnitId, movingUnitIds, _legacyPlacementObstacles)", "Legacy GameState path obstacles must fill reusable placement-obstacle storage.", result);
         RequireText(pathObstacles, "AppendGridCellsForObstacle(obstacle, PathCellSize, _legacyPathObstacles, _legacyPathObstacleSet)", "Legacy GameState path obstacles must append unique grid cells into reusable storage.", result);
@@ -90,7 +86,6 @@ static class GameStateAllocationReviewGate
         ForbidText(pathingAvoidance, "LocalAvoidanceMath.BuildHash(", "Legacy GameState local avoidance must not use the allocating hash copy path.", result);
         ForbidText(pathingAvoidance, ".Where(unit => unit.Hp > 0)", "Legacy GameState local avoidance must not allocate alive-unit filter queries.", result);
         ForbidText(pathingAvoidance, ".Select(unit =>", "Legacy GameState local avoidance must not allocate body projection queries.", result);
-
         var targeting = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.TargetingThreat.cs");
         var targetScans = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.TargetScans.cs");
         var targetingSources = targeting + targetScans;
@@ -176,9 +171,14 @@ static class GameStateAllocationReviewGate
         RequireText(gameState, "HashSet<int> _legacyRequestedSelectionIds", "Legacy id recall must reuse requested-id storage.", result);
         RequireText(gameState, "List<UnitModel> _legacySelectionRectHarvesters", "Legacy rect selection must reuse harvester storage.", result);
         RequireText(gameState, "List<UnitModel> _legacySelectionRectCombatUnits", "Legacy rect selection must reuse combat-unit storage.", result);
+        RequireText(gameState, "List<UnitModel> _legacySelectionRectCandidates", "Legacy rect selection preview and commit must share reusable candidates.", result);
         RequireText(selection, "_legacySelectedUnitIds.Clear()", "Legacy SelectedUnitIds must fill reusable id storage.", result);
         RequireText(selection, "_legacyRequestedSelectionIds.Clear()", "Legacy SelectUnitsByIds must reuse requested-id storage.", result);
-        RequireText(selection, "CollectSelectionRectUnits(normalizedRect, _legacySelectionRectHarvesters, _legacySelectionRectCombatUnits)", "Legacy rect selection must fill reusable unit-class buffers.", result);
+        RequireText(selection, "var candidates = CollectSelectionRectCandidates(worldRect)", "Legacy rect selection commit must consume the shared candidate collector.", result);
+        RequireText(selection, "public int CountSelectionRectCandidates(Rect2 worldRect)", "Legacy rect selection preview must expose the shared candidate count.", result);
+        RequireText(selection, "private IReadOnlyList<UnitModel> CollectSelectionRectCandidates(Rect2 worldRect)", "Legacy rect eligibility must have one reusable candidate collector.", result);
+        RequireText(selection, "_legacySelectionRectCandidates.AddRange(_legacySelectionRectCombatUnits)", "Legacy rect collector must fill reusable combat candidates.", result);
+        RequireText(selection, "_legacySelectionRectCandidates.AddRange(_legacySelectionRectHarvesters)", "Legacy rect collector must conditionally fill reusable economy candidates.", result);
         RequireText(selection, "NearestSelectionDistance(harvestersInRect, center)", "Legacy rect selection must compute nearest harvester explicitly.", result);
         ForbidText(selection, "SelectedUnits().Count()", "Legacy selection methods must not allocate selected-unit Count queries.", result);
         ForbidText(selection, "SelectedBuildings().Count()", "Legacy selection methods must not allocate selected-building Count queries.", result);

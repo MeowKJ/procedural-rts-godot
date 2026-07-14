@@ -88,6 +88,7 @@ public partial class HudLayer : CanvasLayer
 
             card.Position = ProductionButtonPosition(index);
             card.SetState(state);
+            RefreshCatalogInspectorItem(UpgradeInspectorItemId(state.Id), card.InspectorText);
         }
 
         foreach (var key in _upgradeProjectCards.Keys)
@@ -100,11 +101,12 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var stale in _upgradeProjectCardStaleIds)
         {
+            InvalidateCatalogInspectorItem(UpgradeInspectorItemId(stale));
             _upgradeProjectCards[stale].QueueFree();
             _upgradeProjectCards.Remove(stale);
         }
 
-        SetCatalogStatusText(UpgradeProjectCatalogStatusText());
+        SetCatalogInspectorDefault(UpgradeProjectCatalogStatusText());
     }
 
     private UpgradeProjectCard AddUpgradeProjectCard(Control parent, string id)
@@ -120,11 +122,12 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
         _upgradeProjectCards[id] = card;
         parent.AddChild(card);
-        card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);
-        card.MouseExited += RestoreCatalogStatusText;
-        card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);
-        card.FocusExited += RestoreCatalogStatusText;
-        card.Pressed += () => SetCatalogStatusText(card.InspectorText);
+        var inspectorItemId = UpgradeInspectorItemId(id);
+        card.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+        card.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
+        card.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+        card.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
+        card.Pressed += () => PinCatalogInspectorItem(inspectorItemId, card.InspectorText);
         return card;
     }
 

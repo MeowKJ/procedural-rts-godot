@@ -16,6 +16,7 @@ public partial class HudLayer : CanvasLayer
     public Action? RepairRequested { get; init; }
     public Action<AbilityKind>? AbilityRequested { get; init; }
     public Action<string, int?>? BuildKindRequested { get; init; }
+    public Action<CatalogInspectorIntent>? CatalogInspectorIntentRequested { get; init; }
     public Action<Vector2>? MinimapJumpRequested { get; init; }
     public Action<MoveCommandMode>? MoveModeRequested { get; init; }
     public Action<UnitStance>? UnitStanceRequested { get; init; }
@@ -62,38 +63,26 @@ public partial class HudLayer : CanvasLayer
         BuildOutcomeBanner(root);
         BuildCommandPreview(root);
         ApplySoftOldCityPanelStyles();
+        InitializeCatalogInspector();
     }
 
     public override void _Process(double delta)
     {
         var dt = (float)delta;
         var viewport = GetViewport().GetVisibleRect().Size;
-        var mouse = GetViewport().GetMousePosition();
-        var pointerNearRail = mouse.X >= viewport.X - 72;
-        var productionForcedOpen = _hasBuildingSelection || _buildModeActive || pointerNearRail;
-
-        if (productionForcedOpen)
-        {
-            _drawerInactivity = 0;
-        }
-        else
-        {
-            _drawerInactivity += dt;
-        }
-
-        if (_drawerInactivity > 2.4f)
-        {
-            _manualDrawerOpen = false;
-        }
-
-        var holdAfterActivity = _productionDrawerProgress > 0.02f && _drawerInactivity <= 2.4f;
-        var productionTarget = productionForcedOpen || _manualDrawerOpen || holdAfterActivity ? 1f : 0f;
+        var productionForcedOpen = _hasBuildingSelection || _buildModeActive;
+        var productionTarget = productionForcedOpen || _manualDrawerOpen ? 1f : 0f;
         var detailTarget = _hasSelection ? 1f : 0f;
-        _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 5.5f);
-        _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 9.5f);
+        _productionDrawerProgress = Mathf.MoveToward(_productionDrawerProgress, productionTarget, dt * 6.25f);
+        _detailDrawerProgress = Mathf.MoveToward(_detailDrawerProgress, detailTarget, dt * 7.0f);
         UpdateProductionFeedback(dt);
         RefreshSellOrCancelAction();
         LayoutDynamicHud(viewport);
+    }
+
+    public override void _ExitTree()
+    {
+        ReleaseManagedResources();
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -105,8 +94,7 @@ public partial class HudLayer : CanvasLayer
 
         if (key.Keycode == Key.Tab)
         {
-            _manualDrawerOpen = !_manualDrawerOpen;
-            _drawerInactivity = _manualDrawerOpen ? 0 : 3;
+            SetCommandDeckOpen(!_manualDrawerOpen);
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -125,8 +113,16 @@ public partial class HudLayer : CanvasLayer
         }
     }
 
+    public void SetCommandDeckOpen(bool open)
+    {
+        _manualDrawerOpen = open;
+        _productionDrawerProgress = open ? 1f : 0f;
+    }
+
     public void ReleaseManagedResources()
     {
+        ReleaseCursorTextures();
+
         if (_minimapSurface is not null)
         {
             _minimapSurface.FogMask = null;

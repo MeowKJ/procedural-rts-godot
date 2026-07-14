@@ -120,7 +120,7 @@ public partial class SelectionController
     {
         return new CommandPreviewState(
             CommandPreviewKind.Move,
-            MoveModeStatus(PreviewMoveModeFromModifiers()),
+            CommandRibbonContextResolver.MoveModeLabel(PreviewMoveModeFromModifiers()),
             screenPosition,
             worldPosition,
             true);

@@ -39,7 +39,6 @@ public partial class HudLayer : CanvasLayer
                 _effect,
                 _status);
             Text = "";
-            TooltipText = $"{_label} - {_target} - {_source} - {_effect} - {_status}";
             QueueRedraw();
         }
 

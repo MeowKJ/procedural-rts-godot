@@ -13,7 +13,7 @@ public sealed class CatTank : UnitDesign
     public override string ShortCode => "CTK";
     public override IconGlyph Icon => IconGlyph.Tank;
     public override IReadOnlySet<UnitRoleTag> RoleTags => new HashSet<UnitRoleTag> { UnitRoleTag.Vehicle, UnitRoleTag.Assault };
-    public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 140, 455, 320, 1);
+    public override StatsSpec Stats => new(UnitWeightClass.Medium, ArmorTag.Vehicle, 145, 455, 320, 1);
     public override MovementSpec Movement => new(MovementDomain.Land, 136, 7.6f, TurnMode: TurnMode.ArcTurn);
     public override CollisionSpec Collision => new(22, 1.15f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>

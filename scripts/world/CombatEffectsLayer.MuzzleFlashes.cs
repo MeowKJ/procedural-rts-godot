@@ -7,7 +7,6 @@ public partial class CombatEffectsLayer : Node2D
 {
     private void DrawMuzzleFlashes()
     {
-        DrawShotTrails();
         foreach (var effect in _muzzleFlashes)
         {
             if (!IsVisible(effect.Position, effect.Length + 20))
@@ -36,42 +35,6 @@ public partial class CombatEffectsLayer : Node2D
             DrawLine(left, tip, Readable(effect.Accent, 0.52f * fade, readability), ReadableWidth(1.1f, readability), true);
             DrawLine(right, tip, Readable(effect.Accent, 0.44f * fade, readability), ReadableWidth(1.1f, readability), true);
         }
-    }
-
-    private void DrawShotTrails()
-    {
-        foreach (var effect in _shotTrails)
-        {
-            if (!IsSegmentVisible(effect.Start, effect.End, effect.Width * 4f))
-            {
-                continue;
-            }
-
-            var readability = ReadabilityForSegment(effect.Start, effect.End);
-            if (!readability.Draw)
-            {
-                continue;
-            }
-
-            var t = Mathf.Clamp(effect.Age / ShotTrailLifetime, 0, 1);
-            var fade = 1 - t;
-            DrawLine(effect.Start, effect.End, Readable(effect.Accent, 0.44f * fade, readability), ReadableWidth(effect.Width, readability), true);
-            DrawLine(effect.Start, effect.End, Readable(new Color("#ffffff"), 0.82f * fade, readability), ReadableWidth(effect.CoreWidth, readability), true);
-            DrawCircle(effect.End, effect.HeadRadius * fade, Readable(effect.Accent, 0.62f * fade, readability));
-        }
-    }
-
-    private void AddShotTrailIfNeeded(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind)
-    {
-        if (!ShotTrailVfxMath.ShouldCreate(weaponKind))
-        {
-            return;
-        }
-
-        var effect = RentShotTrailEffect();
-        effect.Reset(position, targetPosition, accent, weaponKind);
-        _shotTrails.Add(effect);
-        ApplyShotTrailBudget();
     }
 
     private MuzzleFlashEffect RentMuzzleFlashEffect()
@@ -111,46 +74,6 @@ public partial class CombatEffectsLayer : Node2D
         if (_pooledMuzzleFlashes.Count < MuzzleFlashPoolLimit)
         {
             _pooledMuzzleFlashes.Add(effect);
-        }
-    }
-
-    private ShotTrailEffect RentShotTrailEffect()
-    {
-        if (_pooledShotTrails.Count == 0)
-        {
-            return new ShotTrailEffect();
-        }
-
-        var last = _pooledShotTrails.Count - 1;
-        var effect = _pooledShotTrails[last];
-        _pooledShotTrails.RemoveAt(last);
-        return effect;
-    }
-
-    private void ApplyShotTrailBudget()
-    {
-        if (_shotTrails.Count > ShotTrailSoftLimit)
-        {
-            var overflow = _shotTrails.Count - ShotTrailSoftLimit;
-            for (var index = 0; index < overflow && index < _shotTrails.Count; index++)
-            {
-                _shotTrails[index].FadeOutSoon(UnderLoadFadeSeconds);
-            }
-        }
-
-        while (_shotTrails.Count > ShotTrailHardLimit)
-        {
-            ReturnAndRemoveShotTrail(0);
-        }
-    }
-
-    private void ReturnAndRemoveShotTrail(int index)
-    {
-        var effect = _shotTrails[index];
-        _shotTrails.RemoveAt(index);
-        if (_pooledShotTrails.Count < ShotTrailPoolLimit)
-        {
-            _pooledShotTrails.Add(effect);
         }
     }
 
@@ -195,34 +118,4 @@ public partial class CombatEffectsLayer : Node2D
         public float Age { get; set; }
     }
 
-    private sealed class ShotTrailEffect
-    {
-        public void Reset(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind)
-        {
-            var toTarget = targetPosition - position;
-            var distance = toTarget.Length();
-            var direction = distance <= 0.01f ? Vector2.Right : toTarget / distance;
-            var style = ShotTrailVfxMath.StyleFor(weaponKind, distance);
-            Start = position;
-            End = position + direction * style.Length;
-            Accent = accent;
-            Age = 0;
-            Width = style.Width;
-            CoreWidth = style.CoreWidth;
-            HeadRadius = style.HeadRadius;
-        }
-
-        public void FadeOutSoon(float remainingSeconds)
-        {
-            Age = Mathf.Max(Age, ShotTrailLifetime - remainingSeconds);
-        }
-
-        public Vector2 Start { get; private set; }
-        public Vector2 End { get; private set; }
-        public Color Accent { get; private set; }
-        public float Width { get; private set; }
-        public float CoreWidth { get; private set; }
-        public float HeadRadius { get; private set; }
-        public float Age { get; set; }
-    }
 }

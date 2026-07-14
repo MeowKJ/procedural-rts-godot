@@ -40,7 +40,7 @@ public partial class SelectionController : Node2D
     private readonly List<int> _selectionHotkeyUnitIdBuffer = [];
     private readonly Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers = [];
     private float _redrawTimer;
-    private string _lastGatewayRejectedStatus = string.Empty;
+    private CommandGatewayValidationError _lastGatewayRejection;
 
     public CommandPreviewState PreviewState { get; private set; } = CommandPreviewState.None;
 
@@ -182,6 +182,7 @@ public partial class SelectionController : Node2D
 
         var localRect = RectFromPoints(ScreenToWorld(rect.Position), ScreenToWorld(rect.End));
         DrawSelectionBox(localRect);
+        DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift));
     }
 
     private void StartDrag(Vector2 screenPoint, MouseButton button)

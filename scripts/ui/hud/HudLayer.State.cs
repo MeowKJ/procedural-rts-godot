@@ -7,10 +7,10 @@ public partial class HudLayer : CanvasLayer
 {
     private const float DrawerWidth = HudLayoutMath.DrawerWidth;
     private const float RailWidth = HudLayoutMath.RailWidth;
-    private const int FontTiny = 9;
-    private const int FontSmall = 11;
-    private const int FontBody = 12;
-    private const int FontMeta = 13;
+    private const int FontTiny = HudLayoutMath.MinimumCompactFontSize;
+    private const int FontSmall = HudLayoutMath.MinimumBodyFontSize;
+    private const int FontBody = 13;
+    private const int FontMeta = 14;
     private const int FontValue = 15;
     private const int FontTitle = 18;
     private const int MaxProductionProviderLaneButtons = 8;
@@ -34,10 +34,11 @@ public partial class HudLayer : CanvasLayer
     private Label _catalogSurfaceLabel = null!;
     private Label _catalogOverviewValue = null!;
     private Label _statusValue = null!;
-    private Label _providerLaneSummaryValue = null!;
+    private Label _commandRibbonContextValue = null!;
     private Label _productionValue = null!;
     private Label _queueValue = null!;
     private Label _repeatProductionStateValue = null!;
+    private ColorRect _productionFooterDivider = null!;
     private Label _alertValue = null!;
     private Label _outcomeTitle = null!;
     private Label _outcomeDetail = null!;
@@ -57,7 +58,9 @@ public partial class HudLayer : CanvasLayer
     private Button _sandboxAtmosphereButton = null!;
     private Button _sandboxOverlayButton = null!;
     private Button _sandboxStressButton = null!;
-    private Button _cancelProduction = null!;
+    private IconActionButton _deckToggle = null!;
+    private QueueMiniStack _queueMiniStack = null!;
+    private IconActionButton _cancelProduction = null!;
     private IconActionButton _repeatProduction = null!;
     private IconActionButton _settingsButton = null!;
     private MinimapSurface _minimapSurface = null!;
@@ -81,6 +84,7 @@ public partial class HudLayer : CanvasLayer
     private readonly List<Button> _sandboxDeveloperButtons = [];
     private MoveCommandMode _selectedMoveMode = MoveCommandMode.Direct;
     private UnitStance? _selectedUnitStance;
+    private int _selectedUnitCount;
     private ProductionProviderLaneScope _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
     private int _selectedProductionProviderId;
     private ProductionProviderLaneScope _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
@@ -92,9 +96,10 @@ public partial class HudLayer : CanvasLayer
     private bool _manualDrawerOpen;
     private float _productionDrawerProgress;
     private float _detailDrawerProgress;
-    private float _drawerInactivity;
     private float _productionStatusPulse;
     private float _queueStatusPulse;
+    private bool _commandFailureVisible;
+    private bool _productionCommandFailureVisible;
     private string _lastProductionStatus = "";
     private string _lastQueueSummary = "";
     private string _focusedRepeatProductionDesignId = "";
@@ -173,6 +178,7 @@ public partial class HudLayer : CanvasLayer
 
     public void SetHudContext(bool hasSelection, bool hasBuildingSelection, bool buildModeActive)
     {
+        var wasShowingNoSelectionCommandHint = ShouldShowNoSelectionCommandHint();
         _hasSelection = hasSelection;
         _hasBuildingSelection = hasBuildingSelection;
         _buildModeActive = buildModeActive;
@@ -183,7 +189,6 @@ public partial class HudLayer : CanvasLayer
 
         if (hasBuildingSelection || buildModeActive)
         {
-            _drawerInactivity = 0;
             _productionDrawerProgress = 1f;
         }
 
@@ -191,6 +196,13 @@ public partial class HudLayer : CanvasLayer
         {
             _commandRibbon.Visible = true;
         }
+
+        if (wasShowingNoSelectionCommandHint != ShouldShowNoSelectionCommandHint())
+        {
+            SetCatalogInspectorDefault(DefaultCatalogInspectorText());
+        }
+
+        if (IsInsideTree()) LayoutDynamicHud(GetViewport().GetVisibleRect().Size);
     }
 
     public void SetSelectionInfo(string title, string meta, string stats, string detail, string portraitMode, IconGlyph icon = IconGlyph.None)
@@ -226,11 +238,13 @@ public partial class HudLayer : CanvasLayer
 
     public void SetStatus(string status)
     {
-        _statusValue.Text = CompactText(status, 42);
+        _commandFailureVisible = CommandFailurePresentation.IsFailureStatus(status);
+        _statusValue.Text = CompactText(CommandFailurePresentation.InlineText(status), 42);
     }
 
     public void SetProductionStatus(string status)
     {
+        _productionCommandFailureVisible = CommandFailurePresentation.IsFailureStatus(status);
         if (!string.Equals(_lastProductionStatus, status, StringComparison.Ordinal))
         {
             _productionStatusPulse = 1f;
@@ -239,14 +253,34 @@ public partial class HudLayer : CanvasLayer
 
         if (_selectedCatalogMode != CatalogModeKind.Abilities)
         {
-            SetCatalogStatusText(status);
+            SetCommandPanelResult(status);
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status != GameText.T("ui.status.ready"))
         {
-            _drawerInactivity = 0;
-            _manualDrawerOpen = true;
-            _productionDrawerProgress = 1f;
+            SetCommandDeckOpen(true);
+        }
+    }
+
+    public void ClearCommandFailureFeedback()
+    {
+        if (_commandFailureVisible)
+        {
+            _commandFailureVisible = false;
+            _statusValue.Text = CompactText(GameText.T("ui.status.ready"), 42);
+        }
+
+        if (!_productionCommandFailureVisible)
+        {
+            return;
+        }
+
+        _productionCommandFailureVisible = false;
+        _lastProductionStatus = "";
+        if (_selectedCatalogMode != CatalogModeKind.Abilities)
+        {
+            ClearCatalogInspectorCommandFeedback();
+            SetCatalogInspectorDefault(DefaultCatalogInspectorText());
         }
     }
 
@@ -258,11 +292,14 @@ public partial class HudLayer : CanvasLayer
             _queueStatusPulse = 1f;
             _lastQueueSummary = summary;
             _lastCanCancelProduction = canCancel;
+            var lineBreak = summary.IndexOf('\n');
+            var surfaceSummary = lineBreak >= 0 ? summary[..lineBreak] : summary;
+            _queueValue.Text = CompactText(surfaceSummary, 28);
+            _cancelProduction.FixedHoverText = canCancel ? summary : GameText.T("ui.cancel.none");
         }
 
-        _queueValue.Text = CompactMultiline(summary, 28);
         _cancelProduction.Disabled = !canCancel;
-        _cancelProduction.TooltipText = canCancel ? GameText.T("ui.cancel.available") : GameText.T("ui.cancel.none");
+        RefreshProductionProviderLaneSummary();
     }
 
     public void SetResourceCredits(int credits)
@@ -319,6 +356,7 @@ public partial class HudLayer : CanvasLayer
         _commandPreview.Preview = preview;
         ApplyCommandCursor(preview);
         _commandPreview.QueueRedraw();
+        RefreshCommandRibbonContext();
     }
 
     public void SetOutcomeBanner(GameOutcome outcome, string detail)
@@ -461,6 +499,7 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var stale in _commandCardStaleIds)
         {
+            InvalidateCatalogInspectorItem(CommandCardInspectorItemId(stale));
             _commandButtons[stale].QueueFree();
             _commandButtons.Remove(stale);
         }
@@ -502,21 +541,11 @@ public partial class HudLayer : CanvasLayer
         RefreshAbilityCards();
     }
 
-    private void SetCatalogStatusText(string status)
+    private string LastProductionCatalogStatusText()
     {
-        _productionValue.Text = CompactMultiline(status, 34);
-    }
-
-    private void RestoreCatalogStatusText()
-    {
-        SetCatalogStatusText(_selectedCatalogMode switch
-        {
-            CatalogModeKind.Upgrades => UpgradeProjectCatalogStatusText(),
-            CatalogModeKind.Abilities => _abilityCardStates.Count == 0
-                ? GameText.T("ui.catalog.abilitiesEmpty")
-                : GameText.Format("ui.catalog.abilitiesCount", Math.Min(_abilityCardStates.Count, 12)),
-            _ => string.IsNullOrWhiteSpace(_lastProductionStatus) ? GameText.T("ui.status.ready") : _lastProductionStatus,
-        });
+        return string.IsNullOrWhiteSpace(_lastProductionStatus)
+            ? GameText.T("ui.status.ready")
+            : CommandFailurePresentation.PanelText(_lastProductionStatus);
     }
 
     private void RefreshBuildCards()
@@ -535,6 +564,7 @@ public partial class HudLayer : CanvasLayer
 
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetBuildState(state, disabledReason);
+            RefreshCatalogInspectorItem(CommandCardInspectorItemId(optionId), button.InspectorText);
         }
     }
 
@@ -556,6 +586,7 @@ public partial class HudLayer : CanvasLayer
 
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);
             button.SetState(state, disabledReason);
+            RefreshCatalogInspectorItem(CommandCardInspectorItemId(optionId), button.InspectorText);
         }
 
     }
@@ -565,24 +596,6 @@ public partial class HudLayer : CanvasLayer
         return disabledReasonKey == "ui.needCredits"
             ? GameText.Format("ui.needCredits", cost)
             : string.IsNullOrWhiteSpace(disabledReasonKey) ? "" : GameText.T(disabledReasonKey);
-    }
-
-    public void SetMoveCommandMode(MoveCommandMode mode)
-    {
-        _selectedMoveMode = mode;
-        foreach (var button in _moveModeButtons)
-        {
-            button.SetSelected(button.Mode == mode);
-        }
-    }
-
-    public void SetSelectedUnitStance(UnitStance? stance)
-    {
-        _selectedUnitStance = stance;
-        foreach (var button in _stanceModeButtons)
-        {
-            button.SetSelected(stance is not null && button.Stance == stance.Value);
-        }
     }
 
     public readonly record struct MinimapUnit(Vector2 Position, Owner Owner, FactionId FactionId, bool Selected, float AlertPulse);

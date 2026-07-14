@@ -16,13 +16,14 @@ concurrency:
 
 env:
   DOTNET_ROLL_FORWARD: Major
+  DOTNET_INSTALL_DIR: ~/.dotnet
   GODOT_VERSION: "4.7"
   GODOT_RELEASE: "stable"
 
 jobs:
   verify-all:
     name: VerifyAll
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 90
 
     steps:
@@ -83,6 +84,10 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/ci
           sh tools/verify-all.sh 2>&1 | tee artifacts/ci/verify-all.log
+
+      - name: Capture visual QA
+        shell: bash
+        run: bash tools/VisualQaCapture.sh
 
       - name: Upload verification artifacts
         if: always()

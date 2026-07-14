@@ -80,6 +80,9 @@ static void ValidateWeaponAndAmmoCatalogs(List<string> failures)
     foreach (var ammo in WeaponCatalog.AmmoDefinitions.Values)
     {
         Require(ammo.BaseDamage > 0, $"{ammo.Id} must have positive base damage.", failures);
+        Require(ammo.Behavior == ProjectileBehavior.Beam || ammo.Speed > 0, $"{ammo.Id} non-beam ammo must have positive projectile speed.", failures);
+        Require(ammo.Behavior == ProjectileBehavior.Beam || ProjectileVfxMath.StyleFor(ammo).MinimumVisibleSeconds >= ProjectileVfxMath.MinimumVisibleSeconds,
+            $"{ammo.Id} non-beam ammo must declare a readable minimum projectile flight time.", failures);
         Require(ammo.DamageProfile.ArmorMultipliers.Count > 0, $"{ammo.Id} must declare armor damage multipliers.", failures);
         Require(DamageElementCatalog.Definitions.ContainsKey(ammo.DamageElementId), $"{ammo.Id} references missing damage element {ammo.DamageElementId}.", failures);
         Require(ammo.CounterRules.Rules.All(rule => rule.Multiplier > 0), $"{ammo.Id} counter rules must use positive multipliers.", failures);
@@ -149,6 +152,7 @@ static void ValidateElementPresentationCatalog(List<string> failures)
         Require(style.Projectile.TrailWidth >= ProjectileVfxMath.MinimumTrailWidth, $"{id} projectile presentation trail must stay readable.", failures);
         Require(style.Projectile.CoreWidth >= ProjectileVfxMath.MinimumCoreWidth, $"{id} projectile presentation core must stay readable.", failures);
         Require(style.Projectile.HeadRadius >= ProjectileVfxMath.MinimumHeadRadius, $"{id} projectile presentation head must stay readable.", failures);
+        Require(style.Projectile.MinimumVisibleSeconds >= ProjectileVfxMath.MinimumVisibleSeconds, $"{id} projectile presentation must keep a readable minimum flight time.", failures);
         Require(style.BeamWidthMultiplier > 0, $"{id} beam width multiplier must be positive.", failures);
         Require(style.ImpactColor.A > 0, $"{id} impact color must be visible.", failures);
         Require(style.DeathColor.A > 0, $"{id} death color must be visible.", failures);
@@ -233,6 +237,10 @@ static void ValidateBuildingCatalog(List<string> failures)
         Require(entitySpec.Display.RoleKey == spec.RoleKey, $"{spec.Kind} must carry its BuildSpec RoleKey into EntitySpec display.", failures);
         RequireHasTranslation(spec.NameKey, $"{spec.Kind} name key", failures);
         RequireHasTranslation(spec.RoleKey, $"{spec.Kind} role key", failures);
+        Require(spec.FootprintCells.IsValid, $"{spec.Kind} must declare a positive logical FootprintCells value.", failures);
+        var logicalFootprint = spec.LogicalFootprint();
+        Require(logicalFootprint.X >= spec.Footprint.X && logicalFootprint.Y >= spec.Footprint.Y,
+            $"{spec.Kind} logical FootprintCells must contain its visual Footprint.", failures);
         Require(spec.RequiredProducer is null || BuildSpecCatalog.Definitions.ContainsKey(spec.RequiredProducer), $"{spec.Kind} has a missing required producer.", failures);
         ValidateElementDefense(spec.ElementDefense, $"{spec.Kind} build spec", failures);
         foreach (var required in spec.RequiredBuildings)
@@ -346,12 +354,13 @@ static void ValidateThrowawayAuthoringPath(List<string> failures)
 
 static IEnumerable<EntityComponentState> ThrowawayBuildingComponents(BuildSpec spec)
 {
+    var logicalFootprint = spec.LogicalFootprint();
     yield return new ConstructionIdentityComponentState(spec.Kind);
     yield return new HealthComponentState(spec.MaxHp, spec.MaxHp);
     yield return new SelectableComponentState();
     yield return new VisionComponentState(spec.SightRange);
-    yield return new CollisionComponentState(MathF.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f, 8, 100, BlocksMovement: true);
-    yield return new FootprintComponentState(spec.Footprint, spec.PlacementDomain);
+    yield return new CollisionComponentState(MathF.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f, 8, 100, BlocksMovement: true);
+    yield return new FootprintComponentState(logicalFootprint, spec.PlacementDomain);
     yield return new ConstructionComponentState(0, spec.BuildTime, spec.Cost, spec.RefundRatio);
     yield return new PowerComponentState(spec.PowerProvided, spec.PowerUsed, Powered: true);
 }

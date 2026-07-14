@@ -47,7 +47,7 @@ public partial class SelectionController
         var worldPoint = ScreenToWorld(screenPoint);
         if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
         {
-            _lastGatewayRejectedStatus = string.Empty;
+            _lastGatewayRejection = CommandGatewayValidationError.None;
             if (UnitBattlefield.PickHostileUnit(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } unitInstanceEnemy)
             {
                 var accepted = SubmitRuntimeCommand(
@@ -92,7 +92,9 @@ public partial class SelectionController
                 var subjects = SelectedRuntimeUnitSubjects();
                 var commandKind = moveMode == MoveCommandMode.Attack ? PlayerCommandKind.AttackMove : PlayerCommandKind.Move;
                 var accepted = SubmitRuntimeCommand(commandKind, PlayerCommandPayload.ForPoint(subjects, worldPoint.X, worldPoint.Y, moveMode));
-                StatusChanged?.Invoke(accepted ? MoveModeStatus(moveMode) : GatewayRejectedStatus(MoveModeStatus(moveMode)));
+                StatusChanged?.Invoke(accepted
+                    ? CommandRibbonContextResolver.MoveModeLabel(moveMode)
+                    : GatewayRejectedStatus(CommandRibbonContextResolver.MoveModeLabel(moveMode)));
                 AcknowledgeCommand(
                     accepted ? CommandAcknowledgementKind.Move : CommandAcknowledgementKind.Invalid,
                     worldPoint,
@@ -142,7 +144,7 @@ public partial class SelectionController
             if (hasSelectedUnits)
             {
                 State.CommandMoveSelected(worldPoint, moveMode);
-                StatusChanged?.Invoke(MoveModeStatus(moveMode));
+                StatusChanged?.Invoke(CommandRibbonContextResolver.MoveModeLabel(moveMode));
                 AcknowledgeCommand(
                     CommandAcknowledgementKind.Move,
                     worldPoint,
@@ -169,7 +171,7 @@ public partial class SelectionController
     public void SetMoveCommandMode(MoveCommandMode mode)
     {
         CurrentMoveMode = mode;
-        StatusChanged?.Invoke(MoveModeStatus(mode));
+        StatusChanged?.Invoke(CommandRibbonContextResolver.MoveModeLabel(mode));
     }
 
     private void AcknowledgeCommand(CommandAcknowledgementKind kind, Vector2 position, CommandAcknowledgementAudioCue audioCue)
@@ -248,15 +250,6 @@ public partial class SelectionController
         return mouse.AltPressed ? MoveCommandMode.Attack : CurrentMoveMode;
     }
 
-    private static string MoveModeStatus(MoveCommandMode mode)
-    {
-        return mode switch
-        {
-            MoveCommandMode.Attack => GameText.T("move.attack"),
-            MoveCommandMode.Ignore => GameText.T("move.ignore"),
-            _ => GameText.T("move.direct"),
-        };
-    }
 
     private IReadOnlyList<EntityId> SelectedRuntimeUnitSubjects()
     {
@@ -266,25 +259,14 @@ public partial class SelectionController
     private bool SubmitRuntimeCommand(PlayerCommandKind kind, PlayerCommandPayload payload)
     {
         var result = UnitBattlefield!.SubmitLiveLocalPlayerCommand(LocalPlayerSlotId, kind, payload);
-        _lastGatewayRejectedStatus = FirstGatewayRejection(result);
+        _lastGatewayRejection = CommandGatewayFeedback.FirstRejection(result);
         return result.AcceptedCount > 0;
     }
 
     private string GatewayRejectedStatus(string fallback)
     {
-        return string.IsNullOrWhiteSpace(_lastGatewayRejectedStatus) ? fallback : _lastGatewayRejectedStatus;
-    }
-
-    private static string FirstGatewayRejection(CommandGatewayResult result)
-    {
-        foreach (var command in result.Commands)
-        {
-            if (!command.Accepted)
-            {
-                return command.Message;
-            }
-        }
-
-        return string.Empty;
+        return _lastGatewayRejection == CommandGatewayValidationError.None
+            ? fallback
+            : CommandGatewayFeedback.RejectionStatus(_lastGatewayRejection);
     }
 }

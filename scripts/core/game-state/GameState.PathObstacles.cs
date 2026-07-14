@@ -88,11 +88,12 @@ public sealed partial class GameState
             }
 
             var spec = BuildSpecCatalog.For(building.Kind);
+            var logicalFootprint = spec.LogicalFootprint(building.Facing);
             var rect = PlacementMath.RectFromCenter(
                 building.Position.X,
                 building.Position.Y,
-                spec.Footprint.X + 24,
-                spec.Footprint.Y + 24);
+                logicalFootprint.X + 24,
+                logicalFootprint.Y + 24);
             result.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height));
         }
     }

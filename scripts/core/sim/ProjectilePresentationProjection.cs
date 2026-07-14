@@ -9,17 +9,22 @@ namespace ProceduralRts.Core;
 public readonly record struct ProjectilePresentationProjection(
     EntityId Id,
     Vector2 Position,
+    Vector2 GroundPosition,
     Vector2 Velocity,
+    Vector2 GroundVelocity,
     string WeaponId,
     string AmmoId,
     ProjectileBehavior Behavior,
     HitRule HitRule,
+    float FlightProgress,
+    float ArcHeight,
     AmmoKind? LegacyAmmoKind,
     ProjectileVfxStyle Style,
     Color Accent)
 {
     public bool IsSeekerRocket => LegacyAmmoKind == AmmoKind.SeekerRocket;
-    public float CullingRadius => Style.HeadRadius + Style.CullingPadding;
+    public bool HasGroundShadow => Behavior == ProjectileBehavior.Ballistic && ArcHeight > 0.5f;
+    public float CullingRadius => Style.HeadRadius + Style.CullingPadding + ArcHeight;
     public float TailLength => Style.TailLength;
     public float TrailWidth => Style.TrailWidth;
     public float CoreWidth => Style.CoreWidth;
@@ -74,15 +79,40 @@ public static class ProjectilePresentationProjector
         var sourceOwner = world.TryGet(projectile.Source, out var source)
             ? source.OwnerId
             : entity.OwnerId;
+        var relation = world.Relations.Relation(viewer, sourceOwner);
+        if (relation is not (PlayerRelation.Self or PlayerRelation.Allied)
+            && !world.Visibility.IsVisible(viewer, entity.Id))
+        {
+            return null;
+        }
+
+        var flightProgress = projectile.FlightProgress;
+        var arcHeight = projectile.Behavior == ProjectileBehavior.Ballistic
+            ? ProjectilePresentationMath.BallisticArcHeight(projectile.Origin, projectile.AimPoint, flightProgress)
+            : 0;
+        var visualPosition = entity.Transform.Position + Vector2.Up * arcHeight;
+        var visualVelocity = projectile.Velocity;
+        if (arcHeight > 0)
+        {
+            visualVelocity += Vector2.Up * ProjectilePresentationMath.BallisticArcVerticalSpeed(
+                projectile.Origin,
+                projectile.AimPoint,
+                flightProgress,
+                projectile.FlightDuration);
+        }
 
         return new ProjectilePresentationProjection(
             entity.Id,
+            visualPosition,
             entity.Transform.Position,
+            visualVelocity,
             projectile.Velocity,
             projectile.WeaponId,
             projectile.AmmoId,
-            ammo.Behavior,
-            ammo.HitRule,
+            projectile.Behavior,
+            projectile.HitRule,
+            flightProgress,
+            arcHeight,
             ammo.LegacyKind,
             ProjectileVfxMath.StyleFor(ammo),
             AccentFor(world, viewer, sourceOwner, ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent)));
@@ -109,5 +139,36 @@ public static class ProjectilePresentationProjector
             4 => new Color("#c5a45d"),
             _ => new Color("#b7ad9c"),
         };
+    }
+}
+
+public static class ProjectilePresentationMath
+{
+    public static float BallisticArcHeight(Vector2 origin, Vector2 impactPoint, float progress)
+    {
+        return BallisticArcAmplitude(origin, impactPoint)
+            * MathF.Sin(Mathf.Clamp(progress, 0, 1) * MathF.PI);
+    }
+
+    public static float BallisticArcVerticalSpeed(
+        Vector2 origin,
+        Vector2 impactPoint,
+        float progress,
+        float flightDuration)
+    {
+        if (flightDuration <= 0)
+        {
+            return 0;
+        }
+
+        return BallisticArcAmplitude(origin, impactPoint)
+            * MathF.PI
+            / flightDuration
+            * MathF.Cos(Mathf.Clamp(progress, 0, 1) * MathF.PI);
+    }
+
+    private static float BallisticArcAmplitude(Vector2 origin, Vector2 impactPoint)
+    {
+        return Mathf.Clamp(origin.DistanceTo(impactPoint) * 0.18f, 24f, 96f);
     }
 }

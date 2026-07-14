@@ -5,6 +5,8 @@ static class MatchLifecycleReviewGate
         var verifyAll = ReviewGateSource.Read(root, "tools", "VerifyAll", "Program.cs");
         var pauseQa = ReviewGateSource.Read(root, "scripts", "PauseQaRoot.cs");
         var skirmishQa = ReviewGateSource.Read(root, "scripts", "SkirmishFlowQaRoot.cs");
+        var normalExitQa = ReviewGateSource.Read(root, "scripts", "qa", "NormalExitQaRoot.cs");
+        var visualQaScript = ReviewGateSource.Read(root, "tools", "VisualQaCapture.sh");
         var pauseMenu = ReviewGateSource.Read(root, "scripts", "ui", "PauseMenuLayer.cs");
         var outcome = ReviewGateSource.Read(root, "scripts", "ui", "OutcomeScreenLayer.cs");
         var settings = ReviewGateSource.Read(root, "scripts", "ui", "SettingsOverlayLayer.cs");
@@ -20,6 +22,15 @@ static class MatchLifecycleReviewGate
         RequireText(pauseQa, "PauseRestartButton", "PauseQa must exercise the real restart button.", result);
         RequireText(pauseQa, "PauseMainMenuButton", "PauseQa must exercise the real main-menu button.", result);
         RequireText(pauseQa, "CountNodes<BattleRoot>", "PauseQa must assert battle roots do not leak across lifecycle transitions.", result);
+        RequireText(normalExitQa, "StartSkirmishButton", "NormalExitQa must launch Battle through the real menu button.", result);
+        RequireText(normalExitQa, "PauseQuitButton", "NormalExitQa must exit through the real pause-menu quit button.", result);
+        RequireText(normalExitQa, "Normal exit QA passed:", "NormalExitQa must emit a stable clean-exit marker.", result);
+        RequireText(visualQaScript, "res://scenes/NormalExitQa.tscn", "Visual QA must run the normal exit scene under the rendered virtual display.", result);
+        RequireText(visualQaScript, "timeout --signal=TERM --kill-after=5s 45s", "Each rendered NormalExitQa attempt must have a bounded TERM timeout and short forced-kill fallback.", result);
+        RequireText(visualQaScript, "for attempt in 1 2", "Visual QA must retry NormalExitQa exactly once after a failed or timed-out first attempt.", result);
+        RequireText(visualQaScript, "Normal exit QA failed after 2 attempts.", "Visual QA must fail after the bounded clean retry is exhausted.", result);
+        RequireText(visualQaScript, "grep -Fq 'Normal exit QA passed:' \"$exit_log\"", "Visual QA must retain the stable normal-exit success marker assertion.", result);
+        RequireText(visualQaScript, "RID allocations of type .*Texture", "Visual QA must reject managed texture RID teardown regressions.", result);
         RequireText(pauseMenu, "GetTree().Paused = false;", "Pause menu scene changes must clear paused state.", result);
         RequireText(outcome, "GetTree().Paused = false;", "Outcome scene changes must clear paused state.", result);
         RequireText(controlBindingCatalog, "public static IReadOnlyList<ControlBindingSection> Sections", "Control binding sections must live in a shared catalog.", result);

@@ -22,18 +22,13 @@ public partial class HudLayer : CanvasLayer
         SetLabelColor(_drawerSelectedStats, Ink);
         SetLabelColor(_drawerSelectedDetail, InkMuted);
         SetLabelColor(_statusValue, Ink);
-        SetLabelColor(_providerLaneSummaryValue, InkMuted);
+        RefreshCommandRibbonContext();
         SetLabelColor(_productionValue, Ink);
         SetLabelColor(_queueValue, InkMuted);
         SetLabelColor(_outcomeDetail, Ink);
         if (_outcomeTitle is not null)
         {
             SetLabelColor(_outcomeTitle, Mint);
-        }
-
-        if (_cancelProduction is not null)
-        {
-            UiFactory.ApplyHudCancelButtonTheme(_cancelProduction, CurrentPalette, FontSmall);
         }
 
         foreach (var button in _sandboxDeveloperButtons)
@@ -53,7 +48,7 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var button in _stanceModeButtons)
         {
-            UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, button.Stance, FontTiny);
+            UiFactory.ApplyHudStanceButtonTheme(button, CurrentPalette, button.Presentation, FontTiny);
             button.QueueRedraw();
         }
 
@@ -121,16 +116,25 @@ public partial class HudLayer : CanvasLayer
         return panel;
     }
 
-    private static Control MakeBlock(string title, string value, Vector2 position, Vector2 size)
+    private static Control MakeBlock(string title, string value, Vector2 position, Vector2 size, Color accent)
     {
         var panelColors = UiFactory.HudPanelColorsFor(CurrentPalette, subtle: true);
         var block = MakePanel(title.Replace(" ", ""), panelColors.Fill, panelColors.Border);
         block.Position = position;
         block.CustomMinimumSize = size;
-        block.AddChild(MakeLabel(title, new Vector2(10, 5), 10, InkMuted));
-        var valueLabel = MakeLabel(value, new Vector2(10, 20), 15, Ink);
+        block.Size = size;
+        block.AddChild(new ColorRect
+        {
+            Position = new Vector2(4, 7),
+            CustomMinimumSize = new Vector2(2, size.Y - 14),
+            Size = new Vector2(2, size.Y - 14),
+            Color = new Color(accent, 0.88f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        });
+        block.AddChild(MakeLabel(title, new Vector2(12, 4), 11, InkMuted));
+        var valueLabel = MakeLabel(value, new Vector2(12, 19), 15, Ink);
         valueLabel.Name = "Value";
-        valueLabel.CustomMinimumSize = size - new Vector2(18, 20);
+        valueLabel.CustomMinimumSize = size - new Vector2(20, 19);
         block.AddChild(valueLabel);
         return block;
     }
@@ -154,12 +158,7 @@ public partial class HudLayer : CanvasLayer
 
     private static string CompactText(string text, int maxChars)
     {
-        if (text.Length <= maxChars)
-        {
-            return text;
-        }
-
-        return maxChars <= 3 ? text[..maxChars] : text[..(maxChars - 3)] + "...";
+        return HudLayoutMath.CompactFieldText(text, maxChars);
     }
 
     private static string CompactMultiline(string text, int maxCharsPerLine)
@@ -178,5 +177,19 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         parent.AddChild(separator);
+    }
+
+    private static ColorRect AddConsoleDivider(Control parent, float y, Color accent)
+    {
+        var divider = new ColorRect
+        {
+            Position = new Vector2(8, y),
+            CustomMinimumSize = new Vector2(DrawerWidth - 16, 1),
+            Size = new Vector2(DrawerWidth - 16, 1),
+            Color = new Color(accent, 0.34f),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        parent.AddChild(divider);
+        return divider;
     }
 }

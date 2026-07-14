@@ -70,6 +70,7 @@ static partial class Program
         AssertRestartCaptureConstruction();
         AssertConstructionQueueReadyState();
         AssertConstructionReadyPlacement();
+        AssertPlacementGridFootprints();
         AssertConstructionPowerGate();
         AssertConstructionVisibilityGate();
         AssertConstructionCancelRefund();

@@ -12,11 +12,12 @@ concurrency:
 
 env:
   DOTNET_ROLL_FORWARD: Major
+  DOTNET_INSTALL_DIR: ~/.dotnet
 
 jobs:
   preflight:
     name: Preflight
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 20
 
     steps:

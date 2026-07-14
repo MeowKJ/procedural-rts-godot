@@ -6,25 +6,62 @@ public sealed partial class UnitBattlefield
 {
     public int SelectRect(PlayerSlotId playerSlotId, Rect2 worldRect, bool additive)
     {
-        var normalizedRect = worldRect.Abs();
-        var includeEconomy = ShouldIncludeEconomyInSelectionRect(playerSlotId, normalizedRect);
+        var candidates = CollectSelectionRectCandidates(playerSlotId, worldRect);
         PrepareUnitSelectionBuffer(playerSlotId, additive);
+        foreach (var entityId in candidates)
+        {
+            _selectionEntityBuffer.Add(entityId);
+        }
+
+        return SubmitSelectionBuffer(playerSlotId);
+    }
+
+    public int CountSelectionRectCandidates(PlayerSlotId playerSlotId, Rect2 worldRect)
+    {
+        return CollectSelectionRectCandidates(playerSlotId, worldRect).Count;
+    }
+
+    private IReadOnlyCollection<EntityId> CollectSelectionRectCandidates(PlayerSlotId playerSlotId, Rect2 worldRect)
+    {
+        var normalizedRect = worldRect.Abs();
+        _selectionRectCandidateBuffer.Clear();
+        _selectionRectEconomyUnits.Clear();
+        _selectionRectCombatUnits.Clear();
+
         foreach (var unit in Units)
         {
-            if (unit.PlayerSlotId != playerSlotId)
+            if (unit.PlayerSlotId != playerSlotId || !UnitOverlapsSelectionRect(normalizedRect, unit))
             {
                 continue;
             }
 
-            var selectableByBox = UnitOverlapsSelectionRect(normalizedRect, unit)
-                && (!unit.Spec.RoleTags.Contains(UnitRoleTag.Economy) || includeEconomy);
-            if (selectableByBox)
+            if (unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
             {
-                _selectionEntityBuffer.Add(unit.EntityId);
+                _selectionRectEconomyUnits.Add(unit);
+            }
+            else
+            {
+                _selectionRectCombatUnits.Add(unit);
             }
         }
 
-        return SubmitSelectionBuffer(playerSlotId);
+        foreach (var unit in _selectionRectCombatUnits)
+        {
+            _selectionRectCandidateBuffer.Add(unit.EntityId);
+        }
+
+        if (ShouldIncludeEconomyInSelectionRect(
+                normalizedRect,
+                _selectionRectEconomyUnits,
+                _selectionRectCombatUnits))
+        {
+            foreach (var unit in _selectionRectEconomyUnits)
+            {
+                _selectionRectCandidateBuffer.Add(unit.EntityId);
+            }
+        }
+
+        return _selectionRectCandidateBuffer;
     }
 
     public IReadOnlyList<UnitInstance> SelectUnitsByIds(PlayerSlotId playerSlotId, IEnumerable<int> unitIds)
@@ -328,54 +365,6 @@ public sealed partial class UnitBattlefield
         }
 
         result.Sort(CompareUnitInstanceIds);
-    }
-
-    private bool ShouldIncludeEconomyInSelectionRect(PlayerSlotId playerSlotId, Rect2 worldRect)
-    {
-        var economyCount = 0;
-        var nonEconomyCount = 0;
-        var nearestEconomy = float.PositiveInfinity;
-        var nearestNonEconomy = float.PositiveInfinity;
-        var center = worldRect.Position + worldRect.Size / 2f;
-
-        foreach (var unit in Units)
-        {
-            if (unit.PlayerSlotId != playerSlotId || !UnitOverlapsSelectionRect(worldRect, unit))
-            {
-                continue;
-            }
-
-            var distanceToCenter = unit.Position.DistanceTo(center);
-            if (unit.Spec.RoleTags.Contains(UnitRoleTag.Economy))
-            {
-                economyCount++;
-                nearestEconomy = MathF.Min(nearestEconomy, distanceToCenter);
-            }
-            else
-            {
-                nonEconomyCount++;
-                nearestNonEconomy = MathF.Min(nearestNonEconomy, distanceToCenter);
-            }
-        }
-
-        if (economyCount == 0)
-        {
-            return false;
-        }
-
-        if (nonEconomyCount == 0 || economyCount > nonEconomyCount)
-        {
-            return true;
-        }
-
-        var rectSize = worldRect.Size;
-        var maxSide = Mathf.Max(Mathf.Abs(rectSize.X), Mathf.Abs(rectSize.Y));
-        if (maxSide > SelectionHarvesterIntentMaxSize)
-        {
-            return false;
-        }
-
-        return nearestEconomy <= nearestNonEconomy + SelectionEconomyIntentCenterMargin;
     }
 
 }

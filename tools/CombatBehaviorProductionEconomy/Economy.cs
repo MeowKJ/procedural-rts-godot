@@ -70,6 +70,7 @@ static partial class Program
         var occupancyState = new GameState();
         var hqObstacle = occupancyState.Buildings.First(building => building.Owner == Owner.Player && building.Kind == BuildingDesignIds.Headquarters);
         var occupancyHqSpec = BuildSpecCatalog.For(hqObstacle.Kind);
+        var occupancyHqFootprint = occupancyHqSpec.LogicalFootprint(hqObstacle.Facing);
         var occupancyUnit = occupancyState.Units.First(unit => unit.Owner == Owner.Player && IsCombatUnit(unit));
         occupancyUnit.Position = hqObstacle.Position + new Vector2(-260, 0);
         occupancyUnit.AnchorPosition = occupancyUnit.Position;
@@ -80,10 +81,10 @@ static partial class Program
         var occupancyPath = new[] { occupancyUnit.MoveTarget ?? occupancyUnit.Position }
             .Concat(occupancyUnit.Path)
             .ToList();
-        var hqLeft = hqObstacle.Position.X - (occupancyHqSpec.Footprint.X + 24) / 2f;
-        var hqRight = hqObstacle.Position.X + (occupancyHqSpec.Footprint.X + 24) / 2f;
-        var hqTop = hqObstacle.Position.Y - (occupancyHqSpec.Footprint.Y + 24) / 2f;
-        var hqBottom = hqObstacle.Position.Y + (occupancyHqSpec.Footprint.Y + 24) / 2f;
+        var hqLeft = hqObstacle.Position.X - (occupancyHqFootprint.X + 24) / 2f;
+        var hqRight = hqObstacle.Position.X + (occupancyHqFootprint.X + 24) / 2f;
+        var hqTop = hqObstacle.Position.Y - (occupancyHqFootprint.Y + 24) / 2f;
+        var hqBottom = hqObstacle.Position.Y + (occupancyHqFootprint.Y + 24) / 2f;
 
         if (occupancyPath.Count < 2)
         {

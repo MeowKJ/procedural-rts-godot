@@ -32,6 +32,23 @@ foreach (var state in requiredTextureStates)
 
 Require(File.Exists(Path.Combine(root, "assets", "cursors", "kenney", "LICENSE.kenney-cursor-pack.txt")), "Kenney cursor license/source file should be present.", failures);
 
+var hudCursor = File.ReadAllText(Path.Combine(root, "scripts", "ui", "hud", "HudLayer.Cursor.cs"));
+var hudLayer = File.ReadAllText(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
+var battleLifecycle = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.Lifecycle.cs"));
+RequireText(hudCursor, "HashSet<Texture2D> _ownedCursorTextures", "HudLayer should distinguish owned ImageTexture cursors from ResourceLoader textures.", failures);
+RequireText(hudCursor, "HashSet<Input.CursorShape> _customCursorShapes", "HudLayer should track every Input shape that receives a custom cursor texture.", failures);
+RequireText(hudCursor, "_ownedCursorTextures.Add(texture)", "Source-PNG cursor textures should be registered for teardown.", failures);
+RequireText(hudCursor, "_customCursorShapes.Add(shape)", "Custom cursor assignment should register the affected Input shape.", failures);
+RequireText(hudCursor, "foreach (var shape in _customCursorShapes)", "Cursor teardown should visit every registered custom Input shape.", failures);
+RequireText(hudCursor, "Input.SetCustomMouseCursor(null, shape)", "Cursor teardown should clear each registered Input shape before disposing textures.", failures);
+RequireText(hudCursor, "_customCursorShapes.Clear()", "Cursor teardown should clear the registered Input shape set.", failures);
+RequireText(hudCursor, "Input.SetCustomMouseCursor(null, Input.CursorShape.Arrow)", "Cursor teardown should clear Input's custom cursor reference before disposing textures.", failures);
+RequireText(hudCursor, "ManagedGodotResourceCleanup.DisposeGodotObject(texture)", "Cursor teardown should dispose HUD-owned textures explicitly.", failures);
+RequireText(hudCursor, "_cursorTextureCache.Clear()", "Cursor teardown should clear cached references.", failures);
+RequireText(hudLayer, "public override void _ExitTree()", "HudLayer should own its texture teardown lifecycle.", failures);
+RequireText(hudLayer, "ReleaseCursorTextures();", "HudLayer managed-resource release should include cursor textures.", failures);
+Require(!battleLifecycle.Contains("_hud?.ReleaseManagedResources()", StringComparison.Ordinal), "BattleRoot should not duplicate HudLayer-owned texture teardown.", failures);
+
 var select = BattleCursorCatalog.DefinitionFor(BattleCursorState.DefaultSelect);
 var dragSelect = BattleCursorCatalog.DefinitionFor(BattleCursorState.DragSelect);
 Require(dragSelect.Shape == BattleCursorShape.Drag, "DragSelect should keep Godot drag-shape fallback.", failures);
@@ -61,6 +78,11 @@ static void Require(bool condition, string message, List<string> failures)
     {
         failures.Add(message);
     }
+}
+
+static void RequireText(string source, string required, string message, List<string> failures)
+{
+    Require(source.Contains(required, StringComparison.Ordinal), message, failures);
 }
 
 static string FindRepoRoot()

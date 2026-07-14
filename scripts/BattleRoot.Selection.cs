@@ -171,19 +171,6 @@ public partial class BattleRoot
         return faction.Lerp(PlayerSlotAccent(playerSlotId), 0.36f);
     }
 
-    private static string StanceLabel(UnitStance stance)
-    {
-        return stance switch
-        {
-            UnitStance.Hold => GameText.T("stance.hold"),
-            UnitStance.Aggressive => GameText.T("stance.aggressive"),
-            UnitStance.ReturnGuard => GameText.T("stance.returnGuard"),
-            UnitStance.PassiveRetaliate => GameText.T("stance.passive"),
-            UnitStance.Ignore => GameText.T("stance.ignore"),
-            _ => stance.ToString().ToUpperInvariant(),
-        };
-    }
-
     private static bool IsEconomyUnit(UnitModel unit)
     {
         return unit.Spec.RoleTags.Contains(UnitRoleTag.Economy);

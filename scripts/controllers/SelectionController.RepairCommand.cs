@@ -69,15 +69,15 @@ public partial class SelectionController
     {
         if (_hoveredUnitInstance is { } unit && UnitBattlefield!.CanRepairSelected(LocalPlayerSlotId, unit))
         {
-            return new CommandPreviewState(CommandPreviewKind.Repair, RepairUnitPreviewLabel(), screenPosition, unit.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.Repair, RepairUnitPreviewLabel(), screenPosition, unit.Position, true, CommandPreviewPhase.ArmedCommand);
         }
 
         if (_hoveredBuildingProjection is { } building && UnitBattlefield!.CanRepairSelectedBuilding(LocalPlayerSlotId, building.Id))
         {
-            return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, building.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.Repair, RepairStructurePreviewLabel(), screenPosition, building.Position, true, CommandPreviewPhase.ArmedCommand);
         }
 
-        return new CommandPreviewState(CommandPreviewKind.Repair, RepairInvalidPreviewLabel(), screenPosition, worldPosition, false);
+        return new CommandPreviewState(CommandPreviewKind.Repair, RepairInvalidPreviewLabel(), screenPosition, worldPosition, false, CommandPreviewPhase.ArmedCommand);
     }
 
     private static string RepairUnitPreviewLabel()

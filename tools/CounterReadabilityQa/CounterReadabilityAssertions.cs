@@ -157,8 +157,17 @@ internal static class CounterReadabilityAssertions
         var kineticAmmo = WeaponCatalog.Ammo[AmmoKind.NeedleDart];
         var explosiveAmmo = WeaponCatalog.Ammo[AmmoKind.SeekerRocket];
         var energyAmmo = WeaponCatalog.Ammo[AmmoKind.IonBeam];
-        Require(ProjectileVfxMath.StyleFor(kineticAmmo) == ElementPresentationCatalog.For(DamageElementIds.Kinetic).Projectile, "ProjectileVfxMath must prefer kinetic element style when ammo has an element id.", failures);
-        Require(ProjectileVfxMath.StyleFor(explosiveAmmo) == ElementPresentationCatalog.For(DamageElementIds.Explosive).Projectile, "ProjectileVfxMath must prefer explosive element style when ammo has an element id.", failures);
+        var kineticProjectileStyle = ProjectileVfxMath.StyleFor(kineticAmmo);
+        var kineticElementStyle = ElementPresentationCatalog.For(DamageElementIds.Kinetic).Projectile;
+        var explosiveProjectileStyle = ProjectileVfxMath.StyleFor(explosiveAmmo);
+        var explosiveElementStyle = ElementPresentationCatalog.For(DamageElementIds.Explosive).Projectile;
+        Require(kineticProjectileStyle with { MinimumVisibleSeconds = kineticElementStyle.MinimumVisibleSeconds } == kineticElementStyle,
+            "ProjectileVfxMath must prefer kinetic element visuals while preserving ammo flight readability.", failures);
+        Require(explosiveProjectileStyle with { MinimumVisibleSeconds = explosiveElementStyle.MinimumVisibleSeconds } == explosiveElementStyle,
+            "ProjectileVfxMath must prefer explosive element visuals while preserving ammo flight readability.", failures);
+        Require(kineticProjectileStyle.MinimumVisibleSeconds >= ProjectileVfxMath.MinimumVisibleSeconds
+            && explosiveProjectileStyle.MinimumVisibleSeconds >= ProjectileVfxMath.MinimumVisibleSeconds,
+            "Non-beam projectile styles must keep a readable minimum flight time.", failures);
         Require(ImpactVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Air, energyAmmo, 34).EmitsEmpDissolve, "Energy impact style must expose EMP dissolve through element presentation.", failures);
         Require(DeathVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, explosiveAmmo, 90).EmitsEmbers, "Explosive death style must expose embers through element presentation.", failures);
         Require(ElementPresentationCatalog.BadgeFor(DamageElementIds.Moonshadow).ShortCode == "MSH", "Moonshadow badge must be available as presentation data.", failures);

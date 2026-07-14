@@ -62,7 +62,7 @@ static partial class Program
 
         Assert(firedTick > 0, "independent turret attack-move should fire at the intercepted hostile");
         Assert(removedTick > 0, "independent turret attack-move should remove the intercepted hostile");
-        Assert(resumedTick > removedTick, $"attack-move should resume after fire-anchor release; removedTick={removedTick}, resumedTick={resumedTick}");
+        Assert(resumedTick >= removedTick, $"attack-move should be resumed by the projectile-impact target cleanup tick; removedTick={removedTick}, resumedTick={resumedTick}");
         Assert(world.TryGet(new EntityId(1), out var attacker), "attack-move attacker should survive");
 
         var finalDistance = attacker.Transform.Position.DistanceTo(EntityAttackMoveTarget);

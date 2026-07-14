@@ -34,17 +34,7 @@ public partial class SelectionController
 
     private bool HandleStanceHotkey(InputEventKey key)
     {
-        UnitStance? stance = key.Keycode switch
-        {
-            Key.Z => UnitStance.Hold,
-            Key.X => UnitStance.Aggressive,
-            Key.C => UnitStance.ReturnGuard,
-            Key.V => UnitStance.PassiveRetaliate,
-            Key.B => UnitStance.Ignore,
-            _ => null,
-        };
-
-        if (stance is null)
+        if (!UnitStancePresentationCatalog.TryDefinitionForHotkey((char)key.Keycode, out var presentation))
         {
             return false;
         }
@@ -58,21 +48,8 @@ public partial class SelectionController
             return true;
         }
 
-        UnitStanceRequested?.Invoke(stance.Value);
+        UnitStanceRequested?.Invoke(presentation.Stance);
         return true;
-    }
-
-    private static string StanceLabel(UnitStance stance)
-    {
-        return stance switch
-        {
-            UnitStance.Hold => GameText.T("stance.hold"),
-            UnitStance.Aggressive => GameText.T("stance.aggressive"),
-            UnitStance.ReturnGuard => GameText.T("stance.returnGuard"),
-            UnitStance.PassiveRetaliate => GameText.T("stance.passive"),
-            UnitStance.Ignore => GameText.T("stance.ignore"),
-            _ => stance.ToString(),
-        };
     }
 
     private int SelectArmy()

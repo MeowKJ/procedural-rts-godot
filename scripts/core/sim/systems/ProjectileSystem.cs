@@ -20,10 +20,7 @@ public sealed class ProjectileSystem : ISimSystem
     private static void StepProjectile(SimContext context, EntityInstance projectile, ProjectileComponentState state)
     {
         var world = context.World;
-        if (!world.TryGet(state.Target, out var target)
-            || !target.Components.TryGet<HealthComponentState>(out var health)
-            || health.Hp <= 0
-            || state.LifetimeRemaining <= 0
+        if (state.LifetimeRemaining <= 0
             || state.Speed <= 0)
         {
             world.QueueRemoval(projectile.Id);
@@ -36,21 +33,54 @@ public sealed class ProjectileSystem : ISimSystem
         }
 
         var source = world.TryGet(state.Source, out var liveSource) ? liveSource : null;
-        var toTarget = target.Transform.Position - projectile.Transform.Position;
-        var distance = toTarget.Length();
-        var desired = toTarget / MathF.Max(distance, 0.001f) * state.Speed;
-        var blend = Math.Clamp(state.TrackingStrength * context.FixedDelta, 0, 1);
-        var velocity = state.Velocity.Lerp(desired, blend);
-        if (velocity.LengthSquared() <= 0.001f)
+        var target = TryLiveTarget(world, state.Target);
+        var aimPoint = state.AimPoint;
+        var velocity = state.Velocity;
+        if (state.Behavior == ProjectileBehavior.Tracking)
         {
-            velocity = desired;
+            if (target is not null)
+            {
+                aimPoint = target.Transform.Position;
+                var desired = DirectionTo(projectile.Transform.Position, aimPoint) * state.Speed;
+                var blend = Math.Clamp(state.TrackingStrength * context.FixedDelta, 0, 1);
+                velocity = state.Velocity.Lerp(desired, blend);
+                velocity = velocity.LengthSquared() <= 0.001f
+                    ? desired
+                    : velocity.Normalized() * state.Speed;
+            }
+            else
+            {
+                velocity = DirectionTo(projectile.Transform.Position, aimPoint) * state.Speed;
+            }
         }
 
         var currentPosition = projectile.Transform.Position;
         var nextPosition = currentPosition + velocity * context.FixedDelta;
-        if (HitsTarget(currentPosition, nextPosition, target.Transform.Position, state.HitRadius))
+        var reachedImpact = state.Behavior == ProjectileBehavior.Tracking && target is not null
+            ? HitsTarget(currentPosition, nextPosition, aimPoint, state.HitRadius)
+            : HitsTarget(currentPosition, nextPosition, aimPoint, 1f);
+        if (reachedImpact && state.Age <= 0)
         {
-            WeaponEngagementResolution.ApplyProjectileImpact(context, target, source, projectile, state);
+            projectile.Transform = EntityTransform.At(aimPoint, velocity.Angle());
+            projectile.Components.Set(state with
+            {
+                AimPoint = aimPoint,
+                Velocity = velocity,
+                Age = state.Age + context.FixedDelta,
+                LifetimeRemaining = MathF.Max(0, state.LifetimeRemaining - context.FixedDelta),
+            });
+            return;
+        }
+
+        if (reachedImpact)
+        {
+            WeaponEngagementResolution.ApplyProjectileImpact(
+                context,
+                target,
+                source,
+                projectile,
+                state with { AimPoint = aimPoint, Velocity = velocity },
+                aimPoint);
             world.QueueRemoval(projectile.Id);
             return;
         }
@@ -58,9 +88,27 @@ public sealed class ProjectileSystem : ISimSystem
         projectile.Transform = EntityTransform.At(nextPosition, velocity.Angle());
         projectile.Components.Set(state with
         {
+            AimPoint = aimPoint,
             Velocity = velocity,
+            Age = state.Age + context.FixedDelta,
             LifetimeRemaining = MathF.Max(0, state.LifetimeRemaining - context.FixedDelta),
         });
+    }
+
+    private static EntityInstance? TryLiveTarget(EntityWorld world, EntityId targetId)
+    {
+        return targetId.IsValid
+            && world.TryGet(targetId, out var target)
+            && target.Components.TryGet<HealthComponentState>(out var health)
+            && health.Hp > 0
+                ? target
+                : null;
+    }
+
+    private static Vector2 DirectionTo(Vector2 from, Vector2 to)
+    {
+        var delta = to - from;
+        return delta.LengthSquared() <= 0.001f ? Vector2.Right : delta.Normalized();
     }
 
     private static bool HitsTarget(Vector2 start, Vector2 end, Vector2 target, float radius)
@@ -119,7 +167,14 @@ public sealed class ProjectileSystem : ISimSystem
                     mount.MountId,
                     mount.WeaponId,
                     WeaponEngagementResolution.MuzzlePosition(context.World, interceptor, mount),
-                    projectile.Transform.Position));
+                    projectile.Transform.Position,
+                    mount.LegacyWeaponKind));
+                WeaponEngagementResolution.SpawnInterceptionRound(
+                    context.World,
+                    interceptor,
+                    projectile,
+                    mount,
+                    definition);
                 context.World.QueueRemoval(projectile.Id);
                 return true;
             }

@@ -57,6 +57,7 @@ public partial class HudLayer : CanvasLayer
 
             card.Position = ProductionButtonPosition(index);
             card.SetState(state);
+            RefreshCatalogInspectorItem(AbilityInspectorItemId(state.Ability.Kind), card.InspectorText);
         }
 
         foreach (var key in _abilityCards.Keys)
@@ -69,11 +70,12 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var stale in _abilityCardStaleKinds)
         {
+            InvalidateCatalogInspectorItem(AbilityInspectorItemId(stale));
             _abilityCards[stale].QueueFree();
             _abilityCards.Remove(stale);
         }
 
-        SetCatalogStatusText(visibleCount == 0
+        SetCatalogInspectorDefault(visibleCount == 0
             ? GameText.T("ui.catalog.abilitiesEmpty")
             : GameText.Format("ui.catalog.abilitiesCount", visibleCount));
     }
@@ -92,13 +94,14 @@ public partial class HudLayer : CanvasLayer
         UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
         _abilityCards[kind] = card;
         parent.AddChild(card);
-        card.MouseEntered += () => SetCatalogStatusText(card.InspectorText);
-        card.MouseExited += RestoreCatalogStatusText;
-        card.FocusEntered += () => SetCatalogStatusText(card.InspectorText);
-        card.FocusExited += RestoreCatalogStatusText;
+        var inspectorItemId = AbilityInspectorItemId(kind);
+        card.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+        card.MouseExited += () => ClearCatalogInspectorHover(inspectorItemId);
+        card.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, card.InspectorText);
+        card.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);
         card.Pressed += () =>
         {
-            SetCatalogStatusText(card.InspectorText);
+            PinCatalogInspectorItem(inspectorItemId, card.InspectorText);
             AbilityRequested?.Invoke(kind);
         };
         return card;

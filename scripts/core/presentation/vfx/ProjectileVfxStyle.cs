@@ -11,4 +11,5 @@ public readonly record struct ProjectileVfxStyle(
     float CoreAlpha,
     float HeadAlpha,
     float CullingPadding,
-    Color TailFlare);
+    Color TailFlare,
+    float MinimumVisibleSeconds);

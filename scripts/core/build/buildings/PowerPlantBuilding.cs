@@ -15,6 +15,7 @@ public sealed class PowerPlantBuilding : BuildingDesign
             "Pulse Reactor",
             520,
             new Vector2(104, 96),
+            new PlacementGridFootprint(4, 3),
             360,
             ArmorTag.Structure,
             null,

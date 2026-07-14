@@ -40,6 +40,9 @@ public sealed partial class UnitBattlefield
     private readonly Dictionary<PlayerSlotId, int> _resourceCreditsBefore = [];
     private readonly List<int> _resourceCreditOwnerIds = [];
     private readonly HashSet<EntityId> _selectionEntityBuffer = [];
+    private readonly HashSet<EntityId> _selectionRectCandidateBuffer = [];
+    private readonly List<UnitInstance> _selectionRectEconomyUnits = [];
+    private readonly List<UnitInstance> _selectionRectCombatUnits = [];
     private readonly List<EntityId> _selectionCommandEntityBuffer = [];
     private readonly List<UnitInstance> _selectionUnitBuffer = [];
     private readonly List<int> _selectedBuildingRallyProducerIds = [];
@@ -112,6 +115,7 @@ public sealed partial class UnitBattlefield
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
     public event Action<IReadOnlyList<UnitInstanceDeathInfo>>? UnitsRemoved;
     public event Action<WeaponFiredEvent>? WeaponFired;
+    public event Action<ProjectileImpactEvent>? ProjectileImpacted;
     public event Action<UnitInstance, UnitInstance>? UnitAttacked;
     public event Action<UnitInstance, UnitBattlefieldBuildingSnapshot>? UnitAttackedByBuilding;
     public event Action<UnitBattlefieldBuildingSnapshot, UnitInstance>? BuildingAttacked;
@@ -191,6 +195,7 @@ public sealed partial class UnitBattlefield
         UpdateAbilitiesFromEntityWorld(dt);
         UpdateBuildingTargetCombatFromEntityWorld(dt);
         UpdateBuildingCombatFromEntityWorld(dt);
+        UpdateProjectilesFromEntityWorld(dt);
         UpdateResourceHarvestersFromEntityWorld(dt);
         UpdateProductionQueues(dt);
         UpdateUnitRuntimeMotionFromEntityWorld(dt);

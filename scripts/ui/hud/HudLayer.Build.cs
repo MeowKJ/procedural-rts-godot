@@ -9,21 +9,21 @@ public partial class HudLayer : CanvasLayer
     {
         var top = MakePanel("ResourceStrip", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorderStrong);
         top.SetAnchorsPreset(Control.LayoutPreset.CenterTop);
-        top.OffsetLeft = -224;
+        top.OffsetLeft = -210;
         top.OffsetTop = 10;
-        top.OffsetRight = 224;
+        top.OffsetRight = 210;
         top.OffsetBottom = 56;
         top.MouseFilter = Control.MouseFilterEnum.Ignore;
         root.AddChild(top);
 
-        var credits = MakeBlock(GameText.T("ui.top.credits"), "0", new Vector2(10, 5), new Vector2(150, 36));
+        var credits = MakeBlock(GameText.T("ui.top.credits"), "0", new Vector2(8, 5), new Vector2(138, 36), Amber);
         _creditsValue = credits.GetNode<Label>("Value");
         top.AddChild(credits);
 
-        var power = MakeBlock(GameText.T("ui.top.power"), GameText.T("ui.top.powerStable"), new Vector2(170, 5), new Vector2(116, 36));
+        var power = MakeBlock(GameText.T("ui.top.power"), GameText.T("ui.top.powerStable"), new Vector2(154, 5), new Vector2(108, 36), Cyan);
         top.AddChild(power);
 
-        var status = MakeBlock(GameText.T("ui.top.status"), GameText.T("ui.status.systemsOnline"), new Vector2(296, 5), new Vector2(140, 36));
+        var status = MakeBlock(GameText.T("ui.top.status"), GameText.T("ui.status.systemsOnline"), new Vector2(270, 5), new Vector2(142, 36), Mint);
         _statusValue = status.GetNode<Label>("Value");
         top.AddChild(status);
     }
@@ -96,39 +96,46 @@ public partial class HudLayer : CanvasLayer
     private void BuildCommandRibbon(Control root)
     {
         _commandRibbon = MakePanel("CommandRibbon", CurrentPalette.PanelFill, CurrentPalette.PanelBorder);
-        _commandRibbon.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
+        _commandRibbon.SetAnchorsPreset(Control.LayoutPreset.BottomLeft);
         _commandRibbon.OffsetLeft = 96;
-        _commandRibbon.OffsetTop = -58;
-        _commandRibbon.OffsetRight = -328;
+        _commandRibbon.OffsetTop = -68;
+        _commandRibbon.OffsetRight = 780;
         _commandRibbon.OffsetBottom = -12;
         _commandRibbon.MouseFilter = Control.MouseFilterEnum.Ignore;
         _commandRibbon.Visible = true;
         root.AddChild(_commandRibbon);
 
-        AddStanceModeButton(_commandRibbon, UnitStance.Hold, IconGlyph.StanceHold, $"Z  {GameText.T("stance.hold")}", new Vector2(12, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.Aggressive, IconGlyph.StanceAggressive, $"X  {GameText.T("stance.aggressive")}", new Vector2(58, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.ReturnGuard, IconGlyph.StanceReturn, $"C  {GameText.T("stance.returnGuard")}", new Vector2(104, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.PassiveRetaliate, IconGlyph.StancePassive, $"V  {GameText.T("stance.passive")}", new Vector2(150, 6));
-        AddStanceModeButton(_commandRibbon, UnitStance.Ignore, IconGlyph.StanceIgnore, $"B  {GameText.T("stance.ignore")}", new Vector2(196, 6));
+        for (var index = 0; index < UnitStancePresentationCatalog.Definitions.Length; index++)
+        {
+            var presentation = UnitStancePresentationCatalog.Definitions[index];
+            AddStanceModeButton(_commandRibbon, presentation, new Vector2(6 + index * 44, 6));
+        }
 
-        AddSeparator(_commandRibbon, new Vector2(254, 8));
-        AddMoveModeButton(_commandRibbon, MoveCommandMode.Direct, IconGlyph.Move, GameText.T("ui.tooltip.directMove"), new Vector2(274, 6));
-        AddMoveModeButton(_commandRibbon, MoveCommandMode.Attack, IconGlyph.AttackMove, GameText.T("ui.tooltip.attackMove"), new Vector2(320, 6));
-        AddMoveModeButton(_commandRibbon, MoveCommandMode.Ignore, IconGlyph.IgnoreMove, GameText.T("ui.tooltip.ignoreMove"), new Vector2(366, 6));
+        AddSeparator(_commandRibbon, new Vector2(234, 8));
+        AddMoveModeButton(_commandRibbon, MoveCommandMode.Direct, IconGlyph.Move, GameText.T("ui.tooltip.directMove"), new Vector2(244, 6));
+        AddMoveModeButton(_commandRibbon, MoveCommandMode.Attack, IconGlyph.AttackMove, GameText.T("ui.tooltip.attackMove"), new Vector2(288, 6));
+        AddMoveModeButton(_commandRibbon, MoveCommandMode.Ignore, IconGlyph.IgnoreMove, GameText.T("ui.tooltip.ignoreMove"), new Vector2(332, 6));
 
-        AddSeparator(_commandRibbon, new Vector2(642, 8));
-        var ribbonRepair = AddIconActionButton(_commandRibbon, IconGlyph.Repair, GameText.T("ui.context.repair"), new Vector2(662, 6), new Vector2(36, 34), Mint);
+        _commandRibbonContextValue = MakeSizedLabel("", new Vector2(384, 13), new Vector2(92, 30), FontTiny, InkMuted);
+        _commandRibbonContextValue.Name = "RibbonCommandContext";
+        _commandRibbonContextValue.HorizontalAlignment = HorizontalAlignment.Center;
+        _commandRibbonContextValue.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _commandRibbon.AddChild(_commandRibbonContextValue);
+        RefreshCommandRibbonContext();
+
+        AddSeparator(_commandRibbon, new Vector2(484, 8));
+        var ribbonRepair = AddIconActionButton(_commandRibbon, IconGlyph.Repair, GameText.T("ui.context.repair"), new Vector2(494, 6), new Vector2(44, 44), Mint);
         ribbonRepair.Name = "RibbonRepair";
         ribbonRepair.Pressed += () => RepairRequested?.Invoke();
-        var ribbonCancel = AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(708, 6), new Vector2(36, 34), Danger);
+        var ribbonCancel = AddIconActionButton(_commandRibbon, IconGlyph.Cancel, GameText.T("ui.context.sell"), new Vector2(538, 6), new Vector2(44, 44), Danger);
         ribbonCancel.Name = "RibbonCancelProduction";
         ribbonCancel.Pressed += () => SellOrCancelRequested?.Invoke();
         _sellOrCancelAction = ribbonCancel;
         RefreshSellOrCancelAction();
-        var ribbonRally = AddIconActionButton(_commandRibbon, IconGlyph.Building, GameText.T("ui.context.rally"), new Vector2(754, 6), new Vector2(36, 34), Amber);
+        var ribbonRally = AddIconActionButton(_commandRibbon, IconGlyph.Building, GameText.T("ui.context.rally"), new Vector2(582, 6), new Vector2(44, 44), Amber);
         ribbonRally.Name = "RibbonSetRally";
         ribbonRally.Pressed += () => RallyRequested?.Invoke();
-        _settingsButton = AddIconActionButton(_commandRibbon, IconGlyph.Settings, GameText.T("common.settings"), new Vector2(816, 6), new Vector2(36, 34), Cyan);
+        _settingsButton = AddIconActionButton(_commandRibbon, IconGlyph.Settings, GameText.T("common.settings"), new Vector2(626, 6), new Vector2(44, 44), Cyan);
         _settingsButton.Pressed += () => SettingsRequested?.Invoke();
     }
 
@@ -160,104 +167,123 @@ public partial class HudLayer : CanvasLayer
         _rightRail.OffsetBottom = -12;
         _rightRail.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightRail);
+
+        _deckToggle = AddIconActionButton(
+            _rightRail,
+            CatalogModeGlyph(_selectedCatalogMode),
+            CatalogModeSurfaceText(_selectedCatalogMode),
+            new Vector2(6, 4),
+            new Vector2(52, 44),
+            CatalogModeAccent(_selectedCatalogMode));
+        _deckToggle.Name = "CommandDeckToggle";
+        _deckToggle.Pressed += ToggleCommandDeck;
+
         for (var index = 0; index < MaxProductionProviderLaneButtons; index++)
         {
             AddProductionProviderLaneButton(_rightRail, index);
         }
 
-        _providerLaneSummaryValue = MakeSizedLabel(GameText.T("ui.providerLane.empty"), new Vector2(4, 284), new Vector2(40, 92), FontTiny, InkMuted);
-        _providerLaneSummaryValue.Name = "ProviderLaneSummary";
-        _providerLaneSummaryValue.VerticalAlignment = VerticalAlignment.Top;
-        _rightRail.AddChild(_providerLaneSummaryValue);
+        _queueMiniStack = new QueueMiniStack
+        {
+            Name = "QueueMiniStack",
+            Position = new Vector2(6, 406),
+            CustomMinimumSize = new Vector2(52, 58),
+            Size = new Vector2(52, 58),
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        _rightRail.AddChild(_queueMiniStack);
+        BindFixedHoverText(_queueMiniStack, "queue-mini-stack", CurrentQueueDeckInspectorText, () => QueueMiniStackAccent(CurrentProviderLaneState()));
+
+        _cancelProduction = AddIconActionButton(
+            _rightRail,
+            IconGlyph.Cancel,
+            GameText.T("ui.cancel.none"),
+            new Vector2(10, 468),
+            new Vector2(44, 44),
+            Danger);
+        _cancelProduction.Name = "CancelProduction";
+        _cancelProduction.Disabled = true;
+        _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
     }
 
     private void BuildRightDrawer(Control root)
     {
         _rightProductionPanel = MakePanel("ProductionPanel", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorderStrong);
         _rightProductionPanel.SetAnchorsPreset(Control.LayoutPreset.TopRight);
-        _rightProductionPanel.OffsetLeft = -312;
+        _rightProductionPanel.OffsetLeft = -RailWidth - DrawerWidth - 12;
         _rightProductionPanel.OffsetTop = HudLayoutMath.ProductionPanelTop;
-        _rightProductionPanel.OffsetRight = -12;
+        _rightProductionPanel.OffsetRight = -RailWidth - 12;
         _rightProductionPanel.OffsetBottom = HudLayoutMath.ProductionPanelTop + HudLayoutMath.ProductionPanelHeight;
         _rightProductionPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightProductionPanel);
+        AddConsoleDivider(_rightProductionPanel, 88, Amber);
+        _productionFooterDivider = AddConsoleDivider(_rightProductionPanel, 322, Cyan);
 
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), GameText.T("ui.catalog.buildHelp"), new Vector2(8, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), GameText.T("ui.catalog.trainHelp"), new Vector2(78, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Upgrades, GameText.T("ui.catalog.upgrades"), GameText.T("ui.catalog.upgradesDetail"), GameText.T("ui.catalog.upgradesHelp"), new Vector2(148, 8));
-        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), GameText.T("ui.catalog.abilitiesHelp"), new Vector2(218, 8));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Build, GameText.T("ui.catalog.build"), GameText.T("ui.catalog.buildDetail"), GameText.T("ui.catalog.buildHelp"), new Vector2(8, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Train, GameText.T("ui.catalog.train"), GameText.T("ui.catalog.trainDetail"), GameText.T("ui.catalog.trainHelp"), new Vector2(78, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Upgrades, GameText.T("ui.catalog.upgrades"), GameText.T("ui.catalog.upgradesDetail"), GameText.T("ui.catalog.upgradesHelp"), new Vector2(148, 6));
+        AddCatalogModeButton(_rightProductionPanel, CatalogModeKind.Abilities, GameText.T("ui.catalog.abilities"), GameText.T("ui.catalog.abilitiesDetail"), GameText.T("ui.catalog.abilitiesHelp"), new Vector2(218, 6));
 
-        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(10, 44), BuildCategory.Command, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(45, 44), BuildCategory.Power, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 44), BuildCategory.Economy, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(115, 44), BuildCategory.Infantry, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(150, 44), BuildCategory.Vehicle, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(185, 44), BuildCategory.Defense, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(220, 44), BuildCategory.Air, active: true);
-        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(255, 44), BuildCategory.Naval, active: false);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Building, GameText.T("ui.tabs.command"), new Vector2(8, 40), BuildCategory.Command, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Credits, GameText.T("ui.tabs.power"), new Vector2(42, 40), BuildCategory.Power, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(76, 40), BuildCategory.Economy, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(110, 40), BuildCategory.Infantry, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(144, 40), BuildCategory.Vehicle, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(178, 40), BuildCategory.Defense, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(212, 40), BuildCategory.Air, active: true);
+        AddProductionTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(246, 40), BuildCategory.Naval, active: false);
 
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(10, 44), ProductionCategory.Infantry, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(45, 44), ProductionCategory.Vehicle, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(80, 44), ProductionCategory.Economy, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(115, 44), ProductionCategory.Defense, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(150, 44), ProductionCategory.Air, active: true);
-        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(185, 44), ProductionCategory.Naval, active: false);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Infantry, GameText.T("ui.tabs.infantry"), new Vector2(8, 40), ProductionCategory.Infantry, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Tank, GameText.T("ui.tabs.vehicle"), new Vector2(42, 40), ProductionCategory.Vehicle, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Harvester, GameText.T("ui.tabs.economy"), new Vector2(76, 40), ProductionCategory.Economy, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.StanceHold, GameText.T("ui.tabs.defense"), new Vector2(110, 40), ProductionCategory.Defense, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Air, GameText.T("ui.tabs.air"), new Vector2(144, 40), ProductionCategory.Air, active: true);
+        AddTrainCategoryTab(_rightProductionPanel, IconGlyph.Naval, GameText.T("ui.tabs.naval"), new Vector2(178, 40), ProductionCategory.Naval, active: false);
 
         _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 76), new Vector2(92, 14), FontTiny, InkMuted);
+        _catalogSurfaceLabel.Visible = false;
         _rightProductionPanel.AddChild(_catalogSurfaceLabel);
         _catalogOverviewValue = MakeSizedLabel("", new Vector2(112, 76), new Vector2(172, 14), FontTiny, InkMuted);
         _catalogOverviewValue.Name = "CatalogOverview";
+        _catalogOverviewValue.Visible = false;
         _catalogOverviewValue.HorizontalAlignment = HorizontalAlignment.Right;
         _rightProductionPanel.AddChild(_catalogOverviewValue);
-        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(70, 72), new Vector2(214, 28), FontSmall, Ink);
+        _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(14, 74), new Vector2(270, 20), FontTiny, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);
 
-        _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(150, 20), FontSmall, InkMuted);
+        _queueValue = MakeSizedLabel(GameText.T("ui.queue.empty"), new Vector2(14, 334), new Vector2(190, 20), FontSmall, InkMuted);
         _rightProductionPanel.AddChild(_queueValue);
 
         _repeatProduction = AddIconActionButton(
             _rightProductionPanel,
             IconGlyph.StanceReturn,
             GameText.T("ui.repeat.needCard"),
-            new Vector2(166, 326),
-            new Vector2(28, 28),
+            new Vector2(248, 326),
+            new Vector2(36, 28),
             Cyan);
         _repeatProduction.Name = "RepeatProduction";
         _repeatProduction.ToggleMode = true;
         _repeatProduction.Disabled = true;
         _repeatProduction.Pressed += RequestFocusedProductionRepeat;
 
-        _repeatProductionStateValue = MakeSizedLabel(GameText.T("ui.repeat.state.needCard"), new Vector2(156, 306), new Vector2(48, 14), FontTiny, InkMuted);
+        _repeatProductionStateValue = MakeSizedLabel(GameText.T("ui.repeat.state.needCard"), new Vector2(204, 306), new Vector2(80, 14), FontTiny, InkMuted);
         _repeatProductionStateValue.Name = "RepeatProductionState";
         _repeatProductionStateValue.HorizontalAlignment = HorizontalAlignment.Center;
         _rightProductionPanel.AddChild(_repeatProductionStateValue);
 
-        _cancelProduction = new Button
-        {
-            Name = "CancelProduction",
-            Text = GameText.T("ui.cancel"),
-            Position = new Vector2(202, 326),
-            CustomMinimumSize = new Vector2(82, 28),
-            FocusMode = Control.FocusModeEnum.Click,
-            MouseFilter = Control.MouseFilterEnum.Stop,
-            Disabled = true,
-            TooltipText = GameText.T("ui.cancel.none"),
-        };
-        UiFactory.ApplyHudCancelButtonTheme(_cancelProduction, CurrentPalette, FontSmall);
-        _cancelProduction.Pressed += () => CancelProductionRequested?.Invoke();
-        _rightProductionPanel.AddChild(_cancelProduction);
         SelectCatalogMode(_selectedCatalogMode);
 
         _rightDetailPanel = MakePanel("UnitDetailPanel", CurrentPalette.PanelStrongFill, CurrentPalette.PanelBorder);
         _rightDetailPanel.SetAnchorsPreset(Control.LayoutPreset.BottomRight);
-        _rightDetailPanel.OffsetLeft = -312;
+        _rightDetailPanel.OffsetLeft = -RailWidth - DrawerWidth - 12;
         _rightDetailPanel.OffsetTop = -170;
-        _rightDetailPanel.OffsetRight = -12;
+        _rightDetailPanel.OffsetRight = -RailWidth - 12;
         _rightDetailPanel.OffsetBottom = -12;
-        _rightDetailPanel.CustomMinimumSize = new Vector2(300, 158);
+        _rightDetailPanel.CustomMinimumSize = new Vector2(DrawerWidth, 158);
         _rightDetailPanel.MouseFilter = Control.MouseFilterEnum.Stop;
         root.AddChild(_rightDetailPanel);
+        AddConsoleDivider(_rightDetailPanel, 34, Amber);
         _rightDetailPanel.AddChild(MakeSizedLabel(GameText.T("ui.unitDetail"), new Vector2(14, 12), new Vector2(120, 18), FontBody, Mint));
         _drawerPortrait = new PortraitGlyph
         {

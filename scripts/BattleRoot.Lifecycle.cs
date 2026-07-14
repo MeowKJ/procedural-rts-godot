@@ -21,7 +21,6 @@ public partial class BattleRoot
         }
 
         _state.VisualThemeChanged -= SyncEntityWorldResourceAtmosphere;
-        _hud?.ReleaseManagedResources();
         _audio?.ReleaseManagedResources();
         _state.FogOfWar.ReleaseManagedResources();
         ManagedGodotResourceCleanup.ReleaseTree(this);
@@ -122,6 +121,7 @@ public partial class BattleRoot
         _state.BuildingsRemoved += OnBuildingsRemoved;
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;
         _unitBattlefield.WeaponFired += OnWeaponFired;
+        _unitBattlefield.ProjectileImpacted += OnProjectileImpacted;
         _unitBattlefield.UnitAttacked += OnUnitInstanceAttacked;
         _unitBattlefield.UnitAttackedByBuilding += OnUnitInstanceAttackedByBuilding;
         _unitBattlefield.BuildingAttacked += OnUnitBattlefieldBuildingAttacked;
@@ -158,7 +158,7 @@ public partial class BattleRoot
             Camera = _camera,
             LocalPlayerSlotId = PlayerSlotId.One,
             LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),
-            StatusChanged = OnStatusChanged,
+            StatusChanged = OnBuildPlacementStatusChanged,
             CommandAcknowledged = QueueCommandAcknowledgementEvent,
         };
         AddChild(_buildPlacement);
@@ -255,6 +255,7 @@ public partial class BattleRoot
             RepairRequested = OnRepairRequested,
             AbilityRequested = OnAbilityRequested,
             BuildKindRequested = OnBuildKindRequested,
+            CatalogInspectorIntentRequested = OnCatalogInspectorIntentRequested,
             MinimapJumpRequested = OnMinimapJumpRequested,
             MoveModeRequested = OnMoveModeRequested,
             UnitStanceRequested = OnUnitStanceRequested,

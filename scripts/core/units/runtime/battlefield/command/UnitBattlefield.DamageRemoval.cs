@@ -2,19 +2,6 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void ApplyDamage(UnitInstance attacker, UnitInstance target, WeaponDefinition weapon)
-    {
-        var ammo = WeaponCatalog.Ammo[weapon.AmmoKind];
-        var damage = EffectiveDamageAgainst(ammo, target.Spec);
-        target.Hp -= damage;
-        target.LastDamageAmount = damage;
-        target.LastDamageAmmoKind = ammo.Kind;
-        target.DeathOverkillDamage = MathF.Max(0, -target.Hp);
-        target.HitPulse = 1;
-        target.AlertPulse = 1;
-        UnitAttacked?.Invoke(target, attacker);
-    }
-
     private UnitBattlefieldBuildingDeathInfo? BuildingDeathInfo(int buildingId)
     {
         if (BuildingSnapshot(buildingId) is not { } snapshot || snapshot.Hp > 0)

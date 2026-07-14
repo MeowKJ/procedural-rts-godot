@@ -135,7 +135,7 @@ public partial class HudLayer : CanvasLayer
             disabled: !enabled,
             active: active,
             accent: active ? Mint : Cyan,
-            statusText: RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
+            statusText: hasDesign ? RepeatProductionStateText(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active) : "",
             statusColor: active ? Mint : enabled ? Cyan : InkMuted,
             tooltip: RepeatProductionTooltip(laneState, hasDesign, hasSpecificProvider, providerSupportsDesign, active),
             refreshKey: refreshKey);
@@ -147,10 +147,10 @@ public partial class HudLayer : CanvasLayer
         _repeatProduction.Disabled = disabled;
         _repeatProduction.ButtonPressed = active;
         _repeatProduction.Accent = accent;
-        _repeatProductionStateValue.Visible = visible;
+        _repeatProductionStateValue.Visible = visible && !string.IsNullOrWhiteSpace(statusText);
         _repeatProductionStateValue.Text = statusText;
         SetLabelColor(_repeatProductionStateValue, statusColor);
-        _repeatProduction.TooltipText = tooltip;
+        _repeatProduction.FixedHoverText = tooltip;
         _lastRepeatProductionRefreshKey = refreshKey;
         _repeatProductionStateCached = true;
         _repeatProduction.QueueRedraw();
@@ -384,7 +384,7 @@ public partial class HudLayer : CanvasLayer
     {
         _selectedProductionProviderLaneScope = state.Scope;
         _selectedProductionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
-        SetCatalogStatusText(GameText.Format(
+        ResetCatalogInspectorContext(GameText.Format(
             "ui.providerLane.selected",
             state.Label,
             state.ProviderCount,
@@ -399,7 +399,7 @@ public partial class HudLayer : CanvasLayer
     {
         _selectedConstructionProviderLaneScope = state.Scope;
         _selectedConstructionProviderId = state.Scope == ProductionProviderLaneScope.Specific ? state.ProducerId : 0;
-        SetCatalogStatusText(GameText.Format(
+        ResetCatalogInspectorContext(GameText.Format(
             "ui.constructionProviderLane.selected",
             state.Label,
             state.ProviderCount,
@@ -429,6 +429,7 @@ public partial class HudLayer : CanvasLayer
 
         _selectedProductionProviderLaneScope = ProductionProviderLaneScope.Auto;
         _selectedProductionProviderId = 0;
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
     }
 
     private void ValidateConstructionProviderLaneSelection()
@@ -450,6 +451,7 @@ public partial class HudLayer : CanvasLayer
 
         _selectedConstructionProviderLaneScope = ProductionProviderLaneScope.Auto;
         _selectedConstructionProviderId = 0;
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
     }
 
     private void RefreshProductionProviderLaneButtons()
@@ -466,7 +468,7 @@ public partial class HudLayer : CanvasLayer
                 }
 
                 var button = _productionProviderLaneButtons[visibleIndex];
-                button.Position = new Vector2(4, 52 + visibleIndex * 28);
+                button.Position = new Vector2(8, 52 + visibleIndex * 28);
                 button.SetState(state, IsConstructionProviderLaneSelected(state), state.Available, constructionMode: true);
                 button.Visible = true;
                 visibleIndex++;
@@ -484,7 +486,7 @@ public partial class HudLayer : CanvasLayer
                 }
 
                 var button = _productionProviderLaneButtons[visibleIndex];
-                button.Position = new Vector2(4, 52 + visibleIndex * 28);
+                button.Position = new Vector2(8, 52 + visibleIndex * 28);
                 button.SetState(state, IsProductionProviderLaneSelected(state), IsProductionProviderLaneEnabled(state), constructionMode: false);
                 button.Visible = true;
                 visibleIndex++;

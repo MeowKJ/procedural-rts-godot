@@ -20,7 +20,9 @@ builds/**
 *.ipa
 
 # Local QA and generated artifacts
-artifacts/
+artifacts/**
+!artifacts/
+!artifacts/.gdignore
 captures/
 screenshots/
 recordings/

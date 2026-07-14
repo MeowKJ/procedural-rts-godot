@@ -5,7 +5,7 @@ namespace ProceduralRts.Ui;
 
 public static class UiFactory
 {
-    public static readonly Color Ink = new("#d8f7ff");
+    public static readonly Color Ink = new("#E9E1D1");
 
     public readonly record struct HudPanelColors(Color Fill, Color Border);
 
@@ -60,7 +60,6 @@ public static class UiFactory
             Text = text,
             FocusMode = Control.FocusModeEnum.All,
             MouseDefaultCursorShape = BattleCursorGodotShapes.ToControlShape(BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover).Shape),
-            TooltipText = text,
         };
         StyleButton(button, accent);
         return button;
@@ -110,7 +109,7 @@ public static class UiFactory
 
     public static HudPanelColors HudPanelColorsForName(string name, SoftOldCityHudPalette palette)
     {
-        var strong = name is "ResourceStrip" or "MinimapCluster" or "ProductionPanel" or "OutcomeBanner";
+        var strong = name is "ResourceStrip" or "MinimapCluster" or "ProductionPanel" or "UnitDetailPanel" or "OutcomeBanner";
         return HudPanelColorsFor(palette, strong);
     }
 
@@ -135,7 +134,8 @@ public static class UiFactory
     public static void ApplyNamedHudPanelTheme(Panel panel, SoftOldCityHudPalette palette)
     {
         var colors = HudPanelColorsForName(panel.Name.ToString(), palette);
-        ApplyHudPanelTheme(panel, colors.Fill, colors.Border);
+        var strong = panel.Name.ToString() is "ResourceStrip" or "MinimapCluster" or "ProductionPanel" or "UnitDetailPanel" or "OutcomeBanner";
+        ApplyHudPanelTheme(panel, colors.Fill, colors.Border, strong ? 2 : 1);
     }
 
     public static Label MakeHudLabel(
@@ -239,9 +239,9 @@ public static class UiFactory
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(palette.CatRoute, 0.24f), HudMoveModeAccent(mode, palette), fontSize);
     }
 
-    public static void ApplyHudStanceButtonTheme(Button button, SoftOldCityHudPalette palette, UnitStance stance, int fontSize)
+    public static void ApplyHudStanceButtonTheme(Button button, SoftOldCityHudPalette palette, UnitStancePresentation presentation, int fontSize)
     {
-        var accent = HudStanceAccent(stance, palette);
+        var accent = HudStanceAccent(presentation.AccentRole, palette);
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(accent, 0.22f), accent, fontSize);
     }
 
@@ -266,15 +266,15 @@ public static class UiFactory
         };
     }
 
-    public static Color HudStanceAccent(UnitStance stance, SoftOldCityHudPalette palette)
+    public static Color HudStanceAccent(UnitStanceAccentRole role, SoftOldCityHudPalette palette)
     {
-        return stance switch
+        return role switch
         {
-            UnitStance.Hold => palette.CatRoute,
-            UnitStance.Aggressive => palette.DogCommand,
-            UnitStance.ReturnGuard => palette.Repair,
-            UnitStance.PassiveRetaliate => palette.Text,
-            UnitStance.Ignore => palette.Danger,
+            UnitStanceAccentRole.CatRoute => palette.CatRoute,
+            UnitStanceAccentRole.DogCommand => palette.DogCommand,
+            UnitStanceAccentRole.Repair => palette.Repair,
+            UnitStanceAccentRole.Text => palette.Text,
+            UnitStanceAccentRole.Danger => palette.Danger,
             _ => palette.Repair,
         };
     }
@@ -284,9 +284,9 @@ public static class UiFactory
         return glyph switch
         {
             IconGlyph.Turret => palette.DogCommand,
-            IconGlyph.Air => palette.Text,
-            IconGlyph.Naval or IconGlyph.Tank => palette.CatRoute,
-            IconGlyph.Infantry => palette.Repair,
+            IconGlyph.Building or IconGlyph.Credits => palette.DogCommand,
+            IconGlyph.Air or IconGlyph.Naval or IconGlyph.Tank => palette.CatRoute,
+            IconGlyph.Infantry or IconGlyph.Harvester => palette.Repair,
             _ => palette.Repair,
         };
     }

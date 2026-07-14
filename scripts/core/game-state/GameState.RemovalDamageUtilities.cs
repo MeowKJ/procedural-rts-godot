@@ -244,7 +244,8 @@ public sealed partial class GameState
     private float BuildingRadius(BuildingModel building)
     {
         var spec = BuildSpecCatalog.For(building.Kind);
-        return Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f;
+        var logicalFootprint = spec.LogicalFootprint(building.Facing);
+        return Mathf.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f;
     }
 
     private Vector2 ClampInsideWorld(Vector2 point, float margin)

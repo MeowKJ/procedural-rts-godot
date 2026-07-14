@@ -101,7 +101,8 @@ static partial class Program
             throw new InvalidOperationException("same MatchConfig should produce stable resource positions");
         }
 
-        var generatedLayout = SkirmishMapGenerator.Generate(mirroredMatchConfig);
+        var generatedSpec = SkirmishMapGenerator.GenerateSpec(mirroredMatchConfig);
+        var generatedLayout = generatedSpec.ToSkirmishMapLayout();
         if (generatedLayout.Resources.Count < 6
             || generatedLayout.Resources.Count % 2 != 0
             || generatedLayout.Obstacles.Count < 4
@@ -115,11 +116,17 @@ static partial class Program
             throw new InvalidOperationException("skirmish map starts should be mirrored around the world center");
         }
 
-        var playerHqStart = mirroredMatchA.Buildings.First(building => building.Owner == Owner.Player && building.Kind == BuildingDesignIds.Headquarters);
-        var enemyHqStart = mirroredMatchA.Buildings.First(building => building.Owner == Owner.Enemy && building.Kind == BuildingDesignIds.Headquarters);
-        if ((playerHqStart.Position + enemyHqStart.Position).DistanceTo(mirroredMatchConfig.WorldSize) > 0.01f)
+        foreach (var config in new[]
         {
-            throw new InvalidOperationException("skirmish map should seed mirrored HQ start positions");
+            mirroredMatchConfig with { MapSeed = SkirmishOptions.DefaultMapSeed },
+            mirroredMatchConfig with { MapSeed = 535 },
+            mirroredMatchConfig with { MapSeed = 10535, PlayerFaction = FactionId.Dog, AiFaction = FactionId.Cat },
+            mirroredMatchConfig with { MapSeed = SkirmishOptions.SandboxMapSeed },
+        })
+        {
+            var hqSpec = SkirmishMapGenerator.GenerateSpec(config);
+            AssertGridSafeHqStartContract(config, hqSpec);
+            AssertGameStateHqTransforms(config, new GameState(config), hqSpec);
         }
 
         if (mirroredMatchA.ResourceFields.Count != generatedLayout.Resources.Count)
@@ -399,6 +406,97 @@ static partial class Program
             .Any(unit => unit.AttackTargetId is not null))
         {
             throw new InvalidOperationException("enemy attack wave should not assign harvesters to combat waves");
+        }
+    }
+
+    private static void AssertGridSafeHqStartContract(MatchConfig config, MapSpec generated)
+    {
+        var authoredAnchors = SkirmishMapSpecGenerator.Generate(new SkirmishMapRequest(
+            config.MapSeed,
+            config.StartingCredits,
+            config.WorldSize.ToMapSize(),
+            config.PlayerFaction,
+            config.AiFaction,
+            SkirmishOptions.DefaultMapSeed));
+        var referenceAnchors = SkirmishMapSpecGenerator.Generate(new SkirmishMapRequest(
+            SkirmishOptions.DefaultMapSeed,
+            config.StartingCredits,
+            config.WorldSize.ToMapSize(),
+            config.PlayerFaction,
+            config.AiFaction,
+            SkirmishOptions.DefaultMapSeed));
+
+        var generatedStarts = generated.OwnerStarts.OrderBy(start => start.OwnerId.Value).ToArray();
+        if (generatedStarts.Length != 2
+            || generatedStarts.Any(start => start != authoredAnchors.StartFor(start.OwnerId)))
+        {
+            throw new InvalidOperationException($"seed {config.MapSeed} should preserve both authored OwnerStart anchors");
+        }
+
+        var usesReferenceAnchors = config.MapSeed == SkirmishOptions.DefaultMapSeed;
+        if (!usesReferenceAnchors
+            && (generatedStarts[0].Position.ToVector2() + generatedStarts[1].Position.ToVector2()).DistanceTo(config.WorldSize) > 0.01f)
+        {
+            throw new InvalidOperationException($"non-reference seed {config.MapSeed} should keep mirrored OwnerStart anchors");
+        }
+
+        var hqPositions = new List<Vector2>(2);
+        foreach (var owner in new[] { Owner.Player, Owner.Enemy })
+        {
+            var ownerId = new OwnerId(owner == Owner.Player ? 1 : 2);
+            var start = generated.StartFor(ownerId);
+            var referenceStart = referenceAnchors.StartFor(ownerId);
+            var template = MatchStartLoadouts.For(owner, start.Faction)
+                .Buildings
+                .First(building => building.Kind == BuildingDesignIds.Headquarters);
+            if (!PlacementMath.TryNormalizeCardinalFacing(template.Facing, out var cardinalFacing))
+            {
+                throw new InvalidOperationException($"{owner}/{start.Faction} HQ template should use a cardinal facing");
+            }
+
+            var footprint = BuildSpecCatalog.For(BuildingDesignIds.Headquarters).FootprintCells.Rotated(cardinalFacing);
+            var desired = start.Position.ToVector2() + (template.Position - referenceStart.Position.ToVector2());
+            var expected = new Vector2(
+                PlacementMath.SnapAnchor(desired.X, footprint.WidthCells),
+                PlacementMath.SnapAnchor(desired.Y, footprint.HeightCells));
+            var actual = generated.Buildings.First(building => building.OwnerId == ownerId && building.Kind == BuildingDesignIds.Headquarters);
+            if (actual.Position.ToVector2().DistanceTo(expected) > 0.01f
+                || MathF.Abs(actual.Facing - cardinalFacing) > 0.0001f
+                || MathF.Abs(actual.Position.X - PlacementMath.SnapAnchor(actual.Position.X, footprint.WidthCells)) > 0.001f
+                || MathF.Abs(actual.Position.Y - PlacementMath.SnapAnchor(actual.Position.Y, footprint.HeightCells)) > 0.001f)
+            {
+                throw new InvalidOperationException(
+                    $"seed {config.MapSeed} {owner}/{start.Faction} HQ should keep its OwnerStart-relative template and snap to {footprint.WidthCells}x{footprint.HeightCells} anchor parity");
+            }
+
+            hqPositions.Add(actual.Position.ToVector2());
+        }
+
+        var mirrorResidual = hqPositions[0] + hqPositions[1] - config.WorldSize;
+        if (!usesReferenceAnchors
+            && (MathF.Abs(mirrorResidual.X) > PlacementMath.GridSize
+                || MathF.Abs(mirrorResidual.Y) > PlacementMath.GridSize))
+        {
+            throw new InvalidOperationException(
+                $"seed {config.MapSeed} parity-snapped HQs should remain grid-equivalent mirrors, residual {mirrorResidual}");
+        }
+    }
+
+    private static void AssertGameStateHqTransforms(MatchConfig config, GameState state, MapSpec generated)
+    {
+        foreach (var owner in new[] { Owner.Player, Owner.Enemy })
+        {
+            var ownerId = new OwnerId(owner == Owner.Player ? 1 : 2);
+            var expected = generated.Buildings.First(building =>
+                building.OwnerId == ownerId && building.Kind == BuildingDesignIds.Headquarters);
+            var actual = state.Buildings.First(building =>
+                building.Owner == owner && building.Kind == BuildingDesignIds.Headquarters);
+            if (actual.Position.DistanceTo(expected.Position.ToVector2()) > 0.01f
+                || MathF.Abs(actual.Facing - expected.Facing) > 0.0001f)
+            {
+                throw new InvalidOperationException(
+                    $"seed {config.MapSeed} {owner} GameState HQ transform should exactly match the generated MapSpec");
+            }
         }
     }
 }

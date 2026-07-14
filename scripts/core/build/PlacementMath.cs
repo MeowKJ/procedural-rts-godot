@@ -1,3 +1,5 @@
+using Godot;
+
 namespace ProceduralRts.Core;
 
 public readonly record struct PlacementRect(float X, float Y, float Width, float Height)
@@ -14,10 +16,50 @@ public readonly record struct PlacementBuildVisibility(float X, float Y, float R
 
 public readonly record struct PlacementResult(float X, float Y, bool IsValid, string Reason);
 
+public readonly record struct PlacementGridFootprint(int WidthCells, int HeightCells)
+{
+    public bool IsValid => WidthCells > 0 && HeightCells > 0;
+
+    public Vector2 WorldSize => new(
+        WidthCells * PlacementMath.GridSize,
+        HeightCells * PlacementMath.GridSize);
+
+    public PlacementGridFootprint Rotated(float facing)
+    {
+        var quarterTurns = (int)MathF.Round(facing / (MathF.PI * 0.5f));
+        quarterTurns = ((quarterTurns % 4) + 4) % 4;
+        return quarterTurns % 2 == 0
+            ? this
+            : new PlacementGridFootprint(HeightCells, WidthCells);
+    }
+}
+
 public static class PlacementMath
 {
     public const float GridSize = 32;
     public const float TerrainSampleStep = 48;
+    public const float CardinalFacingTolerance = 0.0001f;
+
+    public static bool TryNormalizeCardinalFacing(
+        float facing,
+        out float cardinalFacing,
+        float tolerance = CardinalFacingTolerance)
+    {
+        cardinalFacing = 0;
+        if (!float.IsFinite(facing) || tolerance < 0)
+        {
+            return false;
+        }
+
+        var quarterTurn = MathF.PI * 0.5f;
+        var quarterTurns = (int)MathF.Round(facing / quarterTurn);
+        quarterTurns = ((quarterTurns % 4) + 4) % 4;
+        cardinalFacing = quarterTurns * quarterTurn;
+
+        var delta = facing - cardinalFacing;
+        var angularDistance = MathF.Abs(MathF.Atan2(MathF.Sin(delta), MathF.Cos(delta)));
+        return angularDistance <= tolerance;
+    }
 
     public static PlacementResult Validate(
         float desiredX,
@@ -28,10 +70,26 @@ public static class PlacementMath
         float worldHeight,
         IReadOnlyList<PlacementObstacle> obstacles,
         float gridSize = GridSize,
-        float padding = 12)
+        float padding = 12,
+        PlacementGridFootprint? logicalFootprint = null,
+        float facing = 0)
     {
-        var snappedX = Snap(desiredX, gridSize);
-        var snappedY = Snap(desiredY, gridSize);
+        var placedFootprint = logicalFootprint is { IsValid: true } gridFootprint
+            ? gridFootprint.Rotated(facing)
+            : default;
+        if (placedFootprint.IsValid)
+        {
+            var logicalSize = placedFootprint.WorldSize;
+            width = logicalSize.X;
+            height = logicalSize.Y;
+        }
+
+        var snappedX = placedFootprint.IsValid
+            ? SnapAnchor(desiredX, placedFootprint.WidthCells, gridSize)
+            : Snap(desiredX, gridSize);
+        var snappedY = placedFootprint.IsValid
+            ? SnapAnchor(desiredY, placedFootprint.HeightCells, gridSize)
+            : Snap(desiredY, gridSize);
         var candidate = RectFromCenter(snappedX, snappedY, width + padding * 2, height + padding * 2);
 
         if (candidate.X < 0 || candidate.Y < 0 || candidate.EndX > worldWidth || candidate.EndY > worldHeight)
@@ -66,10 +124,26 @@ public static class PlacementMath
         IReadOnlyList<PlacementBuildVisibility>? buildVisibility = null,
         bool requiresBuildVisibility = false,
         float gridSize = GridSize,
-        float padding = 0)
+        float padding = 0,
+        PlacementGridFootprint? logicalFootprint = null,
+        float facing = 0)
     {
-        var snappedX = Snap(desiredX, gridSize);
-        var snappedY = Snap(desiredY, gridSize);
+        var placedFootprint = logicalFootprint is { IsValid: true } gridFootprint
+            ? gridFootprint.Rotated(facing)
+            : default;
+        if (placedFootprint.IsValid)
+        {
+            var logicalSize = placedFootprint.WorldSize;
+            width = logicalSize.X;
+            height = logicalSize.Y;
+        }
+
+        var snappedX = placedFootprint.IsValid
+            ? SnapAnchor(desiredX, placedFootprint.WidthCells, gridSize)
+            : Snap(desiredX, gridSize);
+        var snappedY = placedFootprint.IsValid
+            ? SnapAnchor(desiredY, placedFootprint.HeightCells, gridSize)
+            : Snap(desiredY, gridSize);
         var footprint = RectFromCenter(snappedX, snappedY, width, height);
         var candidate = RectFromCenter(snappedX, snappedY, width + padding * 2, height + padding * 2);
 
@@ -137,6 +211,17 @@ public static class PlacementMath
     private static float Snap(float value, float gridSize)
     {
         return MathF.Round(value / gridSize) * gridSize;
+    }
+
+    public static float SnapAnchor(float value, int cellCount, float gridSize = GridSize)
+    {
+        if (cellCount <= 0 || gridSize <= 0)
+        {
+            return value;
+        }
+
+        var parityOffset = cellCount % 2 == 0 ? 0 : gridSize * 0.5f;
+        return MathF.Round((value - parityOffset) / gridSize) * gridSize + parityOffset;
     }
 
     private enum BuildAuthority

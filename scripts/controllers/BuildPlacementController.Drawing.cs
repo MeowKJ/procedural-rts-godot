@@ -7,13 +7,12 @@ public partial class BuildPlacementController
 {
     private void DrawFootprintPreview(Rect2 rect, Color accent, float pulse, bool isValid)
     {
-        var pad = 14;
-        var footprint = rect.Grow(pad);
+        var footprint = rect;
         DrawRect(footprint, new Color(accent, isValid ? 0.11f : 0.16f), true);
         DrawRect(footprint, new Color("#ffffff", isValid ? 0.22f + pulse * 0.18f : 0.08f), false, 1.4f);
         DrawRect(footprint, new Color(accent, isValid ? 0.62f : 0.86f), false, 3.4f);
 
-        var step = 32f;
+        var step = PlacementMath.GridSize;
         for (var x = footprint.Position.X + step; x < footprint.End.X; x += step)
         {
             DrawLine(new Vector2(x, footprint.Position.Y), new Vector2(x, footprint.End.Y), new Color(accent, 0.16f), 1, true);

@@ -168,18 +168,20 @@ DuelOutcome RunTrial(BattleScenario scenario, ulong seed)
     var right = SpawnSide(world, scenario.Right, new OwnerId(2), new Vector2(1150, 700), direction: 1);
 
     var commands = new EntityCommandBuffer();
-    commands.Enqueue(new GroupAttackEntityCommand(
+    // Symmetric attack-move avoids single-target manual-focus overkill from
+    // dominating roster balance after damage moved to projectile impact time.
+    commands.Enqueue(new AttackMoveEntityCommand(
         new OwnerId(1),
         left.Select(entity => entity.Id).ToArray(),
         Tick: 1,
-        Target: right[0].Id,
-        TargetKind: CombatTargetKind.Unit));
-    commands.Enqueue(new GroupAttackEntityCommand(
+        Target: new Vector2(1150, 700),
+        Mode: MoveCommandMode.Attack));
+    commands.Enqueue(new AttackMoveEntityCommand(
         new OwnerId(2),
         right.Select(entity => entity.Id).ToArray(),
         Tick: 1,
-        Target: left[0].Id,
-        TargetKind: CombatTargetKind.Unit));
+        Target: new Vector2(850, 700),
+        Mode: MoveCommandMode.Attack));
 
     for (var tick = 1; tick <= MaxTicks; tick++)
     {
@@ -189,7 +191,9 @@ DuelOutcome RunTrial(BattleScenario scenario, ulong seed)
 
         var leftAlive = CountAlive(world, left);
         var rightAlive = CountAlive(world, right);
-        if (leftAlive == 0 || rightAlive == 0)
+        // Let already-fired rounds settle before deciding the winner.
+        var projectilesInFlight = world.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>());
+        if ((leftAlive == 0 || rightAlive == 0) && !projectilesInFlight)
         {
             return SummarizeOutcome(world, left, right, tick);
         }

@@ -51,16 +51,17 @@ public sealed partial class ConstructionSystem
         float? initialProgress = null)
     {
         var progress = initialProgress ?? (spec.BuildTime <= 0 ? 1 : 0);
+        var logicalFootprint = spec.LogicalFootprint(facing);
         yield return new ConstructionIdentityComponentState(spec.Kind);
         yield return new HealthComponentState(spec.MaxHp, spec.MaxHp);
         yield return new SelectableComponentState();
         yield return new VisionComponentState(spec.SightRange);
         yield return new CollisionComponentState(
-            Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f,
+            Mathf.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f,
             8,
             100,
             BlocksMovement: true);
-        yield return new FootprintComponentState(spec.Footprint, spec.PlacementDomain);
+        yield return new FootprintComponentState(logicalFootprint, spec.PlacementDomain);
         yield return new ConstructionComponentState(
             Progress: Mathf.Clamp(progress, 0, 1),
             BuildTime: spec.BuildTime,

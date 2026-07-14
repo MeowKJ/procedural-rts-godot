@@ -14,6 +14,12 @@ public partial class BattleRoot
         AddStatusAlert(status);
     }
 
+    private void OnBuildPlacementStatusChanged(string status)
+    {
+        OnStatusChanged(status);
+        _hud.SetCommandPanelResult(status);
+    }
+
     private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
     {
         foreach (var death in deaths)
@@ -154,6 +160,31 @@ public partial class BattleRoot
             ? ammo.Accent
             : new Color("#f6c55c");
         _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
+    }
+
+    private void OnProjectileImpacted(ProjectileImpactEvent impact)
+    {
+        if (!WeaponCatalog.AmmoDefinitions.TryGetValue(impact.AmmoId, out var ammo))
+        {
+            return;
+        }
+
+        var radius = ammo.SplashRadius > 0
+            ? Mathf.Clamp(ammo.SplashRadius * 0.42f, 14f, 32f)
+            : 12f;
+        var style = _combatEffects.AddImpactFlash(
+            impact.Position,
+            radius,
+            ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent),
+            ammo.Behavior == ProjectileBehavior.Ballistic ? UnitWeightClass.Heavy : UnitWeightClass.Light,
+            MovementDomain.Land,
+            ammo.BaseDamage,
+            ammo.LegacyKind,
+            ammo.DamageElementId);
+        if (ammo.Behavior == ProjectileBehavior.Ballistic || ammo.SplashRadius > 0)
+        {
+            RequestImpactShake(impact.Position, style);
+        }
     }
 
     private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
@@ -370,12 +401,7 @@ public partial class BattleRoot
     {
         _selection.SetMoveCommandMode(mode);
         _hud.SetMoveCommandMode(mode);
-        _hud.SetStatus(mode switch
-        {
-            MoveCommandMode.Attack => GameText.T("move.attack"),
-            MoveCommandMode.Ignore => GameText.T("move.ignore"),
-            _ => GameText.T("move.direct"),
-        });
+        _hud.SetStatus(CommandRibbonContextResolver.MoveModeLabel(mode));
         PlayAudioCue(mode == MoveCommandMode.Attack ? TacticalAudioCue.Attack : TacticalAudioCue.Move);
     }
 
@@ -394,8 +420,8 @@ public partial class BattleRoot
                 return;
             }
 
-            _hud.SetSelectedUnitStance(stance);
-            _hud.SetStatus(GameText.Format("stance.changed", changed, StanceLabel(stance)));
+            _hud.SetSelectedUnitStance(stance, changed);
+            _hud.SetStatus(GameText.Format("stance.changed", changed, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
             PlayAudioCue(TacticalAudioCue.Selection);
             return;
         }
@@ -409,22 +435,14 @@ public partial class BattleRoot
         }
 
         _state.SetSelectedStance(stance);
-        _hud.SetSelectedUnitStance(stance);
-        _hud.SetStatus(GameText.Format("stance.changed", selectedCount, StanceLabel(stance)));
+        _hud.SetSelectedUnitStance(stance, selectedCount);
+        _hud.SetStatus(GameText.Format("stance.changed", selectedCount, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
         PlayAudioCue(TacticalAudioCue.Selection);
     }
 
     private static string GatewayStatus(CommandGatewayResult result, string acceptedStatus)
     {
-        foreach (var command in result.Commands)
-        {
-            if (!command.Accepted)
-            {
-                return command.Message;
-            }
-        }
-
-        return acceptedStatus;
+        return CommandGatewayFeedback.Status(result, acceptedStatus);
     }
 
     private void OnSettingsRequested()

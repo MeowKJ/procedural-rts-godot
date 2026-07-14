@@ -49,7 +49,9 @@ static partial class Program
         var reacquire = BuildTargetReacquireCooldown();
         var reacquireClock = new SimClock();
         var reacquiredTick = -1;
+        var targetRemovedTick = -1;
         var cooldownBlockedTicks = 0;
+        var sawProjectileBeforeRemoval = false;
         for (var tick = 1; tick <= TargetReacquireCooldownTicks; tick++)
         {
             reacquire.Step(tick, reacquireClock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
@@ -59,14 +61,21 @@ static partial class Program
             var weapon = cooldownAttacker.Components.Require<WeaponUserComponentState>();
             if (tick == 1)
             {
-                Assert(weapon.AttackTarget.Value == 2, "auto-acquire should first lock and kill target 2");
-                Assert(!reacquire.TryGet(new EntityId(2), out _), "target 2 should be removed after the first auto shot");
+                Assert(weapon.AttackTarget.Value == 2, "auto-acquire should first lock target 2");
+                Assert(reacquire.TryGet(new EntityId(2), out _), "target 2 should survive the fire tick until projectile impact");
             }
 
-            if (tick is >= 2 and <= 7)
+            sawProjectileBeforeRemoval |= targetRemovedTick < 0
+                && reacquire.OrderedEntities.Any(entity => entity.Components.Has<ProjectileComponentState>());
+            if (targetRemovedTick < 0 && !reacquire.TryGet(new EntityId(2), out _))
             {
-                Assert(!weapon.AttackTarget.IsValid, $"auto re-acquire should be cooldown-blocked at tick {tick}, got target {weapon.AttackTarget.Value}");
-                Assert(weapon.AutoReacquireCooldownRemaining > 0, $"auto re-acquire cooldown should remain positive at tick {tick}");
+                targetRemovedTick = tick;
+            }
+
+            if (targetRemovedTick >= 0
+                && !weapon.AttackTarget.IsValid
+                && weapon.AutoReacquireCooldownRemaining > 0)
+            {
                 cooldownBlockedTicks++;
             }
 
@@ -76,13 +85,15 @@ static partial class Program
             }
         }
 
-        Assert(cooldownBlockedTicks >= 6, $"auto re-acquire should be blocked for several ticks, got {cooldownBlockedTicks}");
-        Assert(reacquiredTick >= 8, $"backup target should be reacquired only after cooldown, reacquired at tick {reacquiredTick}");
+        Assert(sawProjectileBeforeRemoval, "first auto shot should exist as a projectile before target 2 is removed");
+        Assert(targetRemovedTick > 1, $"target 2 should be removed on impact after the fire tick, removed at {targetRemovedTick}");
+        Assert(cooldownBlockedTicks >= 6, $"auto re-acquire should be blocked for several post-impact ticks, got {cooldownBlockedTicks}");
+        Assert(reacquiredTick >= targetRemovedTick + 7, $"backup target should be reacquired only after post-impact cooldown, removed {targetRemovedTick}, reacquired {reacquiredTick}");
         Console.WriteLine($"OK [target-reacquire-cooldown]: blocked {cooldownBlockedTicks} ticks, reacquired target 3 at tick {reacquiredTick}.");
 
         var manualBypassLog = new List<EntityCommand>
         {
-            new AttackEntityCommand(new OwnerId(1), [new EntityId(1)], 3, new EntityId(3), CombatTargetKind.Unit),
+            new AttackEntityCommand(new OwnerId(1), [new EntityId(1)], 6, new EntityId(3), CombatTargetKind.Unit),
         };
         AssertDeterministic("manual-attack-reacquire-bypass", BuildTargetReacquireCooldown, manualBypassLog, TargetReacquireCooldownTicks, 3);
 
@@ -94,7 +105,7 @@ static partial class Program
             manualBypassBuffer.Enqueue(command);
         }
 
-        for (var tick = 1; tick <= 3; tick++)
+        for (var tick = 1; tick <= 6; tick++)
         {
             manualBypass.Step(tick, manualBypassClock.FixedDelta, manualBypassBuffer.DrainUpToTick(tick));
             manualBypass.Events.Drain();

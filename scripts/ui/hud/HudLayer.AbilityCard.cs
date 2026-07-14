@@ -17,7 +17,6 @@ public partial class HudLayer : CanvasLayer
             Disabled = state.CooldownRemaining > 0.01f && !state.IsActive;
             InspectorText = AbilityInspectorText(state);
             Text = $"\n\n{AbilityCommandGrammar(state.Ability)} {AbilityStateCode(state)}";
-            TooltipText = AbilityTooltip(state);
             QueueRedraw();
         }
 

@@ -17,7 +17,7 @@ static partial class Program
                 new ConstructionIdentityComponentState(BuildingDesignIds.Headquarters),
                 new HealthComponentState(hqSpec.MaxHp, hqSpec.MaxHp),
                 new VisionComponentState(280),
-                new FootprintComponentState(hqSpec.Footprint, hqSpec.PlacementDomain),
+                new FootprintComponentState(hqSpec.LogicalFootprint(), hqSpec.PlacementDomain),
                 new ConstructionComponentState(Progress: 1, BuildTime: hqSpec.BuildTime, Cost: hqSpec.Cost, RefundRatio: hqSpec.RefundRatio),
                 new PowerComponentState(hqSpec.PowerProvided, hqSpec.PowerUsed, Powered: true),
                 new BuildRadiusComponentState(hqSpec.BuildRadius),
@@ -61,7 +61,7 @@ static partial class Program
 
         var acceptedPowerPlant = buildings.Single(entity => entity.Id.Value == 2);
         Assert(acceptedPowerPlant.SpecId == "building.powerplant", $"visible control build should spawn a power plant, got {acceptedPowerPlant.SpecId}");
-        Assert(acceptedPowerPlant.Transform.Position == new Vector2(704, 512), $"visible control build should use snapped placement, got {acceptedPowerPlant.Transform.Position}");
+        Assert(acceptedPowerPlant.Transform.Position == new Vector2(704, 496), $"visible control build should use parity-aware snapped placement, got {acceptedPowerPlant.Transform.Position}");
 
         Console.WriteLine($"OK [construction-visibility]: rejected {rejected.Count}, buildings {buildings.Count}, credits {credits}.");
     }
@@ -82,7 +82,7 @@ static partial class Program
                 new ConstructionIdentityComponentState(BuildingDesignIds.Headquarters),
                 new HealthComponentState(hqSpec.MaxHp, hqSpec.MaxHp),
                 new VisionComponentState(hqSpec.SightRange),
-                new FootprintComponentState(hqSpec.Footprint, hqSpec.PlacementDomain),
+                new FootprintComponentState(hqSpec.LogicalFootprint(), hqSpec.PlacementDomain),
                 new ConstructionComponentState(Progress: 1, BuildTime: hqSpec.BuildTime, Cost: hqSpec.Cost, RefundRatio: hqSpec.RefundRatio),
                 new PowerComponentState(hqSpec.PowerProvided, hqSpec.PowerUsed, Powered: true),
                 new BuildRadiusComponentState(hqSpec.BuildRadius),

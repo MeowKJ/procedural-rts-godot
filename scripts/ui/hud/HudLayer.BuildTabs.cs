@@ -34,11 +34,20 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectCatalogMode(CatalogModeKind mode)
     {
+        ClearCommandFailureFeedback();
         _selectedCatalogMode = mode;
         for (var index = 0; index < _catalogModeButtons.Count; index++)
         {
             var button = _catalogModeButtons[index];
             button.SetSelected(button.Mode == mode);
+        }
+
+        if (_deckToggle is not null)
+        {
+            _deckToggle.Glyph = CatalogModeGlyph(mode);
+            _deckToggle.Accent = CatalogModeAccent(mode);
+            _deckToggle.FixedHoverText = CatalogModeSurfaceText(mode);
+            _deckToggle.QueueRedraw();
         }
 
         for (var index = 0; index < _productionTabs.Count; index++)
@@ -58,20 +67,21 @@ public partial class HudLayer : CanvasLayer
             _catalogSurfaceLabel.Text = CatalogModeSurfaceText(mode);
         }
 
-        if (mode != CatalogModeKind.Abilities && _productionValue is not null)
-        {
-            SetCatalogStatusText(string.IsNullOrWhiteSpace(_lastProductionStatus)
-                ? GameText.T("ui.status.ready")
-                : _lastProductionStatus);
-        }
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
 
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();
         RefreshCatalogOverview();
     }
 
+    private void ToggleCommandDeck()
+    {
+        SetCommandDeckOpen(!_manualDrawerOpen);
+    }
+
     private void SelectProductionTab(BuildCategory category)
     {
+        ClearCommandFailureFeedback();
         _selectedBuildCategory = category;
         for (var index = 0; index < _productionTabs.Count; index++)
         {
@@ -79,6 +89,7 @@ public partial class HudLayer : CanvasLayer
             tab.SetSelected(tab.Category == category);
         }
 
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
         RefreshCommandCards();
         RefreshCatalogOverview();
     }
@@ -116,9 +127,10 @@ public partial class HudLayer : CanvasLayer
             _ => CatalogModeKind.Train,
         };
         SelectCatalogMode(next);
-        _manualDrawerOpen = true;
-        _drawerInactivity = 0;
-        SetCatalogStatusText(GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
+        SetCommandDeckOpen(true);
+        ShowCatalogInspectorHover(
+            CatalogModeInspectorItemId(next),
+            GameText.Format("ui.catalog.modeSelected", CatalogModeLabelText(next), CatalogModeSurfaceText(next)));
     }
 
     private static string CatalogModeLabelText(CatalogModeKind mode)
@@ -135,6 +147,7 @@ public partial class HudLayer : CanvasLayer
 
     private void SelectProductionCategory(ProductionCategory category)
     {
+        ClearCommandFailureFeedback();
         _selectedProductionCategory = category;
         for (var index = 0; index < _trainCategoryTabs.Count; index++)
         {
@@ -142,6 +155,7 @@ public partial class HudLayer : CanvasLayer
             tab.SetSelected(tab.Category == category);
         }
 
+        ResetCatalogInspectorContext(DefaultCatalogInspectorText());
         ValidateProductionProviderLaneSelection();
         RefreshCommandCards();
         RefreshProductionProviderLaneButtons();

@@ -91,7 +91,7 @@ public partial class BuildPlacementController : Node2D
             var kind = CurrentKind();
             var spec = CurrentSpec();
             var mouseWorld = ScreenToWorld(mouse.Position);
-            var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld);
+            var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld, _previewRotation);
             bool accepted;
             string status;
             if (HasActiveReadyTicket)
@@ -151,17 +151,21 @@ public partial class BuildPlacementController : Node2D
 
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(GetViewport().GetMousePosition());
-        var placement = UnitBattlefield.ValidateBuildingPlacement(CurrentKind(), LocalPlayerSlotId, mouseWorld);
+        var placement = UnitBattlefield.ValidateBuildingPlacement(CurrentKind(), LocalPlayerSlotId, mouseWorld, _previewRotation);
         var queuePreview = ShouldQueueConstructionTicket(CurrentKind()) && !HasActiveReadyTicket;
         var placementValid = HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid);
         var accent = placementValid ? spec.Accent : new Color("#ff5d75");
-        var rect = new Rect2(-spec.Footprint / 2f, spec.Footprint);
+        var footprintSize = spec.LogicalFootprint(_previewRotation);
+        var footprintRect = new Rect2(-footprintSize / 2f, footprintSize);
+        var structureRect = new Rect2(-spec.Footprint / 2f, spec.Footprint);
         var pulse = 0.58f + Mathf.Sin(Time.GetTicksMsec() / 110f) * 0.22f;
 
+        DrawSetTransform(new Vector2(placement.X, placement.Y), 0, Vector2.One);
+        DrawFootprintPreview(footprintRect, accent, pulse, placementValid);
+        DrawPlacementCursor(footprintRect, accent, placementValid);
+
         DrawSetTransform(new Vector2(placement.X, placement.Y), _previewRotation, Vector2.One);
-        DrawFootprintPreview(rect, accent, pulse, placementValid);
-        DrawStructurePreview(rect, accent, pulse, placementValid);
-        DrawPlacementCursor(rect, accent, placementValid);
+        DrawStructurePreview(structureRect, accent, pulse, placementValid);
         DrawSetTransform(Vector2.Zero, 0, Vector2.One);
     }
 
@@ -318,7 +322,7 @@ public partial class BuildPlacementController : Node2D
         var kind = CurrentKind();
         var spec = CurrentSpec();
         var mouseWorld = ScreenToWorld(screenPoint);
-        var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld);
+        var placement = UnitBattlefield.ValidateBuildingPlacement(kind, LocalPlayerSlotId, mouseWorld, _previewRotation);
         var snapped = new Vector2(placement.X, placement.Y);
         var queuePreview = ShouldQueueConstructionTicket(kind) && !HasActiveReadyTicket;
         if (!HasEnoughCreditsForPreview(spec) && (queuePreview || placement.IsValid))
@@ -328,20 +332,21 @@ public partial class BuildPlacementController : Node2D
                 PlacementStatusLabel("placement.needCredits", placement.Reason, spec).ToUpperInvariant(),
                 screenPoint,
                 snapped,
-                false);
+                false,
+                CommandPreviewPhase.BuildPlacement);
         }
 
         if (queuePreview)
         {
-            return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true);
+            return new CommandPreviewState(CommandPreviewKind.BuildValid, GameText.Format("build.queuePreview", spec.Label.ToUpperInvariant()), screenPoint, snapped, true, CommandPreviewPhase.BuildPlacement);
         }
 
         var label = HasActiveReadyTicket
             ? GameText.Format("build.placeReadyPreview", spec.Label.ToUpperInvariant())
             : GameText.Format("build.placePreview", spec.Label.ToUpperInvariant());
         return placement.IsValid
-            ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true)
-            : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false);
+            ? new CommandPreviewState(CommandPreviewKind.BuildValid, label, screenPoint, snapped, true, CommandPreviewPhase.BuildPlacement)
+            : new CommandPreviewState(CommandPreviewKind.BuildInvalid, PlacementReasonLabel(placement.Reason).ToUpperInvariant(), screenPoint, snapped, false, CommandPreviewPhase.BuildPlacement);
     }
 
     private bool HasEnoughCreditsForPreview(BuildSpec spec)

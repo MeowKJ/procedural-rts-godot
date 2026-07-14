@@ -246,7 +246,7 @@ public partial class BattleRoot
         if (selectedUnitInstances.Count > 0)
         {
             _hud.SetHudContext(true, false, _buildPlacement.IsActive);
-            _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnitInstances));
+            _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnitInstances), selectedUnitInstances.Count);
             if (selectedUnitInstances.Count == 1)
             {
                 SetUnitInstanceSelectionInfo(selectedUnitInstances[0]);
@@ -265,7 +265,7 @@ public partial class BattleRoot
             if (selectedBuildingProjections.Count > 0)
             {
                 _hud.SetHudContext(true, true, _buildPlacement.IsActive);
-                _hud.SetSelectedUnitStance(null);
+                _hud.SetSelectedUnitStance(null, 0);
                 if (selectedBuildingProjections.Count == 1)
                 {
                     SetUnitBattlefieldBuildingSelectionInfo(selectedBuildingProjections[0]);
@@ -288,13 +288,13 @@ public partial class BattleRoot
         if (total == 0)
         {
             _hud.SetHudContext(false, false, _buildPlacement.IsActive);
-            _hud.SetSelectedUnitStance(null);
+            _hud.SetSelectedUnitStance(null, 0);
             _hud.SetSelectedCount(0);
             return;
         }
 
         _hud.SetHudContext(true, selectedBuildings.Count > 0, _buildPlacement.IsActive);
-        _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnits));
+        _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnits), selectedUnits.Count);
 
         if (total > 1)
         {
@@ -521,7 +521,7 @@ public partial class BattleRoot
             : GameText.Format("ui.detail.damage", style.Descriptor.Damage);
         var detail = isEconomy
             ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
-            : GameText.Format("ui.detail.cooldown", StanceLabel(unit.Stance), style.Descriptor.AttackCooldown);
+            : GameText.Format("ui.detail.cooldown", UnitStancePresentationCatalog.DefinitionFor(unit.Stance).Label, style.Descriptor.AttackCooldown);
 
         _hud.SetSelectionInfo(
             GameText.T(style.Presentation.NameKey).ToUpperInvariant(),

@@ -166,26 +166,18 @@ public sealed partial class GameState
             }
         }
 
-        var normalizedRect = NormalizedSelectionRect(worldRect);
-        CollectSelectionRectUnits(normalizedRect, _legacySelectionRectHarvesters, _legacySelectionRectCombatUnits);
-        var includeHarvesters = ShouldIncludeHarvestersInSelectionRect(
-            normalizedRect,
-            _legacySelectionRectHarvesters,
-            _legacySelectionRectCombatUnits);
-
-        foreach (var unit in Units)
+        var candidates = CollectSelectionRectCandidates(worldRect);
+        foreach (var unit in candidates)
         {
-            if (unit.Owner != Owner.Player)
-            {
-                continue;
-            }
-
-            var selectableByBox = UnitOverlapsSelectionRect(normalizedRect, unit)
-                && (!IsHarvesterUnit(unit) || includeHarvesters);
-            unit.Selected = selectableByBox || (additive && unit.Selected);
+            unit.Selected = true;
         }
 
         return SelectedUnitCount();
+    }
+
+    public int CountSelectionRectCandidates(Rect2 worldRect)
+    {
+        return CollectSelectionRectCandidates(worldRect).Count;
     }
 
     public int SelectedUnitCount()
@@ -202,13 +194,12 @@ public sealed partial class GameState
         return count;
     }
 
-    private void CollectSelectionRectUnits(
-        Rect2 normalizedRect,
-        List<UnitModel> harvesters,
-        List<UnitModel> combatUnits)
+    private IReadOnlyList<UnitModel> CollectSelectionRectCandidates(Rect2 worldRect)
     {
-        harvesters.Clear();
-        combatUnits.Clear();
+        var normalizedRect = NormalizedSelectionRect(worldRect);
+        _legacySelectionRectHarvesters.Clear();
+        _legacySelectionRectCombatUnits.Clear();
+        _legacySelectionRectCandidates.Clear();
         foreach (var unit in Units)
         {
             if (unit.Owner != Owner.Player || !UnitOverlapsSelectionRect(normalizedRect, unit))
@@ -218,13 +209,24 @@ public sealed partial class GameState
 
             if (IsHarvesterUnit(unit))
             {
-                harvesters.Add(unit);
+                _legacySelectionRectHarvesters.Add(unit);
             }
             else
             {
-                combatUnits.Add(unit);
+                _legacySelectionRectCombatUnits.Add(unit);
             }
         }
+
+        _legacySelectionRectCandidates.AddRange(_legacySelectionRectCombatUnits);
+        if (ShouldIncludeHarvestersInSelectionRect(
+                normalizedRect,
+                _legacySelectionRectHarvesters,
+                _legacySelectionRectCombatUnits))
+        {
+            _legacySelectionRectCandidates.AddRange(_legacySelectionRectHarvesters);
+        }
+
+        return _legacySelectionRectCandidates;
     }
 
     private bool UnitOverlapsSelectionRect(Rect2 worldRect, UnitModel unit)
