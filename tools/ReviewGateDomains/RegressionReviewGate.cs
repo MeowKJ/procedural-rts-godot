@@ -87,34 +87,7 @@ static class RegressionReviewGate
         ForbidText(production, "new UnitProductionQueueItem[", "ProductionSystem queue mutation must not allocate copied item arrays.", result);
         ForbidText(production, "OrderedEntities.ToList()", "ProductionSystem must not snapshot all entities with ToList each tick.", result);
         ForbidText(production, ".Where(entity => entity.Id.Value != producer.Id.Value)", "ProductionSystem spawn obstacles must not be built with LINQ chains.", result);
-        RequireText(
-            production,
-            "if (!TrySpawnProducedUnit(world, producer, unitSpec))\n            {\n                continue;\n            }\n\n            RemoveFirstQueueItem(producer, queue);",
-            "ProductionSystem must keep a completed blocked item queued and dequeue only after the fixed egress spawn succeeds.",
-            result);
-        var spawning = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "production", "ProductionSystem.Spawning.cs");
-        RequireText(spawning, "PlacementReservationMath.TryCenter(", "ECS production must derive its spawn point from shared reservation metadata.", result);
-        RequireText(spawning, "PlacementReservationKind.ProductionEgress", "ECS production must consume the production-egress reservation.", result);
-        RequireText(spawning, "ProductionSpawnMath.IsSpawnPointAvailable(", "ECS production must test dynamic blockers at the fixed reservation center.", result);
-        ForbidText(spawning, "RemoveFirstQueueItem", "The ECS spawn helper must not dequeue a blocked production item.", result);
-        var legacyProduction = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.ProductionHarvest.cs");
-        RequireText(legacyProduction, "PlacementReservationMath.TryCenter(", "Legacy production must derive its spawn point from shared reservation metadata.", result);
-        RequireText(legacyProduction, "PlacementReservationKind.ProductionEgress", "Legacy production must consume the production-egress reservation.", result);
-        RequireText(legacyProduction, "ProductionSpawnMath.IsSpawnPointAvailable(", "Legacy production must test dynamic blockers at the fixed reservation center.", result);
-        RequireText(
-            legacyProduction,
-            "if (!TryProducedUnitSpawnPoint(building, item.DesignId, out var spawn))\n            {\n                continue;\n            }\n\n            building.ProductionQueue.RemoveAt(0);",
-            "Legacy production must keep a completed blocked item queued and dequeue only after the fixed egress spawn succeeds.",
-            result);
-        var spawnMath = ReviewGateSource.Read(root, "scripts", "core", "production", "ProductionSpawnMath.cs");
-        RequireText(spawnMath, "IsSpawnPointAvailable(", "ProductionSpawnMath must test only the shared fixed producer egress.", result);
-        ForbidText(spawnMath, "DirectionOffsets", "ProductionSpawnMath must not search alternate spawn directions.", result);
-        ForbidText(spawnMath, "RingScales", "ProductionSpawnMath must not search fallback spawn rings.", result);
-        ForbidText(spawnMath, "FindSpawnPoint", "ProductionSpawnMath must not retain the old radial spawn API.", result);
-        ForbidText(spawnMath, "ClampToWorld", "ProductionSpawnMath must not clamp a blocked or outside egress to a fallback point.", result);
-        ReviewGateSource.ForbidTextInSources(root, result, "FindSpawnPoint", "scripts", "tools");
-        ReviewGateSource.ForbidTextInSources(root, result, "DirectionOffsets", "scripts", "tools");
-        ReviewGateSource.ForbidTextInSources(root, result, "RingScales", "scripts", "tools");
+        ProductionReservationReviewGate.Check(root, result);
         var projectiles = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProjectileSystem.cs");
         ForbidText(projectiles, "OrderedEntities.ToArray()", "ProjectileSystem must not snapshot all entities every tick.", result);
     }

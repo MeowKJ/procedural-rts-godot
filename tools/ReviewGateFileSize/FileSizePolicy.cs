@@ -31,6 +31,7 @@ static class FileSizePolicy
         "tools/ReviewGateCore/",
         "tools/ReviewGateDomains/",
         "tools/ReviewGateFileSize/",
+        "tools/ReviewGateReservations/",
     ];
 
     public static readonly string[] MainProjectCompileExclusions =
