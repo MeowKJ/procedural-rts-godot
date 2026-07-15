@@ -187,7 +187,11 @@ public sealed partial class ProductionSystem : ISimSystem
                 continue;
             }
 
-            SpawnProducedUnit(world, producer, unitSpec);
+            if (!TrySpawnProducedUnit(world, producer, unitSpec))
+            {
+                continue;
+            }
+
             RemoveFirstQueueItem(producer, queue);
             queue = producer.Components.Require<ProductionQueueComponentState>();
             EnsureRepeatQueued(world, producer, queue);

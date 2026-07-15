@@ -29,6 +29,10 @@ public sealed class AirfieldBuilding : BuildingDesign
             0,
             12,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementReservations:
+            [
+                new PlacementReservationSpec(PlacementReservationKind.ProductionEgress, 6, 1, 3, 3),
+            ]);
     }
 }

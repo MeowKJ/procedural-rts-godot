@@ -45,7 +45,7 @@ public static class MatchStartLoadouts
                 [BuildingDesignIds.PowerPlant] = (new Vector2(320, 816), 0),
                 [BuildingDesignIds.Barracks] = (new Vector2(512, 864), 0),
                 [BuildingDesignIds.VehicleFactory] = (new Vector2(512, 1024), 0),
-                [BuildingDesignIds.Refinery] = (new Vector2(304, 544), 0),
+                [BuildingDesignIds.Refinery] = (new Vector2(304, 544), MathF.PI),
             },
             [Owner.Enemy] = new Dictionary<string, (Vector2 Position, float Facing)>
             {
@@ -53,7 +53,7 @@ public static class MatchStartLoadouts
                 [BuildingDesignIds.PowerPlant] = (new Vector2(3040, 1328), MathF.PI),
                 [BuildingDesignIds.Barracks] = (new Vector2(2880, 1280), MathF.PI),
                 [BuildingDesignIds.VehicleFactory] = (new Vector2(2848, 1120), MathF.PI),
-                [BuildingDesignIds.Refinery] = (new Vector2(3056, 1600), MathF.PI),
+                [BuildingDesignIds.Refinery] = (new Vector2(3056, 1600), 0),
             },
         };
 
@@ -78,7 +78,7 @@ public static class MatchStartLoadouts
                 (new Vector2(2710, 1300), MathF.PI),
                 (new Vector2(2522, 1518), MathF.PI),
                 (new Vector2(2650, 1488), MathF.PI),
-                (new Vector2(2768, 1248), MathF.PI),
+                (new Vector2(2720, 1216), MathF.PI),
             ],
         };
 

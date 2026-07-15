@@ -29,6 +29,10 @@ public sealed class BarracksBuilding : BuildingDesign
             0,
             6,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementReservations:
+            [
+                new PlacementReservationSpec(PlacementReservationKind.ProductionEgress, 4, 1, 2, 2),
+            ]);
     }
 }

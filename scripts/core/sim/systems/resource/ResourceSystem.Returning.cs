@@ -31,8 +31,9 @@ public sealed partial class ResourceSystem
         }
 
         world.Metrics.ClearDockWait(harvester.Id.Value);
-        SetMoveTarget(harvester, DockApproachPoint(world, harvester, refinery));
-        if (harvester.Transform.Position.DistanceTo(refinery.Transform.Position) > DockArrivalDistance(world, refinery))
+        var dockPoint = RefineryDockPoint(world, refinery);
+        SetMoveTarget(harvester, dockPoint);
+        if (harvester.Transform.Position.DistanceTo(dockPoint) > DockArrivalDistance(world))
         {
             if (state.RefineryId != refinery.Id.Value)
             {
@@ -67,7 +68,7 @@ public sealed partial class ResourceSystem
             return;
         }
 
-        SetMoveTarget(harvester, DockApproachPoint(world, harvester, refinery));
+        SetMoveTarget(harvester, RefineryDockPoint(world, refinery));
         harvester.Components.Set(state with
         {
             Mode = HarvesterMode.ReturningToRefinery,
@@ -84,8 +85,9 @@ public sealed partial class ResourceSystem
             return;
         }
 
-        SetMoveTarget(harvester, DockApproachPoint(world, harvester, refinery));
-        if (harvester.Transform.Position.DistanceTo(refinery.Transform.Position) > DockArrivalDistance(world, refinery))
+        var dockPoint = RefineryDockPoint(world, refinery);
+        SetMoveTarget(harvester, dockPoint);
+        if (harvester.Transform.Position.DistanceTo(dockPoint) > DockArrivalDistance(world))
         {
             harvester.Components.Set(state with
             {

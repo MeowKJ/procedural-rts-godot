@@ -152,6 +152,8 @@ static partial class Program
 
         Assert(rejectedNegativeClearance, "BuildSpec should reject negative placement clearance");
 
+        AssertPlacementReservationMetadataAndRotation();
+        AssertReservationPlacementKernel();
         AssertAuthoritativePlacementKernel();
         AssertLivePlacementAuthorityParity();
         AssertPlayerBuildGatewayPreservesDesiredPoint();
@@ -161,6 +163,233 @@ static partial class Program
         AssertGridSafeStartingBases();
 
         Console.WriteLine("OK [placement-grid]: parity, four-way validation, four fixed plus 12 generated grid-safe bases, and blocking-unit clearance.");
+    }
+
+    private static void AssertPlacementReservationMetadataAndRotation()
+    {
+        var expected = new[]
+        {
+            (Kind: BuildingDesignIds.Barracks, ReservationKind: PlacementReservationKind.ProductionEgress, Center: 96f),
+            (Kind: BuildingDesignIds.VehicleFactory, ReservationKind: PlacementReservationKind.ProductionEgress, Center: 144f),
+            (Kind: BuildingDesignIds.Airfield, ReservationKind: PlacementReservationKind.ProductionEgress, Center: 144f),
+            (Kind: BuildingDesignIds.Refinery, ReservationKind: PlacementReservationKind.RefineryDock, Center: 128f),
+        };
+        var origin = new Vector2(512, 384);
+        var facings = new[] { 0f, Mathf.Pi * 0.5f, Mathf.Pi, Mathf.Pi * 1.5f };
+        var directions = new[] { Vector2.Right, Vector2.Down, Vector2.Left, Vector2.Up };
+        foreach (var entry in expected)
+        {
+            var spec = BuildSpecCatalog.For(entry.Kind);
+            Assert(spec.PlacementReservations.Count == 1,
+                $"{entry.Kind} should declare exactly one placement reservation");
+            Assert(spec.PlacementReservations[0].Kind == entry.ReservationKind,
+                $"{entry.Kind} should declare {entry.ReservationKind}");
+            for (var rotation = 0; rotation < facings.Length; rotation++)
+            {
+                Assert(PlacementReservationMath.TryCenter(
+                        spec,
+                        entry.ReservationKind,
+                        origin,
+                        facings[rotation],
+                        out var center),
+                    $"{entry.Kind} reservation should resolve at cardinal rotation {rotation}");
+                var expectedCenter = origin + directions[rotation] * entry.Center;
+                Assert(center.DistanceTo(expectedCenter) < 0.001f,
+                    $"{entry.Kind} rotation {rotation} center should be {expectedCenter}, got {center}");
+            }
+        }
+
+        foreach (var spec in BuildSpecCatalog.Definitions.Values)
+        {
+            if (spec.Kind is BuildingDesignIds.Barracks
+                or BuildingDesignIds.VehicleFactory
+                or BuildingDesignIds.Airfield
+                or BuildingDesignIds.Refinery)
+            {
+                continue;
+            }
+
+            Assert(spec.PlacementReservations.Count == 0,
+                $"{spec.Kind} should expose the shared empty reservation array");
+        }
+    }
+
+    private static void AssertReservationPlacementKernel()
+    {
+        var owner = new OwnerId(1);
+        var system = new ConstructionSystem();
+        var barracks = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
+        var power = BuildSpecCatalog.For(BuildingDesignIds.PowerPlant);
+
+        var outsideWorld = CreatePlacementWorld(owner);
+        var outside = system.QueryBuildingPlacement(
+            outsideWorld,
+            owner,
+            barracks,
+            new Vector2(928, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!outside.IsValid && outside.Reason == "placement.outside",
+            $"reservation extent outside the world should reject before later reasons; got {outside}");
+
+        var hiddenWorld = CreatePlacementWorld(owner, sightRange: 100);
+        var hidden = system.QueryBuildingPlacement(
+            hiddenWorld,
+            owner,
+            barracks,
+            new Vector2(512, 384),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!hidden.IsValid && hidden.Reason == "placement.notVisible",
+            $"visible hard footprint with hidden egress should reject as not visible; got {hidden}");
+
+        var terrainWorld = CreatePlacementWorld(owner);
+        var hardOnlyBarracks = barracks with
+        {
+            PlacementReservations = Array.Empty<PlacementReservationSpec>(),
+        };
+        var foundReservationOnlyTerrainFailure = false;
+        for (var y = 64f; !foundReservationOnlyTerrainFailure && y <= 704; y += PlacementMath.GridSize)
+        {
+            for (var x = 64f; x <= 960; x += PlacementMath.GridSize)
+            {
+                var desired = new Vector2(x, y);
+                var hardOnly = system.QueryBuildingPlacement(
+                    terrainWorld,
+                    owner,
+                    hardOnlyBarracks,
+                    desired,
+                    0,
+                    ConstructionPlacementIntent.Direct);
+                var reserved = system.QueryBuildingPlacement(
+                    terrainWorld,
+                    owner,
+                    barracks,
+                    desired,
+                    0,
+                    ConstructionPlacementIntent.Direct);
+                if (hardOnly.IsValid && !reserved.IsValid && reserved.Reason == "placement.impassable")
+                {
+                    foundReservationOnlyTerrainFailure = true;
+                    break;
+                }
+            }
+        }
+
+        Assert(foundReservationOnlyTerrainFailure,
+            "reservation terrain samples should reject at least one grid point whose hard footprint remains passable");
+
+        var candidateReservationWorld = CreatePlacementWorld(owner);
+        var existingPower = SpawnPlacementBuilding(
+            candidateReservationWorld,
+            owner,
+            power,
+            new Vector2(543.999f, 336));
+        var candidateReservationBelow = system.QueryBuildingPlacement(
+            candidateReservationWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        var candidateReservationReady = system.QueryBuildingPlacement(
+            candidateReservationWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.ReadyTicket);
+        existingPower.Transform = existingPower.Transform with { Position = new Vector2(544, 336) };
+        var candidateReservationExact = system.QueryBuildingPlacement(
+            candidateReservationWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!candidateReservationBelow.IsValid && candidateReservationBelow.Reason == "placement.reserved",
+            $"candidate reservation to existing hard gap below 32 should reject as reserved; got {candidateReservationBelow}");
+        Assert(!candidateReservationReady.IsValid && candidateReservationReady.Reason == "placement.reserved",
+            "Direct and ReadyTicket should share reservation rejection semantics");
+        Assert(candidateReservationExact.IsValid,
+            $"candidate reservation to existing hard exact 32 gap should be valid; got {candidateReservationExact}");
+
+        var existingReservationWorld = CreatePlacementWorld(owner);
+        var existingBarracks = SpawnPlacementBuilding(
+            existingReservationWorld,
+            owner,
+            barracks,
+            new Vector2(320.001f, 320));
+        var existingReservationBelow = system.QueryBuildingPlacement(
+            existingReservationWorld,
+            owner,
+            power,
+            new Vector2(544, 336),
+            0,
+            ConstructionPlacementIntent.Direct);
+        existingBarracks.Transform = existingBarracks.Transform with { Position = new Vector2(320, 320) };
+        var existingReservationExact = system.QueryBuildingPlacement(
+            existingReservationWorld,
+            owner,
+            power,
+            new Vector2(544, 336),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!existingReservationBelow.IsValid && existingReservationBelow.Reason == "placement.reserved",
+            $"candidate hard to existing reservation gap below 32 should reject as reserved; got {existingReservationBelow}");
+        Assert(existingReservationExact.IsValid,
+            $"candidate hard to existing reservation exact 32 gap should be valid; got {existingReservationExact}");
+
+        var reservationPairWorld = CreatePlacementWorld(owner);
+        var reservationPairObstacle = SpawnPlacementBuilding(
+            reservationPairWorld,
+            owner,
+            barracks,
+            new Vector2(607.999f, 320),
+            Mathf.Pi);
+        var reservationPairBelow = system.QueryBuildingPlacement(
+            reservationPairWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        reservationPairObstacle.Transform = reservationPairObstacle.Transform with { Position = new Vector2(608, 320) };
+        var reservationPairExact = system.QueryBuildingPlacement(
+            reservationPairWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!reservationPairBelow.IsValid && reservationPairBelow.Reason == "placement.reserved",
+            $"reservation-to-reservation 31.999 gap should reject as reserved; got {reservationPairBelow}");
+        Assert(reservationPairExact.IsValid,
+            $"reservation-to-reservation exact 32 gap should be valid; got {reservationPairExact}");
+
+        var blockedPriorityWorld = CreatePlacementWorld(owner);
+        SpawnPlacementBuilding(blockedPriorityWorld, owner, barracks, new Vector2(320, 320));
+        var blockedPriority = system.QueryBuildingPlacement(
+            blockedPriorityWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!blockedPriority.IsValid && blockedPriority.Reason == "placement.blocked",
+            "hard overlap should outrank reservation conflicts");
+
+        var clearancePriorityWorld = CreatePlacementWorld(owner);
+        SpawnPlacementBuilding(clearancePriorityWorld, owner, barracks, new Vector2(479.999f, 320));
+        var clearancePriority = system.QueryBuildingPlacement(
+            clearancePriorityWorld,
+            owner,
+            barracks,
+            new Vector2(320, 320),
+            0,
+            ConstructionPlacementIntent.Direct);
+        Assert(!clearancePriority.IsValid && clearancePriority.Reason == "placement.clearance",
+            "hard clearance should outrank reservation conflicts");
     }
 
     private static void AssertAuthoritativePlacementKernel()
@@ -455,6 +684,11 @@ static partial class Program
                     ? building with { Position = new MapPoint(2848, 1280) }
                     : building)
                 .ToArray(),
+            Units = unsafeEnemyDog.Units
+                .Select(unit => unit.OwnerId == new OwnerId(2) && unit.DesignId == "dog.harvester"
+                    ? unit with { Position = new MapPoint(2768, 1248) }
+                    : unit)
+                .ToArray(),
         };
         var regressionConflicts = InitialBlockingUnitBuildingConflicts(unsafeEnemyDog);
         Assert(regressionConflicts.Any(conflict =>
@@ -471,7 +705,11 @@ static partial class Program
 
         var unitConflicts = InitialBlockingUnitBuildingConflicts(map);
         Assert(unitConflicts.Count == 0,
-            $"{label} blocking units should clear every building hard footprint; got {string.Join("; ", unitConflicts)}");
+            $"{label} blocking units should clear every building hard footprint and reservation; got {string.Join("; ", unitConflicts)}");
+
+        var reservationConflicts = InitialBuildingReservationConflicts(map);
+        Assert(reservationConflicts.Count == 0,
+            $"{label} buildings should keep hard footprints and reservations mutually clear; got {string.Join("; ", reservationConflicts)}");
     }
 
     private static IReadOnlyList<string> InitialBlockingUnitBuildingConflicts(MapSpec map)
@@ -496,7 +734,40 @@ static partial class Program
                     building.Position.Y,
                     footprint.X,
                     footprint.Y);
-                if (!CircleIntersectsRect(unit.Position, unitSpec.Collision.Radius, rect))
+                var conflictsWithBuilding = CircleIntersectsRect(unit.Position, unitSpec.Collision.Radius, rect);
+                for (var reservationIndex = 0;
+                     !conflictsWithBuilding && reservationIndex < buildingSpec.PlacementReservations.Count;
+                     reservationIndex++)
+                {
+                    var reservation = PlacementReservationMath.WorldRect(
+                        buildingSpec,
+                        buildingSpec.PlacementReservations[reservationIndex],
+                        building.Position.ToVector2(),
+                        cardinalFacing);
+                    conflictsWithBuilding = CircleIntersectsRect(unit.Position, unitSpec.Collision.Radius, reservation);
+                }
+
+                if (!conflictsWithBuilding
+                    && PlacementReservationMath.TryCenter(
+                        buildingSpec,
+                        PlacementReservationKind.ProductionEgress,
+                        building.Position.ToVector2(),
+                        cardinalFacing,
+                        out var egress))
+                {
+                    var producerFaction = ProductionKindDesignBridge.UnitFactionFor(faction);
+                    var spawnRadius = UnitDesignCatalog.Designs.Values
+                        .Where(design => design.Faction == producerFaction
+                            && design.Production?.ProducerKind == building.Kind)
+                        .Select(design => design.Collision.Radius)
+                        .DefaultIfEmpty(0)
+                        .Max();
+                    var requiredDistance = spawnRadius + unitSpec.Collision.Radius + 6;
+                    conflictsWithBuilding = unit.Position.ToVector2().DistanceSquaredTo(egress)
+                        < requiredDistance * requiredDistance;
+                }
+
+                if (!conflictsWithBuilding)
                 {
                     continue;
                 }
@@ -508,6 +779,97 @@ static partial class Program
         }
 
         return conflicts;
+    }
+
+    private static IReadOnlyList<string> InitialBuildingReservationConflicts(MapSpec map)
+    {
+        var conflicts = new List<string>();
+        for (var firstIndex = 0; firstIndex < map.Buildings.Count; firstIndex++)
+        {
+            var first = map.Buildings[firstIndex];
+            var firstSpec = BuildSpecCatalog.For(first.Kind);
+            PlacementMath.TryNormalizeCardinalFacing(first.Facing, out var firstFacing);
+            var firstHard = PlacementMath.RectFromCenter(
+                first.Position.X,
+                first.Position.Y,
+                firstSpec.LogicalFootprint(firstFacing).X,
+                firstSpec.LogicalFootprint(firstFacing).Y);
+            for (var secondIndex = firstIndex + 1; secondIndex < map.Buildings.Count; secondIndex++)
+            {
+                var second = map.Buildings[secondIndex];
+                var secondSpec = BuildSpecCatalog.For(second.Kind);
+                PlacementMath.TryNormalizeCardinalFacing(second.Facing, out var secondFacing);
+                var secondSize = secondSpec.LogicalFootprint(secondFacing);
+                var secondHard = PlacementMath.RectFromCenter(
+                    second.Position.X,
+                    second.Position.Y,
+                    secondSize.X,
+                    secondSize.Y);
+                var clearance = Math.Max(firstSpec.PlacementClearanceCells, secondSpec.PlacementClearanceCells)
+                    * PlacementMath.GridSize;
+                var hasConflict = false;
+                for (var reservationIndex = 0;
+                     !hasConflict && reservationIndex < firstSpec.PlacementReservations.Count;
+                     reservationIndex++)
+                {
+                    var reservation = PlacementReservationMath.WorldRect(
+                        firstSpec,
+                        firstSpec.PlacementReservations[reservationIndex],
+                        first.Position.ToVector2(),
+                        firstFacing);
+                    hasConflict = ReservationRectsConflict(reservation, secondHard, clearance);
+                    for (var otherIndex = 0;
+                         !hasConflict && otherIndex < secondSpec.PlacementReservations.Count;
+                         otherIndex++)
+                    {
+                        var other = PlacementReservationMath.WorldRect(
+                            secondSpec,
+                            secondSpec.PlacementReservations[otherIndex],
+                            second.Position.ToVector2(),
+                            secondFacing);
+                        hasConflict = ReservationRectsConflict(reservation, other, clearance);
+                    }
+                }
+
+                for (var reservationIndex = 0;
+                     !hasConflict && reservationIndex < secondSpec.PlacementReservations.Count;
+                     reservationIndex++)
+                {
+                    var reservation = PlacementReservationMath.WorldRect(
+                        secondSpec,
+                        secondSpec.PlacementReservations[reservationIndex],
+                        second.Position.ToVector2(),
+                        secondFacing);
+                    hasConflict = ReservationRectsConflict(firstHard, reservation, clearance);
+                }
+
+                if (hasConflict)
+                {
+                    conflicts.Add($"{first.Kind}@{first.Position} <-> {second.Kind}@{second.Position}");
+                }
+            }
+        }
+
+        return conflicts;
+    }
+
+    private static bool ReservationRectsConflict(PlacementRect first, PlacementRect second, float clearance)
+    {
+        var xGap = first.EndX <= second.X
+            ? second.X - first.EndX
+            : second.EndX <= first.X
+                ? first.X - second.EndX
+                : 0;
+        var yGap = first.EndY <= second.Y
+            ? second.Y - first.EndY
+            : second.EndY <= first.Y
+                ? first.Y - second.EndY
+                : 0;
+        var overlaps = first.X < second.EndX
+            && first.EndX > second.X
+            && first.Y < second.EndY
+            && first.EndY > second.Y;
+        return overlaps || (clearance > 0 && xGap < clearance && yGap < clearance);
     }
 
     private static bool CircleIntersectsRect(MapPoint center, float radius, PlacementRect rect)

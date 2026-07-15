@@ -36,7 +36,7 @@ public sealed partial class ResourceSystem
                 continue;
             }
 
-            var distanceSq = harvester.Transform.Position.DistanceSquaredTo(candidate.Transform.Position);
+            var distanceSq = harvester.Transform.Position.DistanceSquaredTo(RefineryDockPoint(world, candidate));
             if (distanceSq < bestDistanceSq)
             {
                 bestDistanceSq = distanceSq;
@@ -65,7 +65,7 @@ public sealed partial class ResourceSystem
                 continue;
             }
 
-            var distanceSq = harvester.Transform.Position.DistanceSquaredTo(candidate.Transform.Position);
+            var distanceSq = harvester.Transform.Position.DistanceSquaredTo(RefineryDockPoint(world, candidate));
             if (distanceSq < bestDistanceSq)
             {
                 bestDistanceSq = distanceSq;
@@ -76,30 +76,27 @@ public sealed partial class ResourceSystem
         return best;
     }
 
-    private static Vector2 DockApproachPoint(EntityWorld world, EntityInstance harvester, EntityInstance refinery)
+    private static Vector2 RefineryDockPoint(EntityWorld world, EntityInstance refinery)
     {
-        var radius = refinery.Components.TryGet<CollisionComponentState>(out var collision)
-            ? collision.Radius
-            : 0;
-        if (radius <= 0)
+        if (world.TryGetSpec(refinery.SpecId, out var entitySpec)
+            && entitySpec.Authoring.BuildingSpecId is { } buildingSpecId
+            && BuildSpecCatalog.Definitions.TryGetValue(buildingSpecId, out var buildSpec)
+            && PlacementReservationMath.TryCenter(
+                buildSpec,
+                PlacementReservationKind.RefineryDock,
+                refinery.Transform.Position,
+                refinery.Transform.Facing,
+                out var dockPoint))
         {
-            return refinery.Transform.Position;
+            return dockPoint;
         }
 
-        var fromRefinery = harvester.Transform.Position - refinery.Transform.Position;
-        var direction = fromRefinery.LengthSquared() <= 0.001f
-            ? Vector2.Right
-            : fromRefinery.Normalized();
-        var clearance = radius + MathF.Max(6f, world.EconomyTuning.DockDistance * 0.5f);
-        return refinery.Transform.Position + direction * clearance;
+        return refinery.Transform.Position;
     }
 
-    private static float DockArrivalDistance(EntityWorld world, EntityInstance refinery)
+    private static float DockArrivalDistance(EntityWorld world)
     {
-        var radius = refinery.Components.TryGet<CollisionComponentState>(out var collision)
-            ? collision.Radius
-            : 0;
-        return radius + world.EconomyTuning.DockDistance;
+        return world.EconomyTuning.DockDistance;
     }
 
     private static void ReleaseDock(EntityWorld world, int harvesterId, int? refineryId)

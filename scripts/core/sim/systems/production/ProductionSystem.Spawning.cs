@@ -4,29 +4,35 @@ namespace ProceduralRts.Core;
 
 public sealed partial class ProductionSystem
 {
-    private void SpawnProducedUnit(EntityWorld world, EntityInstance producer, UnitSpec unitSpec)
+    private bool TrySpawnProducedUnit(EntityWorld world, EntityInstance producer, UnitSpec unitSpec)
     {
-        var spawn = SpawnPointFor(world, producer, unitSpec);
-        var unit = world.SpawnUnit(unitSpec, producer.OwnerId, new Vector2(spawn.X, spawn.Y), producer.Transform.Facing);
+        if (!TrySpawnPointFor(world, producer, unitSpec, out var spawn))
+        {
+            return false;
+        }
+
+        var unit = world.SpawnUnit(unitSpec, producer.OwnerId, spawn, producer.Transform.Facing);
         if (!producer.Components.TryGet<RallyPointComponentState>(out var rally))
         {
-            return;
+            return true;
         }
 
         if (TryApplyResourceRally(world, unit, rally))
         {
-            return;
+            return true;
         }
 
         if (TryApplyEntityRally(world, unit, rally))
         {
-            return;
+            return true;
         }
 
         if (rally.Target is { } target)
         {
             ApplyPointRally(unit, target);
         }
+
+        return true;
     }
 
     private static bool TryApplyResourceRally(EntityWorld world, EntityInstance unit, RallyPointComponentState rally)
@@ -80,11 +86,26 @@ public sealed partial class ProductionSystem
         });
     }
 
-    private SpawnPoint SpawnPointFor(EntityWorld world, EntityInstance producer, UnitSpec unitSpec)
+    private bool TrySpawnPointFor(
+        EntityWorld world,
+        EntityInstance producer,
+        UnitSpec unitSpec,
+        out Vector2 spawn)
     {
-        var producerSize = producer.Components.TryGet<FootprintComponentState>(out var footprint)
-            ? footprint.Size
-            : new Vector2(96, 96);
+        if (!world.TryGetSpec(producer.SpecId, out var producerEntitySpec)
+            || producerEntitySpec.Authoring.BuildingSpecId is not { } buildingSpecId
+            || !BuildSpecCatalog.Definitions.TryGetValue(buildingSpecId, out var producerSpec)
+            || !PlacementReservationMath.TryCenter(
+                producerSpec,
+                PlacementReservationKind.ProductionEgress,
+                producer.Transform.Position,
+                producer.Transform.Facing,
+                out spawn))
+        {
+            spawn = producer.Transform.Position;
+            return false;
+        }
+
         var unitRadius = unitSpec.Collision.Radius;
         _spawnObstacles.Clear();
         foreach (var entity in world.OrderedEntities)
@@ -102,15 +123,10 @@ public sealed partial class ProductionSystem
                 collision.Radius));
         }
 
-        return ProductionSpawnMath.FindSpawnPoint(
-            producer.Transform.Position.X,
-            producer.Transform.Position.Y,
-            producer.Transform.Facing,
-            producerSize.X,
-            producerSize.Y,
+        return ProductionSpawnMath.IsSpawnPointAvailable(
+            spawn.X,
+            spawn.Y,
             unitRadius,
-            world.WorldWidth,
-            world.WorldHeight,
             _spawnObstacles);
     }
 }

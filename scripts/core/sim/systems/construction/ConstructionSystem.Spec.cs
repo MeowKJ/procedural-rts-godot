@@ -97,6 +97,8 @@ public sealed partial class ConstructionSystem
 
     private static bool ProducesUnits(string kind)
     {
-        return kind is BuildingDesignIds.Barracks or BuildingDesignIds.VehicleFactory;
+        return kind is BuildingDesignIds.Barracks
+            or BuildingDesignIds.VehicleFactory
+            or BuildingDesignIds.Airfield;
     }
 }
