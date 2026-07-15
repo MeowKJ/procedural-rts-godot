@@ -48,7 +48,8 @@ static partial class Program
             UnitFactionId.Dog,
             new Vector2(160, 180),
             0,
-            BuildSpecCatalog.For(BuildingDesignIds.VehicleFactory).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.VehicleFactory).MaxHp,
+            rallyPoint: new Vector2(420, 120));
         productionPresentationBattlefield.UpsertBuildingTarget(
             912,
             BuildingDesignIds.Barracks,
@@ -56,7 +57,8 @@ static partial class Program
             UnitFactionId.Dog,
             new Vector2(160, 300),
             0,
-            BuildSpecCatalog.For(BuildingDesignIds.Barracks).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.Barracks).MaxHp,
+            rallyPoint: new Vector2(420, 300));
         productionPresentationBattlefield.UpsertBuildingTarget(
             915,
             BuildingDesignIds.Airfield,
@@ -64,7 +66,8 @@ static partial class Program
             UnitFactionId.Dog,
             new Vector2(160, 420),
             0,
-            BuildSpecCatalog.For(BuildingDesignIds.Airfield).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.Airfield).MaxHp,
+            rallyPoint: new Vector2(420, 480));
         productionPresentationBattlefield.UpsertBuildingTarget(
             916,
             BuildingDesignIds.PowerPlant,
@@ -80,7 +83,8 @@ static partial class Program
             UnitFactionId.Cat,
             new Vector2(640, 180),
             Mathf.Pi,
-            BuildSpecCatalog.For(BuildingDesignIds.VehicleFactory).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.VehicleFactory).MaxHp,
+            rallyPoint: new Vector2(380, 240));
         productionPresentationBattlefield.UpsertBuildingTarget(
             913,
             BuildingDesignIds.Barracks,
@@ -88,7 +92,8 @@ static partial class Program
             UnitFactionId.Cat,
             new Vector2(640, 300),
             Mathf.Pi,
-            BuildSpecCatalog.For(BuildingDesignIds.Barracks).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.Barracks).MaxHp,
+            rallyPoint: new Vector2(380, 360));
         productionPresentationBattlefield.UpsertBuildingTarget(
             914,
             BuildingDesignIds.Airfield,
@@ -96,7 +101,8 @@ static partial class Program
             UnitFactionId.Cat,
             new Vector2(640, 420),
             Mathf.Pi,
-            BuildSpecCatalog.For(BuildingDesignIds.Airfield).MaxHp);
+            BuildSpecCatalog.For(BuildingDesignIds.Airfield).MaxHp,
+            rallyPoint: new Vector2(380, 540));
         var dogRuntimeTankOption = productionPresentationBattlefield.ProductionOptionStates(PlayerSlotId.One).Single(option => option.Kind == ProductionKind.LightTank);
         var catRuntimeTankOption = productionPresentationBattlefield.ProductionOptionStates(PlayerSlotId.Two).Single(option => option.Kind == ProductionKind.LightTank);
         var dogRuntimeTankSpec = UnitDesignCatalog.Spec("dog.guard_tank");

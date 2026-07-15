@@ -13,9 +13,17 @@ internal static partial class AiOpponentLoopQaProgram
         float facing,
         int idBase)
     {
+        PlacementMath.TryNormalizeCardinalFacing(facing + MathF.PI, out var refineryFacing);
         var hq = AddBuilding(battlefield, idBase, BuildingDesignIds.Headquarters, slot, faction, center, facing);
         AddBuilding(battlefield, idBase + 1, BuildingDesignIds.PowerPlant, slot, faction, center + new Vector2(0, -230), facing);
-        AddBuilding(battlefield, idBase + 2, BuildingDesignIds.Refinery, slot, faction, center + new Vector2(190 * MathF.Cos(facing), 190 * MathF.Sin(facing) - 115), facing);
+        AddBuilding(
+            battlefield,
+            idBase + 2,
+            BuildingDesignIds.Refinery,
+            slot,
+            faction,
+            center + new Vector2(-190 * MathF.Cos(facing), -115),
+            refineryFacing);
         AddBuilding(battlefield, idBase + 3, BuildingDesignIds.Barracks, slot, faction, center + new Vector2(0, -390), facing);
         AddBuilding(battlefield, idBase + 4, BuildingDesignIds.VehicleFactory, slot, faction, center + new Vector2(0, 250), facing);
         var turret = AddBuilding(battlefield, idBase + 5, BuildingDesignIds.GroundTurret, slot, faction, center + new Vector2(slot == PlayerSlotId.Two ? -360 : 360, 0), facing);
