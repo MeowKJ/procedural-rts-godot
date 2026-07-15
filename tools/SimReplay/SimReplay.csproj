@@ -20,6 +20,7 @@
     <Compile Include="..\SimReplayCombatTargetSignals\**\*.cs" Link="SimReplayCombatTargetSignals\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayCommandGateway\**\*.cs" Link="SimReplayCommandGateway\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayConstructionCore\**\*.cs" Link="SimReplayConstructionCore\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SimReplayPlacementReservations\**\*.cs" Link="SimReplayPlacementReservations\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayConstructionLifecycle\**\*.cs" Link="SimReplayConstructionLifecycle\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayConstructionScenarios\**\*.cs" Link="SimReplayConstructionScenarios\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SimReplayContent\**\*.cs" Link="SimReplayContent\%(RecursiveDir)%(Filename)%(Extension)" />
