@@ -29,6 +29,10 @@ public sealed class RefineryBuilding : BuildingDesign
             0,
             8,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementReservations:
+            [
+                new PlacementReservationSpec(PlacementReservationKind.RefineryDock, 5, 1, 3, 2),
+            ]);
     }
 }

@@ -23,12 +23,7 @@ static partial class Program
                 Kind = EntityKind.Resource,
                 Display = new EntityDisplaySpec("Resource", "resource.name", "resource.role", "RES", IconGlyph.Credits),
             };
-            var refinerySpec = new EntitySpec
-            {
-                Id = "replay.refinery",
-                Kind = EntityKind.Building,
-                Display = new EntityDisplaySpec("Refinery", "refinery.name", "refinery.role", "REF", IconGlyph.Building),
-            };
+            var refinerySpec = ReplayRefinerySpec("replay.refinery");
 
             world.Spawn(harvesterSpec, new OwnerId(1), EntityTransform.At(new Vector2(0, 0)), new EntityComponentState[]
             {
@@ -47,7 +42,7 @@ static partial class Program
                     VisibilityRule: ResourceVisibilityRule.VisibleWhenExplored,
                     CorruptionState: ResourceCorruptionState.Clean),
             });
-            world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(new Vector2(-32, 0)), new EntityComponentState[]
+            world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(new Vector2(-160, 0)), new EntityComponentState[]
             {
                 new DockComponentState(),
             });
@@ -97,6 +92,7 @@ static partial class Program
         Assert(metrics.HarvesterIdleSeconds > 0, "economy metrics should record idle harvester time after depletion");
 
         AssertDockCongestionMetrics();
+        AssertRotatedRefineryDocks();
         AssertHarvesterRetreatsUnderFire();
         AssertEconomyTuningChangesThroughput(BuildResourceWorld, harvestLog, resourceTicks);
 
@@ -161,12 +157,7 @@ static partial class Program
             Kind = EntityKind.Unit,
             Display = new EntityDisplaySpec("Harvester", "harvester.name", "harvester.role", "HAR", IconGlyph.Harvester),
         };
-        var refinerySpec = new EntitySpec
-        {
-            Id = "replay.waiting_refinery",
-            Kind = EntityKind.Building,
-            Display = new EntityDisplaySpec("Refinery", "refinery.name", "refinery.role", "REF", IconGlyph.Building),
-        };
+        var refinerySpec = ReplayRefinerySpec("replay.waiting_refinery");
 
         world.Spawn(harvesterSpec, new OwnerId(1), EntityTransform.At(new Vector2(0, 0)), new EntityComponentState[]
         {
@@ -180,7 +171,7 @@ static partial class Program
             new ResourceCargoComponentState(Cargo: 30, Capacity: 30),
             new MovementComponentState(Vector2.Zero),
         });
-        world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(Vector2.Zero), new EntityComponentState[]
+        world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(new Vector2(-128, 0)), new EntityComponentState[]
         {
             new DockComponentState(),
         });
@@ -194,6 +185,64 @@ static partial class Program
         Assert(world.Metrics.DockWaitSeconds > 0, "economy metrics should record dock wait time under congestion");
         Assert(world.Metrics.RefineryCongestionEvents >= 1, $"economy metrics should count refinery congestion events, got {world.Metrics.RefineryCongestionEvents}");
         Assert(world.Metrics.CreditsBanked == 60, $"both waiting harvesters should eventually unload 60 credits, got {world.Metrics.CreditsBanked}");
+    }
+
+    static void AssertRotatedRefineryDocks()
+    {
+        var facings = new[] { 0f, Mathf.Pi * 0.5f, Mathf.Pi, Mathf.Pi * 1.5f };
+        var directions = new[] { Vector2.Right, Vector2.Down, Vector2.Left, Vector2.Up };
+        for (var rotation = 0; rotation < facings.Length; rotation++)
+        {
+            var world = new EntityWorld(seed: (ulong)(5160 + rotation));
+            world.AddSystem(new ResourceSystem());
+            var center = new Vector2(500, 500);
+            var expectedDock = center + directions[rotation] * 128;
+            var harvesterSpec = new EntitySpec
+            {
+                Id = $"replay.rotated_harvester.{rotation}",
+                Kind = EntityKind.Unit,
+                Display = new EntityDisplaySpec("Harvester", "harvester.name", "harvester.role", "HAR", IconGlyph.Harvester),
+            };
+            var harvester = world.Spawn(
+                harvesterSpec,
+                new OwnerId(1),
+                EntityTransform.At(expectedDock + directions[rotation] * 64),
+                new EntityComponentState[]
+                {
+                    new HarvesterComponentState(HarvesterMode.ReturningToRefinery),
+                    new ResourceCargoComponentState(Cargo: 20, Capacity: 20),
+                    new MovementComponentState(Vector2.Zero),
+                });
+            var refinery = world.Spawn(
+                ReplayRefinerySpec($"replay.rotated_refinery.{rotation}"),
+                new OwnerId(1),
+                EntityTransform.At(center, facings[rotation]),
+                new EntityComponentState[]
+                {
+                    new DockComponentState(),
+                });
+
+            var clock = new SimClock();
+            world.Step(1, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            var returning = harvester.Components.Require<HarvesterComponentState>();
+            var movement = harvester.Components.Require<MovementComponentState>();
+            Assert(returning.RefineryId == refinery.Id.Value && returning.Mode == HarvesterMode.ReturningToRefinery,
+                $"rotation {rotation} should reserve its refinery dock while approaching");
+            Assert(movement.MoveTarget is { } target && target.DistanceTo(expectedDock) < 0.001f,
+                $"rotation {rotation} return target should be exact dock {expectedDock}, got {movement.MoveTarget}");
+
+            harvester.Transform = harvester.Transform with { Position = expectedDock };
+            world.Step(2, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            Assert(harvester.Components.Require<HarvesterComponentState>().Mode == HarvesterMode.Unloading,
+                $"rotation {rotation} should arrive and unload at the shared dock point");
+            for (var tick = 3; tick <= 20; tick++)
+            {
+                world.Step(tick, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            }
+
+            Assert(world.ResourceInventory(new OwnerId(1)).Credits == 20,
+                $"rotation {rotation} should bank all cargo through the shared dock point");
+        }
     }
 
     static void AssertHarvesterRetreatsUnderFire()
@@ -220,12 +269,7 @@ static partial class Program
             Kind = EntityKind.Resource,
             Display = new EntityDisplaySpec("Resource", "resource.name", "resource.role", "RES", IconGlyph.Credits),
         };
-        var refinerySpec = new EntitySpec
-        {
-            Id = "replay.retreat_refinery",
-            Kind = EntityKind.Building,
-            Display = new EntityDisplaySpec("Refinery", "refinery.name", "refinery.role", "REF", IconGlyph.Building),
-        };
+        var refinerySpec = ReplayRefinerySpec("replay.retreat_refinery");
 
         var harvester = world.Spawn(harvesterSpec, new OwnerId(1), EntityTransform.At(new Vector2(80, 0)), new EntityComponentState[]
         {
@@ -246,7 +290,7 @@ static partial class Program
                 VisibilityRule: ResourceVisibilityRule.VisibleWhenExplored,
                 CorruptionState: ResourceCorruptionState.Clean),
         });
-        world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(Vector2.Zero), new EntityComponentState[]
+        world.Spawn(refinerySpec, new OwnerId(1), EntityTransform.At(new Vector2(-128, 0)), new EntityComponentState[]
         {
             new DockComponentState(),
             new CollisionComponentState(Radius: 20, Mass: 10, PushPriority: 5, BlocksMovement: true),
@@ -257,7 +301,7 @@ static partial class Program
         var buffer = new EntityCommandBuffer();
         buffer.Enqueue(new AttackEntityCommand(new OwnerId(2), new[] { new EntityId(4) }, 1, harvester.Id, CombatTargetKind.Unit));
 
-        for (var tick = 1; tick <= 90; tick++)
+        for (var tick = 1; tick <= 110; tick++)
         {
             world.Step(tick, clock.FixedDelta, buffer.DrainUpToTick(tick));
         }
@@ -268,7 +312,13 @@ static partial class Program
         Assert(state.Mode == HarvesterMode.Idle, $"under-fire harvester should retreat and idle near refinery, got {state.Mode}.");
         Assert(!state.Retreating, "retreat marker should clear once the harvester reaches safety.");
         Assert(state.FieldId is null, "retreated harvester should stop the exposed field assignment.");
-        Assert(harvester.Transform.Position.DistanceTo(Vector2.Zero) < 80, $"retreated harvester should move back toward the refinery, pos {harvester.Transform.Position}.");
+        Assert(harvester.Transform.Position.DistanceTo(Vector2.Zero) <= world.EconomyTuning.DockDistance,
+            $"retreated harvester should move back to the refinery dock, pos {harvester.Transform.Position}.");
         Console.WriteLine($"OK [harvester-retreat]: hp {health.Hp:0.0}, pos {harvester.Transform.Position}, mode {state.Mode}.");
+    }
+
+    static EntitySpec ReplayRefinerySpec(string id)
+    {
+        return BuildSpecCatalog.For(BuildingDesignIds.Refinery).ToEntitySpec() with { Id = id };
     }
 }

@@ -489,6 +489,7 @@ public static partial class GameText
         ["placement.outside"] = "Outside buildable area",
         ["placement.blocked"] = "Blocked by structure",
         ["placement.clearance"] = "Needs one grid cell of clearance",
+        ["placement.reserved"] = "Keep building exits and docks clear",
         ["placement.outsideBuildRadius"] = "Outside build radius",
         ["placement.unpowered"] = "Build radius is offline",
         ["placement.impassable"] = "Terrain cannot support it",

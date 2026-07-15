@@ -27,7 +27,11 @@ public sealed partial class GameState
                 continue;
             }
 
-            var spawn = ProducedUnitSpawnPoint(building, item.DesignId);
+            if (!TryProducedUnitSpawnPoint(building, item.DesignId, out var spawn))
+            {
+                continue;
+            }
+
             building.ProductionQueue.RemoveAt(0);
             var completed = new CompletedProductionItem(
                 building.Id,
@@ -47,8 +51,12 @@ public sealed partial class GameState
         var spawn = completed.SpawnPosition;
         if (spawn is null)
         {
-            var spawnPoint = ProducedUnitSpawnPoint(producer, completed.DesignId);
-            spawn = new Vector2(spawnPoint.X, spawnPoint.Y);
+            if (!TryProducedUnitSpawnPoint(producer, completed.DesignId, out var spawnPoint))
+            {
+                throw new InvalidOperationException($"Producer '{producer.Kind}' egress is unavailable for '{completed.DesignId}'.");
+            }
+
+            spawn = spawnPoint;
         }
 
         var unit = AddUnit(completed.DesignId, producer.Owner, spawn.Value, completed.Facing, completed.FactionId);
@@ -62,19 +70,24 @@ public sealed partial class GameState
         return unit;
     }
 
-    private SpawnPoint ProducedUnitSpawnPoint(BuildingModel producer, string designId)
+    private bool TryProducedUnitSpawnPoint(BuildingModel producer, string designId, out Vector2 spawn)
     {
         var producerSpec = BuildSpecCatalog.For(producer.Kind);
         var unitDescriptor = UnitDesignDefinitionCatalog.RuntimeDescriptors[designId];
-        return ProductionSpawnMath.FindSpawnPoint(
-            producer.Position.X,
-            producer.Position.Y,
-            producer.Facing,
-            producerSpec.Footprint.X,
-            producerSpec.Footprint.Y,
+        if (!PlacementReservationMath.TryCenter(
+                producerSpec,
+                PlacementReservationKind.ProductionEgress,
+                producer.Position,
+                producer.Facing,
+                out spawn))
+        {
+            return false;
+        }
+
+        return ProductionSpawnMath.IsSpawnPointAvailable(
+            spawn.X,
+            spawn.Y,
             unitDescriptor.Radius,
-            WorldSize.X,
-            WorldSize.Y,
             UnitSpawnObstacles());
     }
 
@@ -245,9 +258,14 @@ public sealed partial class GameState
     public Vector2 RefineryDeliveryPoint(BuildingModel refinery)
     {
         var spec = BuildSpecCatalog.For(refinery.Kind);
-        var forward = Vector2.FromAngle(refinery.Facing);
-        var logicalFootprint = spec.LogicalFootprint(refinery.Facing);
-        return refinery.Position + forward * (Mathf.Max(logicalFootprint.X, logicalFootprint.Y) * 0.5f + 54);
+        return PlacementReservationMath.TryCenter(
+            spec,
+            PlacementReservationKind.RefineryDock,
+            refinery.Position,
+            refinery.Facing,
+            out var deliveryPoint)
+                ? deliveryPoint
+                : refinery.Position;
     }
 
     private Vector2 RefineryWaitPoint(BuildingModel refinery, int harvesterId)
@@ -274,7 +292,7 @@ public sealed partial class GameState
             }
 
             var load = RefineryDockLoad(building, harvesterId);
-            var distance = building.Position.DistanceTo(position);
+            var distance = RefineryDeliveryPoint(building).DistanceTo(position);
             if (load < bestLoad || (load == bestLoad && distance < bestDistance))
             {
                 best = building;

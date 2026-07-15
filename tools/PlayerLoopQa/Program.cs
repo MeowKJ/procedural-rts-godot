@@ -206,10 +206,10 @@ static void AssertProductionRallyAndTiers()
     var battlefield = NewBattlefield(20000);
     var rally = new Vector2(1060, 860);
     var barracks = AddBuilding(battlefield, 1, BuildingDesignIds.Barracks, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 760));
-    var factoryA = AddBuilding(battlefield, 2, BuildingDesignIds.VehicleFactory, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(860, 760));
-    var factoryB = AddBuilding(battlefield, 3, BuildingDesignIds.VehicleFactory, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(1000, 760));
-    AddBuilding(battlefield, 4, BuildingDesignIds.Airfield, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(1140, 760));
-    AddBuilding(battlefield, 5, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(560, 760));
+    var factoryA = AddBuilding(battlefield, 2, BuildingDesignIds.VehicleFactory, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(1100, 640));
+    var factoryB = AddBuilding(battlefield, 3, BuildingDesignIds.VehicleFactory, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(1100, 1040));
+    AddBuilding(battlefield, 4, BuildingDesignIds.Airfield, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(1500, 760));
+    AddBuilding(battlefield, 5, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(400, 760));
 
     battlefield.SetBuildingTargetSelected(barracks.Id, true);
     battlefield.SetBuildingTargetSelected(factoryA.Id, true);

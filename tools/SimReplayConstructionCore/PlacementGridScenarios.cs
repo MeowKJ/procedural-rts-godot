@@ -152,6 +152,8 @@ static partial class Program
 
         Assert(rejectedNegativeClearance, "BuildSpec should reject negative placement clearance");
 
+        AssertPlacementReservationMetadataAndRotation();
+        AssertReservationPlacementKernel();
         AssertAuthoritativePlacementKernel();
         AssertLivePlacementAuthorityParity();
         AssertPlayerBuildGatewayPreservesDesiredPoint();
@@ -162,6 +164,7 @@ static partial class Program
 
         Console.WriteLine("OK [placement-grid]: parity, four-way validation, four fixed plus 12 generated grid-safe bases, and blocking-unit clearance.");
     }
+
 
     private static void AssertAuthoritativePlacementKernel()
     {
@@ -455,6 +458,11 @@ static partial class Program
                     ? building with { Position = new MapPoint(2848, 1280) }
                     : building)
                 .ToArray(),
+            Units = unsafeEnemyDog.Units
+                .Select(unit => unit.OwnerId == new OwnerId(2) && unit.DesignId == "dog.harvester"
+                    ? unit with { Position = new MapPoint(2768, 1248) }
+                    : unit)
+                .ToArray(),
         };
         var regressionConflicts = InitialBlockingUnitBuildingConflicts(unsafeEnemyDog);
         Assert(regressionConflicts.Any(conflict =>
@@ -471,53 +479,13 @@ static partial class Program
 
         var unitConflicts = InitialBlockingUnitBuildingConflicts(map);
         Assert(unitConflicts.Count == 0,
-            $"{label} blocking units should clear every building hard footprint; got {string.Join("; ", unitConflicts)}");
+            $"{label} blocking units should clear every building hard footprint and reservation; got {string.Join("; ", unitConflicts)}");
+
+        var reservationConflicts = InitialBuildingReservationConflicts(map);
+        Assert(reservationConflicts.Count == 0,
+            $"{label} buildings should keep hard footprints and reservations mutually clear; got {string.Join("; ", reservationConflicts)}");
     }
 
-    private static IReadOnlyList<string> InitialBlockingUnitBuildingConflicts(MapSpec map)
-    {
-        var conflicts = new List<string>();
-        foreach (var unit in map.Units)
-        {
-            var unitSpec = UnitDesignCatalog.Spec(unit.DesignId);
-            if (!unitSpec.Collision.BlocksMovement || unitSpec.Collision.Radius <= 0)
-            {
-                continue;
-            }
-
-            var faction = map.OwnerStarts.First(start => start.OwnerId == unit.OwnerId).Faction;
-            foreach (var building in map.Buildings)
-            {
-                var buildingSpec = BuildSpecCatalog.For(building.Kind);
-                PlacementMath.TryNormalizeCardinalFacing(building.Facing, out var cardinalFacing);
-                var footprint = buildingSpec.LogicalFootprint(cardinalFacing);
-                var rect = PlacementMath.RectFromCenter(
-                    building.Position.X,
-                    building.Position.Y,
-                    footprint.X,
-                    footprint.Y);
-                if (!CircleIntersectsRect(unit.Position, unitSpec.Collision.Radius, rect))
-                {
-                    continue;
-                }
-
-                conflicts.Add(
-                    $"owner={unit.OwnerId.Value} faction={faction} unit={unit.DesignId} "
-                    + $"building={building.Kind}@owner={building.OwnerId.Value}");
-            }
-        }
-
-        return conflicts;
-    }
-
-    private static bool CircleIntersectsRect(MapPoint center, float radius, PlacementRect rect)
-    {
-        var closestX = Math.Clamp(center.X, rect.X, rect.EndX);
-        var closestY = Math.Clamp(center.Y, rect.Y, rect.EndY);
-        var deltaX = center.X - closestX;
-        var deltaY = center.Y - closestY;
-        return deltaX * deltaX + deltaY * deltaY <= radius * radius;
-    }
 
     private static void AssertRotatedBuildingFootprintLifecycle()
     {

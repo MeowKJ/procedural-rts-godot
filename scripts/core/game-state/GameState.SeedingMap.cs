@@ -145,7 +145,7 @@ public sealed partial class GameState
         AddUnit(GenericInfantryUnitDesignId, Owner.Player, testLine + new Vector2(48, 114));
         AddUnit(GenericHarvesterUnitDesignId, Owner.Player, testLine + new Vector2(140, -46), 0.2f);
 
-        AddBuilding(BuildingDesignIds.VehicleFactory, Owner.Player, new Vector2(650, 965), 0.06f);
+        AddBuilding(BuildingDesignIds.VehicleFactory, Owner.Player, new Vector2(650, 965), 0);
 
         AddUnit(GenericLightTankUnitDesignId, Owner.Enemy, new Vector2(1320, 940), Mathf.Pi);
         AddUnit(GenericInfantryUnitDesignId, Owner.Enemy, new Vector2(1376, 1010), Mathf.Pi);

@@ -87,10 +87,7 @@ static class RegressionReviewGate
         ForbidText(production, "new UnitProductionQueueItem[", "ProductionSystem queue mutation must not allocate copied item arrays.", result);
         ForbidText(production, "OrderedEntities.ToList()", "ProductionSystem must not snapshot all entities with ToList each tick.", result);
         ForbidText(production, ".Where(entity => entity.Id.Value != producer.Id.Value)", "ProductionSystem spawn obstacles must not be built with LINQ chains.", result);
-        var spawnMath = ReviewGateSource.Read(root, "scripts", "core", "production", "ProductionSpawnMath.cs");
-        RequireText(spawnMath, "DirectionOffsets", "ProductionSpawnMath must keep candidate directions as static data.", result);
-        RequireText(spawnMath, "RingScales", "ProductionSpawnMath must keep ring scales as static data.", result);
-        ForbidText(spawnMath, "CandidateDirections(", "ProductionSpawnMath must not allocate a candidate-direction list per spawn.", result);
+        ProductionReservationReviewGate.Check(root, result);
         var projectiles = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "ProjectileSystem.cs");
         ForbidText(projectiles, "OrderedEntities.ToArray()", "ProjectileSystem must not snapshot all entities every tick.", result);
     }

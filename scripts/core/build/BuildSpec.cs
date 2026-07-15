@@ -16,6 +16,19 @@ public enum BuildPlacementMode
     RestartCapture
 }
 
+public enum PlacementReservationKind
+{
+    ProductionEgress,
+    RefineryDock,
+}
+
+public readonly record struct PlacementReservationSpec(
+    PlacementReservationKind Kind,
+    int Column,
+    int Row,
+    int WidthCells,
+    int HeightCells);
+
 public sealed record ConstructionMethod(
     ConstructionMethodKind Kind,
     string MethodId,
@@ -120,7 +133,8 @@ public sealed record BuildSpec(
     BuildConstructionPolicy? ConstructionPolicy = null,
     ElementDefenseProfile? ElementDefense = null,
     TargetTraitProfile? TargetTraits = null,
-    int PlacementClearanceCells = 1)
+    int PlacementClearanceCells = 1,
+    IReadOnlyList<PlacementReservationSpec>? PlacementReservations = null)
 {
     private int _placementClearanceCells = PlacementClearanceCells >= 0
         ? PlacementClearanceCells
@@ -132,6 +146,15 @@ public sealed record BuildSpec(
         init => _placementClearanceCells = value >= 0
             ? value
             : throw new ArgumentOutOfRangeException(nameof(value));
+    }
+
+    private IReadOnlyList<PlacementReservationSpec> _placementReservations =
+        PlacementReservations ?? Array.Empty<PlacementReservationSpec>();
+
+    public IReadOnlyList<PlacementReservationSpec> PlacementReservations
+    {
+        get => _placementReservations;
+        init => _placementReservations = value ?? Array.Empty<PlacementReservationSpec>();
     }
 
     public Vector2 LogicalFootprint(float facing = 0) => FootprintCells.Rotated(facing).WorldSize;

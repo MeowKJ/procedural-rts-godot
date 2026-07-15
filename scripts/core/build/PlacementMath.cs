@@ -10,6 +10,13 @@ public readonly record struct PlacementRect(float X, float Y, float Width, float
 
 public readonly record struct PlacementObstacle(float X, float Y, float Width, float Height, int ClearanceCells = 0);
 
+public readonly record struct PlacementReservationObstacle(
+    float X,
+    float Y,
+    float Width,
+    float Height,
+    int ClearanceCells = 0);
+
 public readonly record struct PlacementBuildAnchor(float X, float Y, float Radius, bool Powered = true);
 
 public readonly record struct PlacementBuildVisibility(float X, float Y, float Radius, bool AllowsConstruction = true);

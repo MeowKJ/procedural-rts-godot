@@ -391,6 +391,7 @@ public partial class BuildPlacementController : Node2D
             "placement.outside" => GameText.T("placement.outside"),
             "placement.blocked" => GameText.T("placement.blocked"),
             "placement.clearance" => GameText.T("placement.clearance"),
+            "placement.reserved" => GameText.T("placement.reserved"),
             "placement.outsideBuildRadius" => GameText.T("placement.outsideBuildRadius"),
             "placement.unpowered" => GameText.T("placement.unpowered"),
             "placement.impassable" => GameText.T("placement.impassable"),

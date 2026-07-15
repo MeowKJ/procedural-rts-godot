@@ -29,6 +29,10 @@ public sealed class VehicleFactoryBuilding : BuildingDesign
             0,
             10,
             560,
-            MovementDomain.Land);
+            MovementDomain.Land,
+            PlacementReservations:
+            [
+                new PlacementReservationSpec(PlacementReservationKind.ProductionEgress, 6, 0, 3, 4),
+            ]);
     }
 }

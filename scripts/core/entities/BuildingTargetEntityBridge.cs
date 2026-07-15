@@ -300,7 +300,9 @@ public static class BuildingTargetEntityBridge
 
     private static bool ProducesUnits(string kind)
     {
-        return kind is BuildingDesignIds.Barracks or BuildingDesignIds.VehicleFactory;
+        return kind is BuildingDesignIds.Barracks
+            or BuildingDesignIds.VehicleFactory
+            or BuildingDesignIds.Airfield;
     }
 
     private static int TechTierFor(string kind)

@@ -446,6 +446,7 @@ public static partial class GameText
         ["placement.outside"] = "超出可建造区域",
         ["placement.blocked"] = "被建筑阻挡",
         ["placement.clearance"] = "需要保留一格建筑间距",
+        ["placement.reserved"] = "需要避开建筑出口或泊位",
         ["placement.outsideBuildRadius"] = "超出建造半径",
         ["placement.unpowered"] = "建造半径离线",
         ["placement.impassable"] = "地形无法建造",

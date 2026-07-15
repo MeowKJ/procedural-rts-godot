@@ -122,7 +122,128 @@ static partial class Program
                 || unit.Transform.Position.DistanceTo(rally) < 8f;
         }), "produced units should receive or reach producer rally points");
 
+        AssertFixedProductionEgress();
+
         Console.WriteLine($"OK [production-loop]: produced {producedUnits.Count}, paused queue {unpoweredQueue.Items.Count}, cancelled queue {cancelledQueue.Items.Count}, credits {credits}.");
+    }
+
+    static void AssertFixedProductionEgress()
+    {
+        var cases = new[]
+        {
+            (BuildingKind: BuildingDesignIds.Barracks, UnitDesignId: "dog.infantry", Facing: 0f),
+            (BuildingKind: BuildingDesignIds.VehicleFactory, UnitDesignId: "dog.guard_tank", Facing: Mathf.Pi * 0.5f),
+            (BuildingKind: BuildingDesignIds.Airfield, UnitDesignId: "dog.sky_patrol_aircraft", Facing: Mathf.Pi),
+        };
+        for (var caseIndex = 0; caseIndex < cases.Length; caseIndex++)
+        {
+            var fixture = cases[caseIndex];
+            var world = new EntityWorld(seed: (ulong)(6170 + caseIndex)) { WorldWidth = 1600, WorldHeight = 1200 };
+            world.AddSystem(new ProductionSystem());
+            var buildingSpec = BuildSpecCatalog.For(fixture.BuildingKind);
+            var unitSpec = UnitDesignCatalog.Spec(fixture.UnitDesignId);
+            Assert(buildingSpec.ToEntitySpec().Tags.Contains("Producer"),
+                $"{fixture.BuildingKind} should be classified as a producer");
+            var producer = world.Spawn(
+                buildingSpec.ToEntitySpec(),
+                new OwnerId(1),
+                EntityTransform.At(new Vector2(500, 500), fixture.Facing),
+                new EntityComponentState[]
+                {
+                    new HealthComponentState(buildingSpec.MaxHp, buildingSpec.MaxHp),
+                    new ConstructionComponentState(Progress: 1),
+                    new PowerComponentState(0, buildingSpec.PowerUsed, Powered: true),
+                    new ProductionQueueComponentState(new List<UnitProductionQueueItem>
+                    {
+                        new()
+                        {
+                            Id = 1,
+                            Kind = ProductionKindDesignBridge.ProductionKindFor(unitSpec),
+                            DesignId = unitSpec.Id,
+                            Faction = unitSpec.Faction,
+                            Progress = unitSpec.Production!.Duration,
+                        },
+                    }),
+                });
+
+            var clock = new SimClock();
+            world.Step(1, clock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+            var produced = world.OrderedEntities.Single(entity => entity.SpecId == fixture.UnitDesignId);
+            Assert(PlacementReservationMath.TryCenter(
+                    buildingSpec,
+                    PlacementReservationKind.ProductionEgress,
+                    producer.Transform.Position,
+                    producer.Transform.Facing,
+                    out var expected),
+                $"{fixture.BuildingKind} should resolve a cardinal production egress");
+            Assert(produced.Transform.Position.DistanceTo(expected) < 0.001f,
+                $"{fixture.BuildingKind} should spawn {fixture.UnitDesignId} at exact egress {expected}, got {produced.Transform.Position}");
+            Assert(producer.Components.Require<ProductionQueueComponentState>().Items.Count == 0,
+                $"{fixture.BuildingKind} should dequeue only after its exact egress spawn succeeds");
+        }
+
+        var blockedWorld = new EntityWorld(seed: 6179) { WorldWidth = 1600, WorldHeight = 1200 };
+        blockedWorld.AddSystem(new ProductionSystem());
+        var barracks = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
+        var infantry = UnitDesignCatalog.Spec("dog.infantry");
+        var center = new Vector2(500, 500);
+        PlacementReservationMath.TryCenter(
+            barracks,
+            PlacementReservationKind.ProductionEgress,
+            center,
+            0,
+            out var egress);
+        var blockedProducer = blockedWorld.Spawn(
+            barracks.ToEntitySpec(),
+            new OwnerId(1),
+            EntityTransform.At(center),
+            new EntityComponentState[]
+            {
+                new HealthComponentState(barracks.MaxHp, barracks.MaxHp),
+                new ConstructionComponentState(Progress: 1),
+                new PowerComponentState(0, barracks.PowerUsed, Powered: true),
+                new ProductionQueueComponentState(new List<UnitProductionQueueItem>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        Kind = ProductionKindDesignBridge.ProductionKindFor(infantry),
+                        DesignId = infantry.Id,
+                        Faction = infantry.Faction,
+                        Progress = infantry.Production!.Duration,
+                    },
+                }),
+            });
+        var blockerSpec = new EntitySpec
+        {
+            Id = "replay.egress_blocker",
+            Kind = EntityKind.Unit,
+            Display = new EntityDisplaySpec("Blocker", "blocker.name", "blocker.role", "BLK", IconGlyph.StanceHold),
+        };
+        var blocker = blockedWorld.Spawn(
+            blockerSpec,
+            new OwnerId(1),
+            EntityTransform.At(egress),
+            new EntityComponentState[]
+            {
+                new CollisionComponentState(24, 1, 1, BlocksMovement: true),
+            });
+        var blockedClock = new SimClock();
+        blockedWorld.Step(1, blockedClock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+        var blockedQueue = blockedProducer.Components.Require<ProductionQueueComponentState>();
+        Assert(blockedWorld.OrderedEntities.All(entity => entity.SpecId != infantry.Id),
+            "blocked egress must not spawn at an alternate or fallback point");
+        Assert(blockedQueue.Items.Count == 1
+            && Math.Abs(blockedQueue.Items[0].Progress - infantry.Production!.Duration) < 0.0001f,
+            "blocked egress should retain the first queue item at progress 1");
+
+        blocker.Transform = blocker.Transform with { Position = new Vector2(900, 900) };
+        blockedWorld.Step(2, blockedClock.FixedDelta, Array.Empty<SequencedCommandEnvelope>());
+        var retried = blockedWorld.OrderedEntities.Single(entity => entity.SpecId == infantry.Id);
+        Assert(retried.Transform.Position.DistanceTo(egress) < 0.001f,
+            "cleared egress should retry on the next tick at the same exact point");
+        Assert(blockedProducer.Components.Require<ProductionQueueComponentState>().Items.Count == 0,
+            "successful retry should dequeue the completed item exactly once");
     }
     static void AssertResourceRallyProduction()
     {

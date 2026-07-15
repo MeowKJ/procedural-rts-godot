@@ -90,6 +90,44 @@ static partial class Program
         Assert(!hiddenDirect.IsValid && hiddenDirect.Reason == "placement.notVisible",
             $"Direct spec without build authority should still use simulation visibility; got {hiddenDirect}");
 
+        var barracksSpec = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
+        battlefield.UpsertBuildingTarget(
+            2,
+            BuildingDesignIds.Barracks,
+            PlayerSlotId.One,
+            UnitFactionId.Dog,
+            new Vector2(480.001f, 640),
+            0,
+            barracksSpec.MaxHp,
+            powered: true);
+        var reservedDesired = new Vector2(704, 640);
+        foreach (var intent in new[] { ConstructionPlacementIntent.Direct, ConstructionPlacementIntent.ReadyTicket })
+        {
+            var playerReserved = battlefield.ValidateBuildingPlacement(
+                powerSpec.Kind,
+                PlayerSlotId.One,
+                reservedDesired,
+                0,
+                intent);
+            var aiReserved = battlefield.ValidateBuildingPlacement(
+                powerSpec.Kind,
+                PlayerSlotId.One,
+                reservedDesired,
+                0,
+                intent);
+            var simulationReserved = spatialAuthority.QueryBuildingPlacement(
+                battlefield.EntityWorld,
+                owner,
+                powerSpec,
+                reservedDesired,
+                0,
+                intent);
+            AssertSamePlacement(playerReserved, aiReserved, $"player and AI {intent} reservation rejection");
+            AssertSamePlacement(playerReserved, simulationReserved, $"preview and simulation {intent} reservation rejection");
+            Assert(!playerReserved.IsValid && playerReserved.Reason == "placement.reserved",
+                $"{intent} should preserve placement.reserved across player, AI and simulation authority; got {playerReserved}");
+        }
+
         var outsideDesired = new Vector2(-100, 100);
         var outsidePreview = battlefield.ValidateBuildingPlacement(
             hqSpec.Kind,
@@ -273,8 +311,9 @@ static partial class Program
         var owner = new OwnerId(1);
         var world = CreatePlacementWorld(owner);
         var system = new ConstructionSystem();
-        var spec = BuildSpecCatalog.For(BuildingDesignIds.PowerPlant);
-        var desired = new Vector2(320, 336);
+        var spec = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
+        var desired = new Vector2(320, 320);
+        SpawnPlacementBuilding(world, owner, spec, new Vector2(704, 320), Mathf.Pi);
 
         var warm = system.QueryBuildingPlacement(
             world,

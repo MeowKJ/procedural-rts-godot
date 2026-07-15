@@ -32,11 +32,28 @@ public sealed partial class ConstructionSystem
             return new PlacementResult(snappedX, snappedY, false, "placement.outside");
         }
 
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var reservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                new Vector2(snappedX, snappedY),
+                cardinalFacing);
+            if (reservation.X < 0
+                || reservation.Y < 0
+                || reservation.EndX > world.WorldWidth
+                || reservation.EndY > world.WorldHeight)
+            {
+                return new PlacementResult(snappedX, snappedY, false, "placement.outside");
+            }
+        }
+
         CollectPlacementSnapshot(
             world,
             ownerId,
             _placementBuildAnchors,
             _placementObstacles,
+            _placementReservations,
             _placementVisibility);
 
         if (intent == ConstructionPlacementIntent.ReadyTicket || RequiresBuildAuthority(spec))
@@ -58,9 +75,35 @@ public sealed partial class ConstructionSystem
             return new PlacementResult(snappedX, snappedY, false, "placement.impassable");
         }
 
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var reservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                new Vector2(snappedX, snappedY),
+                cardinalFacing);
+            if (!IsTerrainPassable(world, reservation, spec.PlacementDomain))
+            {
+                return new PlacementResult(snappedX, snappedY, false, "placement.impassable");
+            }
+        }
+
         if (!HasBuildVisibility(footprint, _placementVisibility))
         {
             return new PlacementResult(snappedX, snappedY, false, "placement.notVisible");
+        }
+
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var reservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                new Vector2(snappedX, snappedY),
+                cardinalFacing);
+            if (!HasBuildVisibility(reservation, _placementVisibility))
+            {
+                return new PlacementResult(snappedX, snappedY, false, "placement.notVisible");
+            }
         }
 
         for (var index = 0; index < _placementObstacles.Count; index++)
@@ -93,6 +136,48 @@ public sealed partial class ConstructionSystem
             }
         }
 
+        var candidatePosition = new Vector2(snappedX, snappedY);
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var candidateReservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                candidatePosition,
+                cardinalFacing);
+            for (var obstacleIndex = 0; obstacleIndex < _placementObstacles.Count; obstacleIndex++)
+            {
+                var obstacle = _placementObstacles[obstacleIndex];
+                var pairClearance = Math.Max(spec.PlacementClearanceCells, obstacle.ClearanceCells)
+                    * PlacementMath.GridSize;
+                if (ViolatesReservationClearance(candidateReservation, ObstacleRect(obstacle), pairClearance))
+                {
+                    return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
+                }
+            }
+
+            for (var existingIndex = 0; existingIndex < _placementReservations.Count; existingIndex++)
+            {
+                var existing = _placementReservations[existingIndex];
+                var pairClearance = Math.Max(spec.PlacementClearanceCells, existing.ClearanceCells)
+                    * PlacementMath.GridSize;
+                if (ViolatesReservationClearance(candidateReservation, ReservationRect(existing), pairClearance))
+                {
+                    return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
+                }
+            }
+        }
+
+        for (var existingIndex = 0; existingIndex < _placementReservations.Count; existingIndex++)
+        {
+            var existing = _placementReservations[existingIndex];
+            var pairClearance = Math.Max(spec.PlacementClearanceCells, existing.ClearanceCells)
+                * PlacementMath.GridSize;
+            if (ViolatesReservationClearance(footprint, ReservationRect(existing), pairClearance))
+            {
+                return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
+            }
+        }
+
         return new PlacementResult(snappedX, snappedY, true, "placement.ready");
     }
 
@@ -101,15 +186,25 @@ public sealed partial class ConstructionSystem
         OwnerId ownerId,
         List<PlacementBuildAnchor> buildAnchors,
         List<PlacementObstacle> obstacles,
+        List<PlacementReservationObstacle> reservations,
         List<PlacementBuildVisibility> visibility)
     {
         buildAnchors.Clear();
         obstacles.Clear();
+        reservations.Clear();
         visibility.Clear();
         for (var entityIndex = 0; entityIndex < world.OrderedEntities.Count; entityIndex++)
         {
             var entity = world.OrderedEntities[entityIndex];
             var isAlive = !entity.Components.TryGet<HealthComponentState>(out var health) || health.Hp > 0;
+            BuildSpec? existingSpec = null;
+            if (isAlive
+                && BuildingSpecIdFor(world, entity) is { } buildingSpecId
+                && TryGetBuildSpec(buildingSpecId, out var foundSpec))
+            {
+                existingSpec = foundSpec;
+            }
+
             if (isAlive && entity.Components.TryGet<FootprintComponentState>(out var footprint))
             {
                 var rect = PlacementMath.RectFromCenter(
@@ -117,11 +212,29 @@ public sealed partial class ConstructionSystem
                     entity.Transform.Position.Y,
                     footprint.Size.X,
                     footprint.Size.Y);
-                var clearanceCells = BuildingSpecIdFor(world, entity) is { } kind
-                    && TryGetBuildSpec(kind, out var existingSpec)
-                        ? existingSpec.PlacementClearanceCells
-                        : 0;
+                var clearanceCells = existingSpec?.PlacementClearanceCells ?? 0;
                 obstacles.Add(new PlacementObstacle(rect.X, rect.Y, rect.Width, rect.Height, clearanceCells));
+
+                if (existingSpec is not null)
+                {
+                    PlacementMath.TryNormalizeCardinalFacing(entity.Transform.Facing, out var cardinalFacing);
+                    for (var reservationIndex = 0;
+                         reservationIndex < existingSpec.PlacementReservations.Count;
+                         reservationIndex++)
+                    {
+                        var reservation = PlacementReservationMath.WorldRect(
+                            existingSpec,
+                            existingSpec.PlacementReservations[reservationIndex],
+                            entity.Transform.Position,
+                            cardinalFacing);
+                        reservations.Add(new PlacementReservationObstacle(
+                            reservation.X,
+                            reservation.Y,
+                            reservation.Width,
+                            reservation.Height,
+                            existingSpec.PlacementClearanceCells));
+                    }
+                }
             }
 
             if (entity.OwnerId.Value == ownerId.Value
@@ -369,6 +482,37 @@ public sealed partial class ConstructionSystem
     private static PlacementRect ObstacleRect(PlacementObstacle obstacle)
     {
         return new PlacementRect(obstacle.X, obstacle.Y, obstacle.Width, obstacle.Height);
+    }
+
+    private static PlacementRect ReservationRect(PlacementReservationObstacle reservation)
+    {
+        return new PlacementRect(reservation.X, reservation.Y, reservation.Width, reservation.Height);
+    }
+
+    private static bool ViolatesReservationClearance(PlacementRect a, PlacementRect b, float clearance)
+    {
+        if (Intersects(a, b))
+        {
+            return true;
+        }
+
+        if (clearance <= 0)
+        {
+            return false;
+        }
+
+        return AxisGap(a.X, a.EndX, b.X, b.EndX) < clearance
+            && AxisGap(a.Y, a.EndY, b.Y, b.EndY) < clearance;
+    }
+
+    private static float AxisGap(float startA, float endA, float startB, float endB)
+    {
+        if (endA <= startB)
+        {
+            return startB - endA;
+        }
+
+        return endB <= startA ? startA - endB : 0;
     }
 
     private static bool Intersects(PlacementRect a, PlacementRect b)
