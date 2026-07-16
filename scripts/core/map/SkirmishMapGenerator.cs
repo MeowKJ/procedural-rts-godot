@@ -23,7 +23,7 @@ public static class SkirmishMapGenerator
             config.AiFaction,
             SkirmishOptions.DefaultMapSeed));
         var layout = spec.ToSkirmishMapLayout();
-        return spec with
+        var withLoadout = spec with
         {
             Buildings = StandardBuildings(Owner.Player, config.PlayerFaction, layout)
                 .Concat(StandardBuildings(Owner.Enemy, config.AiFaction, layout))
@@ -32,6 +32,7 @@ public static class SkirmishMapGenerator
                 .Concat(StandardUnits(Owner.Enemy, config.AiFaction, layout))
                 .ToArray(),
         };
+        return SkirmishStartingEnvironmentAdapter.Apply(withLoadout);
     }
 
     public static SkirmishMapLayout Generate(MatchConfig config)

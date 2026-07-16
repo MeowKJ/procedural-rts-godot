@@ -18,9 +18,11 @@ public static class MapLoader
     public static void LoadInto(EntityWorld world, MapSpec spec, MapLoadOptions? options = null)
     {
         MapBuildingPlacementValidator.EnsureValid(spec);
+        var environment = MapRuntimeEnvironment.From(spec);
 
         world.WorldWidth = spec.WorldSize.Width;
         world.WorldHeight = spec.WorldSize.Height;
+        world.InstallMapEnvironment(environment);
         ConfigureOwners(world, spec);
 
         if (options?.ConfigureLiveSystems == true)

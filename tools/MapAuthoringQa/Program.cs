@@ -15,7 +15,7 @@ ValidateDeterministicLoad("baked hand-designed", baked, failures);
 Require(baked.Triggers.Count == 1, "baked map should keep trigger areas.", failures);
 Require(baked.Objectives.Count == 1, "baked map should keep objective nodes.", failures);
 Require(baked.NarrativeNodes.Count == 1, "baked map should keep narrative nodes.", failures);
-Require(baked.TerrainCells.Count == 1, "baked map should keep terrain cells.", failures);
+Require(baked.TerrainCells.Count == 2, "baked map should keep layered terrain cells.", failures);
 
 if (failures.Count > 0)
 {

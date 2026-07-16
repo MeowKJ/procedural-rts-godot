@@ -5,6 +5,7 @@ static partial class PlacementValidationScenarios
     public static void Run(List<string> failures)
     {
         ValidateReasonContract(failures);
+        ValidateEnvironmentContracts(failures);
         ValidateLocalReasonOrder(failures);
         ValidateHardPairReasons(failures);
         ValidateReservationRotationsAndSymmetry(failures);
@@ -20,6 +21,9 @@ static partial class PlacementValidationScenarios
             MapBuildingPlacementConflictKind.Rotation,
             MapBuildingPlacementConflictKind.Unsnapped,
             MapBuildingPlacementConflictKind.Outside,
+            MapBuildingPlacementConflictKind.Terrain,
+            MapBuildingPlacementConflictKind.StaticObstacle,
+            MapBuildingPlacementConflictKind.Resource,
             MapBuildingPlacementConflictKind.Overlap,
             MapBuildingPlacementConflictKind.Clearance,
             MapBuildingPlacementConflictKind.Reserved,

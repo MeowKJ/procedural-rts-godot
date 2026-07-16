@@ -8,7 +8,13 @@ public readonly record struct PlacementRect(float X, float Y, float Width, float
     public float EndY => Y + Height;
 }
 
-public readonly record struct PlacementObstacle(float X, float Y, float Width, float Height, int ClearanceCells = 0);
+public readonly record struct PlacementObstacle(
+    float X,
+    float Y,
+    float Width,
+    float Height,
+    int ClearanceCells = 0,
+    bool IsMapEnvironment = false);
 
 public readonly record struct PlacementReservationObstacle(
     float X,
@@ -16,6 +22,8 @@ public readonly record struct PlacementReservationObstacle(
     float Width,
     float Height,
     int ClearanceCells = 0);
+
+public readonly record struct PlacementResourceObstacle(float X, float Y, float Radius);
 
 public readonly record struct PlacementBuildAnchor(float X, float Y, float Radius, bool Powered = true);
 
@@ -228,6 +236,19 @@ public static class PlacementMath
 
         return AxisGap(first.X, first.EndX, second.X, second.EndX) < clearance
             && AxisGap(first.Y, first.EndY, second.Y, second.EndY) < clearance;
+    }
+
+    public static bool ViolatesClearance(
+        PlacementRect rect,
+        PlacementResourceObstacle resource,
+        float clearance)
+    {
+        var closestX = Math.Clamp(resource.X, rect.X, rect.EndX);
+        var closestY = Math.Clamp(resource.Y, rect.Y, rect.EndY);
+        var dx = resource.X - closestX;
+        var dy = resource.Y - closestY;
+        var requiredDistance = MathF.Max(0, resource.Radius) + MathF.Max(0, clearance);
+        return dx * dx + dy * dy < requiredDistance * requiredDistance;
     }
 
     public static bool HasBuildVisibility(

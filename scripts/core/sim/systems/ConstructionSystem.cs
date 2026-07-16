@@ -11,6 +11,7 @@ public sealed partial class ConstructionSystem : ISimSystem
     private readonly List<PlacementBuildAnchor> _placementBuildAnchors = new();
     private readonly List<PlacementObstacle> _placementObstacles = new();
     private readonly List<PlacementReservationObstacle> _placementReservations = new();
+    private readonly List<PlacementResourceObstacle> _placementResourceObstacles = new();
     private readonly List<PlacementBuildVisibility> _placementVisibility = new();
     private readonly List<string> _requiredBuildingOrder = new();
     private readonly List<EntityId> _constructionSubjectOrder = new();

@@ -68,6 +68,13 @@ metadata/height = 140
 metadata/movement_cost = 0.85
 position = Vector2(540, 500)
 
+[node name="CatBasePad" type="Node2D"]
+metadata/map_kind = "terrain"
+metadata/terrain_id = "base-ground"
+metadata/width = 192
+metadata/height = 160
+position = Vector2(1152, 608)
+
 [node name="GateTrigger" type="Area2D"]
 metadata/map_kind = "trigger"
 metadata/event_key = "chapter0.gate_contact"

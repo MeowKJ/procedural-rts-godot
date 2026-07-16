@@ -13,6 +13,7 @@ public sealed partial class PathfindingSystem : ISimSystem
     private const float SamePointDistanceSquared = 1f;
     private readonly float _cellSize;
     private readonly List<GridObstacle> _obstacles = [];
+    private readonly List<GridTerrain> _terrain = [];
     private readonly HashSet<GridObstacle> _seenObstacles = [];
     private readonly HashSet<int> _sharedPlanned = [];
     private readonly Dictionary<SharedMoveKey, List<SharedMoveCandidate>> _sharedGroups = [];
@@ -134,7 +135,7 @@ public sealed partial class PathfindingSystem : ISimSystem
                 _cellSize,
                 _obstacles,
                 group[0].Domain,
-                [],
+                _terrain,
                 _sharedAssignmentResults);
             _sharedAssignments.Clear();
             foreach (var assignment in corridor.Assignments)
@@ -255,7 +256,7 @@ public sealed partial class PathfindingSystem : ISimSystem
             _cellSize,
             _obstacles,
             domain,
-            []);
+            _terrain);
 
         var pathGoal = new PathPoint(goal.X, goal.Y);
         var waypoints = PathOrGoal(result.Path, pathGoal);
@@ -292,6 +293,8 @@ public sealed partial class PathfindingSystem : ISimSystem
     private void BuildStaticBlockers(EntityWorld world, int movingEntityId, MovementDomain domain)
     {
         _obstacles.Clear();
+        _terrain.Clear();
+        world.MapEnvironment.AppendAuthoredTerrainGrid(_cellSize, _terrain);
         if (TerrainPassability.IgnoresBuildingBlockers(domain))
         {
             return;
@@ -300,6 +303,7 @@ public sealed partial class PathfindingSystem : ISimSystem
         var width = Math.Max(1, (int)MathF.Ceiling(world.WorldWidth / _cellSize));
         var height = Math.Max(1, (int)MathF.Ceiling(world.WorldHeight / _cellSize));
         _seenObstacles.Clear();
+        world.MapEnvironment.AppendStaticObstacleGrid(_cellSize, _obstacles, _seenObstacles);
 
         foreach (var entity in world.OrderedEntities)
         {

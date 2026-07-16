@@ -8,8 +8,19 @@ static partial class PlacementValidationScenarios
             "qa.loader-atomic-rejection",
             new MapSize(512, 512),
             Building(BuildingDesignIds.Barracks, new MapPoint(480, 320)));
-        var world = new EntityWorld(seed: 550) { WorldWidth = 777, WorldHeight = 555 };
+        var world = new EntityWorld(seed: 550);
+        MapLoader.LoadInto(
+            world,
+            new MapSpec
+            {
+                Id = "qa.loader-existing-environment",
+                Seed = 550,
+                WorldSize = new MapSize(777, 555),
+                TerrainCells = [new("existing.ground", new MapRect(0, 0, 777, 555), "ground")],
+                Obstacles = [new("existing.rock", new MapRect(32, 32, 32, 32))],
+            });
         world.ResourceInventory(new OwnerId(1)).Credits = 123;
+        var environmentBefore = world.MapEnvironment;
         var hashBefore = world.DeterministicStateHash();
         MapBuildingPlacementValidationException? first = null;
         try
@@ -26,9 +37,10 @@ static partial class PlacementValidationScenarios
 
         Require(first is not null, "MapLoader should throw the typed placement validation exception.", failures);
         Require(world.DeterministicStateHash() == hashBefore
+            && ReferenceEquals(world.MapEnvironment, environmentBefore)
             && Math.Abs(world.WorldWidth - 777) < 0.001f
             && Math.Abs(world.WorldHeight - 555) < 0.001f,
-            "MapLoader rejection should be atomic before world dimensions, systems, owners, or entities change.", failures);
+            "MapLoader rejection should preserve the previous environment/hash before world dimensions, systems, owners, or entities change.", failures);
 
         MapBuildingPlacementValidationException? second = null;
         try
