@@ -2,14 +2,16 @@ namespace ProceduralRts.Core;
 
 public enum MapBuildingPlacementConflictKind
 {
-    Unsnapped,
     Rotation,
+    Unsnapped,
+    Outside,
     Overlap,
     Clearance,
-    Outside,
+    Reserved,
 }
 
 public sealed record MapBuildingPlacementConflict(
+    string MapId,
     MapBuildingPlacementConflictKind Conflict,
     MapBuildingSeedSpec Building,
     int GridX,
@@ -21,11 +23,11 @@ public sealed record MapBuildingPlacementConflict(
         var subject = Identity(Building, GridX, GridY);
         if (Other is null)
         {
-            return $"{subject} conflict={Conflict.ToString().ToLowerInvariant()}";
+            return $"map={MapId} {subject} conflict={Conflict.ToString().ToLowerInvariant()}";
         }
 
         var otherGrid = MapBuildingPlacementValidator.GridCoordinate(Other);
-        return $"{subject} conflict={Conflict.ToString().ToLowerInvariant()} other=[{Identity(Other, otherGrid.X, otherGrid.Y)}]";
+        return $"map={MapId} {subject} conflict={Conflict.ToString().ToLowerInvariant()} other=[{Identity(Other, otherGrid.X, otherGrid.Y)}]";
     }
 
     private static string Identity(MapBuildingSeedSpec building, int gridX, int gridY)
@@ -36,11 +38,7 @@ public sealed record MapBuildingPlacementConflict(
 
 public static class MapBuildingPlacementValidator
 {
-    public const float DefaultClearance = PlacementMath.GridSize;
-
-    public static IReadOnlyList<MapBuildingPlacementConflict> Validate(
-        MapSpec map,
-        float clearance = DefaultClearance)
+    public static IReadOnlyList<MapBuildingPlacementConflict> Validate(MapSpec map)
     {
         var conflicts = new List<MapBuildingPlacementConflict>();
         var placements = new List<Placement>();
@@ -58,10 +56,20 @@ public static class MapBuildingPlacementValidator
                 footprint.WorldSize.X,
                 footprint.WorldSize.Y);
             var grid = GridCoordinate(snappedX, snappedY, footprint);
+            var reservations = new PlacementRect[spec.PlacementReservations.Count];
+            for (var reservationIndex = 0; reservationIndex < reservations.Length; reservationIndex++)
+            {
+                reservations[reservationIndex] = PlacementReservationMath.WorldRect(
+                    spec,
+                    spec.PlacementReservations[reservationIndex],
+                    building.Position.ToVector2(),
+                    cardinalFacing);
+            }
 
             if (!isCardinal)
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
+                    map.Id,
                     MapBuildingPlacementConflictKind.Rotation,
                     building,
                     grid.X,
@@ -71,22 +79,31 @@ public static class MapBuildingPlacementValidator
             if (!NearlyEqual(building.Position.X, snappedX) || !NearlyEqual(building.Position.Y, snappedY))
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
+                    map.Id,
                     MapBuildingPlacementConflictKind.Unsnapped,
                     building,
                     grid.X,
                     grid.Y));
             }
 
-            if (rect.X < 0 || rect.Y < 0 || rect.EndX > map.WorldSize.Width || rect.EndY > map.WorldSize.Height)
+            if (IsOutside(rect, map.WorldSize)
+                || reservations.Any(reservation => IsOutside(reservation, map.WorldSize)))
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
+                    map.Id,
                     MapBuildingPlacementConflictKind.Outside,
                     building,
                     grid.X,
                     grid.Y));
             }
 
-            placements.Add(new Placement(building, rect, grid.X, grid.Y));
+            placements.Add(new Placement(
+                building,
+                rect,
+                reservations,
+                spec.PlacementClearanceCells,
+                grid.X,
+                grid.Y));
         }
 
         for (var firstIndex = 0; firstIndex < placements.Count; firstIndex++)
@@ -95,9 +112,10 @@ public static class MapBuildingPlacementValidator
             for (var secondIndex = firstIndex + 1; secondIndex < placements.Count; secondIndex++)
             {
                 var second = placements[secondIndex];
-                if (Intersects(first.Rect, second.Rect))
+                if (PlacementMath.Intersects(first.Rect, second.Rect))
                 {
                     conflicts.Add(new MapBuildingPlacementConflict(
+                        map.Id,
                         MapBuildingPlacementConflictKind.Overlap,
                         first.Building,
                         first.GridX,
@@ -106,11 +124,25 @@ public static class MapBuildingPlacementValidator
                     continue;
                 }
 
-                if (clearance > 0
-                    && Intersects(Inflate(first.Rect, clearance * 0.5f), Inflate(second.Rect, clearance * 0.5f)))
+                var pairClearance = Math.Max(first.ClearanceCells, second.ClearanceCells)
+                    * PlacementMath.GridSize;
+                if (PlacementMath.ViolatesClearance(first.Rect, second.Rect, pairClearance))
                 {
                     conflicts.Add(new MapBuildingPlacementConflict(
+                        map.Id,
                         MapBuildingPlacementConflictKind.Clearance,
+                        first.Building,
+                        first.GridX,
+                        first.GridY,
+                        second.Building));
+                    continue;
+                }
+
+                if (ReservationsConflict(first, second, pairClearance))
+                {
+                    conflicts.Add(new MapBuildingPlacementConflict(
+                        map.Id,
+                        MapBuildingPlacementConflictKind.Reserved,
                         first.Building,
                         first.GridX,
                         first.GridY,
@@ -119,7 +151,16 @@ public static class MapBuildingPlacementValidator
             }
         }
 
-        return conflicts;
+        return conflicts.AsReadOnly();
+    }
+
+    public static void EnsureValid(MapSpec map)
+    {
+        var conflicts = Validate(map);
+        if (conflicts.Count > 0)
+        {
+            throw new MapBuildingPlacementValidationException(map.Id, conflicts);
+        }
     }
 
     public static (int X, int Y) GridCoordinate(MapBuildingSeedSpec building)
@@ -144,21 +185,45 @@ public static class MapBuildingPlacementValidator
             (int)MathF.Round(originY / PlacementMath.GridSize));
     }
 
-    private static PlacementRect Inflate(PlacementRect rect, float amount)
+    private static bool ReservationsConflict(Placement first, Placement second, float pairClearance)
     {
-        return new PlacementRect(
-            rect.X - amount,
-            rect.Y - amount,
-            rect.Width + amount * 2,
-            rect.Height + amount * 2);
+        for (var firstIndex = 0; firstIndex < first.Reservations.Count; firstIndex++)
+        {
+            var firstReservation = first.Reservations[firstIndex];
+            if (PlacementMath.ViolatesClearance(firstReservation, second.Rect, pairClearance))
+            {
+                return true;
+            }
+
+            for (var secondIndex = 0; secondIndex < second.Reservations.Count; secondIndex++)
+            {
+                if (PlacementMath.ViolatesClearance(
+                        firstReservation,
+                        second.Reservations[secondIndex],
+                        pairClearance))
+                {
+                    return true;
+                }
+            }
+        }
+
+        for (var secondIndex = 0; secondIndex < second.Reservations.Count; secondIndex++)
+        {
+            if (PlacementMath.ViolatesClearance(first.Rect, second.Reservations[secondIndex], pairClearance))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static bool Intersects(PlacementRect first, PlacementRect second)
+    private static bool IsOutside(PlacementRect rect, MapSize worldSize)
     {
-        return first.X < second.EndX
-            && first.EndX > second.X
-            && first.Y < second.EndY
-            && first.EndY > second.Y;
+        return rect.X < 0
+            || rect.Y < 0
+            || rect.EndX > worldSize.Width
+            || rect.EndY > worldSize.Height;
     }
 
     private static bool NearlyEqual(float first, float second)
@@ -169,6 +234,8 @@ public static class MapBuildingPlacementValidator
     private sealed record Placement(
         MapBuildingSeedSpec Building,
         PlacementRect Rect,
+        IReadOnlyList<PlacementRect> Reservations,
+        int ClearanceCells,
         int GridX,
         int GridY);
 }

@@ -481,9 +481,6 @@ static partial class Program
         Assert(unitConflicts.Count == 0,
             $"{label} blocking units should clear every building hard footprint and reservation; got {string.Join("; ", unitConflicts)}");
 
-        var reservationConflicts = InitialBuildingReservationConflicts(map);
-        Assert(reservationConflicts.Count == 0,
-            $"{label} buildings should keep hard footprints and reservations mutually clear; got {string.Join("; ", reservationConflicts)}");
     }
 
 

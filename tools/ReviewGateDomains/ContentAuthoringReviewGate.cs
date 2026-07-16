@@ -5,7 +5,7 @@ static class ContentAuthoringReviewGate
         RequireUnitSpecAuthoring(root, result);
         RequireUnitKindCleanupEdges(root, result);
         RequireBuildSpecAuthoring(root, result);
-        RequireMapAuthoring(root, result);
+        MapAuthoringReviewGate.Check(root, result);
         RequireEconomyAndProductionSystems(root, result);
         RequireScopeLocks(root, result);
     }
@@ -93,24 +93,6 @@ static class ContentAuthoringReviewGate
         ReviewGateSource.RequireAnyText(root, result, "ProductionQueueComponentState", "scripts/core/sim", "scripts/core/units/runtime", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "StartConstructionEntityCommand", "scripts/core/sim", "tools/SimReplay", "tools/AiOpponentLoopQa");
         ReviewGateSource.RequireAnyText(root, result, "HarvestEntityCommand", "scripts/core/sim", "tools/CombatBehavior", "tools/SimReplay");
-    }
-
-    private static void RequireMapAuthoring(string root, GateResult result)
-    {
-        ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapSpec.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapLoader.cs");
-        ReviewGateSource.RequireFile(root, result, "tools", "MapAuthoringQa", "Program.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "map-authoring-qa", "tools", "VerifyAll", "Program.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "RunMapAuthoringScenario", "tools", "SimReplay", "Program.cs");
-        var mapSpec = ReviewGateSource.Read(root, "scripts", "core", "map", "MapSpec.cs");
-        ForbidText(mapSpec, "using Godot", "MapSpec must stay pure C# without Godot imports.", result);
-        ForbidText(mapSpec, "Vector2", "MapSpec must not expose Godot Vector2.", result);
-        ForbidText(mapSpec, "Godot.Color", "MapSpec must not expose Godot Color.", result);
-        var loader = ReviewGateSource.Read(root, "scripts", "core", "map", "MapLoader.cs");
-        ForbidText(loader, ".tscn", "MapLoader must never read Godot scene files.", result);
-        var simReplayMap = ReviewGateSource.Read(root, "tools", "SimReplayContent", "MapAuthoringScenarios.cs");
-        RequireText(simReplayMap, "MapLoader.Load", "SimReplay must replay authored maps through MapLoader.", result);
-        RequireText(simReplayMap, "AssertDeterministic", "SimReplay map authoring scenario must be deterministic.", result);
     }
 
     private static void RequireScopeLocks(string root, GateResult result)

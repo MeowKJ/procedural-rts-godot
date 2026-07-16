@@ -125,6 +125,7 @@ static class ReviewGateEvidence
             || relativePath.StartsWith("tools/ReviewGateCore/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateDomains/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateFileSize/", StringComparison.OrdinalIgnoreCase)
+            || relativePath.StartsWith("tools/ReviewGateMapAuthoring/", StringComparison.OrdinalIgnoreCase)
             || relativePath.StartsWith("tools/ReviewGateReservations/", StringComparison.OrdinalIgnoreCase);
     }
 }
