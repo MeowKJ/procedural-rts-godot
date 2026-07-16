@@ -275,12 +275,23 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
             return RejectGatewaySink(CommandGatewayValidationError.InvalidSpecId, "Build command requires a registered building spec.", out error, out message);
         }
 
+        if (!command.Payload.BuildFacing.TryResolveCanonicalRadians(out var facing))
+        {
+            envelope = null;
+            return RejectGatewaySink(
+                CommandGatewayValidationError.InvalidPayloadShape,
+                PlayerCommandBuildFacing.InvalidPayloadMessage,
+                out error,
+                out message);
+        }
+
         var entityCommand = new StartConstructionEntityCommand(
             OwnerId.FromPlayerSlot(command.IssuerSlotId),
             ConstructionSubjectEntities(command.IssuerSlotId, spec),
             NextInputCommandTick(),
             command.Payload.SpecId,
-            ToVector2(command.Payload.TargetPoint));
+            ToVector2(command.Payload.TargetPoint),
+            facing);
 
         error = CommandGatewayValidationError.None;
         message = string.Empty;

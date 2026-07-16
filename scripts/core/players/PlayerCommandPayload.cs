@@ -5,6 +5,28 @@ public readonly record struct PlayerCommandPoint(float X, float Y)
     public bool IsFinite => float.IsFinite(X) && float.IsFinite(Y);
 }
 
+public readonly record struct PlayerCommandBuildFacing(int Version, int QuarterTurns)
+{
+    public const string InvalidPayloadMessage = "Build facing must be legacy v0/0 or schema v1 quarter-turn 0..3.";
+
+    public bool TryResolveCanonicalRadians(out float radians)
+    {
+        radians = 0;
+        if (Version == 0)
+        {
+            return QuarterTurns == 0;
+        }
+
+        if (Version != 1 || QuarterTurns is < 0 or > 3)
+        {
+            return false;
+        }
+
+        radians = QuarterTurns * (MathF.PI * 0.5f);
+        return true;
+    }
+}
+
 public readonly record struct PlayerCommandPayload(
     IReadOnlyList<EntityId>? Subjects,
     bool HasTargetPoint,
@@ -14,7 +36,8 @@ public readonly record struct PlayerCommandPayload(
     string SpecId,
     AbilityKind Ability,
     UnitStance Stance,
-    MoveCommandMode MoveMode)
+    MoveCommandMode MoveMode,
+    PlayerCommandBuildFacing BuildFacing = default)
 {
     public static PlayerCommandPayload Empty { get; } = new(
         Array.Empty<EntityId>(),
@@ -105,6 +128,17 @@ public readonly record struct PlayerCommandPayload(
         {
             Subjects = subjects ?? Array.Empty<EntityId>(),
             SpecId = specId,
+        };
+    }
+
+    public static PlayerCommandPayload ForBuild(string specId, float x, float y, int quarterTurns)
+    {
+        return Empty with
+        {
+            SpecId = specId,
+            HasTargetPoint = true,
+            TargetPoint = new PlayerCommandPoint(x, y),
+            BuildFacing = new PlayerCommandBuildFacing(Version: 1, QuarterTurns: quarterTurns),
         };
     }
 }

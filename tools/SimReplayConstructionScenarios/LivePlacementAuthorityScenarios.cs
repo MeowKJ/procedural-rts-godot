@@ -184,23 +184,8 @@ static partial class Program
 
     private static void AssertPlayerBuildGatewayPreservesDesiredPoint()
     {
-        var battlefield = new UnitBattlefield
-        {
-            WorldSize = new Vector2(1200, 900),
-        };
-        battlefield.EntityWorld.WorldWidth = battlefield.WorldSize.X;
-        battlefield.EntityWorld.WorldHeight = battlefield.WorldSize.Y;
-        battlefield.SetCredits(PlayerSlotId.One, 5000);
+        var battlefield = CreatePlayerBuildGatewayBattlefield();
         var hqSpec = BuildSpecCatalog.For(BuildingDesignIds.Headquarters);
-        battlefield.UpsertBuildingTarget(
-            1,
-            hqSpec.Kind,
-            PlayerSlotId.One,
-            UnitFactionId.Dog,
-            new Vector2(320, 320),
-            0,
-            hqSpec.MaxHp,
-            powered: true);
 
         var outsidePoint = new PlayerCommandPoint(-100, 100);
         var outsideCommand = new PlayerCommand(
@@ -238,11 +223,11 @@ static partial class Program
             2,
             2,
             PlayerCommandKind.Build,
-            PlayerCommandPayload.ForSpec(BuildingDesignIds.PowerPlant) with
-            {
-                HasTargetPoint = true,
-                TargetPoint = validPoint,
-            });
+            PlayerCommandPayload.ForBuild(
+                BuildingDesignIds.PowerPlant,
+                validPoint.X,
+                validPoint.Y,
+                quarterTurns: 1));
         var validEnqueued = battlefield.TryEnqueue(
             validCommand,
             out var validEnvelope,
@@ -252,15 +237,17 @@ static partial class Program
             $"valid Build intent should reach simulation authority; got {validError}: {validMessage}");
         Assert(validEnvelope?.Command is StartConstructionEntityCommand validBuild
             && validBuild.Position == new Vector2(validPoint.X, validPoint.Y)
-            && validBuild.Facing == 0,
-            "valid Build gateway envelope should retain original point and default facing 0");
+            && validBuild.Facing == MathF.PI * 0.5f,
+            "schema v1 Build gateway envelope should retain the original point and map quarter-turn 1 to canonical pi/2");
         var validRejections = battlefield.EntityWorld.Events.Drain()
             .OfType<ConstructionRejectedEvent>()
             .ToArray();
         var placed = battlefield.EntityWorld.OrderedEntities
             .SingleOrDefault(entity => entity.SpecId == "building.powerplant");
-        Assert(placed is not null && placed.Transform.Position == new Vector2(544, 336) && placed.Transform.Facing == 0,
-            $"valid gateway Build should spawn at parity-snapped 544,336 facing 0; got {placed?.Transform.Position}; rejections [{string.Join(", ", validRejections.Select(rejection => rejection.Reason))}]");
+        Assert(placed is not null
+            && placed.Transform.Position == new Vector2(560, 320)
+            && placed.Transform.Facing == MathF.PI * 0.5f,
+            $"90-degree gateway Build should spawn at rotated parity-snapped 560,320 facing pi/2; got {placed?.Transform.Position} facing {placed?.Transform.Facing}; rejections [{string.Join(", ", validRejections.Select(rejection => rejection.Reason))}]");
     }
 
     private static void AssertTypedOrderedEntityView()

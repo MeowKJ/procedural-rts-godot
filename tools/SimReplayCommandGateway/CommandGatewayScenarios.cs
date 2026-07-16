@@ -85,6 +85,8 @@ static partial class Program
             });
         AssertAccepted(gateway.Submit(submission, new[] { build }, sink), "gateway should accept build payloads with spec and point");
 
+        AssertBuildFacingPayloadVariants(submission);
+
         var produceMissingSpec = new PlayerCommand(
             PlayerSlotId.One,
             2,
@@ -145,6 +147,100 @@ static partial class Program
             gateway.Submit(submission, new[] { sinkRejected }, rejectingSink),
             CommandGatewayValidationError.EntityCommandSinkRejected,
             "gateway should return structured errors from a rejecting sink");
+    }
+
+    private static void AssertBuildFacingPayloadVariants(CommandGatewaySubmission submission)
+    {
+        var cardinalGateway = new CommandGateway();
+        var cardinalSink = new RecordingGatewaySink();
+        for (var quarterTurns = 0; quarterTurns < 4; quarterTurns++)
+        {
+            var build = new PlayerCommand(
+                PlayerSlotId.One,
+                quarterTurns + 1,
+                12,
+                PlayerCommandKind.Build,
+                PlayerCommandPayload.ForBuild("building.powerplant", 64, 96, quarterTurns));
+            AssertAccepted(
+                cardinalGateway.Submit(submission, [build], cardinalSink),
+                $"gateway should accept schema v1 Build quarter-turn {quarterTurns}");
+        }
+
+        Assert(cardinalSink.Accepted.Count == 4,
+            "all four schema v1 cardinal Build payloads should reach the gateway sink");
+
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(0, 1), "legacy v0 nonzero turn");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, -1), "schema v1 negative turn");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, 4), "schema v1 turn above three");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(2, 0), "unknown schema version");
+
+        var missingSpecBeforeFacing = new PlayerCommand(
+            PlayerSlotId.One,
+            1,
+            12,
+            PlayerCommandKind.Build,
+            PlayerCommandPayload.ForBuild(string.Empty, 64, 96, 4));
+        AssertRejected(
+            new CommandGateway().Submit(submission, [missingSpecBeforeFacing], new RecordingGatewaySink()),
+            CommandGatewayValidationError.InvalidSpecId,
+            "Build spec validation should run before Build-facing validation");
+
+        var missingPointBeforeFacing = new PlayerCommand(
+            PlayerSlotId.One,
+            1,
+            12,
+            PlayerCommandKind.Build,
+            PlayerCommandPayload.ForSpec("building.powerplant") with
+            {
+                BuildFacing = new PlayerCommandBuildFacing(1, 4),
+            });
+        var missingPointResult = new CommandGateway().Submit(
+            submission,
+            [missingPointBeforeFacing],
+            new RecordingGatewaySink());
+        AssertRejected(
+            missingPointResult,
+            CommandGatewayValidationError.InvalidPayloadShape,
+            "Build point validation should run before Build-facing validation");
+        Assert(missingPointResult.Commands[0].Message == "Command requires a finite target point.",
+            "Build point rejection should retain its stable message before malformed facing is inspected");
+
+        var pollutedMove = new PlayerCommand(
+            PlayerSlotId.One,
+            1,
+            12,
+            PlayerCommandKind.Move,
+            PlayerCommandPayload.ForPoint([new EntityId(7)], 64, 96) with
+            {
+                BuildFacing = new PlayerCommandBuildFacing(1, 1),
+            });
+        AssertRejected(
+            new CommandGateway().Submit(submission, [pollutedMove], new RecordingGatewaySink()),
+            CommandGatewayValidationError.InvalidPayloadShape,
+            "gateway should reject non-Build payloads polluted with Build facing");
+    }
+
+    private static void AssertBuildFacingRejected(
+        CommandGatewaySubmission submission,
+        PlayerCommandBuildFacing facing,
+        string label)
+    {
+        var build = new PlayerCommand(
+            PlayerSlotId.One,
+            1,
+            12,
+            PlayerCommandKind.Build,
+            PlayerCommandPayload.ForBuild("building.powerplant", 64, 96, 0) with
+            {
+                BuildFacing = facing,
+            });
+        var result = new CommandGateway().Submit(submission, [build], new RecordingGatewaySink());
+        AssertRejected(
+            result,
+            CommandGatewayValidationError.InvalidPayloadShape,
+            $"gateway should reject {label}");
+        Assert(result.Commands[0].Message == PlayerCommandBuildFacing.InvalidPayloadMessage,
+            $"gateway should retain the stable bounded Build-facing rejection message for {label}");
     }
 
     private static void AssertRejected(
