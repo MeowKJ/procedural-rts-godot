@@ -54,6 +54,7 @@ public sealed partial class ConstructionSystem
             _placementBuildAnchors,
             _placementObstacles,
             _placementReservations,
+            _placementResourceObstacles,
             _placementVisibility);
 
         if (intent == ConstructionPlacementIntent.ReadyTicket || RequiresBuildAuthority(spec))
@@ -147,6 +148,71 @@ public sealed partial class ConstructionSystem
             for (var obstacleIndex = 0; obstacleIndex < _placementObstacles.Count; obstacleIndex++)
             {
                 var obstacle = _placementObstacles[obstacleIndex];
+                if (!obstacle.IsMapEnvironment)
+                {
+                    continue;
+                }
+
+                var obstacleRect = ObstacleRect(obstacle);
+                if (PlacementMath.Intersects(candidateReservation, obstacleRect))
+                {
+                    return new PlacementResult(snappedX, snappedY, false, "placement.blocked");
+                }
+
+                var clearance = spec.PlacementClearanceCells * PlacementMath.GridSize;
+                if (PlacementMath.ViolatesClearance(candidateReservation, obstacleRect, clearance))
+                {
+                    return new PlacementResult(snappedX, snappedY, false, "placement.clearance");
+                }
+            }
+        }
+
+        var resourceClearance = MapPlacementRules.ResourceClearance(spec);
+        for (var resourceIndex = 0; resourceIndex < _placementResourceObstacles.Count; resourceIndex++)
+        {
+            if (PlacementMath.ViolatesClearance(
+                    footprint,
+                    _placementResourceObstacles[resourceIndex],
+                    resourceClearance))
+            {
+                return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
+            }
+        }
+
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var candidateReservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                candidatePosition,
+                cardinalFacing);
+            for (var resourceIndex = 0; resourceIndex < _placementResourceObstacles.Count; resourceIndex++)
+            {
+                if (PlacementMath.ViolatesClearance(
+                        candidateReservation,
+                        _placementResourceObstacles[resourceIndex],
+                        resourceClearance))
+                {
+                    return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
+                }
+            }
+        }
+
+        for (var reservationIndex = 0; reservationIndex < spec.PlacementReservations.Count; reservationIndex++)
+        {
+            var candidateReservation = PlacementReservationMath.WorldRect(
+                spec,
+                spec.PlacementReservations[reservationIndex],
+                candidatePosition,
+                cardinalFacing);
+            for (var obstacleIndex = 0; obstacleIndex < _placementObstacles.Count; obstacleIndex++)
+            {
+                var obstacle = _placementObstacles[obstacleIndex];
+                if (obstacle.IsMapEnvironment)
+                {
+                    continue;
+                }
+
                 var pairClearance = Math.Max(spec.PlacementClearanceCells, obstacle.ClearanceCells)
                     * PlacementMath.GridSize;
                 if (PlacementMath.ViolatesClearance(candidateReservation, ObstacleRect(obstacle), pairClearance))
@@ -187,15 +253,38 @@ public sealed partial class ConstructionSystem
         List<PlacementBuildAnchor> buildAnchors,
         List<PlacementObstacle> obstacles,
         List<PlacementReservationObstacle> reservations,
+        List<PlacementResourceObstacle> resourceObstacles,
         List<PlacementBuildVisibility> visibility)
     {
         buildAnchors.Clear();
         obstacles.Clear();
         reservations.Clear();
+        resourceObstacles.Clear();
         visibility.Clear();
+        for (var obstacleIndex = 0; obstacleIndex < world.MapEnvironment.StaticObstacles.Count; obstacleIndex++)
+        {
+            var bounds = world.MapEnvironment.StaticObstacles[obstacleIndex].Bounds;
+            obstacles.Add(new PlacementObstacle(
+                bounds.X,
+                bounds.Y,
+                bounds.Width,
+                bounds.Height,
+                IsMapEnvironment: true));
+        }
+
         for (var entityIndex = 0; entityIndex < world.OrderedEntities.Count; entityIndex++)
         {
             var entity = world.OrderedEntities[entityIndex];
+            if (entity.Components.TryGet<ResourceNodeComponentState>(out _)
+                && entity.Components.TryGet<CollisionComponentState>(out var resourceCollision)
+                && resourceCollision.Radius > 0)
+            {
+                resourceObstacles.Add(new PlacementResourceObstacle(
+                    entity.Transform.Position.X,
+                    entity.Transform.Position.Y,
+                    resourceCollision.Radius));
+            }
+
             var isAlive = !entity.Components.TryGet<HealthComponentState>(out var health) || health.Hp > 0;
             BuildSpec? existingSpec = null;
             if (isAlive
@@ -491,12 +580,6 @@ public sealed partial class ConstructionSystem
 
     private static TerrainLayer TerrainLayerAt(EntityWorld world, float x, float y)
     {
-        var kind = TerrainFloorMath.KindAt(new Vector2(x, y), new Vector2(world.WorldWidth, world.WorldHeight));
-        return kind switch
-        {
-            TerrainFloorKind.Water => TerrainLayer.Water,
-            TerrainFloorKind.Coast => TerrainLayer.Coast,
-            _ => TerrainLayer.Ground,
-        };
+        return world.MapEnvironment.SampleTerrain(x, y, world.WorldWidth, world.WorldHeight).Layer;
     }
 }

@@ -5,6 +5,9 @@ public enum MapBuildingPlacementConflictKind
     Rotation,
     Unsnapped,
     Outside,
+    Terrain,
+    StaticObstacle,
+    Resource,
     Overlap,
     Clearance,
     Reserved,
@@ -16,32 +19,44 @@ public sealed record MapBuildingPlacementConflict(
     MapBuildingSeedSpec Building,
     int GridX,
     int GridY,
-    MapBuildingSeedSpec? Other = null)
+    MapBuildingSeedSpec? Other = null,
+    MapPlacementConflictTarget? Target = null)
 {
     public override string ToString()
     {
         var subject = Identity(Building, GridX, GridY);
-        if (Other is null)
+        if (Other is not null)
         {
-            return $"map={MapId} {subject} conflict={Conflict.ToString().ToLowerInvariant()}";
+            var otherGrid = MapBuildingPlacementValidator.GridCoordinate(Other);
+            return $"map={MapId} {subject} conflict={ConflictKey(Conflict)} other=[{Identity(Other, otherGrid.X, otherGrid.Y)}]";
         }
 
-        var otherGrid = MapBuildingPlacementValidator.GridCoordinate(Other);
-        return $"map={MapId} {subject} conflict={Conflict.ToString().ToLowerInvariant()} other=[{Identity(Other, otherGrid.X, otherGrid.Y)}]";
+        var target = Target is null ? string.Empty : $" target=[{Target}]";
+        return $"map={MapId} {subject} conflict={ConflictKey(Conflict)}{target}";
     }
 
     private static string Identity(MapBuildingSeedSpec building, int gridX, int gridY)
     {
         return $"owner={building.OwnerId.Value} faction={building.Faction} kind={building.Kind} grid=({gridX},{gridY})";
     }
+
+    private static string ConflictKey(MapBuildingPlacementConflictKind conflict)
+    {
+        return conflict switch
+        {
+            MapBuildingPlacementConflictKind.StaticObstacle => "static_obstacle",
+            _ => conflict.ToString().ToLowerInvariant(),
+        };
+    }
 }
 
-public static class MapBuildingPlacementValidator
+public static partial class MapBuildingPlacementValidator
 {
     public static IReadOnlyList<MapBuildingPlacementConflict> Validate(MapSpec map)
     {
         var conflicts = new List<MapBuildingPlacementConflict>();
         var placements = new List<Placement>();
+        var environment = MapRuntimeEnvironment.From(map);
 
         foreach (var building in map.Buildings)
         {
@@ -96,6 +111,17 @@ public static class MapBuildingPlacementValidator
                     grid.X,
                     grid.Y));
             }
+
+            AppendEnvironmentConflicts(
+                map,
+                environment,
+                spec,
+                building,
+                rect,
+                reservations,
+                grid.X,
+                grid.Y,
+                conflicts);
 
             placements.Add(new Placement(
                 building,
@@ -156,10 +182,13 @@ public static class MapBuildingPlacementValidator
 
     public static void EnsureValid(MapSpec map)
     {
-        var conflicts = Validate(map);
-        if (conflicts.Count > 0)
+        var environmentConflicts = MapEnvironmentSpecValidator.Validate(map);
+        var conflicts = environmentConflicts.Count == 0
+            ? Validate(map)
+            : Array.Empty<MapBuildingPlacementConflict>();
+        if (environmentConflicts.Count > 0 || conflicts.Count > 0)
         {
-            throw new MapBuildingPlacementValidationException(map.Id, conflicts);
+            throw new MapBuildingPlacementValidationException(map.Id, conflicts, environmentConflicts);
         }
     }
 

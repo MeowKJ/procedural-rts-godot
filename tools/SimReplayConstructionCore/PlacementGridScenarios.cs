@@ -473,9 +473,17 @@ static partial class Program
 
     private static void AssertGridSafeStartingMap(MapSpec map, string label)
     {
-        var buildingConflicts = MapBuildingPlacementValidator.Validate(map);
-        Assert(buildingConflicts.Count == 0,
-            $"{label} should be snapped, cardinal, inside, non-overlapping, and 32-unit clear; got {string.Join("; ", buildingConflicts)}");
+        var buildingConflicts = MapBuildingPlacementValidator.Validate(map)
+            .Where(conflict => conflict.Conflict is
+                MapBuildingPlacementConflictKind.Rotation
+                or MapBuildingPlacementConflictKind.Unsnapped
+                or MapBuildingPlacementConflictKind.Outside
+                or MapBuildingPlacementConflictKind.Overlap
+                or MapBuildingPlacementConflictKind.Clearance
+                or MapBuildingPlacementConflictKind.Reserved)
+            .ToArray();
+        Assert(buildingConflicts.Length == 0,
+            $"{label} should be snapped, cardinal, inside, non-overlapping, and 32-unit clear; got {string.Join("; ", buildingConflicts.Select(conflict => conflict.ToString()))}");
 
         var unitConflicts = InitialBlockingUnitBuildingConflicts(map);
         Assert(unitConflicts.Count == 0,

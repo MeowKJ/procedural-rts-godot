@@ -5,6 +5,7 @@ static partial class Program
     static void RunMapAuthoringScenario()
     {
         AssertDeterministic("map-spec-loader", BuildMapSpecWorld, 12, 4);
+        AssertMapRuntimeEnvironment();
     }
 
     private static EntityWorld BuildMapSpecWorld()

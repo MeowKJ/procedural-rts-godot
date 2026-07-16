@@ -328,6 +328,35 @@ public sealed partial class EntityWorld
         hash = EntityStateHash.Add(hash, Rng.State);
         hash = EntityStateHash.Add(hash, _nextEntityId);
         hash = EntityStateHash.Add(hash, _nextProductionItemId);
+        hash = EntityStateHash.Add(hash, WorldWidth);
+        hash = EntityStateHash.Add(hash, WorldHeight);
+        hash = EntityStateHash.Add(hash, MapEnvironment.WorldSize.Width);
+        hash = EntityStateHash.Add(hash, MapEnvironment.WorldSize.Height);
+        hash = EntityStateHash.Add(hash, MapEnvironment.TerrainCells.Count);
+        for (var terrainIndex = 0; terrainIndex < MapEnvironment.TerrainCells.Count; terrainIndex++)
+        {
+            var terrain = MapEnvironment.TerrainCells[terrainIndex];
+            hash = EntityStateHash.Add(hash, terrain.Id);
+            hash = EntityStateHash.Add(hash, terrain.Bounds.X);
+            hash = EntityStateHash.Add(hash, terrain.Bounds.Y);
+            hash = EntityStateHash.Add(hash, terrain.Bounds.Width);
+            hash = EntityStateHash.Add(hash, terrain.Bounds.Height);
+            hash = EntityStateHash.Add(hash, terrain.TerrainId);
+            hash = EntityStateHash.Add(hash, terrain.MovementCost);
+            hash = EntityStateHash.Add(hash, terrain.BlocksLand ? 1 : 0);
+        }
+
+        hash = EntityStateHash.Add(hash, MapEnvironment.StaticObstacles.Count);
+        for (var obstacleIndex = 0; obstacleIndex < MapEnvironment.StaticObstacles.Count; obstacleIndex++)
+        {
+            var obstacle = MapEnvironment.StaticObstacles[obstacleIndex];
+            hash = EntityStateHash.Add(hash, obstacle.Id);
+            hash = EntityStateHash.Add(hash, obstacle.Bounds.X);
+            hash = EntityStateHash.Add(hash, obstacle.Bounds.Y);
+            hash = EntityStateHash.Add(hash, obstacle.Bounds.Width);
+            hash = EntityStateHash.Add(hash, obstacle.Bounds.Height);
+        }
+
         hash = EntityStateHash.Add(hash, EconomyTuning.GatherDistance);
         hash = EntityStateHash.Add(hash, EconomyTuning.DockDistance);
         hash = EntityStateHash.Add(hash, EconomyTuning.GatherRate);
