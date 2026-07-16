@@ -7,7 +7,7 @@ static class GodotSceneMapBaker
     public static MapSpec Bake(string sceneText, string id, int seed)
     {
         var nodes = ParseNodes(sceneText);
-        return new MapSpec
+        var spec = new MapSpec
         {
             Id = id,
             Seed = seed,
@@ -40,6 +40,8 @@ static class GodotSceneMapBaker
                 .Select(node => new MapNarrativeNodeSpec(Name(node), Position(node), Text(node, "text_key"), OptionalText(node, "trigger_id")))
                 .ToArray(),
         };
+        MapBuildingPlacementValidator.EnsureValid(spec);
+        return spec;
     }
 
     private static List<Dictionary<string, string>> ParseNodes(string text)

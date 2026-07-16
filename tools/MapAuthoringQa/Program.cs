@@ -2,7 +2,7 @@ using ProceduralRts.Core;
 
 var failures = new List<string>();
 ValidateMapSpecIsGodotFree(failures);
-ValidatePlacementDiagnostics(failures);
+PlacementValidationScenarios.Run(failures);
 
 var generated = SkirmishMapGenerator.GenerateSpec(MatchConfig.Default);
 ValidateMap("generated skirmish", generated, failures);
@@ -73,57 +73,6 @@ static void ValidateMap(string label, MapSpec spec, List<string> failures)
     {
         failures.Add($"{label}: {conflict}");
     }
-}
-
-static void ValidatePlacementDiagnostics(List<string> failures)
-{
-    var invalid = new MapSpec
-    {
-        Id = "qa.invalid-placement",
-        Seed = 535,
-        WorldSize = new MapSize(512, 512),
-        Buildings =
-        [
-            new(
-                BuildingDesignIds.Headquarters,
-                new OwnerId(1),
-                FactionId.Dog,
-                new MapPoint(32.25f, 32.25f),
-                0.2f),
-            new(
-                BuildingDesignIds.PowerPlant,
-                new OwnerId(2),
-                FactionId.Cat,
-                new MapPoint(128, 80)),
-            new(
-                BuildingDesignIds.Barracks,
-                new OwnerId(2),
-                FactionId.Cat,
-                new MapPoint(256, 96)),
-        ],
-    };
-
-    var conflicts = MapBuildingPlacementValidator.Validate(invalid);
-    foreach (var expected in Enum.GetValues<MapBuildingPlacementConflictKind>())
-    {
-        Require(
-            conflicts.Any(conflict => conflict.Conflict == expected),
-            $"placement diagnostics should report {expected.ToString().ToLowerInvariant()}.",
-            failures);
-    }
-
-    Require(
-        conflicts.All(conflict =>
-        {
-            var report = conflict.ToString();
-            return report.Contains("owner=", StringComparison.Ordinal)
-                && report.Contains("faction=", StringComparison.Ordinal)
-                && report.Contains("kind=", StringComparison.Ordinal)
-                && report.Contains("grid=(", StringComparison.Ordinal)
-                && report.Contains("conflict=", StringComparison.Ordinal);
-        }),
-        "placement diagnostics should identify owner, faction, kind, grid coordinate, and conflict type.",
-        failures);
 }
 
 static void ValidateDeterministicLoad(string label, MapSpec spec, List<string> failures)

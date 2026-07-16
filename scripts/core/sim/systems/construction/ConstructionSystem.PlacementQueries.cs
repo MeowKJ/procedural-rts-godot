@@ -109,7 +109,7 @@ public sealed partial class ConstructionSystem
         for (var index = 0; index < _placementObstacles.Count; index++)
         {
             var obstacle = _placementObstacles[index];
-            if (Intersects(footprint, ObstacleRect(obstacle)))
+            if (PlacementMath.Intersects(footprint, ObstacleRect(obstacle)))
             {
                 return new PlacementResult(snappedX, snappedY, false, "placement.blocked");
             }
@@ -130,7 +130,7 @@ public sealed partial class ConstructionSystem
                 snappedY,
                 footprintSize.X + clearance * 2,
                 footprintSize.Y + clearance * 2);
-            if (Intersects(clearanceRect, ObstacleRect(obstacle)))
+            if (PlacementMath.Intersects(clearanceRect, ObstacleRect(obstacle)))
             {
                 return new PlacementResult(snappedX, snappedY, false, "placement.clearance");
             }
@@ -149,7 +149,7 @@ public sealed partial class ConstructionSystem
                 var obstacle = _placementObstacles[obstacleIndex];
                 var pairClearance = Math.Max(spec.PlacementClearanceCells, obstacle.ClearanceCells)
                     * PlacementMath.GridSize;
-                if (ViolatesReservationClearance(candidateReservation, ObstacleRect(obstacle), pairClearance))
+                if (PlacementMath.ViolatesClearance(candidateReservation, ObstacleRect(obstacle), pairClearance))
                 {
                     return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
                 }
@@ -160,7 +160,7 @@ public sealed partial class ConstructionSystem
                 var existing = _placementReservations[existingIndex];
                 var pairClearance = Math.Max(spec.PlacementClearanceCells, existing.ClearanceCells)
                     * PlacementMath.GridSize;
-                if (ViolatesReservationClearance(candidateReservation, ReservationRect(existing), pairClearance))
+                if (PlacementMath.ViolatesClearance(candidateReservation, ReservationRect(existing), pairClearance))
                 {
                     return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
                 }
@@ -172,7 +172,7 @@ public sealed partial class ConstructionSystem
             var existing = _placementReservations[existingIndex];
             var pairClearance = Math.Max(spec.PlacementClearanceCells, existing.ClearanceCells)
                 * PlacementMath.GridSize;
-            if (ViolatesReservationClearance(footprint, ReservationRect(existing), pairClearance))
+            if (PlacementMath.ViolatesClearance(footprint, ReservationRect(existing), pairClearance))
             {
                 return new PlacementResult(snappedX, snappedY, false, "placement.reserved");
             }
@@ -487,37 +487,6 @@ public sealed partial class ConstructionSystem
     private static PlacementRect ReservationRect(PlacementReservationObstacle reservation)
     {
         return new PlacementRect(reservation.X, reservation.Y, reservation.Width, reservation.Height);
-    }
-
-    private static bool ViolatesReservationClearance(PlacementRect a, PlacementRect b, float clearance)
-    {
-        if (Intersects(a, b))
-        {
-            return true;
-        }
-
-        if (clearance <= 0)
-        {
-            return false;
-        }
-
-        return AxisGap(a.X, a.EndX, b.X, b.EndX) < clearance
-            && AxisGap(a.Y, a.EndY, b.Y, b.EndY) < clearance;
-    }
-
-    private static float AxisGap(float startA, float endA, float startB, float endB)
-    {
-        if (endA <= startB)
-        {
-            return startB - endA;
-        }
-
-        return endB <= startA ? startA - endB : 0;
-    }
-
-    private static bool Intersects(PlacementRect a, PlacementRect b)
-    {
-        return a.X < b.EndX && a.EndX > b.X && a.Y < b.EndY && a.EndY > b.Y;
     }
 
     private static TerrainLayer TerrainLayerAt(EntityWorld world, float x, float y)

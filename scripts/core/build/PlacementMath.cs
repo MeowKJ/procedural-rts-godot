@@ -206,6 +206,30 @@ public static class PlacementMath
         return new PlacementRect(centerX - width / 2f, centerY - height / 2f, width, height);
     }
 
+    public static bool Intersects(PlacementRect first, PlacementRect second)
+    {
+        return first.X < second.EndX
+            && first.EndX > second.X
+            && first.Y < second.EndY
+            && first.EndY > second.Y;
+    }
+
+    public static bool ViolatesClearance(PlacementRect first, PlacementRect second, float clearance)
+    {
+        if (Intersects(first, second))
+        {
+            return true;
+        }
+
+        if (clearance <= 0)
+        {
+            return false;
+        }
+
+        return AxisGap(first.X, first.EndX, second.X, second.EndX) < clearance
+            && AxisGap(first.Y, first.EndY, second.Y, second.EndY) < clearance;
+    }
+
     public static bool HasBuildVisibility(
         PlacementRect footprint,
         IReadOnlyList<PlacementBuildVisibility> buildVisibility)
@@ -347,8 +371,13 @@ public static class PlacementMath
         }
     }
 
-    private static bool Intersects(PlacementRect a, PlacementRect b)
+    private static float AxisGap(float startA, float endA, float startB, float endB)
     {
-        return a.X < b.EndX && a.EndX > b.X && a.Y < b.EndY && a.EndY > b.Y;
+        if (endA <= startB)
+        {
+            return startB - endA;
+        }
+
+        return endB <= startA ? startA - endB : 0;
     }
 }

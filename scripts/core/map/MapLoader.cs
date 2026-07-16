@@ -17,6 +17,8 @@ public static class MapLoader
 
     public static void LoadInto(EntityWorld world, MapSpec spec, MapLoadOptions? options = null)
     {
+        MapBuildingPlacementValidator.EnsureValid(spec);
+
         world.WorldWidth = spec.WorldSize.Width;
         world.WorldHeight = spec.WorldSize.Height;
         ConfigureOwners(world, spec);
