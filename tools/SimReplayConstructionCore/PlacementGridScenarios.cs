@@ -157,6 +157,7 @@ static partial class Program
         AssertAuthoritativePlacementKernel();
         AssertLivePlacementAuthorityParity();
         AssertPlayerBuildGatewayPreservesDesiredPoint();
+        AssertPlayerBuildGatewayCardinalReplayHashes();
         AssertTypedOrderedEntityView();
         AssertPlacementQueryAllocatesZero();
         AssertRotatedBuildingFootprintLifecycle();

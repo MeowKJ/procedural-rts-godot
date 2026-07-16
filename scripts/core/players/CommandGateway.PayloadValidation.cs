@@ -19,13 +19,18 @@ public sealed partial class CommandGateway
             return Reject(CommandGatewayValidationError.InvalidSubject, "Subject ids must be valid entity ids.", out error, out message);
         }
 
+        if (command.Kind != PlayerCommandKind.Build && payload.BuildFacing != default)
+        {
+            return Reject(CommandGatewayValidationError.InvalidPayloadShape, "Build facing is only valid for Build commands.", out error, out message);
+        }
+
         return command.Kind switch
         {
             PlayerCommandKind.Select => Accept(out error, out message),
             PlayerCommandKind.Move or PlayerCommandKind.AttackMove or PlayerCommandKind.AttackGround => RequireSubjectsAndPoint(payload, out error, out message),
             PlayerCommandKind.Attack or PlayerCommandKind.Harvest or PlayerCommandKind.Repair => RequireSubjectsAndTarget(payload, out error, out message),
             PlayerCommandKind.Stop or PlayerCommandKind.HoldPosition => RequireSubjects(payload, out error, out message),
-            PlayerCommandKind.Build => RequireSpecAndPoint(payload, out error, out message),
+            PlayerCommandKind.Build => RequireBuild(payload, out error, out message),
             PlayerCommandKind.Produce => RequireSubjectsAndSpec(payload, out error, out message),
             PlayerCommandKind.Rally => RequireSubjectsAndRallyTarget(payload, out error, out message),
             PlayerCommandKind.Ability or PlayerCommandKind.SetStance or PlayerCommandKind.ControlGroup => RequireSubjects(payload, out error, out message),
@@ -86,14 +91,33 @@ public sealed partial class CommandGateway
         return RequireSpec(payload, out error, out message);
     }
 
-    private bool RequireSpecAndPoint(PlayerCommandPayload payload, out CommandGatewayValidationError error, out string message)
+    private bool RequireBuild(PlayerCommandPayload payload, out CommandGatewayValidationError error, out string message)
     {
         if (!RequireSpec(payload, out error, out message))
         {
             return false;
         }
 
-        return RequirePoint(payload, out error, out message);
+        if (!RequirePoint(payload, out error, out message))
+        {
+            return false;
+        }
+
+        return RequireBuildFacing(payload.BuildFacing, out error, out message);
+    }
+
+    private static bool RequireBuildFacing(
+        PlayerCommandBuildFacing facing,
+        out CommandGatewayValidationError error,
+        out string message)
+    {
+        return facing.TryResolveCanonicalRadians(out _)
+            ? Accept(out error, out message)
+            : Reject(
+                CommandGatewayValidationError.InvalidPayloadShape,
+                PlayerCommandBuildFacing.InvalidPayloadMessage,
+                out error,
+                out message);
     }
 
     private static bool RequireSubjectsAndRallyTarget(PlayerCommandPayload payload, out CommandGatewayValidationError error, out string message)
