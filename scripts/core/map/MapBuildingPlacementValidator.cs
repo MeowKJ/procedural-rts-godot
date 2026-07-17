@@ -20,7 +20,9 @@ public sealed record MapBuildingPlacementConflict(
     int GridX,
     int GridY,
     MapBuildingSeedSpec? Other = null,
-    MapPlacementConflictTarget? Target = null)
+    MapPlacementConflictTarget? Target = null,
+    int BuildingIndex = -1,
+    int? OtherIndex = null)
 {
     public override string ToString()
     {
@@ -58,78 +60,66 @@ public static partial class MapBuildingPlacementValidator
         var placements = new List<Placement>();
         var environment = MapRuntimeEnvironment.From(map);
 
-        foreach (var building in map.Buildings)
+        for (var buildingIndex = 0; buildingIndex < map.Buildings.Count; buildingIndex++)
         {
-            var spec = BuildSpecCatalog.For(building.Kind);
-            var isCardinal = PlacementMath.TryNormalizeCardinalFacing(building.Facing, out var cardinalFacing);
-            var footprint = spec.FootprintCells.Rotated(cardinalFacing);
-            var snappedX = PlacementMath.SnapAnchor(building.Position.X, footprint.WidthCells);
-            var snappedY = PlacementMath.SnapAnchor(building.Position.Y, footprint.HeightCells);
-            var rect = PlacementMath.RectFromCenter(
-                building.Position.X,
-                building.Position.Y,
-                footprint.WorldSize.X,
-                footprint.WorldSize.Y);
-            var grid = GridCoordinate(snappedX, snappedY, footprint);
-            var reservations = new PlacementRect[spec.PlacementReservations.Count];
-            for (var reservationIndex = 0; reservationIndex < reservations.Length; reservationIndex++)
-            {
-                reservations[reservationIndex] = PlacementReservationMath.WorldRect(
-                    spec,
-                    spec.PlacementReservations[reservationIndex],
-                    building.Position.ToVector2(),
-                    cardinalFacing);
-            }
+            var building = map.Buildings[buildingIndex];
+            var geometry = MapBuildingPlacementGeometry.Create(building);
 
-            if (!isCardinal)
+            if (!geometry.IsCardinal)
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
                     map.Id,
                     MapBuildingPlacementConflictKind.Rotation,
                     building,
-                    grid.X,
-                    grid.Y));
+                    geometry.GridX,
+                    geometry.GridY,
+                    BuildingIndex: buildingIndex));
             }
 
-            if (!NearlyEqual(building.Position.X, snappedX) || !NearlyEqual(building.Position.Y, snappedY))
+            if (!NearlyEqual(building.Position.X, geometry.SnappedX)
+                || !NearlyEqual(building.Position.Y, geometry.SnappedY))
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
                     map.Id,
                     MapBuildingPlacementConflictKind.Unsnapped,
                     building,
-                    grid.X,
-                    grid.Y));
+                    geometry.GridX,
+                    geometry.GridY,
+                    BuildingIndex: buildingIndex));
             }
 
-            if (IsOutside(rect, map.WorldSize)
-                || reservations.Any(reservation => IsOutside(reservation, map.WorldSize)))
+            if (IsOutside(geometry.Hard, map.WorldSize)
+                || geometry.Reservations.Any(reservation => IsOutside(reservation, map.WorldSize)))
             {
                 conflicts.Add(new MapBuildingPlacementConflict(
                     map.Id,
                     MapBuildingPlacementConflictKind.Outside,
                     building,
-                    grid.X,
-                    grid.Y));
+                    geometry.GridX,
+                    geometry.GridY,
+                    BuildingIndex: buildingIndex));
             }
 
             AppendEnvironmentConflicts(
                 map,
                 environment,
-                spec,
+                geometry.Spec,
                 building,
-                rect,
-                reservations,
-                grid.X,
-                grid.Y,
+                geometry.Hard,
+                geometry.Reservations,
+                geometry.GridX,
+                geometry.GridY,
+                buildingIndex,
                 conflicts);
 
             placements.Add(new Placement(
                 building,
-                rect,
-                reservations,
-                spec.PlacementClearanceCells,
-                grid.X,
-                grid.Y));
+                geometry.Hard,
+                geometry.Reservations,
+                geometry.Spec.PlacementClearanceCells,
+                geometry.GridX,
+                geometry.GridY,
+                buildingIndex));
         }
 
         for (var firstIndex = 0; firstIndex < placements.Count; firstIndex++)
@@ -146,7 +136,9 @@ public static partial class MapBuildingPlacementValidator
                         first.Building,
                         first.GridX,
                         first.GridY,
-                        second.Building));
+                        second.Building,
+                        BuildingIndex: first.Index,
+                        OtherIndex: second.Index));
                     continue;
                 }
 
@@ -160,7 +152,9 @@ public static partial class MapBuildingPlacementValidator
                         first.Building,
                         first.GridX,
                         first.GridY,
-                        second.Building));
+                        second.Building,
+                        BuildingIndex: first.Index,
+                        OtherIndex: second.Index));
                     continue;
                 }
 
@@ -172,7 +166,9 @@ public static partial class MapBuildingPlacementValidator
                         first.Building,
                         first.GridX,
                         first.GridY,
-                        second.Building));
+                        second.Building,
+                        BuildingIndex: first.Index,
+                        OtherIndex: second.Index));
                 }
             }
         }
@@ -194,24 +190,8 @@ public static partial class MapBuildingPlacementValidator
 
     public static (int X, int Y) GridCoordinate(MapBuildingSeedSpec building)
     {
-        var spec = BuildSpecCatalog.For(building.Kind);
-        PlacementMath.TryNormalizeCardinalFacing(building.Facing, out var cardinalFacing);
-        var footprint = spec.FootprintCells.Rotated(cardinalFacing);
-        var snappedX = PlacementMath.SnapAnchor(building.Position.X, footprint.WidthCells);
-        var snappedY = PlacementMath.SnapAnchor(building.Position.Y, footprint.HeightCells);
-        return GridCoordinate(snappedX, snappedY, footprint);
-    }
-
-    private static (int X, int Y) GridCoordinate(
-        float snappedX,
-        float snappedY,
-        PlacementGridFootprint footprint)
-    {
-        var originX = snappedX - footprint.WorldSize.X * 0.5f;
-        var originY = snappedY - footprint.WorldSize.Y * 0.5f;
-        return (
-            (int)MathF.Round(originX / PlacementMath.GridSize),
-            (int)MathF.Round(originY / PlacementMath.GridSize));
+        var geometry = MapBuildingPlacementGeometry.Create(building);
+        return (geometry.GridX, geometry.GridY);
     }
 
     private static bool ReservationsConflict(Placement first, Placement second, float pairClearance)
@@ -266,5 +246,6 @@ public static partial class MapBuildingPlacementValidator
         IReadOnlyList<PlacementRect> Reservations,
         int ClearanceCells,
         int GridX,
-        int GridY);
+        int GridY,
+        int Index);
 }

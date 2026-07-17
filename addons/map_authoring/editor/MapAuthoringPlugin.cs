@@ -7,7 +7,9 @@ namespace ProceduralRts.MapAuthoring.Editor;
 public partial class MapAuthoringPlugin : EditorPlugin
 {
     private MapAuthoringInspectorPlugin? _inspector;
+    private MapAuthoringValidationFeature? _validation;
     private readonly List<string> _registeredTypes = [];
+    private bool _forceDrawForwardingRegistered;
     private bool _inspectorRegistered;
     private bool _registered;
 
@@ -17,6 +19,10 @@ public partial class MapAuthoringPlugin : EditorPlugin
         if (OS.GetEnvironment("MAP_AUTHORING_PLUGIN_SMOKE") == "1")
         {
             MapAuthoringPluginSmokeDriver.Launch();
+        }
+        if (OS.GetEnvironment("MAP_AUTHORING_VALIDATION_SMOKE") == "1")
+        {
+            MapAuthoringValidationSmokeDriver.Launch();
         }
     }
 
@@ -51,6 +57,11 @@ public partial class MapAuthoringPlugin : EditorPlugin
                 MapAuthoringRegistrationState.TypeAdded(descriptor.Name);
             }
 
+            SetForceDrawOverForwardingEnabled();
+            MapAuthoringRegistrationState.ForceDrawForwarderAdded();
+            _forceDrawForwardingRegistered = true;
+            _validation = new MapAuthoringValidationFeature(this);
+
             _registered = true;
         }
         catch
@@ -67,6 +78,9 @@ public partial class MapAuthoringPlugin : EditorPlugin
             return;
         }
 
+        _validation?.Dispose();
+        _validation = null;
+        RemoveForceDrawForwarder();
         RemoveRegisteredTypes();
         if (_inspectorRegistered && _inspector is not null)
         {
@@ -83,6 +97,9 @@ public partial class MapAuthoringPlugin : EditorPlugin
 
     private void RollbackRegistration()
     {
+        _validation?.Dispose();
+        _validation = null;
+        RemoveForceDrawForwarder();
         RemoveRegisteredTypes();
         if (_inspectorRegistered && _inspector is not null)
         {
@@ -107,5 +124,24 @@ public partial class MapAuthoringPlugin : EditorPlugin
         }
 
         _registeredTypes.Clear();
+    }
+
+    private void RemoveForceDrawForwarder()
+    {
+        if (!_forceDrawForwardingRegistered) return;
+        MapAuthoringRegistrationState.ForceDrawForwarderRemoved();
+        _forceDrawForwardingRegistered = false;
+    }
+
+    public override bool _Handles(GodotObject @object)
+    {
+        return @object is Node node && node.GetTree()?.EditedSceneRoot is Nodes.MapRoot;
+    }
+
+    public override void _ForwardCanvasForceDrawOverViewport(Control viewportControl)
+    {
+        if (!_forceDrawForwardingRegistered) return;
+        MapAuthoringRegistrationState.ForceDrawForwarded();
+        _validation?.Draw(viewportControl);
     }
 }

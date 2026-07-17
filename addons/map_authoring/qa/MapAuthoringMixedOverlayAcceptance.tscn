@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" uid="uid://3q0jv0bdfjtd" path="res://addons/map_authoring/nodes/MapRoot.cs" id="1_root"]
+[ext_resource type="Script" uid="uid://crdvj7kq8mafl" path="res://addons/map_authoring/nodes/OwnerStart.cs" id="2_owner"]
+[ext_resource type="Script" uid="uid://cfijtsfcs3xk2" path="res://addons/map_authoring/nodes/Building.cs" id="3_building"]
+
+[node name="MapAuthoringMixedOverlayAcceptance" type="Node2D"]
+script = ExtResource("1_root")
+Id = "qa.editor.mixed-overlay"
+WorldSize = Vector2(1536, 1024)
+
+[node name="PlayerStart" type="Node2D" parent="."]
+position = Vector2(128, 128)
+script = ExtResource("2_owner")
+
+[node name="EnemyStart" type="Node2D" parent="."]
+position = Vector2(1408, 896)
+script = ExtResource("2_owner")
+OwnerId = 2
+FactionId = "cat"
+
+[node name="ValidBarracks" type="Node2D" parent="."]
+position = Vector2(512, 384)
+script = ExtResource("3_building")
+BuildingId = "building.barracks"
+
+[node name="InvalidBuilding" type="Node2D" parent="."]
+position = Vector2(1024, 640)
+script = ExtResource("3_building")
+BuildingId = "unknown.mixed.building"

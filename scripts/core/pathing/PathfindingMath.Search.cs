@@ -165,6 +165,6 @@ public static partial class PathfindingMath
             }
         }
 
-        return new PathfindingDebugResult([new PathPoint(goalX, goalY)], [start, goal]);
+        return new PathfindingDebugResult([new PathPoint(goalX, goalY)], [start, goal], Reached: false);
     }
 }

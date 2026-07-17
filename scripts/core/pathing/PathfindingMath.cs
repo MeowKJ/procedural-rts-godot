@@ -1,7 +1,10 @@
 namespace ProceduralRts.Core;
 
 public readonly record struct PathPoint(float X, float Y);
-public readonly record struct PathfindingDebugResult(IReadOnlyList<PathPoint> Path, IReadOnlyList<GridObstacle> RawCells);
+public readonly record struct PathfindingDebugResult(
+    IReadOnlyList<PathPoint> Path,
+    IReadOnlyList<GridObstacle> RawCells,
+    bool Reached = true);
 public readonly record struct PathfindingCorridorMember(int Id, float StartX, float StartY, float GoalX, float GoalY);
 public readonly record struct PathfindingCorridorAssignment(int Id, IReadOnlyList<PathPoint> Path, IReadOnlyList<GridObstacle> RawCells);
 public readonly record struct PathfindingSharedCorridorResult(

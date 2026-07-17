@@ -5,7 +5,7 @@ using ProceduralRts.MapAuthoring.Nodes;
 
 namespace ProceduralRts.MapAuthoring.Projection;
 
-static class TypedMapEntityProjection
+public static class TypedMapEntityProjection
 {
     public static MapOwnerStartSpec Owner(MapRoot root, OwnerStart node)
     {
