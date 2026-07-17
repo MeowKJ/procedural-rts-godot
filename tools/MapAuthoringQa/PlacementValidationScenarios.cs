@@ -11,7 +11,6 @@ static partial class PlacementValidationScenarios
         ValidateReservationRotationsAndSymmetry(failures);
         ValidateReservationPairBoundary(failures);
         ValidateAtomicLoaderFailure(failures);
-        ValidateBakerFailure(failures);
     }
 
     private static void ValidateReasonContract(List<string> failures)

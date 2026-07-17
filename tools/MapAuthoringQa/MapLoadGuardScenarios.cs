@@ -66,34 +66,4 @@ static partial class PlacementValidationScenarios
             "MapLoader placement exceptions should carry deterministic map id, conflict order, and message.", failures);
     }
 
-    private static void ValidateBakerFailure(List<string> failures)
-    {
-        var invalidScene = $$"""
-            [node name="Map" type="Node2D"]
-            metadata/world_width = 512
-            metadata/world_height = 512
-
-            [node name="Barracks" type="Marker2D" parent="."]
-            metadata/map_kind = "building"
-            metadata/building_kind = "{{BuildingDesignIds.Barracks}}"
-            metadata/owner_id = 1
-            metadata/faction = "Dog"
-            metadata/position = Vector2(480, 320)
-            metadata/facing = 0
-            """;
-        MapBuildingPlacementValidationException? failure = null;
-        try
-        {
-            GodotSceneMapBaker.Bake(invalidScene, "qa.invalid-baked-map", 550);
-        }
-        catch (MapBuildingPlacementValidationException exception)
-        {
-            failure = exception;
-        }
-
-        Require(failure is not null
-            && failure.MapId == "qa.invalid-baked-map"
-            && failure.Conflicts.Any(conflict => conflict.Conflict == MapBuildingPlacementConflictKind.Outside),
-            "Godot scene baking should fail through the shared typed placement guard.", failures);
-    }
 }

@@ -8,14 +8,14 @@ var generated = SkirmishMapGenerator.GenerateSpec(MatchConfig.Default);
 ValidateMap("generated skirmish", generated, failures);
 ValidateDeterministicLoad("generated skirmish", generated, failures);
 
-var scenePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "fixtures", "hand-designed-map.tscn");
-var baked = GodotSceneMapBaker.Bake(File.ReadAllText(Path.GetFullPath(scenePath)), "qa.hand-designed", 20260701);
-ValidateMap("baked hand-designed", baked, failures);
-ValidateDeterministicLoad("baked hand-designed", baked, failures);
-Require(baked.Triggers.Count == 1, "baked map should keep trigger areas.", failures);
-Require(baked.Objectives.Count == 1, "baked map should keep objective nodes.", failures);
-Require(baked.NarrativeNodes.Count == 1, "baked map should keep narrative nodes.", failures);
-Require(baked.TerrainCells.Count == 2, "baked map should keep layered terrain cells.", failures);
+var artifactPath = Path.Combine(AppContext.BaseDirectory, "fixtures", "hand-designed-map.mapspec.json");
+var authored = MapSpecArtifactCodec.Decode(File.ReadAllBytes(artifactPath));
+ValidateMap("authored artifact", authored, failures);
+ValidateDeterministicLoad("authored artifact", authored, failures);
+Require(authored.Triggers.Count == 1, "authored artifact should keep trigger areas.", failures);
+Require(authored.Objectives.Count == 1, "authored artifact should keep objective nodes.", failures);
+Require(authored.NarrativeNodes.Count == 1, "authored artifact should keep narrative nodes.", failures);
+Require(authored.TerrainCells.Count == 2, "authored artifact should keep layered terrain cells.", failures);
 
 if (failures.Count > 0)
 {
@@ -28,7 +28,7 @@ if (failures.Count > 0)
     Environment.Exit(1);
 }
 
-Console.WriteLine($"MapAuthoringQa PASSED: generated entities {generated.Buildings.Count + generated.Units.Count}, baked entities {baked.Buildings.Count + baked.Units.Count}.");
+Console.WriteLine($"MapAuthoringQa PASSED: generated entities {generated.Buildings.Count + generated.Units.Count}, authored entities {authored.Buildings.Count + authored.Units.Count}.");
 
 static void ValidateMapSpecIsGodotFree(List<string> failures)
 {

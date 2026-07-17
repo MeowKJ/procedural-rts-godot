@@ -1,11 +1,8 @@
 using ProceduralRts.Core;
 
 var failures = new List<string>();
-var fixturePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "hand-designed-map.tscn");
-var baked = GodotSceneMapBaker.Bake(
-    File.ReadAllText(fixturePath),
-    "qa.playable-map-handoff",
-    20260701);
+var fixturePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "hand-designed-map.mapspec.json");
+var baked = MapSpecArtifactCodec.Decode(File.ReadAllBytes(fixturePath));
 
 PlayableMapHandoffScenarios.Run(baked, failures);
 if (failures.Count > 0)
