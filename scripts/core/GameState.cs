@@ -94,6 +94,8 @@ public sealed partial class GameState
     public double LastFogUpdateMs { get; private set; }
     public SkirmishOptions Options { get; }
     public MatchConfig MatchConfig { get; }
+    public MapSpec? ActiveMapSpec => MatchConfig.AuthoredMap;
+    public MapRuntimeEnvironment RuntimeMapEnvironment { get; }
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
     public WorldVisualThemeState VisualTheme { get; private set; } = new(
         WorldVisualTheme.DayCommand,
@@ -148,22 +150,64 @@ public sealed partial class GameState
     }
 
     public GameState(MatchConfig matchConfig, FogQualityTier fogQuality = FogQualityTier.Medium)
+        : this(matchConfig, LoadAuthoredWorld(matchConfig), fogQuality)
     {
+    }
+
+    internal static GameState FromLoadedAuthoredMap(
+        MatchConfig matchConfig,
+        EntityWorld loadedWorld,
+        FogQualityTier fogQuality = FogQualityTier.Medium)
+    {
+        return new GameState(matchConfig, loadedWorld, fogQuality);
+    }
+
+    private GameState(
+        MatchConfig matchConfig,
+        EntityWorld? authoredWorld,
+        FogQualityTier fogQuality)
+    {
+        if (matchConfig.AuthoredMap is not null && matchConfig.LaunchMode == LaunchMode.Sandbox)
+        {
+            throw new InvalidOperationException("Authored maps cannot use sandbox launch mode.");
+        }
+
+        if ((matchConfig.AuthoredMap is null) != (authoredWorld is null))
+        {
+            throw new InvalidOperationException("Authored MatchConfig and loaded EntityWorld must be supplied together.");
+        }
+
         MatchConfig = matchConfig;
         Options = matchConfig.ToSkirmishOptions();
-        WorldSize = matchConfig.WorldSize;
+        WorldSize = authoredWorld is null
+            ? matchConfig.WorldSize
+            : new Vector2(authoredWorld.WorldWidth, authoredWorld.WorldHeight);
+        RuntimeMapEnvironment = authoredWorld?.MapEnvironment ?? MapRuntimeEnvironment.Empty;
         FogQuality = fogQuality;
         FogOfWar = new FogOfWarMap(fogQuality);
         SignalNodes = SignalNetworkMath.CreateDefaultNetwork(WorldSize).ToList();
         ResourceInventories[Owner.Player] = new ResourceInventory { Credits = matchConfig.StartingCredits };
         ResourceInventories[Owner.Enemy] = new ResourceInventory { Credits = matchConfig.StartingCredits };
-        Seed();
+        if (authoredWorld is not null)
+        {
+            SeedAuthoredWorld(matchConfig.AuthoredMap!, authoredWorld);
+        }
+        else
+        {
+            Seed();
+        }
+
         if (matchConfig.LaunchMode == LaunchMode.Sandbox)
         {
             ConfigureDeveloperSandbox();
         }
 
         UpdateFogOfWar();
+    }
+
+    private static EntityWorld? LoadAuthoredWorld(MatchConfig matchConfig)
+    {
+        return matchConfig.AuthoredMap is { } map ? MapLoader.Load(map) : null;
     }
 
     public void Update(double delta)

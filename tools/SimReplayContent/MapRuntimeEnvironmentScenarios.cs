@@ -275,6 +275,11 @@ static partial class Program
             Id = id,
             Seed = 559,
             WorldSize = new MapSize(768, 512),
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(64, 64), 0, 0),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(704, 448), MathF.PI, 0),
+            ],
             TerrainCells = [GroundCell()],
         };
     }

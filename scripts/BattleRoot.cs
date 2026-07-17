@@ -51,12 +51,13 @@ public partial class BattleRoot : Node2D
         "cat.crescent_artillery",
     ];
 
-    private readonly GameState _state = new(SkirmishSetupState.PendingOptions);
-    private readonly UnitBattlefield _unitBattlefield = new();
+    private readonly GameState _state;
+    private readonly UnitBattlefield _unitBattlefield;
     // Fixed-tick EntityWorld core for deterministic gameplay systems and live
     // presentation projections.
     private readonly SimClock _simClock = new();
-    private readonly EntityWorld _entityWorld = new();
+    private readonly EntityWorld _entityWorld;
+    private readonly bool _runEntityWorldShadow;
     private readonly EntityCommandBuffer _entityCommands = new();
     private readonly SimEventSink _presentationEvents = new();
     private readonly List<SimEvent> _simEventDrainBuffer = [];
@@ -108,12 +109,32 @@ public partial class BattleRoot : Node2D
     private int _debugPlayerCommandedUnitCount;
     private int _debugEnemyCommandedUnitCount;
     private GameOutcome _displayedOutcome = GameOutcome.InProgress;
-    private static bool RunEntityWorldShadow => System.Environment.GetEnvironmentVariable("PROCEDURAL_RTS_DISABLE_ENTITY_SHADOW") != "1"
+    private static bool DefaultEntityWorldShadowEnabled => System.Environment.GetEnvironmentVariable("PROCEDURAL_RTS_DISABLE_ENTITY_SHADOW") != "1"
         && System.Environment.GetEnvironmentVariable("PROCEDURAL_RTS_ENTITY_SHADOW") != "0";
+    private bool RunEntityWorldShadow => _runEntityWorldShadow;
     private static bool UseUnitDesignRuntime => true;
     public GameState State => _state;
     public PresentationMetrics PresentationMetrics => _presentationMetrics;
     public int DebugSimClockTick => _simClock.CurrentTick;
+
+    public BattleRoot()
+    {
+        var config = SkirmishSetupState.PendingMatchConfig;
+        if (config.AuthoredMap is { } map)
+        {
+            var world = MapLoader.Load(map);
+            _state = GameState.FromLoadedAuthoredMap(config, world);
+            _unitBattlefield = UnitBattlefield.AdoptLoadedMap(world, map);
+            _entityWorld = world;
+            _runEntityWorldShadow = false;
+            return;
+        }
+
+        _state = new GameState(config);
+        _unitBattlefield = new UnitBattlefield();
+        _entityWorld = new EntityWorld();
+        _runEntityWorldShadow = DefaultEntityWorldShadowEnabled;
+    }
 
     public void DebugClearPresentationMetrics()
     {
@@ -215,5 +236,24 @@ public partial class BattleRoot : Node2D
 
         return designIds;
     }
+
+    public IReadOnlyList<EntityProjection> DebugRuntimeEntityProjections()
+    {
+        return EntityProjector.Project(_unitBattlefield.EntityWorld);
+    }
+
+    public MapRuntimeEnvironment DebugRuntimeMapEnvironment => _unitBattlefield.EntityWorld.MapEnvironment;
+
+    public ulong DebugRuntimeStateHash => _unitBattlefield.EntityWorld.DeterministicStateHash();
+
+    public int DebugRuntimeCredits(PlayerSlotId playerSlotId)
+    {
+        return _unitBattlefield.Credits(playerSlotId);
+    }
+
+    public bool DebugUsesSingleAuthoredEntityWorld =>
+        _state.ActiveMapSpec is not null && ReferenceEquals(_entityWorld, _unitBattlefield.EntityWorld);
+
+    public bool DebugEntityWorldShadowEnabled => RunEntityWorldShadow;
 
 }

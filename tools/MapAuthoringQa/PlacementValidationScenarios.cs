@@ -73,6 +73,11 @@ static partial class PlacementValidationScenarios
             Id = id,
             Seed = 550,
             WorldSize = worldSize,
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(64, 64), 0, 0),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(worldSize.Width - 64, worldSize.Height - 64), MathF.PI, 0),
+            ],
             Buildings = buildings,
         };
     }

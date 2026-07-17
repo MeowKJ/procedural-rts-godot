@@ -8,6 +8,14 @@ public sealed record MapLoadOptions(
 
 public static class MapLoader
 {
+    public static MapRuntimeEnvironment Prepare(MapSpec spec)
+    {
+        MapOwnerTopologyValidator.EnsureValid(spec);
+        MapSemanticValidator.EnsureValid(spec);
+        MapBuildingPlacementValidator.EnsureValid(spec);
+        return MapRuntimeEnvironment.From(spec);
+    }
+
     public static EntityWorld Load(MapSpec spec, ulong? seed = null, MapLoadOptions? options = null)
     {
         var world = new EntityWorld(seed ?? unchecked((ulong)spec.Seed));
@@ -17,8 +25,7 @@ public static class MapLoader
 
     public static void LoadInto(EntityWorld world, MapSpec spec, MapLoadOptions? options = null)
     {
-        MapBuildingPlacementValidator.EnsureValid(spec);
-        var environment = MapRuntimeEnvironment.From(spec);
+        var environment = Prepare(spec);
 
         world.WorldWidth = spec.WorldSize.Width;
         world.WorldHeight = spec.WorldSize.Height;
@@ -30,6 +37,11 @@ public static class MapLoader
             SimSystemPipeline.ConfigureLiveGameplay(world, options.OutcomeViewer ?? new OwnerId(1));
         }
 
+        var reservedBuildingIds = spec.Buildings
+            .Where(building => building.LegacyId is not null)
+            .Select(building => building.LegacyId!.Value)
+            .ToHashSet();
+        var assignedBuildingIds = new HashSet<int>();
         var nextBuildingId = 1;
         foreach (var resource in spec.Resources)
         {
@@ -39,7 +51,11 @@ public static class MapLoader
         foreach (var building in spec.Buildings)
         {
             var buildSpec = BuildSpecCatalog.For(building.Kind);
-            var legacyId = building.LegacyId ?? nextBuildingId++;
+            var legacyId = building.LegacyId ?? NextAvailableBuildingId(
+                ref nextBuildingId,
+                reservedBuildingIds,
+                assignedBuildingIds);
+            assignedBuildingIds.Add(legacyId);
             world.SpawnBuildingTarget(
                 new BuildingEntitySeed(
                     legacyId,
@@ -68,6 +84,19 @@ public static class MapLoader
         }
     }
 
+    private static int NextAvailableBuildingId(
+        ref int candidate,
+        IReadOnlySet<int> reserved,
+        IReadOnlySet<int> assigned)
+    {
+        while (reserved.Contains(candidate) || assigned.Contains(candidate))
+        {
+            candidate++;
+        }
+
+        return candidate++;
+    }
+
     private static void ConfigureOwners(EntityWorld world, MapSpec spec)
     {
         foreach (var start in spec.OwnerStarts)
@@ -79,6 +108,11 @@ public static class MapLoader
         {
             foreach (var second in spec.OwnerStarts)
             {
+                if (first.OwnerId == second.OwnerId)
+                {
+                    continue;
+                }
+
                 world.Relations.Set(first.OwnerId, second.OwnerId, PlayerRelation.Hostile);
             }
         }

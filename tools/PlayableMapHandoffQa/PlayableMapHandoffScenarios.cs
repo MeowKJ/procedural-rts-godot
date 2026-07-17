@@ -1,0 +1,170 @@
+using ProceduralRts.Core;
+
+internal static class PlayableMapHandoffScenarios
+{
+    public static void Run(MapSpec source, List<string> failures)
+    {
+        var authored = AuthoredFixture(source);
+        ValidateLoadedProjection(authored, failures);
+        ValidateAtomicStaging(authored, failures);
+        MapPreflightAtomicScenarios.Run(authored, failures);
+        MapEnvironmentHashScenarios.Run(authored, failures);
+        ValidateDefaultCompatibility(failures);
+    }
+
+    private static void ValidateLoadedProjection(MapSpec map, List<string> failures)
+    {
+        var config = MatchConfig.ForAuthoredMap(map, EnemyDifficulty.Hard);
+        var state = new GameState(config);
+        var world = MapLoader.Load(map);
+        var battlefield = UnitBattlefield.AdoptLoadedMap(world, map);
+
+        Require(state.ActiveMapSpec == map, "authored GameState should retain the pure MapSpec handoff.", failures);
+        Require(state.WorldSize == map.WorldSize.ToVector2(), "authored GameState should use loaded world bounds.", failures);
+        Require(state.RuntimeMapEnvironment.WorldSize == map.WorldSize, "authored GameState should observe the loaded immutable environment.", failures);
+        Require(state.Credits(Owner.Player) == 1800 && state.Credits(Owner.Enemy) == 2100,
+            "authored GameState should preserve asymmetric owner credits.", failures);
+        Require(state.ResourceFields.Count == map.Resources.Count
+            && state.MapObstacles.Count == map.Obstacles.Count
+            && state.Buildings.Count == map.Buildings.Count
+            && state.Units.Count == map.Units.Count,
+            "authored GameState should project every loaded resource, obstacle, building, and unit exactly once.", failures);
+
+        var expectedBuilding = map.Buildings[0];
+        var projectedBuilding = state.Buildings.Single(building => building.Id == 77);
+        Require(projectedBuilding.Kind == expectedBuilding.Kind
+            && projectedBuilding.Position == expectedBuilding.Position.ToVector2()
+            && MathF.Abs(projectedBuilding.Facing - expectedBuilding.Facing) < 0.0001f
+            && MathF.Abs(projectedBuilding.Hp - 725) < 0.0001f
+            && MathF.Abs(projectedBuilding.BuildProgress - 0.95f) < 0.0001f,
+            "authored legacy projection should preserve building id, transform, hp, and build progress.", failures);
+
+        Require(battlefield.EntityWorld == world, "UnitBattlefield should adopt the exact EntityWorld produced by MapLoader.", failures);
+        Require(battlefield.WorldSize == map.WorldSize.ToVector2(), "UnitBattlefield should use authored world bounds.", failures);
+        Require(battlefield.Credits(PlayerSlotId.One) == 1800 && battlefield.Credits(PlayerSlotId.Two) == 2100,
+            "UnitBattlefield should observe loaded owner credits.", failures);
+        Require(battlefield.Units.Count == map.Units.Count
+            && battlefield.BuildingSnapshots().Count == map.Buildings.Count
+            && battlefield.ResourceFields.Count == map.Resources.Count,
+            "UnitBattlefield should adopt every loaded gameplay entity without respawning it.", failures);
+        Require(battlefield.Units.Zip(map.Units).All(pair =>
+                pair.First.Spec.Id == pair.Second.DesignId
+                && pair.First.PlayerSlotId == pair.Second.OwnerId.ToPlayerSlot()
+                && pair.First.Position == pair.Second.Position.ToVector2()
+                && MathF.Abs(pair.First.Facing - pair.Second.Facing) < 0.0001f),
+            "UnitBattlefield should preserve authored unit order, owner, position, and facing.", failures);
+
+        var environment = world.MapEnvironment;
+        Require(environment.OwnerStarts.Count == map.OwnerStarts.Count
+            && environment.TerrainCells.Count == map.TerrainCells.Count
+            && environment.StaticObstacles.Count == map.Obstacles.Count
+            && environment.Triggers.Count == map.Triggers.Count
+            && environment.Objectives.Count == map.Objectives.Count
+            && environment.NarrativeNodes.Count == map.NarrativeNodes.Count,
+            "loaded runtime environment should preserve starts, terrain, obstacles, triggers, objectives, and narrative metadata.", failures);
+        Require(world.OrderedEntities.Any(entity =>
+                entity.SpecId == $"map.objective.{map.Objectives[0].Id}"
+                && entity.Transform.Position == map.Objectives[0].Position.ToVector2()),
+            "authored objective should enter EntityWorld with its exact id and position.", failures);
+        Require(MapLoader.Load(map).DeterministicStateHash() == MapLoader.Load(map).DeterministicStateHash(),
+            "authored MapLoader handoff should produce a deterministic initial hash.", failures);
+    }
+
+    private static void ValidateAtomicStaging(MapSpec valid, List<string> failures)
+    {
+        var previous = SkirmishSetupState.PendingMatchConfig;
+        try
+        {
+            SkirmishSetupState.StageAuthoredMap(valid, EnemyDifficulty.Hard);
+            Require(SkirmishSetupState.PendingMatchConfig.AuthoredMap == valid,
+                "StageAuthoredMap should publish a validated MapSpec handoff.", failures);
+
+            var beforeInvalid = SkirmishSetupState.PendingMatchConfig;
+            var invalid = valid with
+            {
+                Id = "qa.authored.invalid",
+                Buildings =
+                [
+                    valid.Buildings[0] with { Position = new MapPoint(valid.WorldSize.Width - 1, valid.WorldSize.Height - 1) },
+                    .. valid.Buildings.Skip(1),
+                ],
+            };
+            MapBuildingPlacementValidationException? rejection = null;
+            try
+            {
+                SkirmishSetupState.StageAuthoredMap(invalid);
+            }
+            catch (MapBuildingPlacementValidationException exception)
+            {
+                rejection = exception;
+            }
+
+            Require(rejection is not null && SkirmishSetupState.PendingMatchConfig == beforeInvalid,
+                "invalid authored staging should fail atomically without replacing pending match state.", failures);
+
+            var sandboxAuthored = MatchConfig.ForAuthoredMap(valid) with { LaunchMode = LaunchMode.Sandbox };
+            var rejectedSandbox = false;
+            try
+            {
+                SkirmishSetupState.StageMatchConfig(sandboxAuthored);
+            }
+            catch (InvalidOperationException)
+            {
+                rejectedSandbox = true;
+            }
+
+            Require(rejectedSandbox && SkirmishSetupState.PendingMatchConfig == beforeInvalid,
+                "sandbox plus authored map should reject without mutating pending state.", failures);
+        }
+        finally
+        {
+            SkirmishSetupState.StageMatchConfig(previous);
+        }
+    }
+
+    private static void ValidateDefaultCompatibility(List<string> failures)
+    {
+        var previous = SkirmishSetupState.PendingMatchConfig;
+        try
+        {
+            SkirmishSetupState.PendingOptions = SkirmishOptions.Default;
+            Require(SkirmishSetupState.PendingMatchConfig == MatchConfig.Default,
+                "default PendingOptions should retain the existing default MatchConfig.", failures);
+            SkirmishSetupState.PendingOptions = SkirmishOptions.Sandbox;
+            Require(SkirmishSetupState.PendingMatchConfig == MatchConfig.Sandbox
+                && SkirmishSetupState.PendingMatchConfig.AuthoredMap is null,
+                "sandbox PendingOptions should clear any authored map handoff.", failures);
+        }
+        finally
+        {
+            SkirmishSetupState.StageMatchConfig(previous);
+        }
+    }
+
+    private static MapSpec AuthoredFixture(MapSpec source)
+    {
+        return source with
+        {
+            Id = "qa.playable-authored-map",
+            Seed = 453,
+            OwnerStarts =
+            [
+                source.OwnerStarts[0] with { StartingCredits = 1800 },
+                source.OwnerStarts[1] with { StartingCredits = 2100 },
+            ],
+            Buildings = source.Buildings
+                .Select((building, index) => index == 0
+                    ? building with { LegacyId = 77, Hp = 725, BuildProgress = 0.95f }
+                    : building)
+                .ToArray(),
+        };
+    }
+
+    private static void Require(bool condition, string message, List<string> failures)
+    {
+        if (!condition)
+        {
+            failures.Add(message);
+        }
+    }
+}

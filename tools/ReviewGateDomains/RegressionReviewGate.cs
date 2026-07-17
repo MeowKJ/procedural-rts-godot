@@ -35,6 +35,7 @@ static class RegressionReviewGate
             "tools/FogOfWarQa/FogOfWarQa.csproj",
             "tools/PerfSmoke/PerfSmoke.csproj",
             "tools/PlayerLoopQa/PlayerLoopQa.csproj",
+            "tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj",
             "tools/CounterReadabilityQa/CounterReadabilityQa.csproj",
             "tools/VerifyAll/VerifyAll.csproj",
         })
@@ -50,6 +51,7 @@ static class RegressionReviewGate
             "tools/SimReplay/SimReplay.csproj",
             "tools/CombatBehavior/CombatBehavior.csproj",
             "tools/FogOfWarQa/FogOfWarQa.csproj",
+            "tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj",
             "tools/ReviewGate/ReviewGate.csproj",
             "tools/PerfSmoke/PerfSmoke.csproj",
             "tools/CounterReadabilityQa/CounterReadabilityQa.csproj",

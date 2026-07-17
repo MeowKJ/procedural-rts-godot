@@ -16,6 +16,11 @@ static partial class PlacementValidationScenarios
                 Id = "qa.loader-existing-environment",
                 Seed = 550,
                 WorldSize = new MapSize(777, 555),
+                OwnerStarts =
+                [
+                    new(new OwnerId(1), FactionId.Dog, new MapPoint(64, 64), 0, 0),
+                    new(new OwnerId(2), FactionId.Cat, new MapPoint(713, 491), MathF.PI, 0),
+                ],
                 TerrainCells = [new("existing.ground", new MapRect(0, 0, 777, 555), "ground")],
                 Obstacles = [new("existing.rock", new MapRect(32, 32, 32, 32))],
             });

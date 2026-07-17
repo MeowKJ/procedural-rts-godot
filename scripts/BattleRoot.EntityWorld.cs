@@ -11,6 +11,9 @@ public partial class BattleRoot
     private void ConfigureEntityWorld()
     {
         SyncEntityWorldResourceAtmosphere(_state.VisualTheme);
+        _entityWorld.WorldWidth = _state.WorldSize.X;
+        _entityWorld.WorldHeight = _state.WorldSize.Y;
+        _entityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
 
         if (!RunEntityWorldShadow)
         {
@@ -69,7 +72,12 @@ public partial class BattleRoot
         _unitBattlefield.SetCredits(PlayerSlotId.Two, _state.Credits(ProceduralRts.Core.Owner.Enemy));
         _unitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
 
-        if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+        if (_state.MatchConfig.AuthoredMap is not null)
+        {
+            // MapLoader already populated the authoritative EntityWorld and
+            // UnitBattlefield adopted those exact entities before the scene ran.
+        }
+        else if (_state.Options.LaunchMode == LaunchMode.Sandbox)
         {
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(820, 1180), new Vector2(58, 0));
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0));
