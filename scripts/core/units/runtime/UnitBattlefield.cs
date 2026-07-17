@@ -14,7 +14,7 @@ public sealed partial class UnitBattlefield
     private const int HarvesterCargoCapacity = 700;
 
     private int _nextUnitId = 1;
-    private readonly EntityWorld _entityWorld = new();
+    private readonly EntityWorld _entityWorld;
     private readonly EntityCommandBuffer _inputCommands = new();
     private readonly CommandSystem _inputCommandSystem = new();
     private readonly AbilitySystem _abilitySystem = new();
@@ -122,6 +122,16 @@ public sealed partial class UnitBattlefield
     public event Action<PlayerSlotId, ResourceInventory>? ResourceInventoryChanged;
     public event Action<UnitBattlefieldBuildingSnapshot, UnitProductionQueueItem>? ProductionQueued;
     public event Action<UnitBattlefieldBuildingSnapshot, UnitProductionQueueItem, UnitInstance>? ProductionCompleted;
+
+    public UnitBattlefield()
+        : this(new EntityWorld())
+    {
+    }
+
+    private UnitBattlefield(EntityWorld entityWorld)
+    {
+        _entityWorld = entityWorld ?? throw new ArgumentNullException(nameof(entityWorld));
+    }
 
     public UnitInstance Spawn<TDesign>(PlayerSlotId playerSlotId, Vector2 position, float facing = 0)
         where TDesign : UnitDesign, new()

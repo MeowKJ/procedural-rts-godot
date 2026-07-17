@@ -19,6 +19,20 @@ public readonly record struct MapRuntimeTerrainSample(
     string SourceId,
     bool IsAuthored);
 
+public sealed record MapRuntimeTriggerArea(string Id, MapRect Bounds, string EventKey);
+
+public sealed record MapRuntimeObjectiveNode(
+    string Id,
+    MapPoint Position,
+    string ObjectiveKey,
+    bool Primary);
+
+public sealed record MapRuntimeNarrativeNode(
+    string Id,
+    MapPoint Position,
+    string TextKey,
+    string? TriggerId);
+
 /// <summary>
 /// Immutable authored map environment owned by EntityWorld. Terrain cells retain
 /// source order because later authored layers override earlier containing cells.
@@ -27,24 +41,44 @@ public sealed class MapRuntimeEnvironment
 {
     private readonly IReadOnlyList<MapRuntimeTerrainCell> _terrainCells;
     private readonly IReadOnlyList<MapRuntimeStaticObstacle> _staticObstacles;
+    private readonly IReadOnlyList<MapOwnerStartSpec> _ownerStarts;
+    private readonly IReadOnlyList<MapRuntimeTriggerArea> _triggers;
+    private readonly IReadOnlyList<MapRuntimeObjectiveNode> _objectives;
+    private readonly IReadOnlyList<MapRuntimeNarrativeNode> _narrativeNodes;
 
     private MapRuntimeEnvironment(
         MapSize worldSize,
         IReadOnlyList<MapRuntimeTerrainCell> terrainCells,
-        IReadOnlyList<MapRuntimeStaticObstacle> staticObstacles)
+        IReadOnlyList<MapRuntimeStaticObstacle> staticObstacles,
+        IReadOnlyList<MapOwnerStartSpec> ownerStarts,
+        IReadOnlyList<MapRuntimeTriggerArea> triggers,
+        IReadOnlyList<MapRuntimeObjectiveNode> objectives,
+        IReadOnlyList<MapRuntimeNarrativeNode> narrativeNodes)
     {
         WorldSize = worldSize;
         _terrainCells = Array.AsReadOnly(terrainCells.ToArray());
         _staticObstacles = Array.AsReadOnly(staticObstacles.ToArray());
+        _ownerStarts = Array.AsReadOnly(ownerStarts.ToArray());
+        _triggers = Array.AsReadOnly(triggers.ToArray());
+        _objectives = Array.AsReadOnly(objectives.ToArray());
+        _narrativeNodes = Array.AsReadOnly(narrativeNodes.ToArray());
     }
 
-    public static MapRuntimeEnvironment Empty { get; } = new(new MapSize(0, 0), [], []);
+    public static MapRuntimeEnvironment Empty { get; } = new(new MapSize(0, 0), [], [], [], [], [], []);
 
     public MapSize WorldSize { get; }
 
     public IReadOnlyList<MapRuntimeTerrainCell> TerrainCells => _terrainCells;
 
     public IReadOnlyList<MapRuntimeStaticObstacle> StaticObstacles => _staticObstacles;
+
+    public IReadOnlyList<MapOwnerStartSpec> OwnerStarts => _ownerStarts;
+
+    public IReadOnlyList<MapRuntimeTriggerArea> Triggers => _triggers;
+
+    public IReadOnlyList<MapRuntimeObjectiveNode> Objectives => _objectives;
+
+    public IReadOnlyList<MapRuntimeNarrativeNode> NarrativeNodes => _narrativeNodes;
 
     public static MapRuntimeEnvironment From(MapSpec map)
     {
@@ -67,7 +101,32 @@ public sealed class MapRuntimeEnvironment
             obstacles[index] = new MapRuntimeStaticObstacle(source.Id, source.Bounds.ToPlacementRect());
         }
 
-        return new MapRuntimeEnvironment(map.WorldSize, terrain, obstacles);
+        var triggers = map.Triggers
+            .Select(trigger => new MapRuntimeTriggerArea(trigger.Id, trigger.Bounds, trigger.EventKey))
+            .ToArray();
+        var objectives = map.Objectives
+            .Select(objective => new MapRuntimeObjectiveNode(
+                objective.Id,
+                objective.Position,
+                objective.ObjectiveKey,
+                objective.Primary))
+            .ToArray();
+        var narrativeNodes = map.NarrativeNodes
+            .Select(node => new MapRuntimeNarrativeNode(
+                node.Id,
+                node.Position,
+                node.TextKey,
+                node.TriggerId))
+            .ToArray();
+
+        return new MapRuntimeEnvironment(
+            map.WorldSize,
+            terrain,
+            obstacles,
+            map.OwnerStarts,
+            triggers,
+            objectives,
+            narrativeNodes);
     }
 
     public MapRuntimeTerrainSample SampleTerrain(

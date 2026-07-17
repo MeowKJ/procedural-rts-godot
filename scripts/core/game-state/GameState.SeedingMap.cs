@@ -29,19 +29,30 @@ public sealed partial class GameState
         return unit;
     }
 
-    private BuildingModel AddBuilding(string kind, Owner owner, Vector2 position, float facing = 0, FactionId? factionId = null)
+    private BuildingModel AddBuilding(
+        string kind,
+        Owner owner,
+        Vector2 position,
+        float facing = 0,
+        FactionId? factionId = null,
+        int? legacyId = null,
+        float? hp = null,
+        float buildProgress = 1)
     {
         var spec = BuildSpecCatalog.For(kind);
+        var id = legacyId ?? _nextBuildingId++;
+        _nextBuildingId = Math.Max(_nextBuildingId, id + 1);
         var building = new BuildingModel
         {
-            Id = _nextBuildingId++,
+            Id = id,
             Kind = kind,
             Owner = owner,
             FactionId = factionId ?? MatchConfig.FactionForOwner(owner),
             Position = position,
             Facing = facing,
             TurretFacing = facing,
-            Hp = spec.MaxHp,
+            Hp = hp ?? spec.MaxHp,
+            BuildProgress = buildProgress,
         };
 
         Buildings.Add(building);
@@ -119,6 +130,88 @@ public sealed partial class GameState
         }
 
         SeedOwnerLoadout(MatchStartLoadouts.For(Owner.Enemy, MatchConfig.AiFaction, map));
+    }
+
+    private void SeedAuthoredWorld(MapSpec map, EntityWorld world)
+    {
+        _mapObstacles.Clear();
+        foreach (var obstacle in world.MapEnvironment.StaticObstacles)
+        {
+            _mapObstacles.Add(new PlacementObstacle(
+                obstacle.Bounds.X,
+                obstacle.Bounds.Y,
+                obstacle.Bounds.Width,
+                obstacle.Bounds.Height));
+        }
+
+        foreach (var start in map.OwnerStarts)
+        {
+            ResourceInventories[LegacyOwnerFor(start.OwnerId)].Credits = world.ResourceInventory(start.OwnerId).Credits;
+        }
+
+        foreach (var source in map.Resources)
+        {
+            var entity = world.OrderedEntities.FirstOrDefault(candidate =>
+                candidate.SpecId == $"map.resource.{source.Id}")
+                ?? throw new InvalidOperationException($"Loaded map resource '{source.Id}' is missing its EntityWorld entity.");
+            var node = entity.Components.Require<ResourceNodeComponentState>();
+            var collision = entity.Components.Require<CollisionComponentState>();
+            AddResourceField(entity.Transform.Position, collision.Radius, node.Amount, source.Accent.ToColor());
+        }
+
+        foreach (var entity in world.OrderedEntities)
+        {
+            if (entity.Components.TryGet<BuildingIdentityComponentState>(out var building))
+            {
+                var spec = BuildSpecCatalog.For(building.Kind);
+                var hp = entity.Components.TryGet<HealthComponentState>(out var health) ? health.Hp : spec.MaxHp;
+                var progress = entity.Components.TryGet<ConstructionComponentState>(out var construction)
+                    ? construction.Progress
+                    : 1;
+                AddBuilding(
+                    building.Kind,
+                    LegacyOwnerFor(entity.OwnerId),
+                    entity.Transform.Position,
+                    entity.Transform.Facing,
+                    LegacyFactionFor(building.Faction),
+                    building.LegacyBuildingId,
+                    hp,
+                    progress);
+                continue;
+            }
+
+            if (!world.TryGetSpec(entity.SpecId, out var entitySpec) || entitySpec.Kind != EntityKind.Unit)
+            {
+                continue;
+            }
+
+            AddUnit(
+                entity.SpecId,
+                LegacyOwnerFor(entity.OwnerId),
+                entity.Transform.Position,
+                entity.Transform.Facing,
+                map.StartFor(entity.OwnerId).Faction);
+        }
+    }
+
+    private static Owner LegacyOwnerFor(OwnerId ownerId)
+    {
+        return ownerId.Value switch
+        {
+            1 => Owner.Player,
+            2 => Owner.Enemy,
+            _ => throw new InvalidOperationException($"Playable authored maps support owner ids 1 and 2, not {ownerId.Value}."),
+        };
+    }
+
+    private static FactionId LegacyFactionFor(UnitFactionId faction)
+    {
+        return faction switch
+        {
+            UnitFactionId.Cat => FactionId.Cat,
+            UnitFactionId.Corruption => FactionId.Corruption,
+            _ => FactionId.Dog,
+        };
     }
 
     private void SeedOwnerLoadout(MatchStartOwnerLoadout loadout)

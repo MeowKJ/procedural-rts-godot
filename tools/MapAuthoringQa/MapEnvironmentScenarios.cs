@@ -248,6 +248,11 @@ static partial class PlacementValidationScenarios
             Id = id,
             Seed = 559,
             WorldSize = new MapSize(1024, 768),
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(64, 64), 0, 0),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(960, 704), MathF.PI, 0),
+            ],
             TerrainCells = [new("ground", new MapRect(0, 0, 1024, 768), "ground")],
             Buildings = buildings,
         };

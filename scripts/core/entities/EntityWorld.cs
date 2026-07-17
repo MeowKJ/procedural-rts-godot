@@ -357,6 +357,52 @@ public sealed partial class EntityWorld
             hash = EntityStateHash.Add(hash, obstacle.Bounds.Height);
         }
 
+        hash = EntityStateHash.Add(hash, MapEnvironment.OwnerStarts.Count);
+        for (var startIndex = 0; startIndex < MapEnvironment.OwnerStarts.Count; startIndex++)
+        {
+            var start = MapEnvironment.OwnerStarts[startIndex];
+            hash = EntityStateHash.Add(hash, start.OwnerId.Value);
+            hash = EntityStateHash.Add(hash, (int)start.Faction);
+            hash = EntityStateHash.Add(hash, start.Position.X);
+            hash = EntityStateHash.Add(hash, start.Position.Y);
+            hash = EntityStateHash.Add(hash, start.Facing);
+            hash = EntityStateHash.Add(hash, start.StartingCredits);
+        }
+
+        hash = EntityStateHash.Add(hash, MapEnvironment.Triggers.Count);
+        for (var triggerIndex = 0; triggerIndex < MapEnvironment.Triggers.Count; triggerIndex++)
+        {
+            var trigger = MapEnvironment.Triggers[triggerIndex];
+            hash = EntityStateHash.Add(hash, trigger.Id);
+            hash = EntityStateHash.Add(hash, trigger.Bounds.X);
+            hash = EntityStateHash.Add(hash, trigger.Bounds.Y);
+            hash = EntityStateHash.Add(hash, trigger.Bounds.Width);
+            hash = EntityStateHash.Add(hash, trigger.Bounds.Height);
+            hash = EntityStateHash.Add(hash, trigger.EventKey);
+        }
+
+        hash = EntityStateHash.Add(hash, MapEnvironment.Objectives.Count);
+        for (var objectiveIndex = 0; objectiveIndex < MapEnvironment.Objectives.Count; objectiveIndex++)
+        {
+            var objective = MapEnvironment.Objectives[objectiveIndex];
+            hash = EntityStateHash.Add(hash, objective.Id);
+            hash = EntityStateHash.Add(hash, objective.Position.X);
+            hash = EntityStateHash.Add(hash, objective.Position.Y);
+            hash = EntityStateHash.Add(hash, objective.ObjectiveKey);
+            hash = EntityStateHash.Add(hash, objective.Primary ? 1 : 0);
+        }
+
+        hash = EntityStateHash.Add(hash, MapEnvironment.NarrativeNodes.Count);
+        for (var narrativeIndex = 0; narrativeIndex < MapEnvironment.NarrativeNodes.Count; narrativeIndex++)
+        {
+            var narrative = MapEnvironment.NarrativeNodes[narrativeIndex];
+            hash = EntityStateHash.Add(hash, narrative.Id);
+            hash = EntityStateHash.Add(hash, narrative.Position.X);
+            hash = EntityStateHash.Add(hash, narrative.Position.Y);
+            hash = EntityStateHash.Add(hash, narrative.TextKey);
+            hash = EntityStateHash.AddNullableString(hash, narrative.TriggerId);
+        }
+
         hash = EntityStateHash.Add(hash, EconomyTuning.GatherDistance);
         hash = EntityStateHash.Add(hash, EconomyTuning.DockDistance);
         hash = EntityStateHash.Add(hash, EconomyTuning.GatherRate);

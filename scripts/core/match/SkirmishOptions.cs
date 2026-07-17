@@ -41,5 +41,37 @@ public sealed record SkirmishOptions(
 
 public static class SkirmishSetupState
 {
-    public static SkirmishOptions PendingOptions { get; set; } = SkirmishOptions.Default;
+    private static MatchConfig _pendingMatchConfig = SkirmishOptions.Default.ToMatchConfig();
+
+    public static SkirmishOptions PendingOptions
+    {
+        get => _pendingMatchConfig.ToSkirmishOptions();
+        set => _pendingMatchConfig = value.ToMatchConfig();
+    }
+
+    public static MatchConfig PendingMatchConfig => _pendingMatchConfig;
+
+    public static void StageMatchConfig(MatchConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        if (config.AuthoredMap is { } map)
+        {
+            if (config.LaunchMode == LaunchMode.Sandbox)
+            {
+                throw new InvalidOperationException("Authored maps cannot use sandbox launch mode.");
+            }
+
+            MapLoader.Prepare(map);
+        }
+
+        _pendingMatchConfig = config;
+    }
+
+    public static void StageAuthoredMap(
+        MapSpec map,
+        EnemyDifficulty enemyDifficulty = EnemyDifficulty.Normal)
+    {
+        MapLoader.Prepare(map);
+        _pendingMatchConfig = MatchConfig.ForAuthoredMap(map, enemyDifficulty);
+    }
 }

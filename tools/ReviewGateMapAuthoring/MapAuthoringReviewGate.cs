@@ -9,12 +9,20 @@ static class MapAuthoringReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapBuildingPlacementValidationException.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapEnvironmentSpecValidator.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapRuntimeEnvironment.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapOwnerTopologyValidator.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapSemanticValidator.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapPlacementRules.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "MapAuthoringQa", "Program.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "MapAuthoringQa", "MapEnvironmentScenarios.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "MapAuthoringQa", "PlacementReservationScenarios.cs");
+        ReviewGateSource.RequireFile(root, result, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffQa.csproj");
+        ReviewGateSource.RequireFile(root, result, "tools", "PlayableMapHandoffQa", "Program.cs");
+        ReviewGateSource.RequireFile(root, result, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffScenarios.cs");
+        ReviewGateSource.RequireFile(root, result, "tools", "PlayableMapHandoffQa", "MapPreflightAtomicScenarios.cs");
+        ReviewGateSource.RequireFile(root, result, "tools", "PlayableMapHandoffQa", "MapEnvironmentHashScenarios.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "SimReplayContent", "MapRuntimeEnvironmentScenarios.cs");
         ReviewGateSource.RequireTextInFile(root, result, "map-authoring-qa", "tools", "VerifyAll", "Program.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "playable-map-handoff-qa", "tools", "VerifyAll", "Program.cs");
         ReviewGateSource.RequireTextInFile(root, result, "RunMapAuthoringScenario", "tools", "SimReplay", "Program.cs");
         var mapSpec = ReviewGateSource.Read(root, "scripts", "core", "map", "MapSpec.cs");
         ForbidText(mapSpec, "using Godot", "MapSpec must stay pure C# without Godot imports.", result);
@@ -24,9 +32,22 @@ static class MapAuthoringReviewGate
         ForbidText(loader, ".tscn", "MapLoader must never read Godot scene files.", result);
         RequireText(
             loader,
-            "MapBuildingPlacementValidator.EnsureValid(spec);\n        var environment = MapRuntimeEnvironment.From(spec);\n\n        world.WorldWidth",
-            "MapLoader must validate and construct the environment before mutating the world.", result);
+            "public static MapRuntimeEnvironment Prepare(MapSpec spec)",
+            "MapLoader must expose the shared fail-closed authored-map preparation boundary.", result);
+        RequireText(
+            loader,
+            "MapOwnerTopologyValidator.EnsureValid(spec);\n        MapSemanticValidator.EnsureValid(spec);\n        MapBuildingPlacementValidator.EnsureValid(spec);",
+            "MapLoader must complete owner, catalog/id, and placement preflight before mutation.", result);
+        RequireText(
+            loader,
+            "MapBuildingPlacementValidator.EnsureValid(spec);\n        return MapRuntimeEnvironment.From(spec);",
+            "MapLoader preparation must validate before constructing the immutable environment.", result);
+        RequireText(
+            loader,
+            "var environment = Prepare(spec);\n\n        world.WorldWidth",
+            "MapLoader must prepare the map before mutating the world.", result);
         RequireText(loader, "world.InstallMapEnvironment(environment);", "MapLoader must install the validated immutable environment.", result);
+        RequireText(loader, "reservedBuildingIds", "MapLoader auto building ids must skip all explicit authored ids.", result);
         var placementValidator = ReviewGateSource.Read(root, "scripts", "core", "map", "MapBuildingPlacementValidator.cs");
         RequireText(placementValidator, "PlacementReservationMath.WorldRect(", "Map validation must rotate shared reservation metadata.", result);
         RequireText(placementValidator, "PlacementMath.ViolatesClearance(", "Map validation must use shared pair-clearance geometry.", result);
@@ -39,6 +60,13 @@ static class MapAuthoringReviewGate
         RequireText(environmentValidator, "MapPlacementRules.ResourceClearance(spec)", "Map validation must use the shared one-cell resource rule.", result);
         var runtimeEnvironment = ReviewGateSource.Read(root, "scripts", "core", "map", "MapRuntimeEnvironment.cs");
         RequireText(runtimeEnvironment, "Array.AsReadOnly", "Runtime map environment must own immutable collection copies.", result);
+        RequireText(runtimeEnvironment, "IReadOnlyList<MapRuntimeTriggerArea>", "Runtime map environment must retain authored triggers without editor types.", result);
+        RequireText(runtimeEnvironment, "IReadOnlyList<MapRuntimeNarrativeNode>", "Runtime map environment must retain authored narrative metadata without editor types.", result);
+        var entityWorld = ReviewGateSource.Read(root, "scripts", "core", "entities", "EntityWorld.cs");
+        RequireText(entityWorld, "MapEnvironment.OwnerStarts.Count", "Deterministic state hash must include authored owner starts.", result);
+        RequireText(entityWorld, "MapEnvironment.Triggers.Count", "Deterministic state hash must include authored triggers.", result);
+        RequireText(entityWorld, "MapEnvironment.Objectives.Count", "Deterministic state hash must include authored objectives.", result);
+        RequireText(entityWorld, "MapEnvironment.NarrativeNodes.Count", "Deterministic state hash must include authored narrative metadata.", result);
         RequireText(runtimeEnvironment, "AppendAuthoredTerrainGrid", "Runtime environment must rasterize authored terrain for pathfinding.", result);
         RequireText(runtimeEnvironment, "AppendStaticObstacleGrid", "Runtime environment must rasterize static obstacles for pathfinding.", result);
         var constructionPlacement = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "construction", "ConstructionSystem.PlacementQueries.cs");
@@ -56,5 +84,26 @@ static class MapAuthoringReviewGate
         var simReplayMap = ReviewGateSource.Read(root, "tools", "SimReplayContent", "MapAuthoringScenarios.cs");
         RequireText(simReplayMap, "MapLoader.Load", "SimReplay must replay authored maps through MapLoader.", result);
         RequireText(simReplayMap, "AssertDeterministic", "SimReplay map authoring scenario must be deterministic.", result);
+        var battleRoot = ReviewGateSource.Read(root, "scripts", "BattleRoot.cs");
+        RequireText(battleRoot, "var world = MapLoader.Load(map);", "Authored BattleRoot startup must load the map once through MapLoader.", result);
+        RequireText(battleRoot, "UnitBattlefield.AdoptLoadedMap(world, map)", "UnitBattlefield must adopt the exact MapLoader world instead of respawning authored entities.", result);
+        RequireText(battleRoot, "_entityWorld = world;\n            _runEntityWorldShadow = false;", "Authored BattleRoot must bypass the separate EntityWorld shadow without double stepping.", result);
+        var skirmishSetup = ReviewGateSource.Read(root, "scripts", "core", "match", "SkirmishOptions.cs");
+        RequireText(skirmishSetup, "MapLoader.Prepare(map);", "Authored match staging must reject invalid maps before publishing pending state.", result);
+        var authoredSkirmishFlow = ReviewGateSource.Read(root, "scripts", "qa", "SkirmishFlowQaRunner.AuthoredMap.cs");
+        RequireText(authoredSkirmishFlow, "StageAuthoredMap", "SkirmishFlowQa must launch a real authored battle.", result);
+        RequireText(authoredSkirmishFlow, "AssertNormalBattleAfterAuthored", "SkirmishFlowQa must prove normal restart clears authored state.", result);
+        RequireText(authoredSkirmishFlow, "DebugUsesSingleAuthoredEntityWorld", "SkirmishFlowQa must prove authored BattleRoot observes the MapLoader world identity.", result);
+        var playableHandoffProject = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffQa.csproj");
+        RequireText(playableHandoffProject, "MapAuthoringQa\\GodotSceneMapBaker.cs", "Playable handoff QA must link the existing baker source instead of copying its parser.", result);
+        RequireText(playableHandoffProject, "MapAuthoringQa\\fixtures\\hand-designed-map.tscn", "Playable handoff QA must link the existing authored scene fixture.", result);
+        var playableHandoffQa = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffScenarios.cs");
+        RequireText(playableHandoffQa, "UnitBattlefield.AdoptLoadedMap", "Playable handoff QA must retain loaded-world adoption parity assertions.", result);
+        var mapAuthoringProgram = ReviewGateSource.Read(root, "tools", "MapAuthoringQa", "Program.cs");
+        ForbidText(mapAuthoringProgram, "PlayableMapHandoffScenarios.Run", "MapAuthoringQa must not run the extracted playable handoff suite twice.", result);
+        var atomicPreflightQa = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "MapPreflightAtomicScenarios.cs");
+        RequireText(atomicPreflightQa, "ReferenceEquals(existing.MapEnvironment, environmentBefore)", "Map authoring QA must prove invalid preflight leaves an existing EntityWorld unchanged.", result);
+        var environmentHashQa = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "MapEnvironmentHashScenarios.cs");
+        RequireText(environmentHashQa, "one-field", "Map authoring QA must prove environment metadata hash sensitivity.", result);
     }
 }

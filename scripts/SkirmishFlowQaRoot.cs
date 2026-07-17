@@ -26,10 +26,14 @@ public partial class SkirmishFlowQaRoot : Node
 
 public partial class SkirmishFlowQaRunner : Node
 {
-    private const int TimeoutFrames = 600;
+    private const int TimeoutFrames = 1200;
     private int _frames;
     private int _cleanupFrames;
     private bool _startedBattle;
+    private bool _startedAuthoredBattle;
+    private bool _validatedAuthoredBattle;
+    private bool _startedPostAuthoredBattle;
+    private bool _validatedPostAuthoredBattle;
     private bool _cleanupStarted;
 
     public override void _Ready()
@@ -68,13 +72,38 @@ public partial class SkirmishFlowQaRunner : Node
                 return;
             }
 
-            if (_startedBattle && GetTree().CurrentScene is BattleRoot battle)
+            if (_startedBattle && !_startedAuthoredBattle && GetTree().CurrentScene is BattleRoot battle)
             {
                 GD.Print("Skirmish flow QA: validating Battle.");
                 AssertBattleState(battle.State);
                 AssertBattleRuntime(battle);
                 GD.Print("Skirmish flow QA: main menu setup launched Battle with selected faction, seed, credits, and difficulty.");
                 battle.QueueFree();
+                _cleanupStarted = true;
+            }
+            else if (_startedAuthoredBattle
+                && !_validatedAuthoredBattle
+                && GetTree().CurrentScene is BattleRoot authoredBattle)
+            {
+                GD.Print("Skirmish flow QA: validating authored Battle.");
+                AssertAuthoredBattle(authoredBattle);
+                authoredBattle.QueueFree();
+                _validatedAuthoredBattle = true;
+                _cleanupStarted = true;
+            }
+            else if (_startedPostAuthoredBattle
+                && !_validatedPostAuthoredBattle
+                && GetTree().CurrentScene is BattleRoot restartedBattle)
+            {
+                if (restartedBattle.DebugSimClockTick <= 0)
+                {
+                    return;
+                }
+
+                GD.Print("Skirmish flow QA: validating normal Battle after authored teardown.");
+                AssertNormalBattleAfterAuthored(restartedBattle);
+                restartedBattle.QueueFree();
+                _validatedPostAuthoredBattle = true;
                 _cleanupStarted = true;
             }
         }
@@ -167,7 +196,20 @@ public partial class SkirmishFlowQaRunner : Node
             throw new InvalidOperationException("Skirmish flow QA leaked a BattleRoot after cleanup.");
         }
 
-        GD.Print("Skirmish flow QA passed: battle scene cleaned up after setup flow.");
+        if (!_startedAuthoredBattle)
+        {
+            LaunchAuthoredBattle();
+            return;
+        }
+
+        if (!_startedPostAuthoredBattle)
+        {
+            LaunchNormalBattleAfterAuthored();
+            return;
+        }
+
+        SkirmishSetupState.PendingOptions = SkirmishOptions.Default;
+        GD.Print("Skirmish flow QA passed: menu, authored, and post-authored normal battles cleaned up.");
         GetTree().Quit(0);
     }
 

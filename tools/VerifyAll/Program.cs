@@ -62,6 +62,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("roster-authoring-qa", "dotnet", "run --project tools/RosterAuthoringQa/RosterAuthoringQa.csproj --no-restore"),
         Dotnet("content-authoring-qa", "dotnet", "run --project tools/ContentAuthoringQa/ContentAuthoringQa.csproj --no-restore"),
         Dotnet("map-authoring-qa", "dotnet", "run --project tools/MapAuthoringQa/MapAuthoringQa.csproj --no-restore"),
+        Dotnet("playable-map-handoff-qa", "dotnet", "run --project tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj --no-restore"),
         Dotnet("sandbox-spawn-authoring-qa", "dotnet", "run --project tools/SandboxSpawnAuthoringQa/SandboxSpawnAuthoringQa.csproj --no-restore"),
         Dotnet("player-loop-qa", "dotnet", "run --project tools/PlayerLoopQa/PlayerLoopQa.csproj --no-restore"),
         Dotnet("cursor-catalog-qa", "dotnet", "run --project tools/CursorCatalogQa/CursorCatalogQa.csproj --no-restore"),
