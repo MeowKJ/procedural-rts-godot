@@ -67,6 +67,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("mapspec-artifact-qa", "dotnet", "run --project tools/MapSpecArtifactQa/MapSpecArtifactQa.csproj --no-restore"),
         Dotnet("map-authoring-qa", "dotnet", "run --project tools/MapAuthoringQa/MapAuthoringQa.csproj --no-restore"),
         Dotnet("map-authoring-validation-qa", "dotnet", "run --project tools/MapAuthoringValidationQa/MapAuthoringValidationQa.csproj --no-restore"),
+        Dotnet("map-authoring-bake-play-qa", "dotnet", "run --project tools/MapAuthoringBakePlayQa/MapAuthoringBakePlayQa.csproj --no-restore"),
         Dotnet("playable-map-handoff-qa", "dotnet", "run --project tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj --no-restore"),
         Dotnet("sandbox-spawn-authoring-qa", "dotnet", "run --project tools/SandboxSpawnAuthoringQa/SandboxSpawnAuthoringQa.csproj --no-restore"),
         Dotnet("player-loop-qa", "dotnet", "run --project tools/PlayerLoopQa/PlayerLoopQa.csproj --no-restore"),
@@ -106,6 +107,9 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
             steps.Add(new VerifyStep("godot-map-typed-projection-qa", "sh", $"tools/map-typed-projection-qa.sh \"{godot.Path}\""));
             steps.Add(new VerifyStep("godot-map-authoring-plugin-smoke", "sh", $"tools/map-authoring-plugin-smoke.sh \"{godot.Path}\" --headless"));
             steps.Add(new VerifyStep("godot-map-authoring-validation-smoke", "sh", $"tools/map-authoring-validation-smoke.sh \"{godot.Path}\" --headless"));
+            steps.Add(new VerifyStep("godot-map-authoring-sample-parity", "sh", $"tools/map-authoring-sample-parity-qa.sh \"{godot.Path}\""));
+            steps.Add(new VerifyStep("godot-map-authoring-export-pack", "sh", $"tools/map-authoring-export-pack-qa.sh \"{godot.Path}\""));
+            steps.Add(new VerifyStep("godot-map-authoring-bake-play-smoke", "sh", $"tools/map-authoring-bake-play-smoke.sh \"{godot.Path}\" --headless"));
             steps.Add(new VerifyStep("godot-skirmish-flow-qa", godot.Path, "--headless --path . --scene res://scenes/SkirmishFlowQa.tscn"));
             steps.Add(new VerifyStep("godot-active-battle-perf-qa", godot.Path, "--headless --path . --scene res://scenes/ActiveBattlePerfQa.tscn"));
             steps.Add(new VerifyStep("godot-pause-qa", godot.Path, "--headless --path . --scene res://scenes/PauseQa.tscn"));

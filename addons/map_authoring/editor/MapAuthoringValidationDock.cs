@@ -9,7 +9,11 @@ public partial class MapAuthoringValidationDock : EditorDock
     private readonly Label _status = new();
     private readonly VBoxContainer _rows = new();
     private readonly Button _validate = new();
+    private readonly Button _bake = new();
+    private readonly Button _play = new();
     private Action? _validateRequested;
+    private Action? _bakeRequested;
+    private Action? _playRequested;
     private Action<MapValidationDiagnostic, bool>? _navigateRequested;
 
     public MapAuthoringValidationDock()
@@ -24,10 +28,23 @@ public partial class MapAuthoringValidationDock : EditorDock
         var content = new VBoxContainer();
         content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(content);
+        var actions = new HBoxContainer();
+        content.AddChild(actions);
         _validate.Text = "Validate";
         _validate.TooltipText = "Run deterministic read-only validation for the active MapRoot.";
         _validate.Pressed += OnValidatePressed;
-        content.AddChild(_validate);
+        _validate.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        actions.AddChild(_validate);
+        _bake.Text = "Bake";
+        _bake.TooltipText = "Freshly validate and atomically write the canonical MapSpec artifact.";
+        _bake.Pressed += OnBakePressed;
+        _bake.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        actions.AddChild(_bake);
+        _play.Text = "Play";
+        _play.TooltipText = "Freshly validate, bake, and launch an isolated authored preview process.";
+        _play.Pressed += OnPlayPressed;
+        _play.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        actions.AddChild(_play);
         _status.Text = "Fresh: not validated";
         _status.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         content.AddChild(_status);
@@ -38,12 +55,17 @@ public partial class MapAuthoringValidationDock : EditorDock
 
     public string StatusText => _status.Text;
     public int DiagnosticRowCount => _rows.GetChildCount();
+    public string PlayButtonText => _play.Text;
 
     public void Bind(
         Action validateRequested,
+        Action bakeRequested,
+        Action playRequested,
         Action<MapValidationDiagnostic, bool> navigateRequested)
     {
         _validateRequested = validateRequested;
+        _bakeRequested = bakeRequested;
+        _playRequested = playRequested;
         _navigateRequested = navigateRequested;
     }
 
@@ -64,6 +86,25 @@ public partial class MapAuthoringValidationDock : EditorDock
         _status.Text = $"Stale: {reason}";
     }
 
+    public void ShowArtifact(MapAuthoringBakeResult artifact, bool playing)
+    {
+        _status.Text = $"Fresh: {artifact.ResourcePath} · {artifact.Length} bytes · sha256 {artifact.Sha256}";
+        SetPlaying(playing);
+    }
+
+    public void SetOperationError(string message)
+    {
+        _status.Text = $"Blocked: {message}";
+    }
+
+    public void SetPlaying(bool playing)
+    {
+        _play.Text = playing ? "Stop" : "Play";
+        _play.TooltipText = playing
+            ? "Stop only the authored preview process owned by this dock."
+            : "Freshly validate, bake, and launch an isolated authored preview process.";
+    }
+
     public void ClearReport()
     {
         ClearRows();
@@ -73,7 +114,11 @@ public partial class MapAuthoringValidationDock : EditorDock
     public override void _ExitTree()
     {
         _validate.Pressed -= OnValidatePressed;
+        _bake.Pressed -= OnBakePressed;
+        _play.Pressed -= OnPlayPressed;
         _validateRequested = null;
+        _bakeRequested = null;
+        _playRequested = null;
         _navigateRequested = null;
     }
 
@@ -112,4 +157,6 @@ public partial class MapAuthoringValidationDock : EditorDock
     }
 
     private void OnValidatePressed() => _validateRequested?.Invoke();
+    private void OnBakePressed() => _bakeRequested?.Invoke();
+    private void OnPlayPressed() => _playRequested?.Invoke();
 }

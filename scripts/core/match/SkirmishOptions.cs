@@ -74,4 +74,10 @@ public static class SkirmishSetupState
         MapLoader.Prepare(map);
         _pendingMatchConfig = MatchConfig.ForAuthoredMap(map, enemyDifficulty);
     }
+
+    public static void ClearAuthoredMapHandoff()
+    {
+        if (_pendingMatchConfig.AuthoredMap is not null)
+            _pendingMatchConfig = SkirmishOptions.Default.ToMatchConfig();
+    }
 }

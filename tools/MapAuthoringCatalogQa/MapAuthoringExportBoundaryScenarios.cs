@@ -50,6 +50,9 @@ static class MapAuthoringExportBoundaryScenarios
 
         Require(types.Any(type => type.Name == "GodotMapSpecBaker"), path, "formal runtime baker", failures);
         Require(types.Any(type => type.Name == "IMapSpecSceneProjector"), path, "runtime projector contract", failures);
+        Require(types.Any(type => type.Name == "AuthoredMapPreviewBootstrap"), path, "authored preview bootstrap", failures);
+        Require(types.Any(type => type.Name == "AuthoredMapPreviewRuntime"), path, "strict authored preview runtime", failures);
+        Require(types.All(type => type.Name != "MapRoot"), path, "absence of typed editor MapRoot", failures);
     }
 
     private static void Require(bool condition, string path, string label, List<string> failures)

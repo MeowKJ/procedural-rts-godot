@@ -29,6 +29,7 @@ public partial class MainMenuRoot : Control
 
     public override void _Ready()
     {
+        SkirmishSetupState.ClearAuthoredMapHandoff();
         DisplayAudioSettings.LoadAndApply();
 
         SetAnchorsPreset(LayoutPreset.FullRect);

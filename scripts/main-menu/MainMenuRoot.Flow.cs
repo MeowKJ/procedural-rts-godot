@@ -15,6 +15,22 @@ public partial class MainMenuRoot
         LaunchBattle(SkirmishOptions.Sandbox, "Loading developer sandbox...");
     }
 
+    private void StartAuthoredMapPreview()
+    {
+        try
+        {
+            _ = AuthoredMapPreviewRuntime.StageCommittedSample();
+            _status.Text = "Loading Authored Map Preview...";
+            var error = GetTree().ChangeSceneToFile(BattleScenePath);
+            if (error != Error.Ok) throw new InvalidOperationException($"Battle scene load failed: {error}.");
+        }
+        catch (Exception exception)
+        {
+            SkirmishSetupState.ClearAuthoredMapHandoff();
+            _status.Text = $"Authored Map Preview blocked: {exception.Message}";
+        }
+    }
+
     private void LaunchBattle(SkirmishOptions options, string status)
     {
         SkirmishSetupState.PendingOptions = options;

@@ -12,24 +12,37 @@ public sealed record MapAuthoringValidationReport(
     MapAuthoringSourceIndex Sources,
     IReadOnlyList<MapValidationDiagnostic> Diagnostics);
 
+public sealed record MapAuthoringEvaluation(
+    MapAuthoringValidationReport Report,
+    MapSpec? CleanMap)
+{
+    public bool IsClean => CleanMap is not null && Report.Diagnostics.Count == 0;
+}
+
 public static class MapAuthoringValidationRunner
 {
     public static MapAuthoringValidationReport Validate(MapRoot root, long generation = 0)
+        => Evaluate(root, generation).Report;
+
+    public static MapAuthoringEvaluation Evaluate(MapRoot root, long generation = 0)
     {
         var index = MapAuthoringSourceIndex.Build(root);
         var diagnostics = Preflight(root, index);
+        MapSpec? cleanMap = null;
         if (diagnostics.Count == 0)
         {
             var map = TypedMapSceneProjector.Instance.Project(root);
             diagnostics.AddRange(MapValidationService.Validate(map));
+            if (diagnostics.Count == 0) cleanMap = MapSpecSnapshot.Create(map);
         }
         var enriched = diagnostics.Select(value => value with
         {
             Source = index.Resolve(value.Source),
             Conflict = value.Conflict is null ? null : index.Resolve(value.Conflict),
         });
-        return new MapAuthoringValidationReport(
+        var report = new MapAuthoringValidationReport(
             root.GetInstanceId(), root.SceneFilePath, generation, index, MapValidationOrdering.Sort(enriched));
+        return new MapAuthoringEvaluation(report, cleanMap);
     }
 
     private static List<MapValidationDiagnostic> Preflight(MapRoot root, MapAuthoringSourceIndex index)
