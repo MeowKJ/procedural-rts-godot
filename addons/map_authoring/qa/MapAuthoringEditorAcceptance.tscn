@@ -18,11 +18,11 @@ Seed = 20260717
 WorldSize = Vector2(1600, 1000)
 
 [node name="PlayerStart" type="Node2D" parent="."]
-position = Vector2(260, 320)
+position = Vector2(128, 128)
 script = ExtResource("2_owner")
 
 [node name="EnemyStart" type="Node2D" parent="."]
-position = Vector2(1260, 680)
+position = Vector2(1472, 872)
 script = ExtResource("2_owner")
 OwnerId = 2
 FactionId = "cat"
@@ -30,6 +30,17 @@ FactionId = "cat"
 [node name="Headquarters" type="Node2D" parent="."]
 position = Vector2(256, 304)
 script = ExtResource("3_building")
+
+[node name="Barracks" type="Node2D" parent="."]
+position = Vector2(1024, 384)
+script = ExtResource("3_building")
+BuildingId = "building.barracks"
+
+[node name="RotatedRefinery" type="Node2D" parent="."]
+position = Vector2(1344, 464)
+rotation = 1.5707964
+script = ExtResource("3_building")
+BuildingId = "building.refinery"
 
 [node name="GuardTank" type="Node2D" parent="."]
 position = Vector2(380, 320)

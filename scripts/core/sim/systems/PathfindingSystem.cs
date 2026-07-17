@@ -23,7 +23,7 @@ public sealed partial class PathfindingSystem : ISimSystem
     private readonly Dictionary<int, PathfindingCorridorAssignment> _sharedAssignments = [];
     private readonly PathfindingWorkspace _pathWorkspace = new();
 
-    public PathfindingSystem(float cellSize = 64f)
+    public PathfindingSystem(float cellSize = PathfindingStaticGrid.RuntimeCellSize)
     {
         _cellSize = cellSize;
     }
@@ -292,18 +292,18 @@ public sealed partial class PathfindingSystem : ISimSystem
 
     private void BuildStaticBlockers(EntityWorld world, int movingEntityId, MovementDomain domain)
     {
-        _obstacles.Clear();
-        _terrain.Clear();
-        world.MapEnvironment.AppendAuthoredTerrainGrid(_cellSize, _terrain);
-        if (TerrainPassability.IgnoresBuildingBlockers(domain))
+        if (!PathfindingStaticGrid.FillEnvironment(
+                world.MapEnvironment,
+                world.WorldWidth,
+                world.WorldHeight,
+                _cellSize,
+                domain,
+                _obstacles,
+                _terrain,
+                _seenObstacles))
         {
             return;
         }
-
-        var width = Math.Max(1, (int)MathF.Ceiling(world.WorldWidth / _cellSize));
-        var height = Math.Max(1, (int)MathF.Ceiling(world.WorldHeight / _cellSize));
-        _seenObstacles.Clear();
-        world.MapEnvironment.AppendStaticObstacleGrid(_cellSize, _obstacles, _seenObstacles);
 
         foreach (var entity in world.OrderedEntities)
         {
@@ -315,22 +315,16 @@ public sealed partial class PathfindingSystem : ISimSystem
                 continue;
             }
 
-            var minX = Math.Clamp((int)MathF.Floor((entity.Transform.Position.X - collision.Radius) / _cellSize), 0, width - 1);
-            var maxX = Math.Clamp((int)MathF.Floor((entity.Transform.Position.X + collision.Radius) / _cellSize), 0, width - 1);
-            var minY = Math.Clamp((int)MathF.Floor((entity.Transform.Position.Y - collision.Radius) / _cellSize), 0, height - 1);
-            var maxY = Math.Clamp((int)MathF.Floor((entity.Transform.Position.Y + collision.Radius) / _cellSize), 0, height - 1);
-
-            for (var x = minX; x <= maxX; x++)
-            {
-                for (var y = minY; y <= maxY; y++)
-                {
-                    var cell = new GridObstacle(x, y);
-                    if (_seenObstacles.Add(cell))
-                    {
-                        _obstacles.Add(cell);
-                    }
-                }
-            }
+            PathfindingStaticGrid.AppendCircle(
+                new StaticPathCircle(
+                    entity.Transform.Position.X,
+                    entity.Transform.Position.Y,
+                    collision.Radius),
+                world.WorldWidth,
+                world.WorldHeight,
+                _cellSize,
+                _obstacles,
+                _seenObstacles);
         }
     }
 

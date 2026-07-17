@@ -4,6 +4,7 @@ static class MapAuthoringReviewGate
     {
         MapSpecArtifactReviewGate.Check(root, result);
         TypedMapAuthoringReviewGate.Check(root, result);
+        MapAuthoringValidationReviewGate.Check(root, result);
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapSpec.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapLoader.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapBuildingPlacementValidator.cs");
@@ -51,7 +52,7 @@ static class MapAuthoringReviewGate
         RequireText(loader, "world.InstallMapEnvironment(environment);", "MapLoader must install the validated immutable environment.", result);
         RequireText(loader, "reservedBuildingIds", "MapLoader auto building ids must skip all explicit authored ids.", result);
         var placementValidator = ReviewGateSource.Read(root, "scripts", "core", "map", "MapBuildingPlacementValidator.cs");
-        RequireText(placementValidator, "PlacementReservationMath.WorldRect(", "Map validation must rotate shared reservation metadata.", result);
+        RequireText(placementValidator, "MapBuildingPlacementGeometry.Create", "Map validation must consume shared placement geometry.", result);
         RequireText(placementValidator, "PlacementMath.ViolatesClearance(", "Map validation must use shared pair-clearance geometry.", result);
         RequireText(placementValidator, "MapBuildingPlacementConflictKind.Reserved", "Map validation must retain a stable reserved reason.", result);
         var environmentValidator = ReviewGateSource.Read(root, "scripts", "core", "map", "MapBuildingPlacementValidator.Environment.cs");
@@ -77,8 +78,8 @@ static class MapAuthoringReviewGate
         RequireText(constructionPlacement, "MapPlacementRules.ResourceClearance(spec)", "Construction must use the shared one-cell resource rule.", result);
         RequireText(constructionPlacement, "world.MapEnvironment.SampleTerrain", "Construction must consume authored terrain with procedural fallback.", result);
         var pathfinding = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
-        RequireText(pathfinding, "world.MapEnvironment.AppendAuthoredTerrainGrid", "Pathfinding must consume authored terrain overrides.", result);
-        RequireText(pathfinding, "world.MapEnvironment.AppendStaticObstacleGrid", "Pathfinding must consume authored static blockers.", result);
+        RequireText(pathfinding, "PathfindingStaticGrid.FillEnvironment", "Pathfinding must consume the shared authored static-grid seam.", result);
+        RequireText(pathfinding, "PathfindingStaticGrid.AppendCircle", "Pathfinding must consume shared static circle rasterization.", result);
         RequireText(pathfinding, "group[0].Domain,\n                _terrain", "Shared corridors must receive authored terrain.", result);
         RequireText(pathfinding, "domain,\n            _terrain", "Single-entity paths must receive authored terrain.", result);
         var simReplayMap = ReviewGateSource.Read(root, "tools", "SimReplayContent", "MapAuthoringScenarios.cs");

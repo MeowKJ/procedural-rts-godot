@@ -11,6 +11,7 @@ public static partial class MapBuildingPlacementValidator
         IReadOnlyList<PlacementRect> reservations,
         int gridX,
         int gridY,
+        int buildingIndex,
         List<MapBuildingPlacementConflict> conflicts)
     {
         if (TryFirstTerrainConflict(map, environment, spec.PlacementDomain, rect, "hard", out var terrainTarget))
@@ -21,7 +22,8 @@ public static partial class MapBuildingPlacementValidator
                 building,
                 gridX,
                 gridY,
-                terrainTarget));
+                terrainTarget,
+                buildingIndex));
         }
         else
         {
@@ -44,7 +46,8 @@ public static partial class MapBuildingPlacementValidator
                     building,
                     gridX,
                     gridY,
-                    terrainTarget));
+                    terrainTarget,
+                    buildingIndex));
                 break;
             }
         }
@@ -68,7 +71,8 @@ public static partial class MapBuildingPlacementValidator
                 new MapPlacementConflictTarget(
                     MapEnvironmentObjectKind.StaticObstacle,
                     obstacle.Id,
-                    $"{MapPlacementEvidence.Rect(obstacle.Bounds)} relation={relation}")));
+                    $"{MapPlacementEvidence.Rect(obstacle.Bounds)} relation={relation}"),
+                buildingIndex));
             break;
         }
 
@@ -95,7 +99,8 @@ public static partial class MapBuildingPlacementValidator
                 new MapPlacementConflictTarget(
                     MapEnvironmentObjectKind.Resource,
                     resource.Id,
-                    $"{MapPlacementEvidence.Circle(resource.Position, resource.Radius)} relation={relation}")));
+                    $"{MapPlacementEvidence.Circle(resource.Position, resource.Radius)} relation={relation}"),
+                buildingIndex));
             break;
         }
     }
@@ -106,9 +111,11 @@ public static partial class MapBuildingPlacementValidator
         MapBuildingSeedSpec building,
         int gridX,
         int gridY,
-        MapPlacementConflictTarget target)
+        MapPlacementConflictTarget target,
+        int buildingIndex)
     {
-        return new MapBuildingPlacementConflict(mapId, kind, building, gridX, gridY, Target: target);
+        return new MapBuildingPlacementConflict(
+            mapId, kind, building, gridX, gridY, Target: target, BuildingIndex: buildingIndex);
     }
 
     private static string? ViolatingRelation(

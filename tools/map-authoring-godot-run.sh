@@ -78,6 +78,10 @@ if ! grep -F "$marker" "$log"; then
     tail -n 120 "$log" >&2
     exit 1
 fi
+if [ -n "${MAP_AUTHORING_OUTPUT_COPY:-}" ]; then
+    mkdir -p "$(dirname "$MAP_AUTHORING_OUTPUT_COPY")"
+    cp "$log" "$MAP_AUTHORING_OUTPUT_COPY"
+fi
 
 find "$root" -name '*.uid' -type f -print | LC_ALL=C sort > "$uids_after"
 generated_uid_count=$(comm -13 "$uids_before" "$uids_after" | wc -l | tr -d ' ')
