@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://3q0jv0bdfjtd" path="res://addons/map_authoring/nodes/MapRoot.cs" id="1_root"]
+[ext_resource type="Script" uid="uid://cfijtsfcs3xk2" path="res://addons/map_authoring/nodes/Building.cs" id="2_building"]
+
+[node name="MapAuthoringUnknownCatalogAcceptance" type="Node2D"]
+script = ExtResource("1_root")
+Id = "qa.editor.unknown-catalog"
+
+[node name="UnknownBuilding" type="Node2D" parent="."]
+position = Vector2(320, 320)
+script = ExtResource("2_building")
+BuildingId = "unknown.visual-sentinel.building"

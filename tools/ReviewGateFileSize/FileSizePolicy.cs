@@ -22,6 +22,7 @@ static class FileSizePolicy
         "scripts/BattleRoot.cs",
         "scripts/ui/HudLayer.cs",
         "tools/ReviewGate/Program.cs",
+        "tools/MapAuthoringCatalogQa/Program.cs",
         "tools/MapSpecArtifactQa/Program.cs",
         "tools/PlayableMapHandoffQa/Program.cs",
     ];

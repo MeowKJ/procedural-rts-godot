@@ -10,4 +10,10 @@
     <Compile Remove="artifacts\**\*.cs" />
     <Compile Remove="tools\**\*.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="addons\map_authoring\editor\**\*.cs" />
+    <Compile Remove="addons\map_authoring\nodes\**\*.cs" />
+    <Compile Remove="addons\map_authoring\projection\**\*.cs" />
+    <Compile Remove="addons\map_authoring\qa\**\*.cs" />
+  </ItemGroup>
 </Project>

@@ -36,8 +36,8 @@ public partial class MapApiBakeQaRoot : Node
         {
             firstRoot = packed.Instantiate();
             secondRoot = packed.Instantiate();
-            var first = GodotMapSpecBaker.Bake(firstRoot, "qa.hand-designed", 20260701);
-            var second = GodotMapSpecBaker.Bake(secondRoot, "qa.hand-designed", 20260701);
+            var first = FixtureOnlyMetadataMapBaker.BakeFixture(firstRoot, "qa.hand-designed", 20260701);
+            var second = FixtureOnlyMetadataMapBaker.BakeFixture(secondRoot, "qa.hand-designed", 20260701);
             Require(first.Sha256 == second.Sha256 && first.ToArray().SequenceEqual(second.ToArray()), "Two unchanged scene bakes must be byte/hash identical.");
 
             var golden = File.ReadAllBytes(ProjectSettings.GlobalizePath(GoldenPath));
@@ -69,7 +69,7 @@ public partial class MapApiBakeQaRoot : Node
 
             try
             {
-                GodotMapSpecBaker.Bake(root, "qa.invalid-baked-map", 550);
+                FixtureOnlyMetadataMapBaker.BakeFixture(root, "qa.invalid-baked-map", 550);
                 throw new InvalidOperationException("Invalid Godot scene should fail before artifact output.");
             }
             catch (MapBuildingPlacementValidationException exception)
@@ -109,7 +109,7 @@ public partial class MapApiBakeQaRoot : Node
             group.AddChild(obstacle);
             root.AddChild(OwnerStart("DirectStart", 2, "cat", new Vector2(700, 500)));
 
-            var map = MapSpecArtifactCodec.Decode(GodotMapSpecBaker.Bake(root, "qa.root-local", 551).ToArray());
+            var map = MapSpecArtifactCodec.Decode(FixtureOnlyMetadataMapBaker.BakeFixture(root, "qa.root-local", 551).ToArray());
             Require(map.OwnerStarts.Select(item => item.OwnerId.Value).SequenceEqual([1, 2]), "Nested contributors must retain scene preorder.");
             Require(Approx(map.OwnerStarts[0].Position, new MapPoint(80, 120)), "Nested owner position must be relative to the supplied map root.");
             Require(Approx(map.Obstacles[0].Bounds, new MapRect(70, 140, 32, 48)), "Nested rectangle origin must be relative to the supplied map root.");
