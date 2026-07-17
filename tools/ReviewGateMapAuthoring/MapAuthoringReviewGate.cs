@@ -2,6 +2,7 @@ static class MapAuthoringReviewGate
 {
     public static void Check(string root, GateResult result)
     {
+        MapSpecArtifactReviewGate.Check(root, result);
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapSpec.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapLoader.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapBuildingPlacementValidator.cs");
@@ -79,8 +80,6 @@ static class MapAuthoringReviewGate
         RequireText(pathfinding, "world.MapEnvironment.AppendStaticObstacleGrid", "Pathfinding must consume authored static blockers.", result);
         RequireText(pathfinding, "group[0].Domain,\n                _terrain", "Shared corridors must receive authored terrain.", result);
         RequireText(pathfinding, "domain,\n            _terrain", "Single-entity paths must receive authored terrain.", result);
-        var baker = ReviewGateSource.Read(root, "tools", "MapAuthoringQa", "GodotSceneMapBaker.cs");
-        RequireText(baker, "MapBuildingPlacementValidator.EnsureValid(spec);", "Authored scene baking must use the shared placement guard.", result);
         var simReplayMap = ReviewGateSource.Read(root, "tools", "SimReplayContent", "MapAuthoringScenarios.cs");
         RequireText(simReplayMap, "MapLoader.Load", "SimReplay must replay authored maps through MapLoader.", result);
         RequireText(simReplayMap, "AssertDeterministic", "SimReplay map authoring scenario must be deterministic.", result);
@@ -94,9 +93,6 @@ static class MapAuthoringReviewGate
         RequireText(authoredSkirmishFlow, "StageAuthoredMap", "SkirmishFlowQa must launch a real authored battle.", result);
         RequireText(authoredSkirmishFlow, "AssertNormalBattleAfterAuthored", "SkirmishFlowQa must prove normal restart clears authored state.", result);
         RequireText(authoredSkirmishFlow, "DebugUsesSingleAuthoredEntityWorld", "SkirmishFlowQa must prove authored BattleRoot observes the MapLoader world identity.", result);
-        var playableHandoffProject = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffQa.csproj");
-        RequireText(playableHandoffProject, "MapAuthoringQa\\GodotSceneMapBaker.cs", "Playable handoff QA must link the existing baker source instead of copying its parser.", result);
-        RequireText(playableHandoffProject, "MapAuthoringQa\\fixtures\\hand-designed-map.tscn", "Playable handoff QA must link the existing authored scene fixture.", result);
         var playableHandoffQa = ReviewGateSource.Read(root, "tools", "PlayableMapHandoffQa", "PlayableMapHandoffScenarios.cs");
         RequireText(playableHandoffQa, "UnitBattlefield.AdoptLoadedMap", "Playable handoff QA must retain loaded-world adoption parity assertions.", result);
         var mapAuthoringProgram = ReviewGateSource.Read(root, "tools", "MapAuthoringQa", "Program.cs");

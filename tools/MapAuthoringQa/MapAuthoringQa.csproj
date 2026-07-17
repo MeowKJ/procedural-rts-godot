@@ -7,5 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ProceduralRts.csproj" />
+    <None Include="fixtures\hand-designed-map.mapspec.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

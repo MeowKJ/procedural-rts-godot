@@ -4,63 +4,63 @@
 metadata/world_width = 1600
 metadata/world_height = 1000
 
-[node name="PlayerStart" type="Marker2D"]
+[node name="PlayerStart" type="Marker2D" parent="."]
 metadata/map_kind = "owner_start"
 metadata/owner_id = 1
-metadata/faction = "Dog"
+metadata/faction = "dog"
 metadata/credits = 2400
 position = Vector2(260, 320)
 
-[node name="EnemyStart" type="Marker2D"]
+[node name="EnemyStart" type="Marker2D" parent="."]
 metadata/map_kind = "owner_start"
 metadata/owner_id = 2
-metadata/faction = "Cat"
+metadata/faction = "cat"
 metadata/credits = 2400
 metadata/facing = 3.14159
 position = Vector2(1260, 680)
 
-[node name="DogHQ" type="Node2D"]
+[node name="DogHQ" type="Node2D" parent="."]
 metadata/map_kind = "building"
 metadata/building_kind = "building.headquarters"
 metadata/owner_id = 1
-metadata/faction = "Dog"
+metadata/faction = "dog"
 position = Vector2(256, 304)
 
-[node name="CatHQ" type="Node2D"]
+[node name="CatHQ" type="Node2D" parent="."]
 metadata/map_kind = "building"
 metadata/building_kind = "building.headquarters"
 metadata/owner_id = 2
-metadata/faction = "Cat"
+metadata/faction = "cat"
 metadata/facing = 3.1415927
 position = Vector2(1248, 688)
 
-[node name="DogGuard" type="Node2D"]
+[node name="DogGuard" type="Node2D" parent="."]
 metadata/map_kind = "unit"
 metadata/design_id = "dog.guard_tank"
 metadata/owner_id = 1
 position = Vector2(380, 320)
 
-[node name="CatTank" type="Node2D"]
+[node name="CatTank" type="Node2D" parent="."]
 metadata/map_kind = "unit"
 metadata/design_id = "cat.tank"
 metadata/owner_id = 2
 metadata/facing = 3.14159
 position = Vector2(1140, 680)
 
-[node name="NorthField" type="Node2D"]
+[node name="NorthField" type="Node2D" parent="."]
 metadata/map_kind = "resource"
 metadata/radius = 130
 metadata/amount = 2800
 metadata/accent = "#8fffe1"
 position = Vector2(780, 230)
 
-[node name="CourtyardBlock" type="Node2D"]
+[node name="CourtyardBlock" type="Node2D" parent="."]
 metadata/map_kind = "obstacle"
 metadata/width = 220
 metadata/height = 120
 position = Vector2(690, 450)
 
-[node name="SoftRoad" type="Node2D"]
+[node name="SoftRoad" type="Node2D" parent="."]
 metadata/map_kind = "terrain"
 metadata/terrain_id = "soft-road"
 metadata/width = 500
@@ -68,27 +68,27 @@ metadata/height = 140
 metadata/movement_cost = 0.85
 position = Vector2(540, 500)
 
-[node name="CatBasePad" type="Node2D"]
+[node name="CatBasePad" type="Node2D" parent="."]
 metadata/map_kind = "terrain"
 metadata/terrain_id = "base-ground"
 metadata/width = 192
 metadata/height = 160
 position = Vector2(1152, 608)
 
-[node name="GateTrigger" type="Area2D"]
+[node name="GateTrigger" type="Area2D" parent="."]
 metadata/map_kind = "trigger"
 metadata/event_key = "chapter0.gate_contact"
 metadata/width = 180
 metadata/height = 180
 position = Vector2(720, 420)
 
-[node name="SignalObjective" type="Marker2D"]
+[node name="SignalObjective" type="Marker2D" parent="."]
 metadata/map_kind = "objective"
 metadata/objective_key = "objective.restore_signal"
 metadata/primary = true
 position = Vector2(840, 420)
 
-[node name="FirstMark" type="Marker2D"]
+[node name="FirstMark" type="Marker2D" parent="."]
 metadata/map_kind = "narrative"
 metadata/text_key = "narrative.safe_mark"
 metadata/trigger_id = "GateTrigger"

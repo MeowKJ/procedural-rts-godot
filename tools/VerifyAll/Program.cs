@@ -61,6 +61,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("ai-opponent-loop-qa", "dotnet", "run --project tools/AiOpponentLoopQa/AiOpponentLoopQa.csproj --no-restore"),
         Dotnet("roster-authoring-qa", "dotnet", "run --project tools/RosterAuthoringQa/RosterAuthoringQa.csproj --no-restore"),
         Dotnet("content-authoring-qa", "dotnet", "run --project tools/ContentAuthoringQa/ContentAuthoringQa.csproj --no-restore"),
+        Dotnet("mapspec-artifact-qa", "dotnet", "run --project tools/MapSpecArtifactQa/MapSpecArtifactQa.csproj --no-restore"),
         Dotnet("map-authoring-qa", "dotnet", "run --project tools/MapAuthoringQa/MapAuthoringQa.csproj --no-restore"),
         Dotnet("playable-map-handoff-qa", "dotnet", "run --project tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj --no-restore"),
         Dotnet("sandbox-spawn-authoring-qa", "dotnet", "run --project tools/SandboxSpawnAuthoringQa/SandboxSpawnAuthoringQa.csproj --no-restore"),
@@ -97,6 +98,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
             steps.Add(new VerifyStep("godot-battle-headless", godot.Path, "--headless --path . --scene res://scenes/Battle.tscn --quit-after 2"));
             steps.Add(new VerifyStep("godot-ui-font-qa", godot.Path, "--headless --path . --scene res://scenes/UiFontQa.tscn"));
             steps.Add(new VerifyStep("godot-display-settings-qa", godot.Path, "--headless --path . --scene res://scenes/DisplaySettingsQa.tscn"));
+            steps.Add(new VerifyStep("godot-map-api-bake-qa", godot.Path, "--headless --path . --scene res://scenes/MapApiBakeQa.tscn"));
             steps.Add(new VerifyStep("godot-skirmish-flow-qa", godot.Path, "--headless --path . --scene res://scenes/SkirmishFlowQa.tscn"));
             steps.Add(new VerifyStep("godot-active-battle-perf-qa", godot.Path, "--headless --path . --scene res://scenes/ActiveBattlePerfQa.tscn"));
             steps.Add(new VerifyStep("godot-pause-qa", godot.Path, "--headless --path . --scene res://scenes/PauseQa.tscn"));
