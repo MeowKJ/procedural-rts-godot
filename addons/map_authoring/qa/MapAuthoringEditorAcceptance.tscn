@@ -1,0 +1,69 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" uid="uid://3q0jv0bdfjtd" path="res://addons/map_authoring/nodes/MapRoot.cs" id="1_root"]
+[ext_resource type="Script" uid="uid://crdvj7kq8mafl" path="res://addons/map_authoring/nodes/OwnerStart.cs" id="2_owner"]
+[ext_resource type="Script" uid="uid://cfijtsfcs3xk2" path="res://addons/map_authoring/nodes/Building.cs" id="3_building"]
+[ext_resource type="Script" uid="uid://syui0vvsmhqx" path="res://addons/map_authoring/nodes/Unit.cs" id="4_unit"]
+[ext_resource type="Script" uid="uid://cewhub5kcpocf" path="res://addons/map_authoring/nodes/Resource.cs" id="5_resource"]
+[ext_resource type="Script" uid="uid://dgloogapvwwa7" path="res://addons/map_authoring/nodes/Obstacle.cs" id="6_obstacle"]
+[ext_resource type="Script" uid="uid://4kdetffpisk0" path="res://addons/map_authoring/nodes/TerrainRegion.cs" id="7_terrain"]
+[ext_resource type="Script" uid="uid://bbttarn3ir87x" path="res://addons/map_authoring/nodes/Trigger.cs" id="8_trigger"]
+[ext_resource type="Script" uid="uid://d3ggnds63c4uk" path="res://addons/map_authoring/nodes/Objective.cs" id="9_objective"]
+[ext_resource type="Script" uid="uid://d1xnpvpg4xb2p" path="res://addons/map_authoring/nodes/Narrative.cs" id="10_narrative"]
+
+[node name="MapAuthoringEditorAcceptance" type="Node2D"]
+script = ExtResource("1_root")
+Id = "qa.editor.acceptance"
+Seed = 20260717
+WorldSize = Vector2(1600, 1000)
+
+[node name="PlayerStart" type="Node2D" parent="."]
+position = Vector2(260, 320)
+script = ExtResource("2_owner")
+
+[node name="EnemyStart" type="Node2D" parent="."]
+position = Vector2(1260, 680)
+script = ExtResource("2_owner")
+OwnerId = 2
+FactionId = "cat"
+
+[node name="Headquarters" type="Node2D" parent="."]
+position = Vector2(256, 304)
+script = ExtResource("3_building")
+
+[node name="GuardTank" type="Node2D" parent="."]
+position = Vector2(380, 320)
+script = ExtResource("4_unit")
+DesignId = "dog.guard_tank"
+
+[node name="NorthField" type="Node2D" parent="."]
+position = Vector2(780, 230)
+script = ExtResource("5_resource")
+Id = "NorthField"
+
+[node name="CourtyardBlock" type="Node2D" parent="."]
+position = Vector2(690, 450)
+script = ExtResource("6_obstacle")
+Id = "CourtyardBlock"
+
+[node name="SoftRoad" type="Node2D" parent="."]
+position = Vector2(540, 500)
+script = ExtResource("7_terrain")
+Id = "SoftRoad"
+TerrainId = "soft-road"
+
+[node name="GateTrigger" type="Node2D" parent="."]
+position = Vector2(720, 420)
+script = ExtResource("8_trigger")
+Id = "GateTrigger"
+
+[node name="SignalObjective" type="Node2D" parent="."]
+position = Vector2(840, 420)
+script = ExtResource("9_objective")
+Id = "SignalObjective"
+
+[node name="FirstMark" type="Node2D" parent="."]
+position = Vector2(650, 380)
+script = ExtResource("10_narrative")
+Id = "FirstMark"
+TriggerId = "GateTrigger"

@@ -3,7 +3,7 @@ using ProceduralRts.Core;
 
 namespace ProceduralRts.MapAuthoring;
 
-static class FixtureMetadataMapSceneAdapter
+static class FixtureOnlyMetadataMapSceneAdapter
 {
     public static MapSpec Read(Node root, string id, int seed)
     {
@@ -15,12 +15,12 @@ static class FixtureMetadataMapSceneAdapter
         var buildings = new List<MapBuildingSeedSpec>(); var units = new List<MapUnitSeedSpec>();
         var triggers = new List<MapTriggerAreaSpec>(); var objectives = new List<MapObjectiveNodeSpec>();
         var narrative = new List<MapNarrativeNodeSpec>();
-        foreach (var node in SceneOrder(root).Where(node => node.HasMeta("map_kind")))
+        foreach (var node in MapSceneProjection.SceneOrder(root).Where(node => node.HasMeta("map_kind")))
         {
             var metadata = new FixtureMapMetadata(node);
             var node2D = node as Node2D
                 ?? throw new InvalidOperationException($"Map contributor '{node.Name}' must be Node2D.");
-            var point = RootLocalPoint(mapRoot, node2D);
+            var point = MapSceneProjection.RootLocalPoint(mapRoot, node2D);
             var name = node.Name.ToString();
             switch (metadata.RequiredString("map_kind"))
             {
@@ -47,18 +47,6 @@ static class FixtureMetadataMapSceneAdapter
         };
     }
 
-    private static IEnumerable<Node> SceneOrder(Node node)
-    {
-        yield return node;
-        foreach (var child in node.GetChildren())
-        {
-            foreach (var descendant in SceneOrder(child))
-            {
-                yield return descendant;
-            }
-        }
-    }
-
     private static MapOwnerStartSpec Owner(FixtureMapMetadata value, MapPoint point)
     {
         return new MapOwnerStartSpec(OwnerId(value), Faction(value), point, value.Single("facing"), value.Int32("credits", 0));
@@ -83,9 +71,4 @@ static class FixtureMetadataMapSceneAdapter
         return new MapRect(point.X, point.Y, value.Single("width", 1), value.Single("height", 1));
     }
 
-    private static MapPoint RootLocalPoint(Node2D root, Node2D contributor)
-    {
-        var relative = root.GlobalTransform.AffineInverse() * contributor.GlobalTransform;
-        return new MapPoint(relative.Origin.X, relative.Origin.Y);
-    }
 }

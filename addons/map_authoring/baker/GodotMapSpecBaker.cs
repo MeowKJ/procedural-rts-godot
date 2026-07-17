@@ -5,10 +5,16 @@ namespace ProceduralRts.MapAuthoring;
 
 public static class GodotMapSpecBaker
 {
-    public static MapSpecArtifact Bake(Node root, string id, int seed)
+    public static MapSpecArtifact Bake(Node root, IMapSpecSceneProjector projector)
     {
         ArgumentNullException.ThrowIfNull(root);
-        var snapshot = MapSpecSnapshot.Create(FixtureMetadataMapSceneAdapter.Read(root, id, seed));
+        ArgumentNullException.ThrowIfNull(projector);
+        return BakeProjected(projector.Project(root));
+    }
+
+    internal static MapSpecArtifact BakeProjected(MapSpec spec)
+    {
+        var snapshot = MapSpecSnapshot.Create(spec);
         MapLoader.Prepare(snapshot);
         return MapSpecArtifactCodec.Encode(snapshot);
     }
