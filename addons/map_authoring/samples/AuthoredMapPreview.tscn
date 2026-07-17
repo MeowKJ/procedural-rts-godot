@@ -1,0 +1,103 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" uid="uid://3q0jv0bdfjtd" path="res://addons/map_authoring/nodes/MapRoot.cs" id="1_root"]
+[ext_resource type="Script" uid="uid://crdvj7kq8mafl" path="res://addons/map_authoring/nodes/OwnerStart.cs" id="2_owner"]
+[ext_resource type="Script" uid="uid://cfijtsfcs3xk2" path="res://addons/map_authoring/nodes/Building.cs" id="3_building"]
+[ext_resource type="Script" uid="uid://syui0vvsmhqx" path="res://addons/map_authoring/nodes/Unit.cs" id="4_unit"]
+[ext_resource type="Script" uid="uid://cewhub5kcpocf" path="res://addons/map_authoring/nodes/Resource.cs" id="5_resource"]
+[ext_resource type="Script" uid="uid://dgloogapvwwa7" path="res://addons/map_authoring/nodes/Obstacle.cs" id="6_obstacle"]
+[ext_resource type="Script" uid="uid://4kdetffpisk0" path="res://addons/map_authoring/nodes/TerrainRegion.cs" id="7_terrain"]
+[ext_resource type="Script" uid="uid://bbttarn3ir87x" path="res://addons/map_authoring/nodes/Trigger.cs" id="8_trigger"]
+[ext_resource type="Script" uid="uid://d3ggnds63c4uk" path="res://addons/map_authoring/nodes/Objective.cs" id="9_objective"]
+[ext_resource type="Script" uid="uid://d1xnpvpg4xb2p" path="res://addons/map_authoring/nodes/Narrative.cs" id="10_narrative"]
+
+[node name="AuthoredMapPreview" type="Node2D"]
+script = ExtResource("1_root")
+Id = "authored-map-preview"
+Seed = 569
+ArtifactPath = "res://assets/maps/authored-map-preview.mapspec.json"
+
+[node name="PlayerStart" type="Node2D" parent="."]
+position = Vector2(320, 320)
+script = ExtResource("2_owner")
+StartingCredits = 2600
+
+[node name="EnemyStart" type="Node2D" parent="."]
+position = Vector2(3280, 2080)
+rotation = 3.1415927
+script = ExtResource("2_owner")
+OwnerId = 2
+FactionId = "cat"
+StartingCredits = 2800
+
+[node name="PlayerHeadquarters" type="Node2D" parent="."]
+position = Vector2(640, 560)
+script = ExtResource("3_building")
+
+[node name="PlayerBarracks" type="Node2D" parent="."]
+position = Vector2(960, 800)
+script = ExtResource("3_building")
+BuildingId = "building.barracks"
+
+[node name="EnemyHeadquarters" type="Node2D" parent="."]
+position = Vector2(2944, 1840)
+rotation = 3.1415927
+script = ExtResource("3_building")
+OwnerId = 2
+FactionId = "cat"
+
+[node name="EnemyBarracks" type="Node2D" parent="."]
+position = Vector2(2624, 1568)
+rotation = 3.1415927
+script = ExtResource("3_building")
+BuildingId = "building.barracks"
+OwnerId = 2
+FactionId = "cat"
+
+[node name="PlayerInfantry" type="Node2D" parent="."]
+position = Vector2(800, 560)
+script = ExtResource("4_unit")
+
+[node name="EnemyInfantry" type="Node2D" parent="."]
+position = Vector2(2800, 1840)
+rotation = 3.1415927
+script = ExtResource("4_unit")
+DesignId = "cat.basic"
+OwnerId = 2
+
+[node name="CentralCrystal" type="Node2D" parent="."]
+position = Vector2(1800, 1200)
+script = ExtResource("5_resource")
+Id = "central.crystal"
+Amount = 4200
+
+[node name="CentralRidge" type="Node2D" parent="."]
+position = Vector2(1568, 896)
+script = ExtResource("6_obstacle")
+Id = "central.ridge"
+Size = Vector2(192, 128)
+
+[node name="SignalRoad" type="Node2D" parent="."]
+position = Vector2(1408, 1088)
+script = ExtResource("7_terrain")
+Id = "signal.road"
+Size = Vector2(768, 160)
+TerrainId = "soft-road"
+MovementCost = 0.85
+
+[node name="SignalGate" type="Node2D" parent="."]
+position = Vector2(1664, 1024)
+script = ExtResource("8_trigger")
+Id = "signal.gate"
+Size = Vector2(256, 192)
+
+[node name="RestoreSignal" type="Node2D" parent="."]
+position = Vector2(1800, 1200)
+script = ExtResource("9_objective")
+Id = "restore.signal"
+
+[node name="SafeMark" type="Node2D" parent="."]
+position = Vector2(1632, 992)
+script = ExtResource("10_narrative")
+Id = "safe.mark"
+TriggerId = "signal.gate"

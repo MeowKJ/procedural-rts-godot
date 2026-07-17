@@ -51,8 +51,8 @@ static class MapAuthoringValidationReviewGate
         var feature = ReviewGateSource.Read(root, "addons", "map_authoring", "editor", "MapAuthoringValidationFeature.cs");
         RequireText(feature, "RemoveDock", "Validation teardown must remove its dock.", result);
         RequireText(feature, "SetMainScreenEditor(\"2D\")", "Diagnostic navigation must switch to 2D.", result);
-        ForbidText(feature, "Bake", "Validation feature must not own Bake actions.", result);
-        ForbidText(feature, "Play", "Validation feature must not own Play actions.", result);
+        RequireText(feature, "BakeActiveScene", "Validation dock must bind the transactional Bake action.", result);
+        RequireText(feature, "TogglePlayActiveScene", "Validation dock must bind the owned Play/Stop action.", result);
         RequireText(feature, "MapAuthoringStaleMonitor", "Validation must track same-root scene edits.", result);
         RequireText(feature, "_report.Generation != _generation", "Stale generations must block navigation.", result);
         var runner = ReviewGateSource.Read(root, "addons", "map_authoring", "editor", "MapAuthoringValidationRunner.cs");

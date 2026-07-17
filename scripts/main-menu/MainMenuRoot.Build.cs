@@ -83,32 +83,44 @@ public partial class MainMenuRoot
 
         var start = UiFactory.MakeButton(GameText.T("menu.startSkirmish"), Cyan);
         start.Name = "StartSkirmishButton";
-        start.Position = new Vector2(24, 384);
-        start.CustomMinimumSize = new Vector2(304, 48);
+        start.Position = new Vector2(24, 376);
+        start.CustomMinimumSize = new Vector2(304, 40);
         start.Pressed += StartSkirmish;
         sidebar.AddChild(start);
         start.GrabFocus();
 
         var sandbox = UiFactory.MakeButton("SANDBOX", Mint);
-        sandbox.Position = new Vector2(24, 444);
-        sandbox.CustomMinimumSize = new Vector2(304, 48);
+        sandbox.Name = "SandboxButton";
+        sandbox.Position = new Vector2(24, 476);
+        sandbox.CustomMinimumSize = new Vector2(304, 40);
         sandbox.TooltipText = "F5: launch developer sandbox with extra units, buildings, resources, and daytime theme";
         sandbox.Pressed += StartSandbox;
         sidebar.AddChild(sandbox);
 
+        var authoredPreview = UiFactory.MakeButton("AUTHORED MAP PREVIEW", Amber);
+        authoredPreview.Name = "AuthoredMapPreviewButton";
+        authoredPreview.Position = new Vector2(24, 426);
+        authoredPreview.CustomMinimumSize = new Vector2(304, 40);
+        authoredPreview.TooltipText = "Launch the committed typed Map Authoring sample";
+        authoredPreview.Pressed += StartAuthoredMapPreview;
+        sidebar.AddChild(authoredPreview);
+
         var settings = UiFactory.MakeButton(GameText.T("common.settings"), Amber);
-        settings.Position = new Vector2(24, 504);
-        settings.CustomMinimumSize = new Vector2(304, 48);
+        settings.Name = "SettingsButton";
+        settings.Position = new Vector2(24, 526);
+        settings.CustomMinimumSize = new Vector2(304, 40);
         settings.Pressed += OpenSettings;
         sidebar.AddChild(settings);
 
         var quit = UiFactory.MakeButton(GameText.T("common.quit"), Danger);
-        quit.Position = new Vector2(24, 564);
-        quit.CustomMinimumSize = new Vector2(304, 48);
+        quit.Name = "QuitButton";
+        quit.Position = new Vector2(24, 576);
+        quit.CustomMinimumSize = new Vector2(304, 30);
         quit.Pressed += QuitGame;
         sidebar.AddChild(quit);
 
         var footer = UiFactory.MakeLabel(GameText.T("menu.footer.next"), 11, InkMuted);
+        footer.Name = "NextFooter";
         footer.SetAnchorsPreset(LayoutPreset.BottomWide);
         footer.OffsetLeft = 24;
         footer.OffsetTop = -56;

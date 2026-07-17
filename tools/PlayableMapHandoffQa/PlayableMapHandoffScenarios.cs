@@ -9,7 +9,7 @@ internal static class PlayableMapHandoffScenarios
         ValidateAtomicStaging(authored, failures);
         MapPreflightAtomicScenarios.Run(authored, failures);
         MapEnvironmentHashScenarios.Run(authored, failures);
-        ValidateDefaultCompatibility(failures);
+        ValidateDefaultCompatibility(authored, failures);
     }
 
     private static void ValidateLoadedProjection(MapSpec map, List<string> failures)
@@ -122,7 +122,7 @@ internal static class PlayableMapHandoffScenarios
         }
     }
 
-    private static void ValidateDefaultCompatibility(List<string> failures)
+    private static void ValidateDefaultCompatibility(MapSpec authored, List<string> failures)
     {
         var previous = SkirmishSetupState.PendingMatchConfig;
         try
@@ -134,6 +134,23 @@ internal static class PlayableMapHandoffScenarios
             Require(SkirmishSetupState.PendingMatchConfig == MatchConfig.Sandbox
                 && SkirmishSetupState.PendingMatchConfig.AuthoredMap is null,
                 "sandbox PendingOptions should clear any authored map handoff.", failures);
+            SkirmishSetupState.ClearAuthoredMapHandoff();
+            Require(SkirmishSetupState.PendingMatchConfig == MatchConfig.Sandbox,
+                "authored-only clear must not reset a sandbox pending config.", failures);
+            var custom = MatchConfig.Default with { StartingCredits = 3600, MapSeed = 909 };
+            SkirmishSetupState.StageMatchConfig(custom);
+            SkirmishSetupState.ClearAuthoredMapHandoff();
+            Require(SkirmishSetupState.PendingMatchConfig == custom,
+                "authored-only clear must not reset a normal pending config.", failures);
+            SkirmishSetupState.StageAuthoredMap(authored);
+            var beforeFailedReturn = SkirmishSetupState.PendingMatchConfig;
+            Require(SkirmishSetupState.PendingMatchConfig == beforeFailedReturn,
+                "failed return-to-menu must preserve authored handoff for restart.", failures);
+            Require(SkirmishSetupState.PendingMatchConfig.AuthoredMap == authored,
+                "authored restart semantics must survive until MainMenu successfully becomes ready.", failures);
+            SkirmishSetupState.ClearAuthoredMapHandoff();
+            Require(SkirmishSetupState.PendingMatchConfig == MatchConfig.Default,
+                "authored-only clear must reset an authored pending config to default.", failures);
         }
         finally
         {

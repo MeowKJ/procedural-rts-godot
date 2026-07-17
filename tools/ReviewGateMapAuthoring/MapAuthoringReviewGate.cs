@@ -5,6 +5,7 @@ static class MapAuthoringReviewGate
         MapSpecArtifactReviewGate.Check(root, result);
         TypedMapAuthoringReviewGate.Check(root, result);
         MapAuthoringValidationReviewGate.Check(root, result);
+        MapAuthoringBakePlayReviewGate.Check(root, result);
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapSpec.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapLoader.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "map", "MapBuildingPlacementValidator.cs");

@@ -24,11 +24,20 @@ public partial class MapAuthoringPlugin : EditorPlugin
         {
             MapAuthoringValidationSmokeDriver.Launch();
         }
+        if (OS.GetEnvironment("MAP_AUTHORING_BAKE_PLAY_SMOKE") == "1")
+        {
+            MapAuthoringBakePlaySmokeDriver.Launch();
+        }
     }
 
     public override void _ExitTree()
     {
         Unregister();
+    }
+
+    public override void _Process(double delta)
+    {
+        _validation?.PollPlaySession();
     }
 
     private void Register()

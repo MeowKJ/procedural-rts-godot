@@ -4,11 +4,12 @@ using ProceduralRts.MapAuthoring.Nodes;
 
 namespace ProceduralRts.MapAuthoring.Editor;
 
-public sealed class MapAuthoringValidationFeature : IDisposable
+public sealed partial class MapAuthoringValidationFeature : IDisposable
 {
     private readonly MapAuthoringPlugin _plugin;
     private readonly EditorSelection _selection;
     private readonly MapAuthoringStaleMonitor _staleMonitor;
+    private readonly MapAuthoringPlaySession _playSession = new();
     private MapAuthoringValidationDock? _dock;
     private MapAuthoringValidationReport? _report;
     private MapAuthoringOverlayPlan _plan = MapAuthoringOverlayPlan.Empty;
@@ -22,7 +23,7 @@ public sealed class MapAuthoringValidationFeature : IDisposable
         _plugin = plugin;
         _selection = EditorInterface.Singleton.GetSelection();
         _dock = new MapAuthoringValidationDock();
-        _dock.Bind(ValidateActiveScene, Navigate);
+        _dock.Bind(ValidateActiveScene, () => BakeActiveScene(), TogglePlayActiveScene, Navigate);
         _plugin.AddDock(_dock);
         MapAuthoringRegistrationState.DockAdded();
         _plugin.SceneChanged += OnSceneChanged;
@@ -46,18 +47,7 @@ public sealed class MapAuthoringValidationFeature : IDisposable
 
     public void ValidateActiveScene()
     {
-        var root = ActiveRoot();
-        if (root is null)
-        {
-            _report = null;
-            _plan = MapAuthoringOverlayPlan.Empty;
-            _dock?.SetStale("active scene is not a MapRoot");
-            _plugin.UpdateOverlays();
-            return;
-        }
-        _report = MapAuthoringValidationRunner.Validate(root, _generation);
-        _dock?.ShowReport(_report);
-        RebuildPlan();
+        _ = EvaluateFresh();
     }
 
     public void Dispose()
@@ -65,6 +55,7 @@ public sealed class MapAuthoringValidationFeature : IDisposable
         if (_disposed) return;
         _disposed = true;
         if (ReferenceEquals(Current, this)) Current = null;
+        _playSession.Dispose();
         _staleMonitor.Dispose();
         _plugin.SceneChanged -= OnSceneChanged;
         _selection.SelectionChanged -= OnSelectionChanged;
