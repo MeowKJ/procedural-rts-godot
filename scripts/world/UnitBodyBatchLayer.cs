@@ -11,7 +11,7 @@ public partial class UnitBodyBatchLayer : Node2D
     public required IReadOnlyList<UnitInstance> Units { get; init; }
     public required PlayerSlotId Viewer { get; init; }
     public required PlayerRelationTable Relations { get; init; }
-    public Func<int, EntityProjection?>? ProjectionProvider { get; init; }
+    public Func<int, UnitPresentationProjection?>? PresentationProvider { get; init; }
     public Func<WorldVisualThemeState>? VisualThemeProvider { get; init; }
     public Rect2 CullingWorldRect { get; set; } = new(new Vector2(-1_000_000, -1_000_000), new Vector2(2_000_000, 2_000_000));
 
@@ -39,28 +39,24 @@ public partial class UnitBodyBatchLayer : Node2D
         var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());
         foreach (var unit in Units)
         {
-            if (unit.Hp <= 0 || !CullingWorldRect.Intersects(UnitWorldRect(unit.Position, unit.Spec.Collision.Radius)))
+            var presentation = PresentationProvider?.Invoke(unit.Id);
+            if (presentation is not { } current
+                || current.Entity.Hp <= 0
+                || !CullingWorldRect.Intersects(UnitWorldRect(current.Entity.Position, unit.Spec.Collision.Radius)))
             {
                 continue;
             }
 
-            var projection = ProjectionProvider?.Invoke(unit.Id);
-            var hp = projection?.Hp ?? unit.Hp;
-            if (hp <= 0)
-            {
-                continue;
-            }
-
-            var owner = projection?.Owner.ToPlayerSlot() ?? unit.PlayerSlotId;
+            var owner = current.Entity.Owner.ToPlayerSlot();
             var palette = EntityRenderPalette.SoftOldCity(SoftOldCityPalette.PlayerColor(owner));
             UnitVisualRenderer.DrawUnitArtRecipe(
                 this,
                 unit.Spec.Art,
                 palette,
-                projection?.Position ?? unit.Position,
+                current.Entity.Position,
                 1,
-                projection?.Facing ?? unit.Facing,
-                UnitMountFacingSource.FromRuntimeMounts(unit.WeaponMounts),
+                current.Entity.Facing,
+                UnitMountFacingSource.FromRuntimeMounts(current.Mounts),
                 environmentTone);
         }
     }
@@ -69,9 +65,11 @@ public partial class UnitBodyBatchLayer : Node2D
     {
         foreach (var unit in Units)
         {
-            if (unit.Hp <= 0
-                || !CullingWorldRect.Intersects(UnitWorldRect(unit.Position, unit.Spec.Collision.Radius))
-                || !IsMoving(unit))
+            var presentation = PresentationProvider?.Invoke(unit.Id);
+            if (presentation is not { } current
+                || current.Entity.Hp <= 0
+                || !CullingWorldRect.Intersects(UnitWorldRect(current.Entity.Position, unit.Spec.Collision.Radius))
+                || !current.IsMoving)
             {
                 continue;
             }
@@ -80,12 +78,6 @@ public partial class UnitBodyBatchLayer : Node2D
         }
 
         return false;
-    }
-
-    private static bool IsMoving(UnitInstance unit)
-    {
-        return unit.Velocity.LengthSquared() > 0.01f
-            || (unit.MoveTarget is { } target && unit.Position.DistanceSquaredTo(target) > 1f);
     }
 
     private static Rect2 UnitWorldRect(Vector2 position, float radius)

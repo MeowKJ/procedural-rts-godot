@@ -31,6 +31,14 @@ public sealed partial class UnitBattlefield
         return EntityProjector.ProjectOne(_entityWorld, entity);
     }
 
+    public UnitPresentationProjection? UnitPresentationProjection(int id)
+    {
+        var unit = UnitById(id);
+        return unit is not null && _entityWorld.TryGet(unit.EntityId, out var entity)
+            ? UnitPresentationProjector.ProjectOne(_entityWorld, entity)
+            : null;
+    }
+
     public IReadOnlyList<EntityProjection> UnitProjections()
     {
         SyncUnitEntities();

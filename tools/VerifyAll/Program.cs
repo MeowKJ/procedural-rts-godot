@@ -71,6 +71,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("playable-map-handoff-qa", "dotnet", "run --project tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj --no-restore"),
         Dotnet("sandbox-spawn-authoring-qa", "dotnet", "run --project tools/SandboxSpawnAuthoringQa/SandboxSpawnAuthoringQa.csproj --no-restore"),
         Dotnet("player-loop-qa", "dotnet", "run --project tools/PlayerLoopQa/PlayerLoopQa.csproj --no-restore"),
+        Dotnet("unit-presentation-projection-qa", "dotnet", "run --project tools/UnitPresentationProjectionQa/UnitPresentationProjectionQa.csproj --no-restore"),
         Dotnet("cursor-catalog-qa", "dotnet", "run --project tools/CursorCatalogQa/CursorCatalogQa.csproj --no-restore"),
         Dotnet("desktop-hud-qa", "dotnet", "run --project tools/DesktopHudQa/DesktopHudQa.csproj --no-restore"),
         Dotnet("review-gate", "dotnet", "run --project tools/ReviewGate/ReviewGate.csproj --no-restore"),

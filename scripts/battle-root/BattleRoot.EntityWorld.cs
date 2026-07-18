@@ -167,7 +167,7 @@ public partial class BattleRoot
             Unit = unit,
             Viewer = PlayerSlotId.One,
             Relations = _unitBattlefield.Relations,
-            ProjectionProvider = () => _unitBattlefield.UnitProjection(unit.Id),
+            PresentationProvider = () => _unitBattlefield.UnitPresentationProjection(unit.Id),
             VisualThemeProvider = () => _state.VisualTheme,
             DrawBodyArt = false,
         };
