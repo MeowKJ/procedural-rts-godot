@@ -4,10 +4,10 @@ static class TacticalAudioReviewGate
     {
         var layer = ReviewGateSource.Read(root, "scripts", "ui", "TacticalAudioLayer.cs");
         var deduper = ReviewGateSource.Read(root, "scripts", "ui", "TacticalAudioCueDeduper.cs");
-        var events = ReviewGateSource.Read(root, "scripts", "BattleRoot.Events.cs");
+        var events = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Events.cs");
         var feedback = ReviewGateSource.Read(root, "scripts", "battle", "BattleRoot.PresentationFeedback.cs");
-        var lifecycle = ReviewGateSource.Read(root, "scripts", "BattleRoot.Lifecycle.cs");
-        var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
+        var lifecycle = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Lifecycle.cs");
+        var alerts = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Alerts.cs");
 
         RequireText(layer, "TacticalAudioCueDeduper _deduper", "TacticalAudioLayer must keep per-cue de-duplication state.", result);
         RequireText(layer, "_deduper.TryReserve(cue, Time.GetTicksMsec())", "TacticalAudioLayer must de-duplicate cues before taking an audio player.", result);
