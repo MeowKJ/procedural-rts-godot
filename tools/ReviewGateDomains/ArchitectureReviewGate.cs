@@ -29,9 +29,9 @@ static class ArchitectureReviewGate
     private static void RequireEntityWorldPipeline(string root, GateResult result)
     {
         ReviewGateSource.RequireTextInFile(root, result, "private readonly EntityWorld _entityWorld", "scripts", "BattleRoot.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "SimSystemPipeline", "scripts", "BattleRoot.EntityWorld.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_entityWorld.ResourceAtmosphere = atmosphere;", "scripts", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
-        ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/BattleRoot.EntityWorld.cs", "scripts/world", "scripts/core/units/runtime");
+        ReviewGateSource.RequireTextInFile(root, result, "SimSystemPipeline", "scripts", "battle-root", "BattleRoot.EntityWorld.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_entityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
+        ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/battle-root/BattleRoot.EntityWorld.cs", "scripts/world", "scripts/core/units/runtime");
     }
 
     private static void ForbidDeletedMigrationTypes(string root, GateResult result)

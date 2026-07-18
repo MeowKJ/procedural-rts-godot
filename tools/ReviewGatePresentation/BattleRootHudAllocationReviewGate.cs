@@ -4,10 +4,10 @@ static class BattleRootHudAllocationReviewGate
     {
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "BattleRoot.cs"));
-        var process = ReviewGateSource.Read(root, "scripts", "BattleRoot.Process.cs");
+        var process = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Process.cs");
         var minimap = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudMinimap.cs");
-        var alerts = ReviewGateSource.Read(root, "scripts", "BattleRoot.Alerts.cs");
-        var sandbox = ReviewGateSource.Read(root, "scripts", "BattleRoot.Sandbox.cs");
+        var alerts = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Alerts.cs");
+        var sandbox = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Sandbox.cs");
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
         var commandFailurePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandFailurePresentation.cs");
         var commandGatewayFeedback = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandGatewayFeedback.cs");
@@ -45,7 +45,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(process, "LiveLegacyUnitCount()", "PerfHudCounts must use explicit legacy unit counting.", result);
         RequireText(process, "LiveLegacyBuildingCount()", "PerfHudCounts must use explicit legacy building counting.", result);
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
-        var hudSync = ReviewGateSource.Read(root, "scripts", "BattleRoot.HudSync.cs");
+        var hudSync = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudSync.cs");
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
         var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
         var iconSummary = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.SelectionIconSummary.cs");

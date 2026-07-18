@@ -34,7 +34,7 @@ Require(File.Exists(Path.Combine(root, "assets", "cursors", "kenney", "LICENSE.k
 
 var hudCursor = File.ReadAllText(Path.Combine(root, "scripts", "ui", "hud", "HudLayer.Cursor.cs"));
 var hudLayer = File.ReadAllText(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
-var battleLifecycle = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.Lifecycle.cs"));
+var battleLifecycle = File.ReadAllText(Path.Combine(root, "scripts", "battle-root", "BattleRoot.Lifecycle.cs"));
 RequireText(hudCursor, "HashSet<Texture2D> _ownedCursorTextures", "HudLayer should distinguish owned ImageTexture cursors from ResourceLoader textures.", failures);
 RequireText(hudCursor, "HashSet<Input.CursorShape> _customCursorShapes", "HudLayer should track every Input shape that receives a custom cursor texture.", failures);
 RequireText(hudCursor, "_ownedCursorTextures.Add(texture)", "Source-PNG cursor textures should be registered for teardown.", failures);

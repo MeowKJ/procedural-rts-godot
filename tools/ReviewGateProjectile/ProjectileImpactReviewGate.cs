@@ -67,7 +67,7 @@ static class ProjectileImpactReviewGate
         RequireText(combatDraw, "private void DrawBeam(", "Legacy and live beam paths must share the same draw helper.", result);
         RequireText(combatDraw, "projectile.GroundPosition", "Ballistic projectiles must expose a ground position for their shadow.", result);
 
-        var battleRootEvents = ReviewGateSource.Read(root, "scripts", "BattleRoot.Events.cs");
+        var battleRootEvents = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Events.cs");
         RequireText(battleRootEvents, "AddBeamIfNeeded", "BattleRoot attack callbacks must bridge live UnitBattlefield attacks into beam effects.", result);
 
         var battleRootBeams = ReviewGateSource.Read(root, "scripts", "battle", "BattleRoot.BeamEffects.cs");

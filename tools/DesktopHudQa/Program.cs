@@ -140,7 +140,7 @@ static void AssertHudFactoryExtraction(string root)
     var hudLayer = ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
     var battleRoot = ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
     var selectionController = ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "SelectionController.cs"));
-    var hudSync = File.ReadAllText(Path.Combine(root, "scripts", "BattleRoot.HudSync.cs"));
+    var hudSync = File.ReadAllText(Path.Combine(root, "scripts", "battle-root", "BattleRoot.HudSync.cs"));
     var uiFactory = File.ReadAllText(Path.Combine(root, "scripts", "ui", "UiFactory.cs"));
     var cursorCatalog = File.ReadAllText(Path.Combine(root, "scripts", "core", "presentation", "ui", "BattleCursorCatalog.cs"));
     var controlBindingCatalog = File.ReadAllText(Path.Combine(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs"));
