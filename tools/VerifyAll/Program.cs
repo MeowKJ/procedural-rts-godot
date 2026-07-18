@@ -68,6 +68,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("map-authoring-export-release", "dotnet", "build ProceduralRts.csproj -c ExportRelease --no-restore"),
         Dotnet("map-authoring-catalog-qa", "dotnet", "run --project tools/MapAuthoringCatalogQa/MapAuthoringCatalogQa.csproj --no-restore -- .godot/mono/temp/bin/ExportDebug/ProceduralRts.dll .godot/mono/temp/bin/ExportRelease/ProceduralRts.dll"),
         Dotnet("mapspec-artifact-qa", "dotnet", "run --project tools/MapSpecArtifactQa/MapSpecArtifactQa.csproj --no-restore"),
+        Dotnet("release-identity-qa", "dotnet", "run --project tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj --no-restore"),
         Dotnet("map-authoring-qa", "dotnet", "run --project tools/MapAuthoringQa/MapAuthoringQa.csproj --no-restore"),
         Dotnet("pathfinding-environment-cache-qa", "dotnet", "run --project tools/PathfindingEnvironmentCacheQa/PathfindingEnvironmentCacheQa.csproj --no-restore"),
         Dotnet("map-authoring-validation-qa", "dotnet", "run --project tools/MapAuthoringValidationQa/MapAuthoringValidationQa.csproj --no-restore"),

@@ -26,6 +26,16 @@ public partial class MainMenuRoot
         _status.OffsetRight = -34;
         _status.OffsetBottom = 58;
         AddChild(_status);
+
+        var release = UiFactory.MakeLabel($"v{ReleaseIdentity.Current.Version}", 11, InkMuted);
+        release.Name = "ReleaseVersion";
+        release.HorizontalAlignment = HorizontalAlignment.Right;
+        release.SetAnchorsPreset(LayoutPreset.TopRight);
+        release.OffsetLeft = -360;
+        release.OffsetTop = 58;
+        release.OffsetRight = -34;
+        release.OffsetBottom = 78;
+        AddChild(release);
     }
 
     private void BuildMissionPanel()
