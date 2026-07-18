@@ -52,12 +52,26 @@ The project includes a Windows export preset named `Windows Desktop`.
 ```
 
 Godot export templates must be installed locally before release export can produce the `.exe`.
+The strict release command fails when templates are missing, clears its whole output
+directory, packages the complete export, and verifies a clean extracted runtime:
 
-Run the export smoke script to build C#, validate `export_presets.cfg`, and export only when local Windows templates exist:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\PackageWindowsRelease.ps1
+```
+
+`assets/release/release-identity.json` is the canonical source for the menu
+version, Windows version mapping, release tag, BuildInfo, and authored sample
+identity. Do not edit version values in isolation.
+
+Run the same strict package path with its disposable smoke output:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\ExportSmoke.ps1
 ```
+
+After merged-main verification and physical Windows acceptance evidence, use
+`tools/PublishWindowsPrerelease.ps1` with `-Publish`; it refuses to publish
+without the exact release commit, checked assets, and supplied acceptance evidence.
 
 ## Current Prototype
 
