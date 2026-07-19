@@ -304,17 +304,6 @@ public partial class HudLayer : CanvasLayer
         RefreshProductionProviderLaneSummary();
     }
 
-    private static void SetLabelTextAndResetSizeWhenChanged(Label label, string next)
-    {
-        if (string.Equals(label.Text, next, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        label.Text = next;
-        label.ResetSize();
-    }
-
     public void SetResourceCredits(int credits)
     {
         _creditsValue.Text = credits.ToString("N0");

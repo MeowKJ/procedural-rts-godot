@@ -86,7 +86,8 @@ Require(alert is { Kind: AlertKind.Economy, RemainingRatio: > 0 },
 
 var root = FindRoot();
 var applicator = Read(root, "scripts", "ui", "hud", "HudLayer.RuntimeStates.cs");
-var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs");
+var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs")
+    + Read(root, "scripts", "VisualQaCaptureRoot.BattleHudRuntime.cs");
 var harness = Read(root, "tools", "VisualQaCapture.sh");
 var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
     + string.Join("\n", Directory.EnumerateFiles(
