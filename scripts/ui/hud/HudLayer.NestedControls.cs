@@ -148,23 +148,20 @@ public partial class HudLayer : CanvasLayer
             var rect = new Rect2(Vector2.Zero, Size);
             var accent = CatalogModeAccent(Mode);
             var focused = HasFocus();
-            var borderAlpha = focused ? 0.95f : _selected ? 0.84f : 0.42f;
-            var borderWidth = focused ? 2.2f : _selected ? 1.8f : 1.2f;
-            var fill = _selected
-                ? new Color(accent, focused ? 0.24f : 0.16f)
-                : new Color(focused ? accent : CurrentPalette.PanelSubtleFill, focused ? 0.12f : 0.82f);
-            DrawRect(rect, fill, true);
-            DrawRect(rect.Grow(-1), new Color(accent, borderAlpha), false, borderWidth, true);
+            var state = focused ? HudVisualState.Hover : _selected ? HudVisualState.Selected : HudVisualState.Normal;
+            var style = HudVisualFoundation.For(CurrentPalette, HudVisualPrimitive.ModeStrip, state, accent);
+            DrawRect(rect, style.Fill, true);
+            DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth, true);
             if (focused)
             {
                 DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);
                 DrawRect(new Rect2(new Vector2(2, 5), new Vector2(2, rect.Size.Y - 10)), new Color(accent, 0.95f), true);
             }
 
-            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(accent, _selected || focused ? 0.78f : 0.46f), true);
+            DrawRect(new Rect2(new Vector2(4, rect.Size.Y - 4), new Vector2(rect.Size.X - 8, 1)), new Color(style.Accent, _selected || focused ? 0.78f : 0.46f), true);
 
             var glyph = CatalogModeGlyph(Mode);
-            DrawIconGlyph(this, glyph, rect.GetCenter(), 24, new Color(accent, _selected || focused ? 1f : 0.72f));
+            DrawIconGlyph(this, glyph, rect.GetCenter(), 24, new Color(style.Accent, _selected || focused ? 1f : 0.72f));
         }
     }
 

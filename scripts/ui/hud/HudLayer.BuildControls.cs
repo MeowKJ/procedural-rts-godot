@@ -285,7 +285,7 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Stop,
             Visible = false,
         };
-        UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, Cyan, FontTiny);
+        UiFactory.ApplyHudQueueRowTheme(button, CurrentPalette, Cyan, FontTiny);
         button.Pressed += () =>
         {
             SelectProviderLane(button.State);

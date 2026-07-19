@@ -58,9 +58,11 @@ public partial class HudLayer : CanvasLayer
             DrawString(font, new Vector2(size.X - 47, size.Y - 12), CompactCardText(_metric, 11), HorizontalAlignment.Right, 39, 8, new Color(CurrentPalette.TextMuted, 0.78f));
 
             var badge = new Rect2(new Vector2(size.X - 42, 20), new Vector2(36, 12));
-            DrawRect(badge, new Color(accentColor, 0.16f), true);
-            DrawRect(badge, new Color(accentColor, 0.68f), false, 1);
-            DrawString(font, badge.Position + new Vector2(3, 9), CompactCardText(_statusBadge, 6), HorizontalAlignment.Center, badge.Size.X - 6, 8, new Color(accentColor, 0.96f));
+            var badgeState = _state.StatusKey.Contains("campaignGate", StringComparison.Ordinal) ? HudVisualState.Warning : HudVisualState.Normal;
+            var badgeStyle = HudVisualFoundation.For(CurrentPalette, HudVisualPrimitive.StatusBadge, badgeState, accentColor);
+            DrawRect(badge, badgeStyle.Fill, true);
+            DrawRect(badge, badgeStyle.Border, false, badgeStyle.BorderWidth);
+            DrawString(font, badge.Position + new Vector2(3, 9), CompactCardText(_statusBadge, 6), HorizontalAlignment.Center, badge.Size.X - 6, 8, new Color(badgeStyle.Accent, 0.96f));
             DrawRect(new Rect2(0, size.Y - 5, size.X, 5), new Color(accentColor, 0.28f), true);
         }
 
