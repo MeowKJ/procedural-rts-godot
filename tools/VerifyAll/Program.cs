@@ -77,6 +77,7 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("player-loop-qa", "dotnet", "run --project tools/PlayerLoopQa/PlayerLoopQa.csproj --no-restore"),
         Dotnet("unit-presentation-projection-qa", "dotnet", "run --project tools/UnitPresentationProjectionQa/UnitPresentationProjectionQa.csproj --no-restore"),
         Dotnet("hud-visual-foundation-qa", "dotnet", "run --project tools/HudVisualFoundationQa/HudVisualFoundationQa.csproj --no-restore"),
+        Dotnet("battle-hud-runtime-states-qa", "dotnet", "run --project tools/BattleHudRuntimeStatesQa/BattleHudRuntimeStatesQa.csproj --no-restore"),
         Dotnet("cursor-catalog-qa", "dotnet", "run --project tools/CursorCatalogQa/CursorCatalogQa.csproj --no-restore"),
         Dotnet("desktop-hud-qa", "dotnet", "run --project tools/DesktopHudQa/DesktopHudQa.csproj --no-restore"),
         Dotnet("review-gate", "dotnet", "run --project tools/ReviewGate/ReviewGate.csproj --no-restore"),

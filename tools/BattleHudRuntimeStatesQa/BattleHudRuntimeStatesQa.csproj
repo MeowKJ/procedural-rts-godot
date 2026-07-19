@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\scripts\core\presentation\ui\BattleHudRuntimeStates.cs" Link="BattleHudRuntimeStates.cs" />
+    <Compile Include="..\..\scripts\core\presentation\ui\IconGlyph.cs" Link="IconGlyph.cs" />
+    <Compile Include="..\..\scripts\core\presentation\descriptors\AlertKind.cs" Link="AlertKind.cs" />
+    <Compile Include="..\..\scripts\core\localization\GameLanguage.cs" Link="GameLanguage.cs" />
+    <Compile Include="..\..\scripts\core\ai\EnemyDifficulty.cs" Link="EnemyDifficulty.cs" />
+    <Compile Include="..\..\scripts\core\match\LaunchMode.cs" Link="LaunchMode.cs" />
+    <Compile Include="..\..\scripts\core\presentation\theme\WorldVisualTheme.cs" Link="WorldVisualTheme.cs" />
+  </ItemGroup>
+</Project>

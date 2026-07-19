@@ -89,6 +89,22 @@ assert_png_dimensions battle_hud_1280x720.png 1280 720
 assert_png_dimensions battle_hud_1600x900.png 1600 900
 assert_png_dimensions battle_hud_1920x1080.png 1920 1080
 
+for state in \
+  empty \
+  unit_selected \
+  production_building_selected \
+  unavailable_low_resources \
+  queue_progress \
+  alert
+do
+  for dimensions in 1280x720 1600x900 1920x1080
+  do
+    width="${dimensions%x*}"
+    height="${dimensions#*x}"
+    assert_png_dimensions "battle_hud_runtime_${state}_${width}x${height}.png" "$width" "$height"
+  done
+done
+
 for file_name in \
   main_menu.png \
   main_menu_settings.png \
@@ -176,4 +192,4 @@ do
   fi
 done
 
-echo "Visual QA capture passed: true 1280x720, 1600x900, and 1920x1080 screenshots plus real PauseQuitButton exit with clean managed texture teardown."
+echo "Visual QA capture passed: six normal-skirmish HUD states at true 1280x720, 1600x900, and 1920x1080 plus real PauseQuitButton exit with clean managed texture teardown."
