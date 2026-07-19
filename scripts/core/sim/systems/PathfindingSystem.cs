@@ -292,15 +292,7 @@ public sealed partial class PathfindingSystem : ISimSystem
 
     private void BuildStaticBlockers(EntityWorld world, int movingEntityId, MovementDomain domain)
     {
-        if (!PathfindingStaticGrid.FillEnvironment(
-                world.MapEnvironment,
-                world.WorldWidth,
-                world.WorldHeight,
-                _cellSize,
-                domain,
-                _obstacles,
-                _terrain,
-                _seenObstacles))
+        if (!CopyCachedEnvironment(world, domain))
         {
             return;
         }

@@ -79,7 +79,7 @@ static class MapAuthoringReviewGate
         RequireText(constructionEnvironment, "ResourceNodeComponentState", "Construction must treat live resource nodes as placement exclusions.", result);
         RequireText(constructionObstacles, "MapPlacementRules.ResourceClearance(spec)", "Construction must use the shared one-cell resource rule.", result);
         RequireText(constructionEnvironment, "world.MapEnvironment.SampleTerrain", "Construction must consume authored terrain with procedural fallback.", result);
-        var pathfinding = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
+        var pathfinding = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs"));
         RequireText(pathfinding, "PathfindingStaticGrid.FillEnvironment", "Pathfinding must consume the shared authored static-grid seam.", result);
         RequireText(pathfinding, "PathfindingStaticGrid.AppendCircle", "Pathfinding must consume shared static circle rasterization.", result);
         RequireText(pathfinding, "group[0].Domain,\n                _terrain", "Shared corridors must receive authored terrain.", result);
