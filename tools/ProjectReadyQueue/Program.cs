@@ -97,6 +97,28 @@ static int SelfTest()
         3,
         [Issue(18, workflow: "In Progress", status: "In Progress", agent: "Local Codex")]));
     Require(ProjectReadyReport.Render(inProgressOnly).Contains("继续推进", StringComparison.Ordinal), "in-progress-only report needs an accurate next action");
+    var reviewSelection = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
+        1,
+        3,
+        [
+            Issue(19, workflow: "Review", status: "In Progress", agent: "Local Codex", openBlockers: [999]),
+            Issue(20, workflow: "Review", status: "In Progress", agent: "Local Codex", labels: ["status:paused"]),
+            Issue(21, workflow: "Review", status: "In Progress", agent: "Local Codex"),
+        ]));
+    Require(ProjectReadyReport.Render(reviewSelection).Contains("先完成 [#21", StringComparison.Ordinal), "next action must skip blocked and paused review items");
+    var inProgressSelection = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
+        1,
+        3,
+        [
+            Issue(22, workflow: "In Progress", status: "In Progress", agent: "Local Codex", openBlockers: [999]),
+            Issue(23, workflow: "In Progress", status: "In Progress", agent: "Local Codex"),
+        ]));
+    Require(ProjectReadyReport.Render(inProgressSelection).Contains("继续推进 [#23", StringComparison.Ordinal), "next action must skip blocked in-progress items");
+    var blockedOnly = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
+        1,
+        3,
+        [Issue(24, workflow: "Review", status: "In Progress", agent: "Local Codex", labels: ["status:paused"])]));
+    Require(ProjectReadyReport.Render(blockedOnly).Contains("先解除 [#24", StringComparison.Ordinal), "blocked-only report must surface the blocker instead of review work");
 
     Console.WriteLine("ProjectReadyQueue self-test PASSED.");
     return 0;
