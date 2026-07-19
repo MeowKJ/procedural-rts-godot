@@ -82,6 +82,7 @@ static void CheckAiFriendlyGitHubSurface(string root, List<string> failures)
         "openBlockers",
         "github-token: ${{ secrets.PROJECTS_TOKEN }}",
         "缺少 PROJECTS_TOKEN",
+        "DOTNET_INSTALL_DIR: ~/.dotnet",
         "projectProbe.node?.id !== projectId || projectProbe.node?.number !== 3",
         "tools/ProjectReadyQueue/ProjectReadyQueue.csproj",
         "project-state.json",
