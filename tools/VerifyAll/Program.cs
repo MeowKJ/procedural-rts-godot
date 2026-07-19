@@ -53,6 +53,8 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
     {
         Dotnet("build", "dotnet", "build ProceduralRts.csproj --no-restore"),
         Dotnet("workflow-security-qa", "dotnet", "run --project tools/WorkflowSecurityQa/WorkflowSecurityQa.csproj --no-restore"),
+        Dotnet("project-ready-queue", "dotnet", "run --project tools/ProjectReadyQueue/ProjectReadyQueue.csproj --no-restore -- --self-test"),
+        Dotnet("project-blueprint", "dotnet", "run --project tools/ProjectBlueprint/ProjectBlueprint.csproj --no-restore -- --self-test"),
         Dotnet("sim-replay", "dotnet", "run --project tools/SimReplay/SimReplay.csproj --no-restore"),
         Dotnet("combat-behavior", "dotnet", "run --project tools/CombatBehavior/CombatBehavior.csproj --no-restore"),
         Dotnet("simulation-smoke", "dotnet", "run --project tools/SimulationSmoke/SimulationSmoke.csproj --no-restore"),
