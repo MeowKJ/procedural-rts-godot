@@ -112,31 +112,77 @@ public partial class VisualQaCaptureRoot : Node
     private async Task CaptureBattleHudRuntimeStates(string outputPath)
     {
         var config = BattleHudRuntimeStateCatalog.CaptureConfig;
-        foreach (var state in BattleHudRuntimeStateCatalog.States)
+        try
         {
-            await LoadScene(BattleScenePath);
-            SetBattleTheme(config.Theme, $"visual-qa-runtime-{state.CaptureId}");
-            var hud = RequiredNode<HudLayer>("Hud");
-            hud.SetSandboxDeveloperControlsVisible(false);
-            hud.ApplyBattleHudRuntimeProjection(state.Projection);
-            GetViewport().GuiGetFocusOwner()?.ReleaseFocus();
-
-            GetTree().Paused = true;
-            try
+            foreach (var state in BattleHudRuntimeStateCatalog.States)
             {
+                await LoadScene(BattleScenePath);
+                SetBattleTheme(config.Theme, $"visual-qa-runtime-{state.CaptureId}");
+                var hud = RequiredNode<HudLayer>("Hud");
+                AssertNormalSkirmishSandboxHidden();
+                FreezeBattleHudRuntimeProjectionAuthority();
                 foreach (var resolution in BattleHudRuntimeStateCatalog.Resolutions)
                 {
-                    SetCaptureSize(new Vector2I(resolution.Width, resolution.Height));
-                    await NextFrames(config.SettleFrames);
-                    await Capture(outputPath, state.CaptureFileName(resolution));
+                    await CaptureBattleHudRuntimeResolution(outputPath, hud, state, resolution, config);
                 }
             }
-            finally
-            {
-                SetCaptureSize(CaptureSize);
-                GetTree().Paused = false;
-            }
         }
+        finally
+        {
+            GetTree().Paused = false;
+            SetCaptureSize(CaptureSize);
+        }
+    }
+
+    private async Task CaptureBattleHudRuntimeResolution(
+        string outputPath,
+        HudLayer hud,
+        BattleHudRuntimeStateSpec state,
+        BattleHudCaptureResolution resolution,
+        BattleHudRuntimeCaptureConfig config)
+    {
+        GetTree().Paused = false;
+        SetCaptureSize(new Vector2I(resolution.Width, resolution.Height));
+        hud.ApplyBattleHudRuntimeProjection(state.Projection);
+        GetViewport().GuiGetFocusOwner()?.ReleaseFocus();
+        await NextFrames(config.SettleFrames);
+        AssertNormalSkirmishSandboxHidden();
+
+        GetTree().Paused = true;
+        try
+        {
+            await Capture(outputPath, state.CaptureFileName(resolution));
+        }
+        finally
+        {
+            GetTree().Paused = false;
+        }
+    }
+
+    private void AssertNormalSkirmishSandboxHidden()
+    {
+        if (_activeScene is not BattleRoot battle
+            || battle.State.Options.LaunchMode != LaunchMode.Skirmish)
+        {
+            throw new InvalidOperationException("Battle HUD runtime capture requires a real Skirmish launch.");
+        }
+
+        if (RequiredNode<Control>("SandboxDeveloperPanel").Visible)
+        {
+            throw new InvalidOperationException(
+                "Normal-skirmish HUD exposed SandboxDeveloperPanel before capture.");
+        }
+    }
+
+    private void FreezeBattleHudRuntimeProjectionAuthority()
+    {
+        if (_activeScene is not BattleRoot battle)
+        {
+            throw new InvalidOperationException("Battle HUD runtime capture requires BattleRoot.");
+        }
+
+        battle.SetProcess(false);
+        battle.SetPhysicsProcess(false);
     }
 
     private async Task CaptureSparseCommandDeck(string outputPath, HudLayer hud)

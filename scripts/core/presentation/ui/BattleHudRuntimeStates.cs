@@ -171,12 +171,12 @@ public static class BattleHudRuntimeStateCatalog
                     AvailableProduction(),
                     null,
                     true,
-                    "PRODUCTION READY")),
+                    "PROD READY")),
             new(
                 BattleHudRuntimeStateKind.UnavailableLowResources,
                 "unavailable_low_resources",
-                BattleHudRuntimeSourceKind.CommandIntent,
-                BattleHudCommandIntentKind.QueueProduction,
+                BattleHudRuntimeSourceKind.ReadOnlyProjection,
+                BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     ProductionBuildingSelection(),
                     40,
@@ -187,7 +187,7 @@ public static class BattleHudRuntimeStateCatalog
                     },
                     null,
                     true,
-                    "INSUFFICIENT CREDITS")),
+                    "LOW CREDITS")),
             new(
                 BattleHudRuntimeStateKind.QueueProgress,
                 "queue_progress",
@@ -205,7 +205,7 @@ public static class BattleHudRuntimeStateCatalog
                     },
                     null,
                     true,
-                    "PRODUCTION ACTIVE")),
+                    "QUEUE ACTIVE")),
             new(
                 BattleHudRuntimeStateKind.Alert,
                 "alert",
@@ -217,7 +217,7 @@ public static class BattleHudRuntimeStateCatalog
                     BattleHudProductionProjection.None,
                     new BattleHudAlertProjection(AlertKind.Economy, "INSUFFICIENT CREDITS", 1),
                     false,
-                    "ECONOMY ALERT")),
+                    "CREDIT ALERT")),
         ]);
 
     public static IReadOnlyList<BattleHudCaptureResolution> Resolutions => CaptureResolutions;
@@ -232,7 +232,7 @@ public static class BattleHudRuntimeStateCatalog
         "CAT BARRACKS",
         "OPERATIONAL",
         "HP 1200 / 1200  POWER +0",
-        "INFANTRY PRODUCER / SELL REFUND 300",
+        "SELL REFUND 300",
         "building",
         IconGlyph.Building);
 

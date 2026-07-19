@@ -49,7 +49,7 @@ static class PresentationReviewGate
         ReviewGateSource.RequireFile(root, result, "tools", "BattleHudRuntimeStatesQa", "BattleHudRuntimeStatesQa.csproj");
         ReviewGateSource.RequireTextInFile(root, result, "battle-hud-runtime-states-qa", "tools", "VerifyAll", "Program.cs");
         ReviewGateSource.RequireTextInFile(root, result, "CaptureBattleHudRuntimeStates", "scripts", "VisualQaCaptureRoot.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "SetSandboxDeveloperControlsVisible(false)", "scripts", "VisualQaCaptureRoot.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "AssertNormalSkirmishSandboxHidden", "scripts", "VisualQaCaptureRoot.cs");
         ReviewGateSource.RequireTextInFile(root, result, "battle_hud_style1c_dusk.png", "scripts", "VisualQaCaptureRoot.cs");
     }
 }
