@@ -40,6 +40,9 @@ public partial class UnitStanceStrip : Control
         }
     }
 
+    public bool IsButtonSelected(UnitStance stance) =>
+        _buttons.Any(button => button.Presentation.Stance == stance && button.Selected);
+
     public void ApplyTheme(SoftOldCityHudPalette palette, int fontSize)
     {
         _palette = palette;
@@ -89,6 +92,7 @@ public partial class UnitStanceStrip : Control
 
         public required UnitStancePresentation Presentation { get; init; }
         public required SoftOldCityHudPalette Palette { get; set; }
+        public bool Selected => _selected;
 
         public void SetSelected(bool selected)
         {

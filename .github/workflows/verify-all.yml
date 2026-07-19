@@ -87,13 +87,15 @@ jobs:
 
       - name: Capture visual QA
         shell: bash
+        env:
+          BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}
         run: bash tools/VisualQaCapture.sh
 
       - name: Upload verification artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-all-${{ github.run_id }}
+          name: verify-all-${{ github.run_id }}-${{ github.sha }}
           path: |
             artifacts/**
-          if-no-files-found: ignore
+          if-no-files-found: error

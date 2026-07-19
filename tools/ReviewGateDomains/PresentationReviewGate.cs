@@ -48,9 +48,15 @@ static class PresentationReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "presentation", "ui", "BattleHudRuntimeStates.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.RuntimeStates.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "BattleHudRuntimeStatesQa", "BattleHudRuntimeStatesQa.csproj");
+        ReviewGateSource.RequireFile(root, result, "tools", "BattleHudRuntimeStatesQa", "BattleHudVisualArtifactManifest.cs");
         ReviewGateSource.RequireTextInFile(root, result, "battle-hud-runtime-states-qa", "tools", "VerifyAll", "Program.cs");
         ReviewGateSource.RequireTextInFile(root, result, "CaptureBattleHudRuntimeStates", "scripts", "VisualQaCaptureRoot.cs");
         ReviewGateSource.RequireTextInFile(root, result, "AssertNormalSkirmishSandboxHidden", "scripts", "VisualQaCaptureRoot.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "ProbeBattleHudRuntimeStructure", "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "control.IsVisibleInTree()", "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "control.GetGlobalRect()", "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "--write-artifact-manifest", "tools", "VisualQaCapture.sh");
+        ReviewGateSource.RequireTextInFile(root, result, "if-no-files-found: error", ".github", "workflows", "verify-all.yml");
         ReviewGateSource.RequireTextInFile(root, result, "battle_hud_style1c_dusk.png", "scripts", "VisualQaCaptureRoot.cs");
     }
 }

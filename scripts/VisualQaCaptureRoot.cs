@@ -3,6 +3,7 @@ using ProceduralRts.Core;
 using ProceduralRts.Ui;
 using ProceduralRts.World;
 using System.IO;
+using System.Text.Json;
 
 namespace ProceduralRts;
 
@@ -11,7 +12,9 @@ public partial class VisualQaCaptureRoot : Node
     private const string MainMenuScenePath = "res://scenes/MainMenu.tscn";
     private const string BattleScenePath = "res://scenes/Battle.tscn";
     private const string OutputDirectory = "artifacts/visual-qa";
+    private const int DefaultRenderFlushFrames = 6;
     private static readonly Vector2I CaptureSize = new(1600, 900);
+    private readonly List<BattleHudRuntimeStructuralEvidence> _battleHudRuntimeStructuralEvidence = [];
     private Node? _activeScene;
     private Vector2I _captureSize = CaptureSize;
 
@@ -112,6 +115,8 @@ public partial class VisualQaCaptureRoot : Node
     private async Task CaptureBattleHudRuntimeStates(string outputPath)
     {
         var config = BattleHudRuntimeStateCatalog.CaptureConfig;
+        _battleHudRuntimeStructuralEvidence.Clear();
+        File.Delete(Path.Combine(outputPath, BattleHudRuntimeStateCatalog.StructuralEvidenceFileName));
         try
         {
             foreach (var state in BattleHudRuntimeStateCatalog.States)
@@ -126,6 +131,8 @@ public partial class VisualQaCaptureRoot : Node
                     await CaptureBattleHudRuntimeResolution(outputPath, hud, state, resolution, config);
                 }
             }
+
+            WriteBattleHudRuntimeStructuralEvidence(outputPath);
         }
         finally
         {
@@ -147,16 +154,40 @@ public partial class VisualQaCaptureRoot : Node
         GetViewport().GuiGetFocusOwner()?.ReleaseFocus();
         await NextFrames(config.SettleFrames);
         AssertNormalSkirmishSandboxHidden();
+        _battleHudRuntimeStructuralEvidence.Add(hud.ProbeBattleHudRuntimeStructure(state, resolution));
 
         GetTree().Paused = true;
         try
         {
-            await Capture(outputPath, state.CaptureFileName(resolution));
+            await Capture(
+                outputPath,
+                state.CaptureFileName(resolution),
+                config.RenderFlushFrames);
         }
         finally
         {
             GetTree().Paused = false;
         }
+    }
+
+    private void WriteBattleHudRuntimeStructuralEvidence(string outputPath)
+    {
+        var expectedCount = BattleHudRuntimeStateCatalog.States.Count
+            * BattleHudRuntimeStateCatalog.Resolutions.Count;
+        if (_battleHudRuntimeStructuralEvidence.Count != expectedCount)
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD runtime probe produced {_battleHudRuntimeStructuralEvidence.Count} results, expected {expectedCount}.");
+        }
+
+        var path = Path.Combine(outputPath, BattleHudRuntimeStateCatalog.StructuralEvidenceFileName);
+        File.WriteAllText(
+            path,
+            JsonSerializer.Serialize(_battleHudRuntimeStructuralEvidence, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+            }) + System.Environment.NewLine);
     }
 
     private void AssertNormalSkirmishSandboxHidden()
@@ -493,9 +524,12 @@ public partial class VisualQaCaptureRoot : Node
         state.SetVisualTheme(target, driver, transitionProgress);
     }
 
-    private async Task Capture(string outputPath, string fileName)
+    private async Task Capture(
+        string outputPath,
+        string fileName,
+        int renderFlushFrames = DefaultRenderFlushFrames)
     {
-        await NextFrames(6);
+        await NextFrames(renderFlushFrames);
         var image = GetViewport().GetTexture().GetImage();
         GD.Print(
             $"Capture metrics {fileName}: requested {_captureSize.X}x{_captureSize.Y}, " +

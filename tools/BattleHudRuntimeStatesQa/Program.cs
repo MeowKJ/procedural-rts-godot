@@ -4,6 +4,7 @@ var failures = new List<string>();
 var states = BattleHudRuntimeStateCatalog.States;
 var resolutions = BattleHudRuntimeStateCatalog.Resolutions;
 var config = BattleHudRuntimeStateCatalog.CaptureConfig;
+var visualGateCases = new List<BattleHudVisualGateCase>();
 
 Require(states.Count == 6, "runtime manifest must own exactly the six #604 states", failures);
 Require(config == new BattleHudRuntimeCaptureConfig(
@@ -13,8 +14,9 @@ Require(config == new BattleHudRuntimeCaptureConfig(
         EnemyDifficulty.Normal,
         LaunchMode.Skirmish,
         WorldVisualTheme.DayCommand,
-        8),
-    "runtime capture config must freeze language, credits, seed, difficulty, launch mode, theme, and settle frames", failures);
+        8,
+        6),
+    "runtime capture config must freeze language, credits, seed, difficulty, launch mode, theme, settle frames, and render flush frames", failures);
 Require(resolutions.SequenceEqual(
     [
         new BattleHudCaptureResolution(1280, 720),
@@ -39,7 +41,12 @@ foreach (var state in states)
         : state.CommandIntent == BattleHudCommandIntentKind.None,
         $"{state.Kind} source and command intent must agree", failures);
     Require(state.Projection.Credits >= 0, $"{state.Kind} credits must be non-negative", failures);
+    foreach (var resolution in resolutions)
+    {
+        visualGateCases.Add(BattleHudVisualGate.Validate(state, resolution, failures));
+    }
 }
+Require(visualGateCases.Count == 18, "visual gate catalog must cover all 18 state-resolution captures", failures);
 
 var empty = BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.Empty).Projection;
 Require(empty.Selection.Kind == BattleHudSelectionKind.None && !empty.Production.Visible && empty.Alert is null,
@@ -78,8 +85,10 @@ Require(alert is { Kind: AlertKind.Economy, RemainingRatio: > 0 },
 
 var root = FindRoot();
 var applicator = Read(root, "scripts", "ui", "hud", "HudLayer.RuntimeStates.cs");
+var runtimeProbe = Read(root, "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
 var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs");
 var harness = Read(root, "tools", "VisualQaCapture.sh");
+var workflow = Read(root, ".github", "workflows", "verify-all.yml");
 var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
     + string.Join("\n", Directory.EnumerateFiles(
         Path.Combine(root, "scripts", "battle-root"),
@@ -123,10 +132,39 @@ RequireOrdered(capture, failures,
     "GetViewport().GuiGetFocusOwner()?.ReleaseFocus();",
     "await NextFrames(config.SettleFrames);",
     "AssertNormalSkirmishSandboxHidden();",
+    "hud.ProbeBattleHudRuntimeStructure(state, resolution)",
     "GetTree().Paused = true;",
-    "await Capture(outputPath, state.CaptureFileName(resolution));");
-RequireText(harness, "battle_hud_runtime_${state}_${width}x${height}.png",
-    "Visual QA harness must validate every state/resolution capture", failures);
+    "await Capture(",
+    "state.CaptureFileName(resolution),",
+    "config.RenderFlushFrames);");
+RequireText(runtimeProbe, "control.IsVisibleInTree()",
+    "runtime visual gate must read real Control tree visibility", failures);
+RequireText(runtimeProbe, "control.GetGlobalRect()",
+    "runtime visual gate must read real global Control rectangles", failures);
+RequireText(runtimeProbe, "EffectiveAlpha(control)",
+    "runtime visual gate must reject transparent critical controls", failures);
+RequireText(runtimeProbe, "owner-contains:",
+    "runtime visual gate must check critical child ownership containment", failures);
+RequireText(runtimeProbe, "forbidden-overlap:",
+    "runtime visual gate must check the bounded forbidden overlap pairs", failures);
+RequireText(runtimeProbe, "payload:alert",
+    "runtime visual gate must verify real alert payload and text", failures);
+RequireText(runtimeProbe, "_queueMiniStack.ActiveProgress",
+    "runtime visual gate must verify the real queue progress surface", failures);
+RequireText(runtimeProbe, "HudLayoutMath.MinimumCommandHitTarget",
+    "runtime visual gate must enforce real 44px interactive controls", failures);
+RequireText(capture, "WriteBattleHudRuntimeStructuralEvidence",
+    "runtime capture must persist all structural probe evidence", failures);
+RequireText(harness, "--write-artifact-manifest",
+    "Visual QA harness must build the canonical runtime artifact manifest", failures);
+Require(!harness.Contains("for state in", StringComparison.Ordinal),
+    "Visual QA harness must not duplicate the typed runtime state catalog in bash", failures);
+RequireText(workflow, "BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}",
+    "VerifyAll visual capture must bind evidence to the exact checked-out SHA", failures);
+RequireText(workflow, "name: verify-all-${{ github.run_id }}-${{ github.sha }}",
+    "VerifyAll artifact name must bind the run and exact SHA", failures);
+RequireText(workflow, "if-no-files-found: error",
+    "VerifyAll must fail artifact upload when evidence is absent", failures);
 
 Require(BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.ProductionBuildingSelected).Projection.Status == "PROD READY",
     "production-ready status must fit the compact 1280 top strip", failures);
@@ -142,7 +180,24 @@ if (failures.Count > 0)
     throw new InvalidOperationException("BattleHudRuntimeStatesQa FAILED:\n" + string.Join("\n", failures));
 }
 
-Console.WriteLine("BattleHudRuntimeStatesQa PASSED: six typed projection/intent states produce 18 deterministic normal-skirmish captures with no gameplay authority coupling.");
+if (args is ["--write-artifact-manifest", var manifestPath, var structuralEvidencePath, var exactCommit])
+{
+    BattleHudVisualArtifactManifestWriter.Write(
+        manifestPath,
+        structuralEvidencePath,
+        exactCommit,
+        visualGateCases);
+    Console.WriteLine($"Battle HUD artifact manifest written: {manifestPath} ({visualGateCases.Count} captures, {exactCommit})");
+}
+else if (args.Length == 0)
+{
+    Console.WriteLine("BattleHudRuntimeStatesQa PASSED: one typed catalog defines 18 deterministic captures and their runtime probe contracts.");
+}
+else
+{
+    throw new ArgumentException(
+        "Usage: BattleHudRuntimeStatesQa [--write-artifact-manifest <manifest-path> <structural-evidence-path> <exact-commit>]");
+}
 
 static void Require(bool condition, string message, List<string> failures)
 {

@@ -116,6 +116,8 @@ public partial class HudLayer : CanvasLayer
         private float _feedbackPulse;
         private bool _hasState;
         public string InspectorText { get; private set; } = "";
+        public int QueuedCount => _queued;
+        public float ActiveProgress => _progress;
 
         public void SetState(ProductionOptionState state, string disabledReason)
         {

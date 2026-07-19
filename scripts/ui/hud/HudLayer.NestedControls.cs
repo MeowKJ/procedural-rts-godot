@@ -70,6 +70,9 @@ public partial class HudLayer : CanvasLayer
         private int _queued;
         private float _progress;
         private bool _available;
+        public int QueuedCount => _queued;
+        public float ActiveProgress => _progress;
+        public bool Available => _available;
 
         public void SetState(IconGlyph glyph, Color accent, int queued, float progress, bool available)
         {
@@ -436,6 +439,7 @@ public partial class HudLayer : CanvasLayer
     private partial class AlertRow : Control
     {
         private AlertLine? _alert;
+        public AlertLine? Alert => _alert;
 
         public void SetAlert(AlertLine? alert)
         {
