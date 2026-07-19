@@ -24,11 +24,14 @@ public partial class HudLayer : CanvasLayer
         {
             base._Draw();
             var size = Size;
+            var metrics = HudVisualFoundation.MetricsFor(HudVisualPrimitive.CommandCard);
             var style = UiFactory.GetHudCommandButtonOverlayStyle(Disabled, CurrentPalette);
             var accent = AbilityAccent(_state.Ability.Kind);
             var ready = _state.CooldownRemaining <= 0.01f;
             var iconAccent = new Color(accent, ready || _state.IsActive ? 0.96f : 0.48f);
-            var iconRect = new Rect2(new Vector2(14, 6), new Vector2(size.X - 28, 32));
+            var iconRect = new Rect2(
+                new Vector2(metrics.ContentPadding * 2, metrics.ContentPadding - 1),
+                new Vector2(size.X - metrics.ContentPadding * 4, 32));
             DynamicUnitIcon.DrawFallbackIcon(
                 this,
                 iconRect,
@@ -37,24 +40,24 @@ public partial class HudLayer : CanvasLayer
                 framed: false);
 
             DrawString(
-                UiFontProfile.DrawFont(UiFontRole.Compact),
+                UiFontProfile.DrawFont(metrics.DetailFontRole),
                 new Vector2(8, size.Y - 12),
                 AbilityShortCode(_state.Ability.Kind),
                 HorizontalAlignment.Left,
                 size.X - 16,
-                9,
+                metrics.DetailFontSize,
                 style.ShortLabel);
 
             var metric = AbilityMetricLine(_state.Ability);
             if (!string.IsNullOrWhiteSpace(metric))
             {
                 DrawString(
-                    UiFontProfile.DrawFont(UiFontRole.Compact),
+                    UiFontProfile.DrawFont(metrics.DetailFontRole),
                     new Vector2(8, 17),
                     metric,
                     HorizontalAlignment.Left,
                     size.X - 16,
-                    8,
+                    metrics.DetailFontSize,
                     new Color(CurrentPalette.TextMuted, ready ? 0.74f : 0.52f));
             }
 
@@ -66,7 +69,12 @@ public partial class HudLayer : CanvasLayer
 
             if (_state.IsActive)
             {
-                DrawRect(new Rect2(Vector2.Zero, size).Grow(-2), new Color(accent, 0.36f), false, 1.8f, true);
+                DrawRect(
+                    new Rect2(Vector2.Zero, size).Grow(-metrics.ItemSpacing),
+                    new Color(accent, 0.36f),
+                    false,
+                    1.8f,
+                    true);
             }
         }
 

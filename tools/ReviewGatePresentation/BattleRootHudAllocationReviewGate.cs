@@ -76,7 +76,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style typed feedback.", result);
         RequireText(hudLayer, "button.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page through typed feedback.", result);
         RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.", result);
-        RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.", result);
+        RequireText(hudLayer, "DrawRect(rect.Grow(-metrics.ContentPadding), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring using foundation spacing.", result);
         RequireText(hudLayer, "button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);", "Build and Train card focus must show focused action details through typed inspector state.", result);
         RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.", result);
         RequireText(hudLayer, "button.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);", "Build and Train card focus exit must reveal the next typed inspector layer.", result);
@@ -109,9 +109,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudLayer, "state.Category != _selectedBuildCategory", "Build option cards must filter by the selected build category.", result);
         RequireText(hudLayer, "_visibleBuildCardStates.Count >= 12", "Build option cards must keep the fixed-grid cap used by the right panel.", result);
         RequireText(hudLayer, "button.SetBuildState(state, disabledReason)", "Build option cards must render build snapshot state and disabled reasons explicitly.", result);
-        RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train cards must render compact availability badges.", result);
+        RequireText(hudLayer, "DrawStatusBadge(size, metrics)", "Build and Train cards must render compact availability badges using foundation metrics.", result);
         RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card badges must derive from enabled, queue, progress, and disabled-reason state.", result);
-        RequireText(hudLayer, "new Rect2(new Vector2(3, 5), new Vector2(3, size.Y - 10))", "Train card state must render as a text-free status strip away from the role glyph lane.", result);
+        RequireText(hudLayer, "new Vector2(metrics.ItemSpacing, metrics.ContentPadding - metrics.ItemSpacing)", "Train card state must render as a text-free status strip using foundation spacing away from the role glyph lane.", result);
         RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.", result);
         RequireText(hudLayer, "BuildKindRequested?.Invoke(button.BuildKind, SelectedConstructionProviderId(button.BuildKind))", "Build option cards must emit build-kind intents with selected construction provider lanes instead of production requests.", result);
         ForbidText(hudLayer, "BuildCategoryRequested?.Invoke(category);", "Build category tabs must filter build cards without arming placement.", result);
@@ -347,7 +347,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudCommandControls, "ProducerShortCode = BuildSpecCatalog.For(state.ProducerKind).ShortCode", "Train catalog cards must surface the source producer as compact metadata.", result);
         RequireText(hudCommandControls, "RoleGlyph = state.RoleGlyph == IconGlyph.None ? state.Icon : state.RoleGlyph", "Train catalog cards must surface unit role glyphs separately from the main unit icon.", result);
         RequireText(hudCommandControls, "private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId)", "Train catalog card metadata must stay scoped to unit production cards.", result);
-        RequireText(hudCommandControls, "DrawTrainCardMetadata(size)", "Train catalog cards must render source/role metadata in the card surface.", result);
+        RequireText(hudCommandControls, "DrawTrainCardMetadata(size, metrics)", "Train catalog cards must render source/role metadata in the card surface using foundation metrics.", result);
         RequireText(hudCommandControls, "ProducerShortCode = \"\";", "Build cards must clear train-only producer metadata.", result);
         RequireText(hudCommandControls, "Duration = 0;", "Build cards must clear train-only duration metadata.", result);
         RequireText(hudCommandControls, "InspectorText = TrainInspectorText", "Train catalog cards must route disabled reasons to the fixed inspector.", result);

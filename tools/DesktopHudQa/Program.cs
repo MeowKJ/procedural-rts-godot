@@ -232,7 +232,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModeFocusText(button));", "Catalog mode button focus must show keyboard-style typed feedback.");
     RequireText(hudLayer, "button.Pressed += () => ShowCatalogInspectorHover(inspectorItemId, CatalogModePageSelectedText(button));", "Catalog mode button press must confirm the selected page through typed feedback.");
     RequireText(hudLayer, "var focused = HasFocus();", "Catalog mode buttons must draw an explicit keyboard/gamepad focus state.");
-    RequireText(hudLayer, "DrawRect(rect.Grow(-4), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring.");
+    RequireText(hudLayer, "DrawRect(rect.Grow(-metrics.ContentPadding), new Color(Ink, 0.24f), false, 1, true);", "Catalog mode buttons must draw a visible inner focus ring using foundation spacing.");
     RequireText(hudLayer, "button.FocusEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);", "Build and Train card focus must show focused action details through typed inspector state.");
     RequireText(hudLayer, "button.FocusEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);", "Train card focus must establish repeat-production source context without mouse hover.");
     RequireText(hudLayer, "button.FocusExited += () => ClearCatalogInspectorHover(inspectorItemId);", "Build and Train card focus exit must reveal the next typed inspector layer.");
@@ -242,7 +242,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Build;", "Build category tabs must only be visible on the Build catalog page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Train;", "Train category tabs must only be visible on the Train catalog page.");
     RequireText(hudLayer, "state.Category != _selectedProductionCategory", "Train command grid must filter by the selected production category.");
-    RequireText(hudLayer, "DrawStatusBadge(size)", "Build and Train command cards must render compact availability badges.");
+    RequireText(hudLayer, "DrawStatusBadge(size, metrics)", "Build and Train command cards must render compact availability badges using foundation metrics.");
     RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card status badges must derive from enabled, queue, progress, and disabled-reason state.");
     RequireText(hudLayer, "state.DisabledReasonKey", "Build and Train cards must pass raw disabled reason keys into status badge selection.");
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");

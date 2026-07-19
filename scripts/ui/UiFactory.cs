@@ -224,9 +224,9 @@ public static class UiFactory
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(accent, 0.24f), accent, fontSize);
     }
 
-    public static void ApplyHudQueueRowTheme(Button button, SoftOldCityHudPalette palette, Color accent, int fontSize)
+    public static void ApplyHudQueueRowTheme(Button button, SoftOldCityHudPalette palette, Color accent)
     {
-        ApplyHudFoundationButtonTheme(button, palette, HudVisualPrimitive.QueueRow, accent, fontSize);
+        ApplyHudFoundationButtonTheme(button, palette, HudVisualPrimitive.QueueRow, accent);
     }
 
     public static void ApplyHudCancelButtonTheme(Button button, SoftOldCityHudPalette palette, int fontSize)
@@ -234,9 +234,9 @@ public static class UiFactory
         ApplyHudButtonTheme(button, palette, palette.PanelSubtleFill, new Color(palette.Danger, 0.34f), palette.Danger, fontSize);
     }
 
-    public static void ApplyHudCommandButtonTheme(Button button, SoftOldCityHudPalette palette, int fontSize)
+    public static void ApplyHudCommandButtonTheme(Button button, SoftOldCityHudPalette palette)
     {
-        ApplyHudFoundationButtonTheme(button, palette, HudVisualPrimitive.CommandCard, palette.Repair, fontSize);
+        ApplyHudFoundationButtonTheme(button, palette, HudVisualPrimitive.CommandCard, palette.Repair);
     }
 
     public static void ApplyHudMoveModeButtonTheme(Button button, SoftOldCityHudPalette palette, MoveCommandMode mode, int fontSize)
@@ -369,28 +369,44 @@ public static class UiFactory
         Button button,
         SoftOldCityHudPalette palette,
         HudVisualPrimitive primitive,
-        Color accent,
-        int fontSize)
+        Color accent)
     {
+        var metrics = HudVisualFoundation.MetricsFor(primitive);
         var normal = HudVisualFoundation.For(palette, primitive, HudVisualState.Normal, accent);
         var hover = HudVisualFoundation.For(palette, primitive, HudVisualState.Hover, accent);
         var pressed = HudVisualFoundation.For(palette, primitive, HudVisualState.Pressed, accent);
         var disabled = HudVisualFoundation.For(palette, primitive, HudVisualState.Disabled, accent);
-        var selected = HudVisualFoundation.For(palette, primitive, HudVisualState.Selected, accent);
+        var focused = HudVisualFoundation.For(palette, primitive, HudVisualState.Focused, accent);
         button.MouseDefaultCursorShape = BattleCursorGodotShapes.ToControlShape(BattleCursorCatalog.DefinitionFor(BattleCursorState.UiHover).Shape);
-        button.AddThemeStyleboxOverride("normal", HudPanelStyle(normal.Fill, normal.Border, normal.BorderWidth));
-        button.AddThemeStyleboxOverride("hover", HudPanelStyle(hover.Fill, hover.Border, hover.BorderWidth));
-        button.AddThemeStyleboxOverride("pressed", HudPanelStyle(pressed.Fill, pressed.Border, pressed.BorderWidth));
-        button.AddThemeStyleboxOverride("disabled", HudPanelStyle(disabled.Fill, disabled.Border, disabled.BorderWidth));
-        button.AddThemeStyleboxOverride("focus", HudPanelStyle(selected.Fill, selected.Border, selected.BorderWidth));
-        UiFontProfile.ApplyToControl(button, fontSize <= 11 ? UiFontRole.Compact : UiFontRole.Body, fontSize);
+        button.AddThemeStyleboxOverride("normal", CreateHudFoundationStyleBox(normal, metrics));
+        button.AddThemeStyleboxOverride("hover", CreateHudFoundationStyleBox(hover, metrics));
+        button.AddThemeStyleboxOverride("pressed", CreateHudFoundationStyleBox(pressed, metrics));
+        button.AddThemeStyleboxOverride("disabled", CreateHudFoundationStyleBox(disabled, metrics));
+        button.AddThemeStyleboxOverride("focus", CreateHudFoundationStyleBox(focused, metrics));
+        button.AddThemeConstantOverride("h_separation", Mathf.RoundToInt(metrics.ItemSpacing));
+        UiFontProfile.ApplyToControl(button, metrics.FontRole, metrics.FontSize);
         button.AddThemeColorOverride("font_color", normal.Text);
         button.AddThemeColorOverride("font_hover_color", hover.Text);
         button.AddThemeColorOverride("font_pressed_color", pressed.Text);
         button.AddThemeColorOverride("font_disabled_color", disabled.Text);
     }
 
-    private static StyleBoxFlat PanelStyle(Color fill, Color stroke, int border = 1)
+    public static StyleBoxFlat CreateHudFoundationStyleBox(HudVisualStyle style, HudVisualMetrics metrics)
+    {
+        return PanelStyle(
+            style.Fill,
+            style.Border,
+            style.BorderWidth,
+            metrics.CornerRadius,
+            metrics.ContentPadding);
+    }
+
+    private static StyleBoxFlat PanelStyle(
+        Color fill,
+        Color stroke,
+        int border = 1,
+        int cornerRadius = 3,
+        float contentPadding = 0)
     {
         return new StyleBoxFlat
         {
@@ -400,10 +416,14 @@ public static class UiFactory
             BorderWidthTop = border,
             BorderWidthRight = border,
             BorderWidthBottom = border,
-            CornerRadiusBottomLeft = 3,
-            CornerRadiusBottomRight = 3,
-            CornerRadiusTopLeft = 3,
-            CornerRadiusTopRight = 3,
+            CornerRadiusBottomLeft = cornerRadius,
+            CornerRadiusBottomRight = cornerRadius,
+            CornerRadiusTopLeft = cornerRadius,
+            CornerRadiusTopRight = cornerRadius,
+            ContentMarginLeft = contentPadding,
+            ContentMarginTop = contentPadding,
+            ContentMarginRight = contentPadding,
+            ContentMarginBottom = contentPadding,
         };
     }
 }

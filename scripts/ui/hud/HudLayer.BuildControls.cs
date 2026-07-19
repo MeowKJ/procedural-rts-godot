@@ -218,7 +218,7 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Stop,
         };
         button.Size = button.CustomMinimumSize;
-        UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
+        UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette);
         var inspectorItemId = CommandCardInspectorItemId(optionId);
         button.MouseEntered += () => ShowCatalogInspectorHover(inspectorItemId, button.InspectorText);
         button.MouseEntered += () => FocusRepeatProductionDesign(button.UnitDesignId);
@@ -285,7 +285,7 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Stop,
             Visible = false,
         };
-        UiFactory.ApplyHudQueueRowTheme(button, CurrentPalette, Cyan, FontTiny);
+        UiFactory.ApplyHudQueueRowTheme(button, CurrentPalette, Cyan);
         button.Pressed += () =>
         {
             SelectProviderLane(button.State);

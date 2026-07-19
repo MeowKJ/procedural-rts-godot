@@ -187,8 +187,11 @@ public partial class HudLayer : CanvasLayer
         {
             base._Draw();
             var size = Size;
+            var metrics = HudVisualFoundation.MetricsFor(HudVisualPrimitive.CommandCard);
             var style = UiFactory.GetHudCommandButtonOverlayStyle(Disabled, CurrentPalette);
-            var iconRect = new Rect2(new Vector2(14, 6), new Vector2(size.X - 28, 32));
+            var iconRect = new Rect2(
+                new Vector2(metrics.ContentPadding * 2, metrics.ContentPadding - 1),
+                new Vector2(size.X - metrics.ContentPadding * 4, 32));
             var iconAccent = Disabled ? new Color(Accent, 0.42f) : new Color(Accent, 0.96f);
             if (!string.IsNullOrWhiteSpace(UnitDesignId))
             {
@@ -206,18 +209,25 @@ public partial class HudLayer : CanvasLayer
 
             if (IsTrainCard)
             {
-                DrawTrainCardMetadata(size);
+                DrawTrainCardMetadata(size, metrics);
             }
 
-            var compactFont = UiFontProfile.DrawFont(UiFontRole.Compact);
-            DrawString(compactFont, new Vector2(7, size.Y - 10), CompactCardText(ShortLabel, 5), HorizontalAlignment.Left, 28, 8, style.ShortLabel);
+            var compactFont = UiFontProfile.DrawFont(metrics.DetailFontRole);
             DrawString(
                 compactFont,
-                new Vector2(34, size.Y - 10),
+                new Vector2(metrics.ContentPadding, size.Y - metrics.DetailFontSize - 1),
+                CompactCardText(ShortLabel, 5),
+                HorizontalAlignment.Left,
+                28,
+                metrics.DetailFontSize,
+                style.ShortLabel);
+            DrawString(
+                compactFont,
+                new Vector2(34, size.Y - metrics.DetailFontSize - 1),
                 Cost.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 HorizontalAlignment.Center,
                 26,
-                8,
+                metrics.DetailFontSize,
                 new Color(CurrentPalette.Text, Disabled ? 0.48f : 0.86f));
             if (_progress > 0)
             {
@@ -239,15 +249,20 @@ public partial class HudLayer : CanvasLayer
             if (Disabled)
             {
                 DrawRect(new Rect2(Vector2.Zero, size), style.DisabledFill, true);
-                DrawLine(new Vector2(8, size.Y - 8), new Vector2(size.X - 8, 8), style.DisabledStrike, 2, true);
+                DrawLine(
+                    new Vector2(metrics.ContentPadding, size.Y - metrics.ContentPadding),
+                    new Vector2(size.X - metrics.ContentPadding, metrics.ContentPadding),
+                    style.DisabledStrike,
+                    2,
+                    true);
             }
 
-            DrawStatusBadge(size);
+            DrawStatusBadge(size, metrics);
         }
 
         private bool IsTrainCard => !string.IsNullOrWhiteSpace(UnitDesignId);
 
-        private void DrawTrainCardMetadata(Vector2 size)
+        private void DrawTrainCardMetadata(Vector2 size, HudVisualMetrics metrics)
         {
             if (RoleGlyph != IconGlyph.None)
             {
@@ -261,22 +276,24 @@ public partial class HudLayer : CanvasLayer
 
             if (Duration > 0)
             {
-                var font = UiFontProfile.DrawFont(UiFontRole.Compact);
+                var font = UiFontProfile.DrawFont(metrics.DetailFontRole);
                 var seconds = $"{Mathf.CeilToInt(Duration)}s";
                 DrawString(
                     font,
-                    new Vector2(size.X - 24, size.Y - 10),
+                    new Vector2(size.X - 24, size.Y - metrics.DetailFontSize - 1),
                     seconds,
                     HorizontalAlignment.Right,
                     20,
-                    8,
+                    metrics.DetailFontSize,
                     new Color(CurrentPalette.TextMuted, Disabled ? 0.46f : 0.68f));
             }
         }
 
-        private void DrawStatusBadge(Vector2 size)
+        private void DrawStatusBadge(Vector2 size, HudVisualMetrics metrics)
         {
-            var status = new Rect2(new Vector2(3, 5), new Vector2(3, size.Y - 10));
+            var status = new Rect2(
+                new Vector2(metrics.ItemSpacing, metrics.ContentPadding - metrics.ItemSpacing),
+                new Vector2(metrics.ItemSpacing, size.Y - (metrics.ContentPadding - metrics.ItemSpacing) * 2));
             DrawRect(status, new Color(_statusBadgeAccent, Disabled ? 0.42f : 0.9f), true);
         }
 

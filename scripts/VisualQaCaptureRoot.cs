@@ -95,6 +95,18 @@ public partial class VisualQaCaptureRoot : Node
         await Capture(outputPath, "battle_hud_style1b_fog.png");
         SetBattleTheme(WorldVisualTheme.DuskDefense, "visual-qa-dusk");
         await Capture(outputPath, "battle_hud_style1c_dusk.png");
+        SetBattleTheme(WorldVisualTheme.NightRadar, "visual-qa-night-radar");
+        await Capture(outputPath, "battle_hud_style1d_night.png");
+        SetBattleThemeTransition(
+            WorldVisualTheme.DayCommand,
+            WorldVisualTheme.NightRadar,
+            0.5f,
+            "visual-qa-day-night-transition");
+        await Capture(outputPath, "battle_hud_theme_transition.png");
+        SetBattleTheme(WorldVisualTheme.NightRadar, "visual-qa-foundation-states");
+        hud.DebugConfigureHudVisualFoundationQa();
+        await NextFrames(12);
+        await Capture(outputPath, "battle_hud_foundation_states.png");
         SetBattleTheme(WorldVisualTheme.DayCommand, "visual-qa-day");
         await NextFrames(2);
     }
@@ -377,6 +389,18 @@ public partial class VisualQaCaptureRoot : Node
     {
         var grid = RequiredNode<GridLayer>("Grid");
         grid.State?.SetVisualTheme(theme, driver, transitionProgress: 1);
+    }
+
+    private void SetBattleThemeTransition(
+        WorldVisualTheme current,
+        WorldVisualTheme target,
+        float transitionProgress,
+        string driver)
+    {
+        var grid = RequiredNode<GridLayer>("Grid");
+        var state = grid.State ?? throw new InvalidOperationException("Visual QA theme transition requires GameState.");
+        state.SetVisualTheme(current, $"{driver}-start", transitionProgress: 1);
+        state.SetVisualTheme(target, driver, transitionProgress);
     }
 
     private async Task Capture(string outputPath, string fileName)

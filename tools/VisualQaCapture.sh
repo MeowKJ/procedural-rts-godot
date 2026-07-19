@@ -100,6 +100,9 @@ for file_name in \
   battle_hud_selection_detail.png \
   battle_hud_style1b_fog.png \
   battle_hud_style1c_dusk.png \
+  battle_hud_style1d_night.png \
+  battle_hud_theme_transition.png \
+  battle_hud_foundation_states.png \
   battle_projectile_direct.png \
   battle_projectile_ballistic.png \
   battle_projectile_tracking.png \
