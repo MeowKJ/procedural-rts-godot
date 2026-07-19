@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -72,8 +73,8 @@ static void Validate(EvidenceOptions options)
     RequiredString(host, "os", "Windows acceptance evidence host");
     RequiredString(host, "architecture", "Windows acceptance evidence host");
     var acceptedAt = RequiredString(evidence, "acceptedAtUtc", "Windows acceptance evidence");
-    Require(DateTimeOffset.TryParse(acceptedAt, out var parsedAt) && parsedAt.Offset == TimeSpan.Zero,
-        "Windows acceptance evidence acceptedAtUtc must be a UTC ISO-8601 timestamp");
+    Require(IsUtcIso8601(acceptedAt),
+        "Windows acceptance evidence acceptedAtUtc must be a UTC ISO-8601 timestamp ending in Z");
 
     var interactive = RequiredObject(evidence, "interactive", "Windows acceptance evidence");
     foreach (var check in new[]
@@ -120,6 +121,8 @@ static void RunSelfTest()
         RequireReject(evidencePath, identityPath, root, commit, "stale commit");
         WriteEvidence(evidencePath, version, commit, sampleHash, packageName, new string('b', 64));
         RequireReject(evidencePath, identityPath, root, commit, "package hash mismatch");
+        WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash, acceptedAtUtc: "07/19/2026 00:00:00Z");
+        RequireReject(evidencePath, identityPath, root, commit, "non-ISO acceptance timestamp");
         WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash, normalSkirmishReturn: false);
         RequireReject(evidencePath, identityPath, root, commit, "missing interactive check");
     }
@@ -136,7 +139,8 @@ static void WriteEvidence(
     string sampleHash,
     string packageName,
     string packageHash,
-    bool normalSkirmishReturn = true)
+    bool normalSkirmishReturn = true,
+    string acceptedAtUtc = "2026-07-19T00:00:00Z")
 {
     File.WriteAllText(path, $$"""
         {
@@ -149,7 +153,7 @@ static void WriteEvidence(
           "package": { "file": "{{packageName}}", "sha256": "{{packageHash}}" },
           "sampleMap": { "id": "authored-map-preview", "sha256": "{{sampleHash}}" },
           "host": { "machineClass": "physical Windows PC", "os": "Windows 11", "architecture": "x86_64" },
-          "acceptedAtUtc": "2026-07-19T00:00:00Z",
+          "acceptedAtUtc": "{{acceptedAtUtc}}",
           "interactive": {
             "packageExtracted": true,
             "desktopLaunch": true,
@@ -227,6 +231,16 @@ static string RequiredSha256(JsonElement parent, string name, string label)
 static string Sha256(string path)
 {
     return Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+}
+
+static bool IsUtcIso8601(string value)
+{
+    return DateTimeOffset.TryParseExact(
+        value,
+        ["yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'"],
+        CultureInfo.InvariantCulture,
+        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+        out _);
 }
 
 static bool IsCommit(string value)
