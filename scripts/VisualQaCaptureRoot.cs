@@ -115,6 +115,7 @@ public partial class VisualQaCaptureRoot : Node
     private async Task CaptureBattleHudRuntimeStates(string outputPath)
     {
         var config = BattleHudRuntimeStateCatalog.CaptureConfig;
+        var (exactCommit, captureRunNonce) = RequiredBattleHudRuntimeProvenance();
         _battleHudRuntimeStructuralEvidence.Clear();
         File.Delete(Path.Combine(outputPath, BattleHudRuntimeStateCatalog.StructuralEvidenceFileName));
         try
@@ -124,15 +125,23 @@ public partial class VisualQaCaptureRoot : Node
                 await LoadScene(BattleScenePath);
                 SetBattleTheme(config.Theme, $"visual-qa-runtime-{state.CaptureId}");
                 var hud = RequiredNode<HudLayer>("Hud");
+                AssertBattleHudRuntimeCaptureConfig(config);
                 AssertNormalSkirmishSandboxHidden();
                 FreezeBattleHudRuntimeProjectionAuthority();
                 foreach (var resolution in BattleHudRuntimeStateCatalog.Resolutions)
                 {
-                    await CaptureBattleHudRuntimeResolution(outputPath, hud, state, resolution, config);
+                    await CaptureBattleHudRuntimeResolution(
+                        outputPath,
+                        hud,
+                        state,
+                        resolution,
+                        config,
+                        exactCommit,
+                        captureRunNonce);
                 }
             }
 
-            WriteBattleHudRuntimeStructuralEvidence(outputPath);
+            WriteBattleHudRuntimeStructuralEvidence(outputPath, exactCommit, captureRunNonce);
         }
         finally
         {
@@ -146,15 +155,22 @@ public partial class VisualQaCaptureRoot : Node
         HudLayer hud,
         BattleHudRuntimeStateSpec state,
         BattleHudCaptureResolution resolution,
-        BattleHudRuntimeCaptureConfig config)
+        BattleHudRuntimeCaptureConfig config,
+        string exactCommit,
+        string captureRunNonce)
     {
         GetTree().Paused = false;
         SetCaptureSize(new Vector2I(resolution.Width, resolution.Height));
         hud.ApplyBattleHudRuntimeProjection(state.Projection);
         GetViewport().GuiGetFocusOwner()?.ReleaseFocus();
         await NextFrames(config.SettleFrames);
+        AssertBattleHudRuntimeCaptureConfig(config);
         AssertNormalSkirmishSandboxHidden();
-        _battleHudRuntimeStructuralEvidence.Add(hud.ProbeBattleHudRuntimeStructure(state, resolution));
+        _battleHudRuntimeStructuralEvidence.Add(hud.ProbeBattleHudRuntimeStructure(
+            state,
+            resolution,
+            exactCommit,
+            captureRunNonce));
 
         GetTree().Paused = true;
         try
@@ -170,7 +186,10 @@ public partial class VisualQaCaptureRoot : Node
         }
     }
 
-    private void WriteBattleHudRuntimeStructuralEvidence(string outputPath)
+    private void WriteBattleHudRuntimeStructuralEvidence(
+        string outputPath,
+        string exactCommit,
+        string captureRunNonce)
     {
         var expectedCount = BattleHudRuntimeStateCatalog.States.Count
             * BattleHudRuntimeStateCatalog.Resolutions.Count;
@@ -178,6 +197,13 @@ public partial class VisualQaCaptureRoot : Node
         {
             throw new InvalidOperationException(
                 $"Battle HUD runtime probe produced {_battleHudRuntimeStructuralEvidence.Count} results, expected {expectedCount}.");
+        }
+
+        if (_battleHudRuntimeStructuralEvidence.Any(item => item.ExactCommit != exactCommit
+            || item.CaptureRunNonce != captureRunNonce))
+        {
+            throw new InvalidOperationException(
+                "Battle HUD runtime probe produced inconsistent capture provenance.");
         }
 
         var path = Path.Combine(outputPath, BattleHudRuntimeStateCatalog.StructuralEvidenceFileName);
@@ -188,6 +214,24 @@ public partial class VisualQaCaptureRoot : Node
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true,
             }) + System.Environment.NewLine);
+    }
+
+    private static (string ExactCommit, string CaptureRunNonce) RequiredBattleHudRuntimeProvenance()
+    {
+        var exactCommit = System.Environment.GetEnvironmentVariable("BATTLE_HUD_CAPTURE_COMMIT") ?? "";
+        var captureRunNonce = System.Environment.GetEnvironmentVariable("BATTLE_HUD_CAPTURE_RUN_NONCE") ?? "";
+        if (exactCommit.Length != 40 || !exactCommit.All(Uri.IsHexDigit))
+        {
+            throw new InvalidOperationException(
+                "BATTLE_HUD_CAPTURE_COMMIT must be the exact 40-character checkout SHA.");
+        }
+
+        if (string.IsNullOrWhiteSpace(captureRunNonce))
+        {
+            throw new InvalidOperationException("BATTLE_HUD_CAPTURE_RUN_NONCE is required.");
+        }
+
+        return (exactCommit.ToLowerInvariant(), captureRunNonce);
     }
 
     private void AssertNormalSkirmishSandboxHidden()
@@ -202,6 +246,39 @@ public partial class VisualQaCaptureRoot : Node
         {
             throw new InvalidOperationException(
                 "Normal-skirmish HUD exposed SandboxDeveloperPanel before capture.");
+        }
+    }
+
+    private void AssertBattleHudRuntimeCaptureConfig(BattleHudRuntimeCaptureConfig config)
+    {
+        if (_activeScene is not BattleRoot battle)
+        {
+            throw new InvalidOperationException("Battle HUD runtime capture config requires BattleRoot.");
+        }
+
+        var options = battle.State.Options;
+        if (options.StartingCredits != config.StartingCredits
+            || options.MapSeed != config.MapSeed
+            || options.EnemyDifficulty != config.EnemyDifficulty
+            || options.LaunchMode != config.LaunchMode)
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD runtime options differ from capture config: {options}.");
+        }
+
+        if (GameText.CurrentLanguage != config.Language)
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD runtime language {GameText.CurrentLanguage} differs from {config.Language}.");
+        }
+
+        var visualTheme = battle.State.VisualTheme;
+        if (visualTheme.Current != config.Theme
+            || visualTheme.Target != config.Theme
+            || visualTheme.TransitionProgress < 0.999f)
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD runtime theme {visualTheme} differs from settled {config.Theme}.");
         }
     }
 

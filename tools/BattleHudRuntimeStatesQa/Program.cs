@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ProceduralRts.Core;
 
 var failures = new List<string>();
@@ -89,6 +90,8 @@ var runtimeProbe = Read(root, "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
 var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs");
 var harness = Read(root, "tools", "VisualQaCapture.sh");
 var workflow = Read(root, ".github", "workflows", "verify-all.yml");
+var visualGate = Read(root, "tools", "BattleHudRuntimeStatesQa", "BattleHudVisualGate.cs");
+var manifestWriter = Read(root, "tools", "BattleHudRuntimeStatesQa", "BattleHudVisualArtifactManifest.cs");
 var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
     + string.Join("\n", Directory.EnumerateFiles(
         Path.Combine(root, "scripts", "battle-root"),
@@ -108,6 +111,18 @@ RequireText(capture, "CaptureBattleHudRuntimeStates", "Visual QA must capture th
 Require(!capture.Contains("SetSandboxDeveloperControlsVisible(false)", StringComparison.Ordinal),
     "runtime capture must not hide sandbox controls and mask the real launch gate", failures);
 RequireText(capture, "AssertNormalSkirmishSandboxHidden", "runtime capture must assert the real Skirmish sandbox gate", failures);
+RequireText(capture, "AssertBattleHudRuntimeCaptureConfig(config)",
+    "runtime capture must assert the manifest scenario against the live BattleRoot", failures);
+RequireText(capture, "options.StartingCredits != config.StartingCredits",
+    "runtime capture must verify live starting credits", failures);
+RequireText(capture, "options.MapSeed != config.MapSeed",
+    "runtime capture must verify the live map seed", failures);
+RequireText(capture, "options.EnemyDifficulty != config.EnemyDifficulty",
+    "runtime capture must verify live enemy difficulty", failures);
+RequireText(capture, "GameText.CurrentLanguage != config.Language",
+    "runtime capture must verify the live localization language", failures);
+RequireText(capture, "visualTheme.Current != config.Theme",
+    "runtime capture must verify the live settled visual theme", failures);
 RequireText(capture, "RequiredNode<Control>(\"SandboxDeveloperPanel\").Visible",
     "runtime capture must read the actual SandboxDeveloperPanel visibility", failures);
 RequireText(capture, "StageDeterministicBattleCapture", "each Battle load must stage the fixed skirmish config", failures);
@@ -131,8 +146,9 @@ RequireOrdered(capture, failures,
     "hud.ApplyBattleHudRuntimeProjection(state.Projection);",
     "GetViewport().GuiGetFocusOwner()?.ReleaseFocus();",
     "await NextFrames(config.SettleFrames);",
+    "AssertBattleHudRuntimeCaptureConfig(config);",
     "AssertNormalSkirmishSandboxHidden();",
-    "hud.ProbeBattleHudRuntimeStructure(state, resolution)",
+    "hud.ProbeBattleHudRuntimeStructure(",
     "GetTree().Paused = true;",
     "await Capture(",
     "state.CaptureFileName(resolution),",
@@ -153,14 +169,49 @@ RequireText(runtimeProbe, "_queueMiniStack.ActiveProgress",
     "runtime visual gate must verify the real queue progress surface", failures);
 RequireText(runtimeProbe, "HudLayoutMath.MinimumCommandHitTarget",
     "runtime visual gate must enforce real 44px interactive controls", failures);
+RequireText(runtimeProbe, "alpha >= BattleHudRuntimeSettledAlpha",
+    "runtime visual gate must require settled critical-control alpha", failures);
+RequireText(runtimeProbe, "MeasureBattleHudRuntimeLabelText",
+    "runtime visual gate must measure critical Label text with the real Godot font", failures);
+RequireText(runtimeProbe, "label.GetMinimumSize()",
+    "runtime visual gate must compare each critical Label minimum size to its allotted rect", failures);
+RequireText(visualGate, "ExpectedByState",
+    "typed QA must own an independent exact six-state expectation matrix", failures);
+RequireText(visualGate, "RequireExactSet(",
+    "typed QA must compare the production catalog to its independent oracle", failures);
+Require(!runtimeProbe.Contains("foreach (var signal in state.CriticalSignals)", StringComparison.Ordinal),
+    "runtime signal evidence must come from explicit live assertions, not catalog iteration", failures);
+RequireText(manifestWriter, "actualSignals.SetEquals(gateCase.RequiredSignals)",
+    "artifact manifest must enforce exact live signal markers", failures);
+RequireText(manifestWriter, "actualRelations.SetEquals(gateCase.RequiredRelations)",
+    "artifact manifest must enforce exact structural relation markers", failures);
+RequireText(manifestWriter, "structural.ExactCommit",
+    "artifact manifest must verify every structural result commit", failures);
+RequireText(manifestWriter, "structural.CaptureRunNonce",
+    "artifact manifest must verify every structural result run nonce", failures);
 RequireText(capture, "WriteBattleHudRuntimeStructuralEvidence",
     "runtime capture must persist all structural probe evidence", failures);
 RequireText(harness, "--write-artifact-manifest",
     "Visual QA harness must build the canonical runtime artifact manifest", failures);
 Require(!harness.Contains("for state in", StringComparison.Ordinal),
     "Visual QA harness must not duplicate the typed runtime state catalog in bash", failures);
+RequireOrdered(harness, failures,
+    ": \"${BATTLE_HUD_CAPTURE_COMMIT:?",
+    "checkout_commit=\"$(git rev-parse HEAD)\"",
+    "git diff --quiet --",
+    "capture_started_seconds=$SECONDS");
+RequireText(harness, "BATTLE_HUD_CAPTURE_RUN_NONCE",
+    "Visual QA harness must require a capture-run nonce", failures);
 RequireText(workflow, "BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}",
     "VerifyAll visual capture must bind evidence to the exact checked-out SHA", failures);
+RequireText(workflow, "BATTLE_HUD_CAPTURE_RUN_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}",
+    "VerifyAll visual capture must bind evidence to one workflow attempt", failures);
+RequireText(workflow, "run: bash tools/VisualQaCapture.sh",
+    "VerifyAll must execute the guarded visual capture harness directly", failures);
+RequireText(workflow, "test -s artifacts/visual-qa/battle-hud-runtime-artifact-manifest.json",
+    "VerifyAll must require the canonical manifest before artifact upload", failures);
+RequireText(workflow, "test -s artifacts/visual-qa/battle-hud-runtime-structural-evidence.json",
+    "VerifyAll must require structural evidence before artifact upload", failures);
 RequireText(workflow, "name: verify-all-${{ github.run_id }}-${{ github.sha }}",
     "VerifyAll artifact name must bind the run and exact SHA", failures);
 RequireText(workflow, "if-no-files-found: error",
@@ -180,12 +231,19 @@ if (failures.Count > 0)
     throw new InvalidOperationException("BattleHudRuntimeStatesQa FAILED:\n" + string.Join("\n", failures));
 }
 
-if (args is ["--write-artifact-manifest", var manifestPath, var structuralEvidencePath, var exactCommit])
+if (args is [
+    "--write-artifact-manifest",
+    var manifestPath,
+    var structuralEvidencePath,
+    var exactCommit,
+    var captureRunNonce])
 {
     BattleHudVisualArtifactManifestWriter.Write(
         manifestPath,
         structuralEvidencePath,
         exactCommit,
+        captureRunNonce,
+        ReadRepositoryHead(root),
         visualGateCases);
     Console.WriteLine($"Battle HUD artifact manifest written: {manifestPath} ({visualGateCases.Count} captures, {exactCommit})");
 }
@@ -196,7 +254,7 @@ else if (args.Length == 0)
 else
 {
     throw new ArgumentException(
-        "Usage: BattleHudRuntimeStatesQa [--write-artifact-manifest <manifest-path> <structural-evidence-path> <exact-commit>]");
+        "Usage: BattleHudRuntimeStatesQa [--write-artifact-manifest <manifest-path> <structural-evidence-path> <exact-commit> <capture-run-nonce>]");
 }
 
 static void Require(bool condition, string message, List<string> failures)
@@ -243,4 +301,31 @@ static string FindRoot()
     }
 
     throw new InvalidOperationException("Could not locate ProceduralRts.csproj.");
+}
+
+static string ReadRepositoryHead(string root)
+{
+    using var process = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            FileName = "git",
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        },
+    };
+    process.StartInfo.ArgumentList.Add("rev-parse");
+    process.StartInfo.ArgumentList.Add("HEAD");
+    process.Start();
+    var output = process.StandardOutput.ReadToEnd().Trim();
+    var error = process.StandardError.ReadToEnd().Trim();
+    process.WaitForExit();
+    if (process.ExitCode != 0 || output.Length != 40 || !output.All(Uri.IsHexDigit))
+    {
+        throw new InvalidOperationException($"Could not resolve repository HEAD: {error}");
+    }
+
+    return output.ToLowerInvariant();
 }

@@ -6,16 +6,23 @@ namespace ProceduralRts.Ui;
 public partial class HudLayer
 {
     private const float BattleHudRuntimeProbeTolerance = 1f;
+    private const float BattleHudRuntimeSettledAlpha = 0.95f;
 
     private static readonly (BattleHudRuntimeControlId Child, BattleHudRuntimeControlId Owner)[]
         BattleHudRuntimeOwnedControls =
         [
             (BattleHudRuntimeControlId.UnitStanceStrip, BattleHudRuntimeControlId.CommandRibbon),
             (BattleHudRuntimeControlId.StanceHold, BattleHudRuntimeControlId.UnitStanceStrip),
+            (BattleHudRuntimeControlId.StatusLabel, BattleHudRuntimeControlId.ResourceStrip),
+            (BattleHudRuntimeControlId.SelectionTitleLabel, BattleHudRuntimeControlId.UnitDetailPanel),
+            (BattleHudRuntimeControlId.SelectionMetaLabel, BattleHudRuntimeControlId.UnitDetailPanel),
+            (BattleHudRuntimeControlId.SelectionStatsLabel, BattleHudRuntimeControlId.UnitDetailPanel),
+            (BattleHudRuntimeControlId.SelectionDetailLabel, BattleHudRuntimeControlId.UnitDetailPanel),
             (BattleHudRuntimeControlId.ProductionProviderLane0, BattleHudRuntimeControlId.RightRail),
             (BattleHudRuntimeControlId.QueueMiniStack, BattleHudRuntimeControlId.RightRail),
             (BattleHudRuntimeControlId.CancelProduction, BattleHudRuntimeControlId.RightRail),
             (BattleHudRuntimeControlId.ProductionCard, BattleHudRuntimeControlId.ProductionPanel),
+            (BattleHudRuntimeControlId.QueueSummaryLabel, BattleHudRuntimeControlId.ProductionPanel),
         ];
 
     private static readonly (BattleHudRuntimeControlId First, BattleHudRuntimeControlId Second)[]
@@ -33,7 +40,9 @@ public partial class HudLayer
 
     public BattleHudRuntimeStructuralEvidence ProbeBattleHudRuntimeStructure(
         BattleHudRuntimeStateSpec state,
-        BattleHudCaptureResolution resolution)
+        BattleHudCaptureResolution resolution,
+        string exactCommit,
+        string captureRunNonce)
     {
         var checks = new List<string>();
         var expectedViewport = new Vector2(resolution.Width, resolution.Height);
@@ -59,7 +68,7 @@ public partial class HudLayer
                 resolution,
                 checks);
             RequireRuntimeProbe(
-                alpha > 0.02f,
+                alpha >= BattleHudRuntimeSettledAlpha,
                 $"alpha:{controlId}",
                 state,
                 resolution,
@@ -85,6 +94,10 @@ public partial class HudLayer
                     state,
                     resolution,
                     checks);
+            }
+            if (control is Label label)
+            {
+                ValidateBattleHudRuntimeLabelFit(label, rect, controlId, state, resolution, checks);
             }
 
             rects.Add(controlId, rect);
@@ -130,13 +143,10 @@ public partial class HudLayer
         }
 
         ValidateBattleHudRuntimeState(state, resolution, checks);
-        foreach (var signal in state.CriticalSignals)
-        {
-            checks.Add($"signal:{signal}");
-        }
-
         return new BattleHudRuntimeStructuralEvidence(
             BattleHudRuntimeStateCatalog.Scenario,
+            exactCommit,
+            captureRunNonce,
             state.Kind.ToString(),
             state.CaptureId,
             state.CaptureFileName(resolution),
@@ -153,10 +163,16 @@ public partial class HudLayer
         BattleHudRuntimeControlId.MinimapCluster => GetNode<Control>("HudRoot/MinimapCluster"),
         BattleHudRuntimeControlId.RightRail => _rightRail,
         BattleHudRuntimeControlId.CommandRibbon => _commandRibbon,
+        BattleHudRuntimeControlId.StatusLabel => _statusValue,
         BattleHudRuntimeControlId.UnitDetailPanel => _rightDetailPanel,
+        BattleHudRuntimeControlId.SelectionTitleLabel => _drawerSelectedTitle,
+        BattleHudRuntimeControlId.SelectionMetaLabel => _drawerSelectedMeta,
+        BattleHudRuntimeControlId.SelectionStatsLabel => _drawerSelectedStats,
+        BattleHudRuntimeControlId.SelectionDetailLabel => _drawerSelectedDetail,
         BattleHudRuntimeControlId.UnitStanceStrip => _unitStanceStrip,
         BattleHudRuntimeControlId.StanceHold => _unitStanceStrip.GetNode<BaseButton>("StanceHold"),
         BattleHudRuntimeControlId.ProductionPanel => _rightProductionPanel,
+        BattleHudRuntimeControlId.QueueSummaryLabel => _queueValue,
         BattleHudRuntimeControlId.ProductionProviderLane0 => _productionProviderLaneButtons[0],
         BattleHudRuntimeControlId.ProductionCard => RuntimeProductionCard(),
         BattleHudRuntimeControlId.QueueMiniStack => _queueMiniStack,
@@ -197,6 +213,7 @@ public partial class HudLayer
             state,
             resolution,
             checks);
+        MarkRuntimeSignal(BattleHudRuntimeSignalId.Status, checks);
         RequireRuntimeProbe(
             _drawerSelectedTitle.Text == CompactText(projection.Selection.Title, 24)
                 && _drawerSelectedMeta.Text == CompactText(projection.Selection.Meta, 30)
@@ -218,6 +235,21 @@ public partial class HudLayer
             state,
             resolution,
             checks);
+        switch (state.Kind)
+        {
+            case BattleHudRuntimeStateKind.Empty:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.NoSelection, checks);
+                break;
+            case BattleHudRuntimeStateKind.UnitSelected:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.SelectionDetail, checks);
+                break;
+            case BattleHudRuntimeStateKind.ProductionBuildingSelected:
+            case BattleHudRuntimeStateKind.UnavailableLowResources:
+            case BattleHudRuntimeStateKind.QueueProgress:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.BuildingDetail, checks);
+                break;
+        }
+
         RequireRuntimeProbe(
             _unitStanceStrip.Projection == projection.StanceStrip,
             "state:stance-projection",
@@ -232,6 +264,10 @@ public partial class HudLayer
                 state,
                 resolution,
                 checks);
+        }
+        if (state.Kind == BattleHudRuntimeStateKind.UnitSelected)
+        {
+            MarkRuntimeSignal(BattleHudRuntimeSignalId.UniformHoldStance, checks);
         }
 
         ValidateBattleHudRuntimeAlert(state, resolution, checks);
@@ -291,6 +327,19 @@ public partial class HudLayer
             state,
             resolution,
             checks);
+        switch (state.Kind)
+        {
+            case BattleHudRuntimeStateKind.ProductionBuildingSelected:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.ProductionReady, checks);
+                break;
+            case BattleHudRuntimeStateKind.UnavailableLowResources:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.ProductionBlocked, checks);
+                break;
+            case BattleHudRuntimeStateKind.QueueProgress:
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.QueueProgress, checks);
+                MarkRuntimeSignal(BattleHudRuntimeSignalId.QueueCancel, checks);
+                break;
+        }
     }
 
     private void ValidateBattleHudRuntimeAlert(
@@ -307,6 +356,10 @@ public partial class HudLayer
                 && alert.Text == expected.Value.Text
                 && Mathf.IsEqualApprox(alert.RemainingRatio, expected.Value.RemainingRatio);
         RequireRuntimeProbe(matches, "payload:alert", state, resolution, checks);
+        if (state.Kind == BattleHudRuntimeStateKind.Alert)
+        {
+            MarkRuntimeSignal(BattleHudRuntimeSignalId.AlertPayload, checks);
+        }
     }
 
     private static float EffectiveAlpha(CanvasItem control)
@@ -339,6 +392,52 @@ public partial class HudLayer
             or BattleHudRuntimeControlId.ProductionProviderLane0
             or BattleHudRuntimeControlId.ProductionCard
             or BattleHudRuntimeControlId.CancelProduction;
+
+    private static void ValidateBattleHudRuntimeLabelFit(
+        Label label,
+        Rect2 allottedRect,
+        BattleHudRuntimeControlId controlId,
+        BattleHudRuntimeStateSpec state,
+        BattleHudCaptureResolution resolution,
+        List<string> checks)
+    {
+        var minimum = label.GetMinimumSize();
+        var measured = MeasureBattleHudRuntimeLabelText(label);
+        var marker = $"text-fit:{controlId}:minimum={minimum.X:0.##}x{minimum.Y:0.##};" +
+            $"measured={measured.X:0.##}x{measured.Y:0.##};" +
+            $"allotted={allottedRect.Size.X:0.##}x{allottedRect.Size.Y:0.##}";
+        RequireRuntimeProbe(
+            minimum.X <= allottedRect.Size.X + BattleHudRuntimeProbeTolerance
+                && minimum.Y <= allottedRect.Size.Y + BattleHudRuntimeProbeTolerance
+                && measured.X <= allottedRect.Size.X + BattleHudRuntimeProbeTolerance
+                && measured.Y <= allottedRect.Size.Y + BattleHudRuntimeProbeTolerance,
+            marker,
+            state,
+            resolution,
+            checks);
+    }
+
+    private static Vector2 MeasureBattleHudRuntimeLabelText(Label label)
+    {
+        var settings = label.LabelSettings;
+        var font = settings?.Font ?? label.GetThemeFont("font");
+        var fontSize = settings?.FontSize ?? label.GetThemeFontSize("font_size");
+        var lines = label.Text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var width = 0f;
+        foreach (var line in lines)
+        {
+            width = Mathf.Max(width, font.GetStringSize(line, fontSize: fontSize).X);
+        }
+
+        var lineSpacing = label.GetThemeConstant("line_spacing");
+        return new Vector2(
+            width,
+            font.GetHeight(fontSize) * lines.Length
+                + lineSpacing * Math.Max(0, lines.Length - 1));
+    }
+
+    private static void MarkRuntimeSignal(BattleHudRuntimeSignalId signal, List<string> checks) =>
+        checks.Add($"signal:{signal}");
 
     private static void RequireRuntimeProbe(
         bool condition,

@@ -5,8 +5,22 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
 : "${GODOT_BIN:?Set GODOT_BIN to the Godot 4.7 Mono executable.}"
+: "${BATTLE_HUD_CAPTURE_COMMIT:?Set BATTLE_HUD_CAPTURE_COMMIT to the exact checkout SHA.}"
+: "${BATTLE_HUD_CAPTURE_RUN_NONCE:?Set BATTLE_HUD_CAPTURE_RUN_NONCE to this capture run.}"
 command -v xvfb-run >/dev/null
 command -v timeout >/dev/null
+
+checkout_commit="$(git rev-parse HEAD)"
+capture_commit="$BATTLE_HUD_CAPTURE_COMMIT"
+capture_run_nonce="$BATTLE_HUD_CAPTURE_RUN_NONCE"
+if [[ "$capture_commit" != "$checkout_commit" ]]; then
+  echo "Battle HUD capture commit $capture_commit does not match checkout $checkout_commit." >&2
+  exit 1
+fi
+if ! git diff --quiet -- || ! git diff --cached --quiet --; then
+  echo "Battle HUD capture requires a clean tracked working tree and index." >&2
+  exit 1
+fi
 
 output="artifacts/visual-qa"
 log="$output/visual-qa.log"
@@ -92,13 +106,6 @@ assert_png_dimensions battle_hud_1280x720.png 1280 720
 assert_png_dimensions battle_hud_1600x900.png 1600 900
 assert_png_dimensions battle_hud_1920x1080.png 1920 1080
 
-checkout_commit="$(git rev-parse HEAD)"
-capture_commit="${BATTLE_HUD_CAPTURE_COMMIT:-$checkout_commit}"
-if [[ "$capture_commit" != "$checkout_commit" ]]; then
-  echo "Battle HUD capture commit $capture_commit does not match checkout $checkout_commit." >&2
-  exit 1
-fi
-
 structural_evidence="$output/battle-hud-runtime-structural-evidence.json"
 artifact_manifest="$output/battle-hud-runtime-artifact-manifest.json"
 dotnet run \
@@ -108,7 +115,8 @@ dotnet run \
   --write-artifact-manifest \
   "$artifact_manifest" \
   "$structural_evidence" \
-  "$capture_commit"
+  "$capture_commit" \
+  "$capture_run_nonce"
 if [[ ! -s "$artifact_manifest" ]]; then
   echo "Battle HUD artifact manifest is missing or empty: $artifact_manifest" >&2
   exit 1

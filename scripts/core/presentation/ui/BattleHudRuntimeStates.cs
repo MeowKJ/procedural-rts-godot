@@ -35,10 +35,16 @@ public enum BattleHudRuntimeControlId
     MinimapCluster,
     RightRail,
     CommandRibbon,
+    StatusLabel,
     UnitDetailPanel,
+    SelectionTitleLabel,
+    SelectionMetaLabel,
+    SelectionStatsLabel,
+    SelectionDetailLabel,
     UnitStanceStrip,
     StanceHold,
     ProductionPanel,
+    QueueSummaryLabel,
     ProductionProviderLane0,
     ProductionCard,
     QueueMiniStack,
@@ -152,6 +158,8 @@ public sealed record BattleHudRuntimeControlEvidence(
 
 public sealed record BattleHudRuntimeStructuralEvidence(
     string Scenario,
+    string ExactCommit,
+    string CaptureRunNonce,
     string State,
     string CaptureId,
     string FileName,
@@ -225,6 +233,10 @@ public static class BattleHudRuntimeStateCatalog
                     "UNIT SELECTED"),
                 CriticalControls(
                     BattleHudRuntimeControlId.UnitDetailPanel,
+                    BattleHudRuntimeControlId.SelectionTitleLabel,
+                    BattleHudRuntimeControlId.SelectionMetaLabel,
+                    BattleHudRuntimeControlId.SelectionStatsLabel,
+                    BattleHudRuntimeControlId.SelectionDetailLabel,
                     BattleHudRuntimeControlId.UnitStanceStrip,
                     BattleHudRuntimeControlId.StanceHold),
                 Signals(
@@ -348,6 +360,7 @@ public static class BattleHudRuntimeStateCatalog
             BattleHudRuntimeControlId.MinimapCluster,
             BattleHudRuntimeControlId.RightRail,
             BattleHudRuntimeControlId.CommandRibbon,
+            BattleHudRuntimeControlId.StatusLabel,
         };
         controls.AddRange(contextualControls);
         return controls.AsReadOnly();
@@ -356,7 +369,12 @@ public static class BattleHudRuntimeStateCatalog
     private static IReadOnlyList<BattleHudRuntimeControlId> ProductionControls() =>
         CriticalControls(
             BattleHudRuntimeControlId.UnitDetailPanel,
+            BattleHudRuntimeControlId.SelectionTitleLabel,
+            BattleHudRuntimeControlId.SelectionMetaLabel,
+            BattleHudRuntimeControlId.SelectionStatsLabel,
+            BattleHudRuntimeControlId.SelectionDetailLabel,
             BattleHudRuntimeControlId.ProductionPanel,
+            BattleHudRuntimeControlId.QueueSummaryLabel,
             BattleHudRuntimeControlId.ProductionProviderLane0,
             BattleHudRuntimeControlId.ProductionCard,
             BattleHudRuntimeControlId.QueueMiniStack,

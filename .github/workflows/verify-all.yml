@@ -89,7 +89,14 @@ jobs:
         shell: bash
         env:
           BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}
+          BATTLE_HUD_CAPTURE_RUN_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
         run: bash tools/VisualQaCapture.sh
+
+      - name: 验证 Battle HUD 证据完整性
+        shell: bash
+        run: |
+          test -s artifacts/visual-qa/battle-hud-runtime-artifact-manifest.json
+          test -s artifacts/visual-qa/battle-hud-runtime-structural-evidence.json
 
       - name: Upload verification artifacts
         if: always()

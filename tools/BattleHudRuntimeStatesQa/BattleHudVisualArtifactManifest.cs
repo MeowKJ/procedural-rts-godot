@@ -25,6 +25,7 @@ internal sealed record BattleHudVisualArtifactCapture(
 internal sealed record BattleHudVisualArtifactManifest(
     int SchemaVersion,
     string ExactCommit,
+    string CaptureRunNonce,
     string Scenario,
     string StructuralEvidenceFile,
     string Language,
@@ -45,11 +46,24 @@ internal static class BattleHudVisualArtifactManifestWriter
         string manifestPath,
         string structuralEvidencePath,
         string exactCommit,
+        string captureRunNonce,
+        string repositoryHead,
         IReadOnlyList<BattleHudVisualGateCase> gateCases)
     {
         if (exactCommit.Length != 40 || !exactCommit.All(Uri.IsHexDigit))
         {
             throw new InvalidOperationException("Battle HUD artifact manifest requires a 40-character exact commit SHA.");
+        }
+
+        if (!string.Equals(exactCommit, repositoryHead, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD artifact commit {exactCommit} differs from repository HEAD {repositoryHead}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(captureRunNonce))
+        {
+            throw new InvalidOperationException("Battle HUD artifact manifest requires a capture-run nonce.");
         }
 
         if (gateCases.Count != BattleHudRuntimeStateCatalog.States.Count
@@ -90,7 +104,7 @@ internal static class BattleHudVisualArtifactManifestWriter
                     $"Battle HUD structural evidence is missing capture {gateCase.FileName}.");
             }
 
-            ValidateStructuralEvidence(gateCase, structural);
+            ValidateStructuralEvidence(gateCase, structural, exactCommit, captureRunNonce);
             var path = Path.Combine(evidenceDirectory, gateCase.FileName);
             var file = new FileInfo(path);
             if (!file.Exists || file.Length <= 4096)
@@ -135,6 +149,7 @@ internal static class BattleHudVisualArtifactManifestWriter
         var manifest = new BattleHudVisualArtifactManifest(
             SchemaVersion: 1,
             ExactCommit: exactCommit.ToLowerInvariant(),
+            CaptureRunNonce: captureRunNonce,
             Scenario: BattleHudRuntimeStateCatalog.Scenario,
             StructuralEvidenceFile: Path.GetFileName(structuralEvidencePath),
             Language: config.Language.ToString(),
@@ -160,10 +175,14 @@ internal static class BattleHudVisualArtifactManifestWriter
 
     private static void ValidateStructuralEvidence(
         BattleHudVisualGateCase gateCase,
-        BattleHudRuntimeStructuralEvidence structural)
+        BattleHudRuntimeStructuralEvidence structural,
+        string exactCommit,
+        string captureRunNonce)
     {
         if (!structural.Passed
             || structural.Scenario != gateCase.Scenario
+            || !string.Equals(structural.ExactCommit, exactCommit, StringComparison.OrdinalIgnoreCase)
+            || structural.CaptureRunNonce != captureRunNonce
             || structural.State != gateCase.State.ToString()
             || structural.CaptureId != gateCase.CaptureId
             || structural.Width != gateCase.Resolution.Width
@@ -205,15 +224,39 @@ internal static class BattleHudVisualArtifactManifestWriter
                         $"Battle HUD structural evidence has an undersized interactive control {control} in {gateCase.FileName}.");
                 }
             }
-        }
 
-        foreach (var signal in gateCase.RequiredSignals)
-        {
-            if (!structural.Checks.Contains($"signal:{signal}", StringComparer.Ordinal))
+            if (IsTextControl(control)
+                && !structural.Checks.Any(check => check.StartsWith($"text-fit:{control}:", StringComparison.Ordinal)))
             {
                 throw new InvalidOperationException(
-                    $"Battle HUD structural evidence lacks signal:{signal} for {gateCase.FileName}.");
+                    $"Battle HUD structural evidence lacks text-fit:{control} for {gateCase.FileName}.");
             }
+        }
+
+        var signalMarkers = structural.Checks
+            .Where(check => check.StartsWith("signal:", StringComparison.Ordinal))
+            .Select(check => check["signal:".Length..])
+            .ToArray();
+        var actualSignals = signalMarkers.ToHashSet(StringComparer.Ordinal);
+        if (actualSignals.Count != gateCase.RequiredSignals.Count
+            || actualSignals.Count != signalMarkers.Length
+            || !actualSignals.SetEquals(gateCase.RequiredSignals))
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD structural evidence has the wrong exact signal markers for {gateCase.FileName}.");
+        }
+
+        var relationMarkers = structural.Checks
+            .Where(check => check.StartsWith("owner-contains:", StringComparison.Ordinal)
+                || check.StartsWith("forbidden-overlap:", StringComparison.Ordinal))
+            .ToArray();
+        var actualRelations = relationMarkers.ToHashSet(StringComparer.Ordinal);
+        if (actualRelations.Count != gateCase.RequiredRelations.Count
+            || actualRelations.Count != relationMarkers.Length
+            || !actualRelations.SetEquals(gateCase.RequiredRelations))
+        {
+            throw new InvalidOperationException(
+                $"Battle HUD structural evidence has the wrong exact relation markers for {gateCase.FileName}.");
         }
     }
 
@@ -222,6 +265,14 @@ internal static class BattleHudVisualArtifactManifestWriter
             or nameof(BattleHudRuntimeControlId.ProductionProviderLane0)
             or nameof(BattleHudRuntimeControlId.ProductionCard)
             or nameof(BattleHudRuntimeControlId.CancelProduction);
+
+    private static bool IsTextControl(string controlId) =>
+        controlId is nameof(BattleHudRuntimeControlId.StatusLabel)
+            or nameof(BattleHudRuntimeControlId.SelectionTitleLabel)
+            or nameof(BattleHudRuntimeControlId.SelectionMetaLabel)
+            or nameof(BattleHudRuntimeControlId.SelectionStatsLabel)
+            or nameof(BattleHudRuntimeControlId.SelectionDetailLabel)
+            or nameof(BattleHudRuntimeControlId.QueueSummaryLabel);
 
     private static (int Width, int Height) ReadPngDimensions(string path)
     {
