@@ -27,7 +27,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $tagCommit = ((& git -C $project rev-parse "$($identity.tag)^{commit}" 2>$null) | Out-String).Trim()
-if ($LASTEXITCODE -eq 0 -and $tagCommit -ne $resolvedCommit) {
+$tagExists = $LASTEXITCODE -eq 0
+if ($tagExists -and $tagCommit -ne $resolvedCommit) {
     throw "Existing tag '$($identity.tag)' points at $tagCommit rather than verified commit $resolvedCommit."
 }
 
@@ -49,7 +50,7 @@ if (-not $Publish) {
     exit 0
 }
 
-if ($LASTEXITCODE -ne 0) {
+if (-not $tagExists) {
     & git -C $project tag -a $identity.tag $resolvedCommit -m "Procedural RTS $($identity.version)"
     if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag $($identity.tag)." }
     & git -C $project push origin $identity.tag
@@ -58,5 +59,5 @@ if ($LASTEXITCODE -ne 0) {
 
 & gh auth status
 if ($LASTEXITCODE -ne 0) { throw "GitHub authentication is required to publish the prerelease." }
-& gh release create $identity.tag @assets --repo MeowKJ/procedural-rts-godot --title "Procedural RTS $($identity.version)" --prerelease --notes "Windows x86_64 Map Authoring Preview RC. This prerelease is unsigned and has no installer or auto-update. It does not include macOS packaging, Linux runtime acceptance, or campaign expansion. Verify SHA256SUMS.txt before running."
+& gh release create $identity.tag @assets --repo MeowKJ/procedural-rts-godot --target $resolvedCommit --title "Procedural RTS $($identity.version)" --prerelease --notes "Windows x86_64 Map Authoring Preview RC. This prerelease is unsigned and has no installer or auto-update. It does not include macOS packaging, Linux runtime acceptance, or campaign expansion. Verify SHA256SUMS.txt before running."
 if ($LASTEXITCODE -ne 0) { throw "Failed to publish prerelease $($identity.tag)." }

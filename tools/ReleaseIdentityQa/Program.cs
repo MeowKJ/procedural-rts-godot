@@ -26,6 +26,10 @@ Require(preset.Contains($"application/file_version=\"{windowsVersion}\"", String
 Require(preset.Contains($"application/product_version=\"{windowsVersion}\"", StringComparison.Ordinal), "Windows product version must match release identity");
 var menu = File.ReadAllText(Path.Combine(root, "scripts", "main-menu", "MainMenuRoot.Build.cs"));
 Require(menu.Contains("ReleaseIdentity.Current.Version", StringComparison.Ordinal) && menu.Contains("ReleaseVersion", StringComparison.Ordinal), "Main menu must render canonical release identity");
+var publisher = File.ReadAllText(Path.Combine(root, "tools", "PublishWindowsPrerelease.ps1"));
+Require(publisher.Contains("$tagExists = $LASTEXITCODE -eq 0", StringComparison.Ordinal), "publisher must retain missing-tag state before invoking other commands");
+Require(publisher.Contains("if (-not $tagExists)", StringComparison.Ordinal), "publisher must explicitly create a missing tag at the verified commit");
+Require(publisher.Contains("--target $resolvedCommit", StringComparison.Ordinal), "publisher must target the verified commit when creating the prerelease");
 
 Console.WriteLine($"ReleaseIdentityQa PASSED: {tag}, Windows {windowsVersion}, sample {sampleId} {sampleHash}.");
 
