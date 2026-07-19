@@ -1,7 +1,11 @@
 name: Preflight
 
 on:
-  pull_request: {}
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'codex/**'
 
 permissions:
   contents: read
@@ -41,4 +45,11 @@ jobs:
 
       - name: Diff whitespace check
         shell: bash
-        run: git diff --check "origin/${{ github.base_ref }}...HEAD"
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            git diff --check HEAD^ HEAD
+          else
+            git fetch origin main --no-tags --depth=1
+            git diff --check origin/main...HEAD
+          fi
