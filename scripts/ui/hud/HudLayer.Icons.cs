@@ -5,7 +5,7 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
-    private static void DrawIconGlyph(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
+    internal static void DrawIconGlyph(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
     {
         if (TryDrawIconTexture(canvas, glyph, center, size, color))
         {

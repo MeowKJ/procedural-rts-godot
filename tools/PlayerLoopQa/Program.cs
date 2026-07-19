@@ -468,6 +468,40 @@ static void AssertCommandGatewayLivePlayerLoop()
         "live build command should pass through CommandGateway before reaching ConstructionSystem");
 }
 
+static void AssertRejectedStanceProjectionRemainsAuthoritative()
+{
+    var submission = new CommandGatewaySubmission(
+        new PlayerControllerId("qa-stance-strip"),
+        PlayerControllerKind.QaAgent,
+        [PlayerSlotId.One],
+        CurrentTick: 1);
+    var uniformHold = UnitStanceStripProjection.FromSelection(UnitStance.Hold, selectedUnitCount: 2);
+    var tooManySubjects = new PlayerCommand(
+        PlayerSlotId.One,
+        ClientSequence: 1,
+        TargetTick: 1,
+        PlayerCommandKind.SetStance,
+        PlayerCommandPayload.ForSubjects([new EntityId(1), new EntityId(2)]) with { Stance = UnitStance.Aggressive });
+    var tooManyResult = new CommandGateway(new CommandGatewayOptions(MaxSubjectsPerCommand: 1))
+        .Submit(submission, [tooManySubjects]);
+    RequireRejected(tooManyResult, CommandGatewayValidationError.TooManySubjects,
+        "stance intent above the subject limit should reject");
+    Require(uniformHold.IsSelected(UnitStance.Hold) && !uniformHold.IsSelected(UnitStance.Aggressive),
+        "TooManySubjects rejection must preserve the last authoritative Hold projection");
+
+    var noSelection = UnitStanceStripProjection.None;
+    var emptySubjects = tooManySubjects with
+    {
+        ClientSequence = 2,
+        Payload = PlayerCommandPayload.ForSubjects(Array.Empty<EntityId>()) with { Stance = UnitStance.Aggressive },
+    };
+    var noSelectionResult = new CommandGateway().Submit(submission, [emptySubjects]);
+    RequireRejected(noSelectionResult, CommandGatewayValidationError.InvalidPayloadShape,
+        "stance intent without selected subjects should reject");
+    Require(noSelection == UnitStanceStripProjection.None,
+        "No-selection rejection must preserve the empty authoritative projection");
+}
+
 static void RequireRejected(CommandGatewayResult result, CommandGatewayValidationError expected, string message)
 {
     Require(result.RejectedCount == 1, message);
@@ -483,8 +517,9 @@ AssertSelectionCommandsAndStance();
 AssertLiveSharedCorridorPathing();
 AssertVictoryAndDefeat();
 AssertCommandGatewayLivePlayerLoop();
+AssertRejectedStanceProjectionRemainsAuthoritative();
 
-Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, victory/defeat, and live CommandGateway player loop.");
+Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, rejected stance projection preservation, victory/defeat, and live CommandGateway player loop.");
 
 sealed class MoveFirstOwnedUnitAgent : IPlayerAgent
 {

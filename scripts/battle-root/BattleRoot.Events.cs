@@ -420,7 +420,7 @@ public partial class BattleRoot
                 return;
             }
 
-            _hud.SetSelectedUnitStance(stance, changed);
+            RefreshSelectionInfo();
             _hud.SetStatus(GameText.Format("stance.changed", changed, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
             PlayAudioCue(TacticalAudioCue.Selection);
             return;

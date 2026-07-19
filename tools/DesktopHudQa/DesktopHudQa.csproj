@@ -11,6 +11,7 @@
     <Compile Include="..\..\scripts\core\presentation\ui\CatalogInspectorState.cs" Link="CatalogInspectorState.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\IconGlyph.cs" Link="IconGlyph.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\UnitStancePresentation.cs" Link="UnitStancePresentation.cs" />
+    <Compile Include="..\..\scripts\core\presentation\ui\UnitStanceStripProjection.cs" Link="UnitStanceStripProjection.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\CommandRibbonContextState.cs" Link="CommandRibbonContextState.cs" />
     <Compile Include="..\..\scripts\core\commands\CommandPreviewKind.cs" Link="CommandPreviewKind.cs" />
     <Compile Include="..\..\scripts\core\commands\CommandPreviewPhase.cs" Link="CommandPreviewPhase.cs" />

@@ -7,6 +7,7 @@ static class PresentationReviewGate
         RequireWorldPresentation(root, result);
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);
+        UnitStanceStripReviewGate.Check(root, result);
         HoverTooltipReviewGate.Check(root, result);
         CombatReadabilityReviewGate.Check(root, result);
         ClassSilhouetteReviewGate.Check(root, result);

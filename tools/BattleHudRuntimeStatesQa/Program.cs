@@ -44,10 +44,15 @@ foreach (var state in states)
 var empty = BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.Empty).Projection;
 Require(empty.Selection.Kind == BattleHudSelectionKind.None && !empty.Production.Visible && empty.Alert is null,
     "empty must be a clean no-selection projection", failures);
+Require(empty.StanceStrip == UnitStanceStripProjection.None,
+    "empty must keep the stance strip on its zero-selection projection", failures);
 
 var unit = BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.UnitSelected).Projection;
 Require(unit.Selection.Kind == BattleHudSelectionKind.Unit && !unit.Production.Visible,
     "unit-selected must expose selection detail without production state", failures);
+Require(unit.StanceStrip.State == UnitStanceStripSelectionState.Uniform
+    && unit.StanceStrip.IsSelected(UnitStance.Hold),
+    "unit-selected must source a uniform Hold stance projection for the pilot screenshot", failures);
 
 var building = BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.ProductionBuildingSelected).Projection;
 Require(building.Selection.Kind == BattleHudSelectionKind.ProductionBuilding
@@ -82,6 +87,8 @@ var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
         SearchOption.TopDirectoryOnly).Select(File.ReadAllText));
 RequireText(applicator, "ApplyBattleHudRuntimeProjection(BattleHudRuntimeProjection projection)",
     "HudLayer must consume the typed read-only runtime projection", failures);
+RequireText(applicator, "SetSelectedUnitStance(projection.StanceStrip.SelectedStance, projection.StanceStrip.SelectedUnitCount)",
+    "runtime state applicator must feed the source stance projection through HudLayer", failures);
 Require(!applicator.Contains("UnitBattlefield", StringComparison.Ordinal),
     "runtime state applicator must not reach into gameplay authority", failures);
 Require(!applicator.Contains("SetProcess(false)", StringComparison.Ordinal)
