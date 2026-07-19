@@ -49,6 +49,8 @@ Require(!updated.Entity.Selected && updated.AlertPulse == 0.9f && updated.Comman
 Require(updated.Cargo == 0 && updated.HarvestPulse == 0 && !updated.IsMoving,
     "projection must clear stale economy and movement feedback", failures);
 
+UnitPresentationProjectionRuntimeScenarios.Run(failures);
+
 if (failures.Count > 0)
 {
     Console.Error.WriteLine("UnitPresentationProjectionQa FAILED");
