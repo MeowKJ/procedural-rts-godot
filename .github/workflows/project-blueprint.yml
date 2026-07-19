@@ -16,7 +16,7 @@ concurrency:
 jobs:
   render:
     name: Render native milestone DAG
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 5
 
     steps:
