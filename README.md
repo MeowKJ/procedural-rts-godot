@@ -72,6 +72,19 @@ powershell -ExecutionPolicy Bypass -File .\tools\ExportSmoke.ps1
 After merged-main verification and physical Windows acceptance evidence, use
 `tools/PublishWindowsPrerelease.ps1` with `-Publish`; it refuses to publish
 without the exact release commit, checked assets, and supplied acceptance evidence.
+The evidence is a `procedural-rts.windows-acceptance` schema-v1 JSON record
+bound to the generated package SHA-256, authored sample id/hash, exact commit,
+UTC acceptance time, redacted Windows host metadata, and explicit successful
+interactive checks for extract, launch, preview entry, authored-map load, and
+return to normal skirmish. Validate it before publishing with:
+
+```powershell
+dotnet run --project .\tools\WindowsAcceptanceEvidence\WindowsAcceptanceEvidence.csproj -- `
+  --evidence .\windows-acceptance.json `
+  --identity .\assets\release\release-identity.json `
+  --release-root .\builds\release `
+  --commit <verified-merged-main-sha>
+```
 
 ## Current Prototype
 
