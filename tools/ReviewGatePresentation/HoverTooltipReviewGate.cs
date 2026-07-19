@@ -23,6 +23,7 @@ static class HoverTooltipReviewGate
         var battleRootAlerts = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Alerts.cs");
         var hudPreview = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
+        var stanceStrip = ReviewGateSource.Read(root, "scripts", "ui", "UnitStanceStrip.cs");
         var englishText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
 
@@ -108,7 +109,8 @@ static class HoverTooltipReviewGate
         RequireText(stancePresentation, "UnitStance.Hold, \"stance.hold\", IconGlyph.StanceHold, 'Z', UnitStanceAccentRole.CatRoute", "Stance presentation catalog must preserve Hold metadata.", result);
         RequireText(stancePresentation, "UnitStance.Ignore, \"stance.ignore\", IconGlyph.StanceIgnore, 'B', UnitStanceAccentRole.Danger", "Stance presentation catalog must preserve Ignore metadata.", result);
         RequireText(selectionHotkeys, "UnitStancePresentationCatalog.TryDefinitionForHotkey", "Selection hotkeys must consume the shared stance presentation catalog.", result);
-        RequireText(hudLayer, "UnitStancePresentationCatalog.Definitions", "Command ribbon construction must consume the shared stance presentation catalog.", result);
+        RequireText(hudLayer, "new UnitStanceStrip", "Command ribbon construction must compose the reusable stance strip.", result);
+        RequireText(stanceStrip, "UnitStancePresentationCatalog.Definitions", "UnitStanceStrip must consume the shared stance presentation catalog.", result);
         RequireText(battleRoot, "UnitStancePresentationCatalog.DefinitionFor(stance).Label", "BattleRoot stance status must consume the shared localized label.", result);
         ForbidText(battleRoot, "StanceLabel(UnitStance stance)", "BattleRoot must not retain a duplicate stance label switch.", result);
         ForbidText(selectionHotkeys, "Key.Z => UnitStance.Hold", "SelectionController must not retain a duplicate stance hotkey switch.", result);
