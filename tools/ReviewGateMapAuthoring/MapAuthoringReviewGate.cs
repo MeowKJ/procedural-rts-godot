@@ -73,11 +73,12 @@ static class MapAuthoringReviewGate
         RequireText(entityWorld, "MapEnvironment.NarrativeNodes.Count", "Deterministic state hash must include authored narrative metadata.", result);
         RequireText(runtimeEnvironment, "AppendAuthoredTerrainGrid", "Runtime environment must rasterize authored terrain for pathfinding.", result);
         RequireText(runtimeEnvironment, "AppendStaticObstacleGrid", "Runtime environment must rasterize static obstacles for pathfinding.", result);
-        var constructionPlacement = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "construction", "ConstructionSystem.PlacementQueries.cs");
-        RequireText(constructionPlacement, "world.MapEnvironment.StaticObstacles", "Construction must consume static environment rectangles.", result);
-        RequireText(constructionPlacement, "ResourceNodeComponentState", "Construction must treat live resource nodes as placement exclusions.", result);
-        RequireText(constructionPlacement, "MapPlacementRules.ResourceClearance(spec)", "Construction must use the shared one-cell resource rule.", result);
-        RequireText(constructionPlacement, "world.MapEnvironment.SampleTerrain", "Construction must consume authored terrain with procedural fallback.", result);
+        var constructionEnvironment = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "construction", "ConstructionSystem.PlacementEnvironment.cs");
+        var constructionObstacles = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "construction", "ConstructionSystem.PlacementObstacles.cs");
+        RequireText(constructionEnvironment, "world.MapEnvironment.StaticObstacles", "Construction must consume static environment rectangles.", result);
+        RequireText(constructionEnvironment, "ResourceNodeComponentState", "Construction must treat live resource nodes as placement exclusions.", result);
+        RequireText(constructionObstacles, "MapPlacementRules.ResourceClearance(spec)", "Construction must use the shared one-cell resource rule.", result);
+        RequireText(constructionEnvironment, "world.MapEnvironment.SampleTerrain", "Construction must consume authored terrain with procedural fallback.", result);
         var pathfinding = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs");
         RequireText(pathfinding, "PathfindingStaticGrid.FillEnvironment", "Pathfinding must consume the shared authored static-grid seam.", result);
         RequireText(pathfinding, "PathfindingStaticGrid.AppendCircle", "Pathfinding must consume shared static circle rasterization.", result);
