@@ -32,7 +32,9 @@ public static class ProjectReadyReport
         var open = output.Evaluated.Where(item => item.State == "OPEN").ToList();
         var inProgress = open.Where(item => item.Workflow == "In Progress").ToList();
         var review = open.Where(item => item.Workflow == "Review").ToList();
-        var blocked = open.Where(item => item.Paused || item.OpenBlockers.Count > 0).ToList();
+        var blocked = open.Where(IsBlocked).ToList();
+        var actionableReview = review.Where(item => !IsBlocked(item)).ToList();
+        var actionableInProgress = inProgress.Where(item => !IsBlocked(item)).ToList();
         var completed = output.Evaluated.Where(item => item.State == "CLOSED" || item.Workflow == "Done").ToList();
         var categorized = output.Eligible
             .Concat(inProgress)
@@ -80,7 +82,7 @@ public static class ProjectReadyReport
         lines.Add(string.Empty);
         lines.Add("## 下一步");
         lines.Add(string.Empty);
-        lines.Add(NextAction(output, review, inProgress, blocked));
+        lines.Add(NextAction(output, actionableReview, actionableInProgress, blocked));
         lines.Add(string.Empty);
         lines.Add("机器判定只读取同一 artifact 中的 `ai-ready.json`；本中文报告、`status:ready`、`size:*` 和兼容 `Status` 字段均不参与领取判定。`status:paused` 仍是规范暂停信号。");
         return string.Join(Environment.NewLine, lines) + Environment.NewLine;
@@ -114,6 +116,9 @@ public static class ProjectReadyReport
 
         return "当前没有可安全领取任务；先补齐 Project 规范字段、验收标准和验证门禁。";
     }
+
+    private static bool IsBlocked(ProjectReadyEvaluation item) =>
+        item.Paused || item.OpenBlockers.Count > 0;
 
     private static void AddTable(List<string> lines, IReadOnlyList<ProjectReadyEvaluation> items, bool includeReasons)
     {
