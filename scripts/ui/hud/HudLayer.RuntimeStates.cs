@@ -13,6 +13,7 @@ public partial class HudLayer
 
         SetResourceCredits(projection.Credits);
         SetHudContext(hasSelection, hasBuildingSelection, buildModeActive: false);
+        SetSelectedUnitStance(projection.StanceStrip.SelectedStance, projection.StanceStrip.SelectedUnitCount);
         SetSelectionInfo(
             selection.Title,
             selection.Meta,

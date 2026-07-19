@@ -105,11 +105,21 @@ public partial class HudLayer : CanvasLayer
         _commandRibbon.Visible = true;
         root.AddChild(_commandRibbon);
 
-        for (var index = 0; index < UnitStancePresentationCatalog.Definitions.Length; index++)
+        _unitStanceStrip = new UnitStanceStrip
         {
-            var presentation = UnitStancePresentationCatalog.Definitions[index];
-            AddStanceModeButton(_commandRibbon, presentation, new Vector2(6 + index * 44, 6));
-        }
+            Name = "UnitStanceStrip",
+            Position = new Vector2(6, 6),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            IntentRequested = stance => UnitStanceRequested?.Invoke(stance),
+            HoverStarted = presentation => ShowFixedHoverText(
+                $"stance.{presentation.Stance}",
+                presentation.Tooltip,
+                UiFactory.HudStanceAccent(presentation.AccentRole, CurrentPalette)),
+            HoverEnded = presentation => ClearFixedHoverText($"stance.{presentation.Stance}"),
+        };
+        _unitStanceStrip.ApplyTheme(CurrentPalette, FontTiny);
+        _unitStanceStrip.ApplyProjection(UnitStanceStripProjection.FromSelection(_selectedUnitStance, _selectedUnitCount));
+        _commandRibbon.AddChild(_unitStanceStrip);
 
         AddSeparator(_commandRibbon, new Vector2(234, 8));
         AddMoveModeButton(_commandRibbon, MoveCommandMode.Direct, IconGlyph.Move, GameText.T("ui.tooltip.directMove"), new Vector2(244, 6));

@@ -90,6 +90,7 @@ public readonly record struct BattleHudAlertProjection(
 
 public sealed record BattleHudRuntimeProjection(
     BattleHudSelectionProjection Selection,
+    UnitStanceStripProjection StanceStrip,
     int Credits,
     BattleHudProductionProjection Production,
     BattleHudAlertProjection? Alert,
@@ -136,6 +137,7 @@ public static class BattleHudRuntimeStateCatalog
                 BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     BattleHudSelectionProjection.Empty,
+                    UnitStanceStripProjection.None,
                     400,
                     BattleHudProductionProjection.None,
                     null,
@@ -155,6 +157,7 @@ public static class BattleHudRuntimeStateCatalog
                         "RECON INFANTRY / DIRECT FIRE",
                         "unit",
                         IconGlyph.Infantry),
+                    UnitStanceStripProjection.FromSelection(UnitStance.Hold, selectedUnitCount: 1),
                     400,
                     BattleHudProductionProjection.None,
                     null,
@@ -167,6 +170,7 @@ public static class BattleHudRuntimeStateCatalog
                 BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     ProductionBuildingSelection(),
+                    UnitStanceStripProjection.None,
                     640,
                     AvailableProduction(),
                     null,
@@ -179,6 +183,7 @@ public static class BattleHudRuntimeStateCatalog
                 BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     ProductionBuildingSelection(),
+                    UnitStanceStripProjection.None,
                     40,
                     AvailableProduction() with
                     {
@@ -195,6 +200,7 @@ public static class BattleHudRuntimeStateCatalog
                 BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     ProductionBuildingSelection(),
+                    UnitStanceStripProjection.None,
                     640,
                     AvailableProduction() with
                     {
@@ -213,6 +219,7 @@ public static class BattleHudRuntimeStateCatalog
                 BattleHudCommandIntentKind.None,
                 new BattleHudRuntimeProjection(
                     BattleHudSelectionProjection.Empty,
+                    UnitStanceStripProjection.None,
                     80,
                     BattleHudProductionProjection.None,
                     new BattleHudAlertProjection(AlertKind.Economy, "INSUFFICIENT CREDITS", 1),

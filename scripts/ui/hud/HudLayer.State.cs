@@ -22,8 +22,6 @@ public partial class HudLayer : CanvasLayer
     private static Color Mint => CurrentPalette.Repair;
     private static Color Amber => CurrentPalette.DogCommand;
     private static Color Danger => CurrentPalette.Danger;
-    private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
-
     private Label _creditsValue = null!;
     private Label _drawerSelectedTitle = null!;
     private Label _drawerSelectedMeta = null!;
@@ -44,6 +42,7 @@ public partial class HudLayer : CanvasLayer
     private Label _outcomeDetail = null!;
     private Panel _outcomeBanner = null!;
     private Panel _commandRibbon = null!;
+    private UnitStanceStrip _unitStanceStrip = null!;
     private Panel _sandboxDeveloperPanel = null!;
     private Panel _rightRail = null!;
     private Panel _rightProductionPanel = null!;
@@ -68,7 +67,6 @@ public partial class HudLayer : CanvasLayer
     private readonly List<AlertRow> _alertRows = [];
     private readonly List<ControlGroupSlot> _controlGroupSlots = [];
     private readonly List<MoveModeButton> _moveModeButtons = [];
-    private readonly List<StanceModeButton> _stanceModeButtons = [];
     private readonly Dictionary<string, CommandButton> _commandButtons = [];
     private readonly List<BuildOptionSnapshot> _buildCardStates = [];
     private readonly List<BuildOptionSnapshot> _visibleBuildCardStates = [];

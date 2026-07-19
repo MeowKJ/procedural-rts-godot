@@ -16,12 +16,10 @@ public partial class HudLayer
 
     public void SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)
     {
-        _selectedUnitStance = stance;
-        _selectedUnitCount = Math.Max(0, selectedUnitCount);
-        foreach (var button in _stanceModeButtons)
-        {
-            button.SetSelected(stance is not null && button.Stance == stance.Value);
-        }
+        var projection = UnitStanceStripProjection.FromSelection(stance, selectedUnitCount);
+        _selectedUnitStance = projection.SelectedStance;
+        _selectedUnitCount = projection.SelectedUnitCount;
+        _unitStanceStrip?.ApplyProjection(projection);
         RefreshCommandRibbonContext();
     }
 

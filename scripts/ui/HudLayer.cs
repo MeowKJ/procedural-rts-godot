@@ -128,11 +128,6 @@ public partial class HudLayer : CanvasLayer
             _minimapSurface.FogMask = null;
         }
 
-        foreach (var texture in IconTextureCache.Values)
-        {
-            ManagedGodotResourceCleanup.DisposeGodotObject(texture);
-        }
-
-        IconTextureCache.Clear();
+        HudIconRenderer.ReleaseManagedResources();
     }
 }

@@ -483,8 +483,9 @@ AssertSelectionCommandsAndStance();
 AssertLiveSharedCorridorPathing();
 AssertVictoryAndDefeat();
 AssertCommandGatewayLivePlayerLoop();
+UnitStanceGatewayProjectionQa.Assert();
 
-Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, victory/defeat, and live CommandGateway player loop.");
+Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, live stance authority projection, victory/defeat, and live CommandGateway player loop.");
 
 sealed class MoveFirstOwnedUnitAgent : IPlayerAgent
 {
