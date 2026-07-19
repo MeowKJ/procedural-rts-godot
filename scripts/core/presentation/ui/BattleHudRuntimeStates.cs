@@ -221,8 +221,8 @@ public static class BattleHudRuntimeStateCatalog
                         BattleHudSelectionKind.Unit,
                         "ALLEY RUNNER",
                         "READY",
-                        "HP 180  SPD 92  RNG 140",
-                        "RECON INFANTRY / DIRECT FIRE",
+                        "HP180 SPD92 RNG140",
+                        "RECON / DIRECT FIRE",
                         "unit",
                         IconGlyph.Infantry),
                     UnitStanceStripProjection.FromSelection(UnitStance.Hold, selectedUnitCount: 1),
@@ -296,7 +296,7 @@ public static class BattleHudRuntimeStateCatalog
                     {
                         QueuedCount = 4,
                         ActiveProgress = 0.56f,
-                        QueueSummary = "ALLEY RUNNER  56%  QUEUED 4",
+                        QueueSummary = "RUNNER 56%  Q4",
                         CanCancel = true,
                     },
                     null,
@@ -336,7 +336,7 @@ public static class BattleHudRuntimeStateCatalog
         BattleHudSelectionKind.ProductionBuilding,
         "CAT BARRACKS",
         "OPERATIONAL",
-        "HP 1200 / 1200  POWER +0",
+        "HP1200/1200 PWR+0",
         "SELL REFUND 300",
         "building",
         IconGlyph.Building);

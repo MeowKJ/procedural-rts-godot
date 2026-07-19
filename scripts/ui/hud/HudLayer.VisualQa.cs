@@ -123,7 +123,8 @@ public partial class HudLayer
                 $"owner-contains:{owner}>{child}",
                 state,
                 resolution,
-                checks);
+                checks,
+                $"owner={FormatRect(ownerRect)} child={FormatRect(childRect)}");
         }
 
         foreach (var (first, second) in BattleHudRuntimeForbiddenOverlaps)
@@ -439,17 +440,22 @@ public partial class HudLayer
     private static void MarkRuntimeSignal(BattleHudRuntimeSignalId signal, List<string> checks) =>
         checks.Add($"signal:{signal}");
 
+    private static string FormatRect(Rect2 rect) =>
+        $"{rect.Position.X:0.##},{rect.Position.Y:0.##} {rect.Size.X:0.##}x{rect.Size.Y:0.##}";
+
     private static void RequireRuntimeProbe(
         bool condition,
         string check,
         BattleHudRuntimeStateSpec state,
         BattleHudCaptureResolution resolution,
-        List<string> checks)
+        List<string> checks,
+        string? failureDetail = null)
     {
         if (!condition)
         {
             throw new InvalidOperationException(
-                $"Battle HUD runtime probe failed {state.CaptureId}/{resolution.Suffix}: {check}.");
+                $"Battle HUD runtime probe failed {state.CaptureId}/{resolution.Suffix}: {check}" +
+                (failureDetail is null ? "." : $" ({failureDetail})."));
         }
 
         checks.Add(check);
