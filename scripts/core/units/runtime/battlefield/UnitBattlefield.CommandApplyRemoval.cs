@@ -82,6 +82,14 @@ public sealed partial class UnitBattlefield
         }
 
         unit.CommandPulse = 1;
+        if (entity.Components.TryGet<PresentationPulseComponentState>(out var pulse))
+        {
+            entity.Components.Set(pulse with { CommandPulse = 1 });
+        }
+        else
+        {
+            entity.Components.Set(new PresentationPulseComponentState(CommandPulse: 1));
+        }
     }
 
 }
