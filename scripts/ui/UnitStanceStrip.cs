@@ -6,6 +6,7 @@ namespace ProceduralRts.Ui;
 public partial class UnitStanceStrip : Control
 {
     private const int ButtonSize = 44;
+    private static readonly Vector2 MinimumStripSize = new(220, 44);
 
     private readonly List<StanceButton> _buttons = [];
     private UnitStanceStripProjection _projection = UnitStanceStripProjection.None;
@@ -16,6 +17,12 @@ public partial class UnitStanceStrip : Control
     public Action<UnitStancePresentation>? HoverStarted { get; init; }
     public Action<UnitStancePresentation>? HoverEnded { get; init; }
     public UnitStanceStripProjection Projection => _projection;
+
+    public UnitStanceStrip()
+    {
+        CustomMinimumSize = MinimumStripSize;
+        Size = MinimumStripSize;
+    }
 
     public override void _Ready()
     {
@@ -97,7 +104,7 @@ public partial class UnitStanceStrip : Control
             var style = UiFactory.GetHudModeButtonDrawStyle(accent, _selected);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            HudLayer.DrawIconGlyph(this, Presentation.Glyph, rect.Size / 2f, 28, style.Icon);
+            HudIconRenderer.Draw(this, Presentation.Glyph, rect.Size / 2f, 28, style.Icon);
         }
     }
 }

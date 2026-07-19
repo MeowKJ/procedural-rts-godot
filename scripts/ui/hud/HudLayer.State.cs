@@ -22,8 +22,6 @@ public partial class HudLayer : CanvasLayer
     private static Color Mint => CurrentPalette.Repair;
     private static Color Amber => CurrentPalette.DogCommand;
     private static Color Danger => CurrentPalette.Danger;
-    private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
-
     private Label _creditsValue = null!;
     private Label _drawerSelectedTitle = null!;
     private Label _drawerSelectedMeta = null!;

@@ -468,38 +468,98 @@ static void AssertCommandGatewayLivePlayerLoop()
         "live build command should pass through CommandGateway before reaching ConstructionSystem");
 }
 
-static void AssertRejectedStanceProjectionRemainsAuthoritative()
+static void AssertLiveStanceProjectionAuthority()
 {
-    var submission = new CommandGatewaySubmission(
-        new PlayerControllerId("qa-stance-strip"),
-        PlayerControllerKind.QaAgent,
-        [PlayerSlotId.One],
-        CurrentTick: 1);
-    var uniformHold = UnitStanceStripProjection.FromSelection(UnitStance.Hold, selectedUnitCount: 2);
-    var tooManySubjects = new PlayerCommand(
-        PlayerSlotId.One,
-        ClientSequence: 1,
-        TargetTick: 1,
-        PlayerCommandKind.SetStance,
-        PlayerCommandPayload.ForSubjects([new EntityId(1), new EntityId(2)]) with { Stance = UnitStance.Aggressive });
-    var tooManyResult = new CommandGateway(new CommandGatewayOptions(MaxSubjectsPerCommand: 1))
-        .Submit(submission, [tooManySubjects]);
-    RequireRejected(tooManyResult, CommandGatewayValidationError.TooManySubjects,
-        "stance intent above the subject limit should reject");
-    Require(uniformHold.IsSelected(UnitStance.Hold) && !uniformHold.IsSelected(UnitStance.Aggressive),
-        "TooManySubjects rejection must preserve the last authoritative Hold projection");
-
-    var noSelection = UnitStanceStripProjection.None;
-    var emptySubjects = tooManySubjects with
+    var acceptedBattlefield = NewBattlefield();
+    var acceptedUnits = new[]
     {
-        ClientSequence = 2,
-        Payload = PlayerCommandPayload.ForSubjects(Array.Empty<EntityId>()) with { Stance = UnitStance.Aggressive },
+        acceptedBattlefield.Spawn("dog.guard_tank", PlayerSlotId.One, new Vector2(420, 420)),
+        acceptedBattlefield.Spawn("dog.rocket", PlayerSlotId.One, new Vector2(480, 420)),
     };
-    var noSelectionResult = new CommandGateway().Submit(submission, [emptySubjects]);
-    RequireRejected(noSelectionResult, CommandGatewayValidationError.InvalidPayloadShape,
-        "stance intent without selected subjects should reject");
-    Require(noSelection == UnitStanceStripProjection.None,
-        "No-selection rejection must preserve the empty authoritative projection");
+    acceptedBattlefield.SelectUnitsByIds(PlayerSlotId.One, acceptedUnits.Select(unit => unit.Id));
+    var aggressiveProjection = ProjectSelectedUnitStance(acceptedBattlefield, PlayerSlotId.One);
+    Require(aggressiveProjection.State == UnitStanceStripSelectionState.Uniform
+        && aggressiveProjection.IsSelected(UnitStance.Aggressive),
+        "live stance projection should start from the selected entities' Aggressive authority state");
+
+    var acceptedSubjects = acceptedBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
+    var commandsBeforeAccepted = acceptedBattlefield.AppliedInputCommandCount;
+    var acceptedResult = acceptedBattlefield.SubmitLiveLocalPlayerCommand(
+        PlayerSlotId.One,
+        PlayerCommandKind.SetStance,
+        PlayerCommandPayload.ForSubjects(acceptedSubjects) with { Stance = UnitStance.Hold });
+    Require(acceptedResult.AcceptedCount == 1,
+        "live SetStance should pass through the default gateway and real UnitBattlefield sink");
+    Require(acceptedBattlefield.AppliedInputCommandCount == commandsBeforeAccepted + 1,
+        "accepted live SetStance should apply exactly one authoritative input command");
+    Require(acceptedUnits.All(unit => unit.Stance == UnitStance.Hold),
+        "accepted live SetStance should update every selected entity stance");
+    var holdProjection = ProjectSelectedUnitStance(acceptedBattlefield, PlayerSlotId.One);
+    Require(holdProjection.State == UnitStanceStripSelectionState.Uniform
+        && holdProjection.SelectedUnitCount == acceptedUnits.Length
+        && holdProjection.IsSelected(UnitStance.Hold),
+        "accepted live SetStance should rebuild a uniform Hold projection from entities");
+
+    const int tooManySubjectCount = 257;
+    var rejectedBattlefield = NewBattlefield();
+    var rejectedUnits = new List<UnitInstance>(tooManySubjectCount);
+    for (var index = 0; index < tooManySubjectCount; index++)
+    {
+        rejectedUnits.Add(rejectedBattlefield.Spawn(
+            "dog.guard_tank",
+            PlayerSlotId.One,
+            new Vector2(160 + index % 32 * 24, 160 + index / 32 * 24)));
+    }
+
+    rejectedBattlefield.SelectUnitsByIds(PlayerSlotId.One, rejectedUnits.Select(unit => unit.Id));
+    var tooManySubjects = rejectedBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
+    Require(tooManySubjects.Count == tooManySubjectCount,
+        "TooManySubjects scenario must use 257 real selected entity ids");
+    var projectionBeforeRejection = ProjectSelectedUnitStance(rejectedBattlefield, PlayerSlotId.One);
+    var commandsBeforeRejection = rejectedBattlefield.AppliedInputCommandCount;
+    var tooManyResult = rejectedBattlefield.SubmitLiveLocalPlayerCommand(
+        PlayerSlotId.One,
+        PlayerCommandKind.SetStance,
+        PlayerCommandPayload.ForSubjects(tooManySubjects) with { Stance = UnitStance.Hold });
+    RequireRejected(tooManyResult, CommandGatewayValidationError.TooManySubjects,
+        "257-subject live stance intent should reject at the default gateway limit");
+    Require(rejectedBattlefield.AppliedInputCommandCount == commandsBeforeRejection,
+        "TooManySubjects must reject before the real UnitBattlefield sink applies a command");
+    Require(rejectedUnits.All(unit => unit.Stance == UnitStance.Aggressive),
+        "TooManySubjects must leave every real entity stance unchanged");
+    var projectionAfterRejection = ProjectSelectedUnitStance(rejectedBattlefield, PlayerSlotId.One);
+    Require(projectionAfterRejection == projectionBeforeRejection
+        && projectionAfterRejection.IsSelected(UnitStance.Aggressive),
+        "TooManySubjects must preserve the projection rebuilt from unchanged entities");
+
+    Require(ProjectSelectedUnitStance(NewBattlefield(), PlayerSlotId.One) == UnitStanceStripProjection.None,
+        "an empty UnitDesign battlefield must project zero selected stance state");
+}
+
+static UnitStanceStripProjection ProjectSelectedUnitStance(UnitBattlefield battlefield, PlayerSlotId playerSlotId)
+{
+    var selectedCount = 0;
+    UnitStance? uniformStance = null;
+    var mixed = false;
+    foreach (var unit in battlefield.Units)
+    {
+        if (unit.PlayerSlotId != playerSlotId || !unit.Selected || unit.Hp <= 0)
+        {
+            continue;
+        }
+
+        selectedCount++;
+        if (uniformStance is null)
+        {
+            uniformStance = unit.Stance;
+        }
+        else if (uniformStance.Value != unit.Stance)
+        {
+            mixed = true;
+        }
+    }
+
+    return UnitStanceStripProjection.FromSelection(mixed ? null : uniformStance, selectedCount);
 }
 
 static void RequireRejected(CommandGatewayResult result, CommandGatewayValidationError expected, string message)
@@ -517,9 +577,9 @@ AssertSelectionCommandsAndStance();
 AssertLiveSharedCorridorPathing();
 AssertVictoryAndDefeat();
 AssertCommandGatewayLivePlayerLoop();
-AssertRejectedStanceProjectionRemainsAuthoritative();
+AssertLiveStanceProjectionAuthority();
 
-Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, move/attack/stance, rejected stance projection preservation, victory/defeat, and live CommandGateway player loop.");
+Console.WriteLine("PlayerLoopQa PASSED: build radius, cat ready-ticket placement, harvest/bank, T1-T3 production, rally, selection, shared corridor, live stance authority projection, victory/defeat, and live CommandGateway player loop.");
 
 sealed class MoveFirstOwnedUnitAgent : IPlayerAgent
 {

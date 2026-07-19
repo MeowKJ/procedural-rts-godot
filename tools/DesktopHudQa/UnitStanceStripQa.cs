@@ -35,11 +35,6 @@ static class UnitStanceStripQa
         Require(uniformHold == projectionBeforeIntent && uniformHold.IsSelected(UnitStance.Hold),
             "Hold must remain highlighted until a later authoritative projection arrives.");
 
-        var rejectedNoSelection = none;
-        var rejectedTooManySubjects = uniformHold;
-        Require(rejectedNoSelection == none && rejectedTooManySubjects == uniformHold,
-            "Rejected stance intents must leave the last projection unchanged.");
-
         AssertControlSource(repoRoot);
     }
 

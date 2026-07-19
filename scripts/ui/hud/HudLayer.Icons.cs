@@ -5,7 +5,17 @@ namespace ProceduralRts.Ui;
 
 public partial class HudLayer : CanvasLayer
 {
-    internal static void DrawIconGlyph(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
+    private static void DrawIconGlyph(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
+    {
+        HudIconRenderer.Draw(canvas, glyph, center, size, color);
+    }
+}
+
+internal static class HudIconRenderer
+{
+    private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
+
+    public static void Draw(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
     {
         if (TryDrawIconTexture(canvas, glyph, center, size, color))
         {
@@ -240,5 +250,15 @@ public partial class HudLayer : CanvasLayer
         }
 
         return ImageTexture.CreateFromImage(image);
+    }
+
+    public static void ReleaseManagedResources()
+    {
+        foreach (var texture in IconTextureCache.Values)
+        {
+            ManagedGodotResourceCleanup.DisposeGodotObject(texture);
+        }
+
+        IconTextureCache.Clear();
     }
 }

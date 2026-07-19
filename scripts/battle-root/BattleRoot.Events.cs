@@ -407,12 +407,20 @@ public partial class BattleRoot
 
     private void OnUnitStanceRequested(UnitStance stance)
     {
-        if (_unitBattlefield.SelectedCount(PlayerSlotId.One) > 0)
+        if (UseUnitDesignRuntime)
         {
+            var selectedCount = _unitBattlefield.SelectedCount(PlayerSlotId.One);
+            if (selectedCount == 0)
+            {
+                _hud.SetStatus(GameText.T("stance.selectRequired"));
+                PlayAudioCue(TacticalAudioCue.Invalid);
+                return;
+            }
+
             var subjects = _unitBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
             var payload = PlayerCommandPayload.ForSubjects(subjects) with { Stance = stance };
             var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload);
-            var changed = result.AcceptedCount > 0 ? subjects.Count : 0;
+            var changed = result.AcceptedCount > 0 ? selectedCount : 0;
             if (changed == 0)
             {
                 _hud.SetStatus(GatewayStatus(result, GameText.T("stance.selectRequired")));
@@ -426,8 +434,8 @@ public partial class BattleRoot
             return;
         }
 
-        var selectedCount = _state.SelectedUnitCount();
-        if (selectedCount == 0)
+        var legacySelectedCount = _state.SelectedUnitCount();
+        if (legacySelectedCount == 0)
         {
             _hud.SetStatus(GameText.T("stance.selectRequired"));
             PlayAudioCue(TacticalAudioCue.Invalid);
@@ -435,8 +443,8 @@ public partial class BattleRoot
         }
 
         _state.SetSelectedStance(stance);
-        _hud.SetSelectedUnitStance(stance, selectedCount);
-        _hud.SetStatus(GameText.Format("stance.changed", selectedCount, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
+        _hud.SetSelectedUnitStance(stance, legacySelectedCount);
+        _hud.SetStatus(GameText.Format("stance.changed", legacySelectedCount, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
         PlayAudioCue(TacticalAudioCue.Selection);
     }
 

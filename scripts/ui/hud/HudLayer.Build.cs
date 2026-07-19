@@ -109,7 +109,6 @@ public partial class HudLayer : CanvasLayer
         {
             Name = "UnitStanceStrip",
             Position = new Vector2(6, 6),
-            CustomMinimumSize = new Vector2(220, 44),
             MouseFilter = Control.MouseFilterEnum.Ignore,
             IntentRequested = stance => UnitStanceRequested?.Invoke(stance),
             HoverStarted = presentation => ShowFixedHoverText(
@@ -118,7 +117,6 @@ public partial class HudLayer : CanvasLayer
                 UiFactory.HudStanceAccent(presentation.AccentRole, CurrentPalette)),
             HoverEnded = presentation => ClearFixedHoverText($"stance.{presentation.Stance}"),
         };
-        _unitStanceStrip.Size = _unitStanceStrip.CustomMinimumSize;
         _unitStanceStrip.ApplyTheme(CurrentPalette, FontTiny);
         _unitStanceStrip.ApplyProjection(UnitStanceStripProjection.FromSelection(_selectedUnitStance, _selectedUnitCount));
         _commandRibbon.AddChild(_unitStanceStrip);
