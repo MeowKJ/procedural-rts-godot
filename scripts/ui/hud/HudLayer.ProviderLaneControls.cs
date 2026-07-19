@@ -36,6 +36,7 @@ public partial class HudLayer : CanvasLayer
             };
             Text = "";
             Disabled = !enabled;
+            UiFactory.ApplyHudQueueRowTheme(this, CurrentPalette, _accent);
             FixedHoverText = enabled
                 ? GameText.Format(
                     constructionMode ? "ui.constructionProviderLane.tooltip" : "ui.providerLane.tooltip",
@@ -49,11 +50,16 @@ public partial class HudLayer : CanvasLayer
         public override void _Draw()
         {
             base._Draw();
+            var metrics = HudVisualFoundation.MetricsFor(HudVisualPrimitive.QueueRow);
             var alpha = Disabled ? 0.32f : 0.86f;
-            if (_selected)
+            if (!Disabled && (_selected || HasFocus()))
             {
-                DrawRect(new Rect2(new Vector2(3, 3), Size - new Vector2(6, 6)), new Color(_accent, 0.18f), true);
-                DrawRect(new Rect2(new Vector2(2, 2), Size - new Vector2(4, 4)), new Color(_accent, 0.76f), false, 1.4f);
+                var state = (_selected ? HudVisualState.Selected : HudVisualState.Normal)
+                    | (HasFocus() ? HudVisualState.Focused : HudVisualState.Normal);
+                var style = HudVisualFoundation.For(CurrentPalette, HudVisualPrimitive.QueueRow, state, _accent);
+                DrawStyleBox(
+                    UiFactory.CreateHudFoundationStyleBox(style, metrics),
+                    new Rect2(Vector2.Zero, Size).Grow(-metrics.ItemSpacing));
             }
 
             DrawIconGlyph(
@@ -68,17 +74,24 @@ public partial class HudLayer : CanvasLayer
                 : State.ProviderCount;
             var countText = Math.Min(99, Math.Max(0, count)).ToString(System.Globalization.CultureInfo.InvariantCulture);
             DrawString(
-                UiFontProfile.DrawFont(UiFontRole.Compact),
+                UiFontProfile.DrawFont(metrics.DetailFontRole),
                 new Vector2(31, Size.Y * 0.5f + 4),
                 countText,
                 HorizontalAlignment.Center,
                 15,
-                11,
+                metrics.DetailFontSize,
                 new Color(_accent, Disabled ? 0.52f : 0.94f));
 
             if (State.ActiveProgress > 0)
             {
-                DrawRect(new Rect2(3, Size.Y - 5, (Size.X - 6) * State.ActiveProgress, 2), new Color(_accent, alpha), true);
+                DrawRect(
+                    new Rect2(
+                        metrics.ContentPadding,
+                        Size.Y - metrics.ContentPadding - metrics.ItemSpacing,
+                        (Size.X - metrics.ContentPadding * 2) * State.ActiveProgress,
+                        metrics.ItemSpacing),
+                    new Color(_accent, alpha),
+                    true);
             }
 
             if (State.QueueCount > 0)

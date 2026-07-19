@@ -18,6 +18,7 @@ public partial class HudLayer : CanvasLayer
             "ui.upgrade.effect.focusedMunitions",
             "ui.upgrade.status.sourceNeeded",
             "ui.upgrade.badge.sourceNeeded",
+            HudStatusBadgeRole.Neutral,
             450,
             40),
         new(
@@ -31,6 +32,7 @@ public partial class HudLayer : CanvasLayer
             "ui.upgrade.effect.opticArray",
             "ui.upgrade.status.campaignGate",
             "ui.upgrade.badge.campaignGate",
+            HudStatusBadgeRole.Warning,
             320,
             35),
         new(
@@ -44,6 +46,7 @@ public partial class HudLayer : CanvasLayer
             "ui.upgrade.effect.fieldRepairs",
             "ui.upgrade.status.sourceNeeded",
             "ui.upgrade.badge.sourceNeeded",
+            HudStatusBadgeRole.Neutral,
             380,
             45),
     ];
@@ -51,6 +54,19 @@ public partial class HudLayer : CanvasLayer
     private readonly Dictionary<string, UpgradeProjectCard> _upgradeProjectCards = [];
     private readonly HashSet<string> _upgradeProjectCardActiveIds = [];
     private readonly List<string> _upgradeProjectCardStaleIds = [];
+
+    public void DebugConfigureHudVisualFoundationQa()
+    {
+        SelectCatalogMode(CatalogModeKind.Upgrades);
+        SetCommandDeckOpen(true);
+        var selected = _catalogModeButtons.First(button => button.Mode == CatalogModeKind.Upgrades);
+        selected.GrabFocus();
+        selected.QueueRedraw();
+        foreach (var card in _upgradeProjectCards.Values)
+        {
+            card.QueueRedraw();
+        }
+    }
 
     private void ClearUpgradeProjectCards()
     {
@@ -119,7 +135,7 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Stop,
         };
         card.Size = card.CustomMinimumSize;
-        UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
+        UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette);
         _upgradeProjectCards[id] = card;
         parent.AddChild(card);
         var inspectorItemId = UpgradeInspectorItemId(id);
@@ -142,6 +158,7 @@ public partial class HudLayer : CanvasLayer
         string EffectKey,
         string StatusKey,
         string StatusBadgeKey,
+        HudStatusBadgeRole BadgeRole,
         int Cost,
         int DurationSeconds);
 

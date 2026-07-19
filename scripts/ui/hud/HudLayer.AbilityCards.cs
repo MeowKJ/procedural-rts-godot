@@ -91,7 +91,7 @@ public partial class HudLayer : CanvasLayer
             MouseFilter = Control.MouseFilterEnum.Stop,
         };
         card.Size = card.CustomMinimumSize;
-        UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette, FontBody);
+        UiFactory.ApplyHudCommandButtonTheme(card, CurrentPalette);
         _abilityCards[kind] = card;
         parent.AddChild(card);
         var inspectorItemId = AbilityInspectorItemId(kind);

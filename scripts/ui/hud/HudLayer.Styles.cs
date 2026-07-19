@@ -54,19 +54,19 @@ public partial class HudLayer : CanvasLayer
 
         foreach (var button in _commandButtons.Values)
         {
-            UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
+            UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette);
             button.QueueRedraw();
         }
 
         foreach (var button in _productionProviderLaneButtons)
         {
-            UiFactory.ApplyHudActionButtonTheme(button, CurrentPalette, Cyan, FontTiny);
+            UiFactory.ApplyHudQueueRowTheme(button, CurrentPalette, button.Accent);
             button.QueueRedraw();
         }
 
         foreach (var button in _abilityCards.Values)
         {
-            UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette, FontBody);
+            UiFactory.ApplyHudCommandButtonTheme(button, CurrentPalette);
             button.QueueRedraw();
         }
 
