@@ -26,6 +26,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "Could not resolve release commit '$Commit'."
 }
 
+$validator = Join-Path $project "tools\WindowsAcceptanceEvidence\WindowsAcceptanceEvidence.csproj"
+& dotnet run --project $validator -- --evidence $WindowsAcceptanceEvidence --identity (Join-Path $project "assets\release\release-identity.json") --release-root $release --commit $resolvedCommit
+if ($LASTEXITCODE -ne 0) {
+    throw "Physical Windows acceptance evidence did not satisfy the release contract."
+}
+
 $tagCommit = ((& git -C $project rev-parse "$($identity.tag)^{commit}" 2>$null) | Out-String).Trim()
 $tagExists = $LASTEXITCODE -eq 0
 if ($tagExists -and $tagCommit -ne $resolvedCommit) {
