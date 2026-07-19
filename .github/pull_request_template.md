@@ -1,33 +1,33 @@
-## Issue
+## 关联 Issue / Issue
 
 Closes #
 
-## Scope
+## 范围 / Scope
 
 -
 
-## Non-goals
+## 非目标 / Non-goals
 
 -
 
-## Review / Evidence
+## 审查与证据 / Review / Evidence
 
 -
 
-## Verification
+## 验证 / Verification
 
 -
 
-## Async CI
+## 异步 CI / Async CI
 
-- Narrow gates:
-- VerifyAll CI:
-- Monitor command: `sh tools/ci-monitor.sh <pr-number>`
+- 窄门：
+- VerifyAll CI：`pending` / `passed` / `failed`
+- 后续检查：`sh tools/ci-monitor.sh <pr-number>`
 
-## Manual / Visual Evidence
+## 手工或视觉证据 / Manual / Visual Evidence
 
 -
 
-## Risk
+## 风险 / Risk
 
 -

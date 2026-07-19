@@ -1,4 +1,5 @@
 name: Project Blueprint
+run-name: 项目蓝图与 AI 可领取队列 · ${{ github.run_number }}
 
 on:
   workflow_dispatch:
@@ -15,27 +16,49 @@ concurrency:
 
 jobs:
   render:
-    name: Render native milestone DAG
+    name: 生成 M10-M12 任务进度
     runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 5
 
     steps:
-      - name: Checkout
+      - name: 验证 Project 访问凭据
+        shell: bash
+        env:
+          PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PROJECTS_TOKEN" ]; then
+            echo "缺少 PROJECTS_TOKEN：该 token 必须具有读取用户 Project #3 和仓库 Issue 的权限。" >&2
+            exit 1
+          fi
+
+      - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: 配置 .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Collect native M10-M12 graph
+      - name: 采集 GitHub 原生任务状态
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.PROJECTS_TOKEN }}
           script: |
             const fs = require("fs");
-            const labels = ["M10", "M11", "M12"];
+            const projectId = "PVT_kwHOA-xhv84BcK_0";
+            const projectProbe = await github.graphql(`query($id: ID!) {
+              node(id: $id) {
+                ... on ProjectV2 { id number }
+              }
+            }`, { id: projectId });
+            if (projectProbe.node?.id !== projectId || projectProbe.node?.number !== 3) {
+              throw new Error("PROJECTS_TOKEN cannot read the expected Project #3; refusing a false missing-field report.");
+            }
+
+            const milestoneLabels = ["M10", "M11", "M12"];
             const issueNumbers = new Set();
-            for (const label of labels) {
+            for (const label of milestoneLabels) {
               const issues = await github.paginate(github.rest.issues.listForRepo, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -51,23 +74,51 @@ jobs:
             const query = `query($owner: String!, $repo: String!, $number: Int!) {
               repository(owner: $owner, name: $repo) {
                 issue(number: $number) {
-                  number title url state
+                  number title url state body
+                  labels(first: 100) {
+                    nodes { name }
+                    pageInfo { hasNextPage }
+                  }
                   parent { number }
-                  subIssues(first: 100) { nodes { number } }
-                  blockedBy(first: 100) { nodes { number } }
-                  blocking(first: 100) { nodes { number } }
-                  projectItems(first: 20) {
+                  subIssues(first: 100) {
+                    nodes { number state }
+                    pageInfo { hasNextPage }
+                  }
+                  blockedBy(first: 100) {
+                    nodes { number state }
+                    pageInfo { hasNextPage }
+                  }
+                  blocking(first: 100) {
+                    nodes { number state }
+                    pageInfo { hasNextPage }
+                  }
+                  projectItems(first: 100) {
                     nodes {
                       project { id }
-                      fieldValueByName(name: "Workflow") {
+                      status: fieldValueByName(name: "Status") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      priority: fieldValueByName(name: "Priority") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      workflow: fieldValueByName(name: "Workflow") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      size: fieldValueByName(name: "Size") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      agent: fieldValueByName(name: "Agent") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name }
+                      }
+                      verificationGate: fieldValueByName(name: "Verification Gate") {
                         ... on ProjectV2ItemFieldSingleSelectValue { name }
                       }
                     }
+                    pageInfo { hasNextPage }
                   }
                 }
               }
             }`;
-            const projectId = "PVT_kwHOA-xhv84BcK_0";
             const issues = [];
             for (const number of [...issueNumbers].sort((a, b) => a - b)) {
               const result = await github.graphql(query, {
@@ -76,42 +127,79 @@ jobs:
                 number,
               });
               const issue = result.repository.issue;
-              const projectItem = issue.projectItems.nodes.find(item => item.project.id === projectId);
+              if (!issue) throw new Error(`Issue #${number} disappeared during collection.`);
+              const pagedConnections = [issue.labels, issue.subIssues, issue.blockedBy, issue.blocking, issue.projectItems];
+              if (pagedConnections.some(connection => connection.pageInfo.hasNextPage)) {
+                throw new Error(`Issue #${number} exceeds a normalized collection page; refusing truncated state.`);
+              }
+
+              const projectItems = issue.projectItems.nodes.filter(item => item.project.id === projectId);
+              const projectItem = projectItems.length === 1 ? projectItems[0] : null;
+              const subIssues = issue.subIssues.nodes;
+              const blockers = issue.blockedBy.nodes;
               issues.push({
                 number: issue.number,
                 title: issue.title,
                 url: issue.url,
                 state: issue.state,
-                workflow: projectItem?.fieldValueByName?.name ?? null,
+                body: issue.body,
+                labels: issue.labels.nodes.map(label => label.name).sort(),
+                projectItemCount: projectItems.length,
+                status: projectItem?.status?.name ?? null,
+                priority: projectItem?.priority?.name ?? null,
+                workflow: projectItem?.workflow?.name ?? null,
+                size: projectItem?.size?.name ?? null,
+                agent: projectItem?.agent?.name ?? null,
+                verificationGate: projectItem?.verificationGate?.name ?? null,
                 parent: issue.parent?.number ?? null,
-                subIssues: issue.subIssues.nodes.map(child => child.number),
-                blockedBy: issue.blockedBy.nodes.map(blocker => blocker.number),
-                blocking: issue.blocking.nodes.map(blocked => blocked.number),
+                subIssues: subIssues.map(child => child.number).sort((a, b) => a - b),
+                openSubIssues: subIssues.filter(child => child.state === "OPEN").map(child => child.number).sort((a, b) => a - b),
+                blockedBy: blockers.map(blocker => blocker.number).sort((a, b) => a - b),
+                openBlockers: blockers.filter(blocker => blocker.state === "OPEN").map(blocker => blocker.number).sort((a, b) => a - b),
+                blocking: issue.blocking.nodes.map(blocked => blocked.number).sort((a, b) => a - b),
               });
             }
-            fs.writeFileSync("project-blueprint.json", JSON.stringify({
-              title: "M10-M12 Native Work Graph",
+            fs.writeFileSync("project-state.json", JSON.stringify({
+              schemaVersion: 1,
+              projectNumber: 3,
+              title: "M10-M12 原生任务蓝图",
               issues,
-            }, null, 2));
+            }, null, 2) + "\n");
 
-      - name: Render Mermaid artifact
+      - name: 生成中文蓝图和机器队列
+        shell: bash
         run: |
-          dotnet run --project tools/ProjectBlueprint/ProjectBlueprint.csproj -- project-blueprint.json project-blueprint.md
+          set -euo pipefail
+          dotnet run --project tools/ProjectBlueprint/ProjectBlueprint.csproj -- project-state.json project-blueprint.md
+          dotnet run --project tools/ProjectReadyQueue/ProjectReadyQueue.csproj -- project-state.json ai-ready.json ai-ready.md
 
-      - name: Upload blueprint artifact
+      - name: 上传任务状态 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: project-blueprint-${{ github.run_id }}
-          path: project-blueprint.md
+          name: project-progress-${{ github.run_id }}
+          path: |
+            project-state.json
+            project-blueprint.md
+            ai-ready.json
+            ai-ready.md
           if-no-files-found: error
 
-      - name: Update #593 blueprint status
+      - name: 更新 #593 中文进度面板
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require("fs");
             const marker = "<!-- project-blueprint -->";
-            const body = `${marker}\n${fs.readFileSync("project-blueprint.md", "utf8")}\nArtifact: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const metadata = `<!-- project-blueprint-meta schema=1 run=${context.runId} head=${context.sha} -->`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              metadata,
+              fs.readFileSync("project-blueprint.md", "utf8").trim(),
+              "---",
+              fs.readFileSync("ai-ready.md", "utf8").trim(),
+              `**运行与 artifact：** [${context.runId}](${runUrl})`,
+            ].join("\n\n");
             const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,

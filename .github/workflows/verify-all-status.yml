@@ -1,4 +1,5 @@
 name: VerifyAll PR Status
+run-name: VerifyAll PR 中文状态 · ${{ github.event.workflow_run.id }}
 
 on:
   workflow_run:
@@ -18,12 +19,12 @@ concurrency:
 
 jobs:
   pr-status:
-    name: Comment VerifyAll status
+    name: 更新 VerifyAll 状态评论
     runs-on: [self-hosted, linux, x64, procedural-rts]
     timeout-minutes: 5
 
     steps:
-      - name: Update PR status comment
+      - name: 更新 PR 中文状态评论
         uses: actions/github-script@v7
         with:
           script: |
@@ -34,38 +35,36 @@ jobs:
               run_id: eventRun.id,
             });
 
-            let prs = run.pull_requests || [];
-            if (prs.length === 0) {
-              const associated = await github.paginate(
-                github.rest.repos.listPullRequestsAssociatedWithCommit,
-                {
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  commit_sha: run.head_sha,
-                  per_page: 100,
-                });
-              prs = associated.filter(candidate =>
-                candidate.state === "open" && candidate.head?.sha === run.head_sha);
+            const candidateNumbers = new Set(
+              (run.pull_requests || [])
+                .map(candidate => candidate.number)
+                .filter(number => Number.isInteger(number)));
+            const associated = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: run.head_sha,
+                per_page: 100,
+              });
+            for (const candidate of associated) {
+              candidateNumbers.add(candidate.number);
             }
 
-            if (prs.length === 0) {
-              core.notice(`VerifyAll run ${run.id} is not associated with an open pull request; skipping PR status comment.`);
-              return;
+            const pullRequests = [];
+            for (const pullNumber of [...candidateNumbers].sort((left, right) => left - right)) {
+              const { data: candidate } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+              });
+              if (candidate.state === "open" && candidate.head.sha === run.head_sha) {
+                pullRequests.push(candidate);
+              }
             }
 
-            const prNumber = prs[0].number;
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
-            if (pr.state !== "open") {
-              core.notice(`Pull request #${prNumber} is no longer open; skipping VerifyAll status comment.`);
-              return;
-            }
-
-            if (pr.head.sha !== run.head_sha) {
-              core.notice(`VerifyAll run ${run.id} head ${run.head_sha} is stale for PR #${prNumber} head ${pr.head.sha}; skipping.`);
+            if (pullRequests.length === 0) {
+              core.notice(`VerifyAll 运行 ${run.id} 未关联精确 head 的开放 PR，跳过状态评论。`);
               return;
             }
 
@@ -77,57 +76,62 @@ jobs:
               : conclusion === "success"
                 ? "status:verified"
                 : "status:needs-fix";
-            const icon = !completed
-              ? "PENDING"
+            const displayStatus = !completed
+              ? "⏳ 排队或运行中"
               : conclusion === "success"
-                ? "PASS"
-                : "FAIL";
+                ? "✅ 通过"
+                : "❌ 失败";
             const runUrl = run.html_url;
             const headSha = (run.head_sha || "").slice(0, 12);
             const completedAt = run.updated_at || run.created_at;
-            const next = !completed
-              ? "Codex should not wait on this run. A monitor or Integrator can poll later with `sh tools/ci-monitor.sh " + pr.number + "`."
-              : conclusion === "success"
-                ? "Integrator may proceed with review/merge checks."
-                : "Owner should inspect a bounded failed-log tail with `sh tools/ci-failure-tail.sh " + run.id + " 180`.";
 
-            const body = [
-              marker,
-              `**VerifyAll:** ${icon}`,
-              `**State:** \`${status}\``,
-              `**Run:** [${run.id}](${runUrl})`,
-              `**Head:** \`${headSha}\``,
-              `**Updated:** ${completedAt}`,
-              `**Next:** ${next}`,
-            ].join("\n");
+            for (const pullRequest of pullRequests) {
+              const next = !completed
+                ? `无需在当前会话等待；后续由监控器或集成者运行 \`sh tools/ci-monitor.sh ${pullRequest.number}\`。`
+                : conclusion === "success"
+                  ? "集成者可以继续核对审查线程和精确 head 合并门禁。"
+                  : `Owner 应使用 \`sh tools/ci-failure-tail.sh ${run.id} 180\` 读取有限失败日志。`;
+              const body = [
+                marker,
+                `<!-- verify-all-meta schema=1 run=${run.id} head=${run.head_sha} state=${status} -->`,
+                `**完整验证：** ${displayStatus}`,
+                `**机器状态：** \`${status}\``,
+                `**运行记录：** [${run.id}](${runUrl})`,
+                `**精确提交：** \`${headSha}\``,
+                `**更新时间：** ${completedAt}`,
+                `**下一步：** ${next}`,
+              ].join("\n");
 
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              per_page: 100,
-            });
-            const existing = comments.find(comment =>
-              comment.user?.type === "Bot" && comment.body?.includes(marker));
-            const existingRunMatch = existing?.body?.match(/\*\*Run:\*\*\s*\[(\d+)\]/);
-            const existingRunId = existingRunMatch ? Number(existingRunMatch[1]) : null;
-            if (existingRunId !== null && existingRunId > run.id) {
-              core.notice(`Marker comment already references newer VerifyAll run ${existingRunId}; skipping older run ${run.id}.`);
-              return;
-            }
-
-            if (existing) {
-              await github.rest.issues.updateComment({
+              const comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
+                issue_number: pullRequest.number,
+                per_page: 100,
               });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body,
-              });
+              const existing = comments.find(comment =>
+                comment.user?.type === "Bot" && comment.body?.includes(marker));
+              const metadataRunMatch = existing?.body?.match(/<!-- verify-all-meta\s+schema=1\s+run=(\d+)\b/);
+              const legacyRunMatch = existing?.body?.match(/\*\*Run:\*\*\s*\[(\d+)\]/);
+              const existingRunMatch = metadataRunMatch || legacyRunMatch;
+              const existingRunId = existingRunMatch ? Number(existingRunMatch[1]) : null;
+              if (existingRunId !== null && existingRunId > run.id) {
+                core.notice(`PR #${pullRequest.number} 已指向较新的 VerifyAll 运行 ${existingRunId}，跳过旧运行 ${run.id}。`);
+                continue;
+              }
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pullRequest.number,
+                  body,
+                });
+              }
             }
