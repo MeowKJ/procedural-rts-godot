@@ -27,6 +27,19 @@ static void Validate(EvidenceOptions options)
     var packagePath = Path.Combine(options.ReleaseRoot, packageName);
     Require(File.Exists(packagePath), $"release package is missing: {packagePath}");
     var packageHash = Sha256(packagePath);
+    var buildInfo = ReadJson(Path.Combine(options.ReleaseRoot, "BUILD_INFO.json"), "release BUILD_INFO");
+    Require(RequiredString(buildInfo, "version", "release BUILD_INFO") == version,
+        "release BUILD_INFO version does not match release identity");
+    Require(RequiredString(buildInfo, "tag", "release BUILD_INFO") == tag,
+        "release BUILD_INFO tag does not match release identity");
+    Require(RequiredString(buildInfo, "commit", "release BUILD_INFO") == options.Commit,
+        "release BUILD_INFO commit does not match the verified release commit");
+    Require(RequiredString(buildInfo, "target", "release BUILD_INFO") == target,
+        "release BUILD_INFO target does not match release identity");
+    Require(RequiredString(buildInfo, "sampleMapId", "release BUILD_INFO") == sampleId,
+        "release BUILD_INFO sample id does not match release identity");
+    Require(RequiredSha256(buildInfo, "sampleMapHash", "release BUILD_INFO") == sampleHash,
+        "release BUILD_INFO sample SHA-256 does not match release identity");
 
     var evidence = ReadJson(options.EvidencePath, "Windows acceptance evidence");
     Require(RequiredString(evidence, "format", "Windows acceptance evidence") == "procedural-rts.windows-acceptance",
@@ -93,6 +106,9 @@ static void RunSelfTest()
         var packageName = $"ProceduralRTS-{version}-windows-x86_64.zip";
         File.WriteAllBytes(Path.Combine(root, packageName), [1, 2, 3, 4]);
         var packageHash = Sha256(Path.Combine(root, packageName));
+        File.WriteAllText(Path.Combine(root, "BUILD_INFO.json"), $$"""
+            {"version":"{{version}}","tag":"v{{version}}","commit":"{{commit}}","target":"windows-x86_64","sampleMapId":"authored-map-preview","sampleMapHash":"{{sampleHash}}"}
+            """);
         var evidencePath = Path.Combine(root, "windows-acceptance.json");
 
         WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash);
