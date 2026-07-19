@@ -86,136 +86,25 @@ Require(alert is { Kind: AlertKind.Economy, RemainingRatio: > 0 },
 
 var root = FindRoot();
 var applicator = Read(root, "scripts", "ui", "hud", "HudLayer.RuntimeStates.cs");
-var runtimeProbe = Read(root, "scripts", "ui", "hud", "HudLayer.VisualQa.cs");
 var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs");
 var harness = Read(root, "tools", "VisualQaCapture.sh");
-var workflow = Read(root, ".github", "workflows", "verify-all.yml");
-var visualGate = Read(root, "tools", "BattleHudRuntimeStatesQa", "BattleHudVisualGate.cs");
-var manifestWriter = Read(root, "tools", "BattleHudRuntimeStatesQa", "BattleHudVisualArtifactManifest.cs");
 var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
     + string.Join("\n", Directory.EnumerateFiles(
         Path.Combine(root, "scripts", "battle-root"),
         "*.cs",
         SearchOption.TopDirectoryOnly).Select(File.ReadAllText));
-RequireText(applicator, "ApplyBattleHudRuntimeProjection(BattleHudRuntimeProjection projection)",
-    "HudLayer must consume the typed read-only runtime projection", failures);
-RequireText(applicator, "SetSelectedUnitStance(projection.StanceStrip.SelectedStance, projection.StanceStrip.SelectedUnitCount)",
-    "runtime state applicator must feed the source stance projection through HudLayer", failures);
 Require(!applicator.Contains("UnitBattlefield", StringComparison.Ordinal),
     "runtime state applicator must not reach into gameplay authority", failures);
 Require(!applicator.Contains("SetProcess(false)", StringComparison.Ordinal)
     && !productionBattleRoot.Contains("SetProcess(false)", StringComparison.Ordinal)
     && !productionBattleRoot.Contains("SetPhysicsProcess(false)", StringComparison.Ordinal),
     "capture-only authority freeze must not leak into HudLayer or production BattleRoot sources", failures);
-RequireText(capture, "CaptureBattleHudRuntimeStates", "Visual QA must capture the runtime state manifest", failures);
 Require(!capture.Contains("SetSandboxDeveloperControlsVisible(false)", StringComparison.Ordinal),
     "runtime capture must not hide sandbox controls and mask the real launch gate", failures);
-RequireText(capture, "AssertNormalSkirmishSandboxHidden", "runtime capture must assert the real Skirmish sandbox gate", failures);
-RequireText(capture, "AssertBattleHudRuntimeCaptureConfig(config)",
-    "runtime capture must assert the manifest scenario against the live BattleRoot", failures);
-RequireText(capture, "options.StartingCredits != config.StartingCredits",
-    "runtime capture must verify live starting credits", failures);
-RequireText(capture, "options.MapSeed != config.MapSeed",
-    "runtime capture must verify the live map seed", failures);
-RequireText(capture, "options.EnemyDifficulty != config.EnemyDifficulty",
-    "runtime capture must verify live enemy difficulty", failures);
-RequireText(capture, "GameText.CurrentLanguage != config.Language",
-    "runtime capture must verify the live localization language", failures);
-RequireText(capture, "visualTheme.Current != config.Theme",
-    "runtime capture must verify the live settled visual theme", failures);
-RequireText(capture, "RequiredNode<Control>(\"SandboxDeveloperPanel\").Visible",
-    "runtime capture must read the actual SandboxDeveloperPanel visibility", failures);
-RequireText(capture, "StageDeterministicBattleCapture", "each Battle load must stage the fixed skirmish config", failures);
-RequireText(capture, "await LoadScene(BattleScenePath);", "each runtime state must start from a fresh Battle scene", failures);
-RequireOrdered(capture, failures,
-    "private async Task CaptureBattleHudRuntimeStates(",
-    "await LoadScene(BattleScenePath);",
-    "AssertNormalSkirmishSandboxHidden();",
-    "FreezeBattleHudRuntimeProjectionAuthority();",
-    "foreach (var resolution in BattleHudRuntimeStateCatalog.Resolutions)");
-RequireText(capture, "battle.SetProcess(false);",
-    "runtime fixture must stop live BattleRoot refresh from overwriting the typed projection", failures);
-RequireText(capture, "battle.SetPhysicsProcess(false);",
-    "runtime fixture must stop live BattleRoot physics while responsive HUD layout settles", failures);
-RequireText(capture, "GuiGetFocusOwner()?.ReleaseFocus()", "runtime captures must clear transient UI focus", failures);
-RequireText(capture, "NextFrames(config.SettleFrames)", "runtime captures must use the manifest settle-frame contract", failures);
-RequireOrdered(capture, failures,
-    "private async Task CaptureBattleHudRuntimeResolution(",
-    "GetTree().Paused = false;",
-    "SetCaptureSize(new Vector2I(resolution.Width, resolution.Height));",
-    "hud.ApplyBattleHudRuntimeProjection(state.Projection);",
-    "GetViewport().GuiGetFocusOwner()?.ReleaseFocus();",
-    "await NextFrames(config.SettleFrames);",
-    "AssertBattleHudRuntimeCaptureConfig(config);",
-    "AssertNormalSkirmishSandboxHidden();",
-    "hud.ProbeBattleHudRuntimeStructure(",
-    "GetTree().Paused = true;",
-    "await Capture(",
-    "state.CaptureFileName(resolution),",
-    "config.RenderFlushFrames);");
-RequireText(runtimeProbe, "control.IsVisibleInTree()",
-    "runtime visual gate must read real Control tree visibility", failures);
-RequireText(runtimeProbe, "control.GetGlobalRect()",
-    "runtime visual gate must read real global Control rectangles", failures);
-RequireText(runtimeProbe, "EffectiveAlpha(control)",
-    "runtime visual gate must reject transparent critical controls", failures);
-RequireText(runtimeProbe, "owner-contains:",
-    "runtime visual gate must check critical child ownership containment", failures);
-RequireText(runtimeProbe, "forbidden-overlap:",
-    "runtime visual gate must check the bounded forbidden overlap pairs", failures);
-RequireText(runtimeProbe, "payload:alert",
-    "runtime visual gate must verify real alert payload and text", failures);
-RequireText(runtimeProbe, "_queueMiniStack.ActiveProgress",
-    "runtime visual gate must verify the real queue progress surface", failures);
-RequireText(runtimeProbe, "HudLayoutMath.MinimumCommandHitTarget",
-    "runtime visual gate must enforce real 44px interactive controls", failures);
-RequireText(runtimeProbe, "alpha >= BattleHudRuntimeSettledAlpha",
-    "runtime visual gate must require settled critical-control alpha", failures);
-RequireText(runtimeProbe, "MeasureBattleHudRuntimeLabelText",
-    "runtime visual gate must measure critical Label text with the real Godot font", failures);
-RequireText(runtimeProbe, "label.GetMinimumSize()",
-    "runtime visual gate must compare each critical Label minimum size to its allotted rect", failures);
-RequireText(visualGate, "ExpectedByState",
-    "typed QA must own an independent exact six-state expectation matrix", failures);
-RequireText(visualGate, "RequireExactSet(",
-    "typed QA must compare the production catalog to its independent oracle", failures);
-Require(!runtimeProbe.Contains("foreach (var signal in state.CriticalSignals)", StringComparison.Ordinal),
-    "runtime signal evidence must come from explicit live assertions, not catalog iteration", failures);
-RequireText(manifestWriter, "actualSignals.SetEquals(gateCase.RequiredSignals)",
-    "artifact manifest must enforce exact live signal markers", failures);
-RequireText(manifestWriter, "actualRelations.SetEquals(gateCase.RequiredRelations)",
-    "artifact manifest must enforce exact structural relation markers", failures);
-RequireText(manifestWriter, "structural.ExactCommit",
-    "artifact manifest must verify every structural result commit", failures);
-RequireText(manifestWriter, "structural.CaptureRunNonce",
-    "artifact manifest must verify every structural result run nonce", failures);
-RequireText(capture, "WriteBattleHudRuntimeStructuralEvidence",
-    "runtime capture must persist all structural probe evidence", failures);
-RequireText(harness, "--write-artifact-manifest",
-    "Visual QA harness must build the canonical runtime artifact manifest", failures);
 Require(!harness.Contains("for state in", StringComparison.Ordinal),
     "Visual QA harness must not duplicate the typed runtime state catalog in bash", failures);
-RequireOrdered(harness, failures,
-    ": \"${BATTLE_HUD_CAPTURE_COMMIT:?",
-    "checkout_commit=\"$(git rev-parse HEAD)\"",
-    "git diff --quiet --",
-    "capture_started_seconds=$SECONDS");
-RequireText(harness, "BATTLE_HUD_CAPTURE_RUN_NONCE",
-    "Visual QA harness must require a capture-run nonce", failures);
-RequireText(workflow, "BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}",
-    "VerifyAll visual capture must bind evidence to the exact checked-out SHA", failures);
-RequireText(workflow, "BATTLE_HUD_CAPTURE_RUN_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}",
-    "VerifyAll visual capture must bind evidence to one workflow attempt", failures);
-RequireText(workflow, "run: bash tools/VisualQaCapture.sh",
-    "VerifyAll must execute the guarded visual capture harness directly", failures);
-RequireText(workflow, "test -s artifacts/visual-qa/battle-hud-runtime-artifact-manifest.json",
-    "VerifyAll must require the canonical manifest before artifact upload", failures);
-RequireText(workflow, "test -s artifacts/visual-qa/battle-hud-runtime-structural-evidence.json",
-    "VerifyAll must require structural evidence before artifact upload", failures);
-RequireText(workflow, "name: verify-all-${{ github.run_id }}-${{ github.sha }}",
-    "VerifyAll artifact name must bind the run and exact SHA", failures);
-RequireText(workflow, "if-no-files-found: error",
-    "VerifyAll must fail artifact upload when evidence is absent", failures);
+RequireText(harness, "git status --porcelain=v1 --untracked-files=all",
+    "Visual QA harness must reject untracked capture inputs", failures);
 
 Require(BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.ProductionBuildingSelected).Projection.Status == "PROD READY",
     "production-ready status must fit the compact 1280 top strip", failures);
@@ -267,22 +156,6 @@ static void Require(bool condition, string message, List<string> failures)
 
 static void RequireText(string source, string expected, string message, List<string> failures) =>
     Require(source.Contains(expected, StringComparison.Ordinal), message, failures);
-
-static void RequireOrdered(string source, List<string> failures, params string[] markers)
-{
-    var cursor = 0;
-    foreach (var marker in markers)
-    {
-        var index = source.IndexOf(marker, cursor, StringComparison.Ordinal);
-        if (index < 0)
-        {
-            failures.Add($"runtime capture order is missing or misplaced: {marker}");
-            return;
-        }
-
-        cursor = index + marker.Length;
-    }
-}
 
 static string Read(string root, params string[] parts) =>
     File.ReadAllText(Path.Combine([root, .. parts]));

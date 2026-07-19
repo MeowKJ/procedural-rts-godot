@@ -21,6 +21,10 @@ if ! git diff --quiet -- || ! git diff --cached --quiet --; then
   echo "Battle HUD capture requires a clean tracked working tree and index." >&2
   exit 1
 fi
+if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
+  echo "Battle HUD capture rejects untracked files outside ignored build and artifact paths." >&2
+  exit 1
+fi
 
 output="artifacts/visual-qa"
 log="$output/visual-qa.log"

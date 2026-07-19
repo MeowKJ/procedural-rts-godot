@@ -219,14 +219,10 @@ public partial class HudLayer : CanvasLayer
         Color iconAccent,
         string? unitDesignId = null)
     {
-        _drawerSelectedTitle.Text = CompactText(title, 24);
-        _drawerSelectedMeta.Text = CompactText(meta, 30);
-        _drawerSelectedStats.Text = CompactText(stats, 31);
-        _drawerSelectedDetail.Text = CompactText(detail, 34);
-        _drawerSelectedTitle.ResetSize();
-        _drawerSelectedMeta.ResetSize();
-        _drawerSelectedStats.ResetSize();
-        _drawerSelectedDetail.ResetSize();
+        SetLabelTextAndResetSizeWhenChanged(_drawerSelectedTitle, CompactText(title, 24));
+        SetLabelTextAndResetSizeWhenChanged(_drawerSelectedMeta, CompactText(meta, 30));
+        SetLabelTextAndResetSizeWhenChanged(_drawerSelectedStats, CompactText(stats, 31));
+        SetLabelTextAndResetSizeWhenChanged(_drawerSelectedDetail, CompactText(detail, 34));
         _drawerPortrait.Mode = portraitMode;
         _drawerPortrait.Icon = icon;
         _drawerPortrait.UnitDesignId = unitDesignId;
@@ -241,8 +237,9 @@ public partial class HudLayer : CanvasLayer
     public void SetStatus(string status)
     {
         _commandFailureVisible = CommandFailurePresentation.IsFailureStatus(status);
-        _statusValue.Text = CompactText(CommandFailurePresentation.InlineText(status), 42);
-        _statusValue.ResetSize();
+        SetLabelTextAndResetSizeWhenChanged(
+            _statusValue,
+            CompactText(CommandFailurePresentation.InlineText(status), 42));
     }
 
     public void SetProductionStatus(string status)
@@ -270,8 +267,9 @@ public partial class HudLayer : CanvasLayer
         if (_commandFailureVisible)
         {
             _commandFailureVisible = false;
-            _statusValue.Text = CompactText(GameText.T("ui.status.ready"), 42);
-            _statusValue.ResetSize();
+            SetLabelTextAndResetSizeWhenChanged(
+                _statusValue,
+                CompactText(GameText.T("ui.status.ready"), 42));
         }
 
         if (!_productionCommandFailureVisible)
@@ -298,13 +296,23 @@ public partial class HudLayer : CanvasLayer
             _lastCanCancelProduction = canCancel;
             var lineBreak = summary.IndexOf('\n');
             var surfaceSummary = lineBreak >= 0 ? summary[..lineBreak] : summary;
-            _queueValue.Text = CompactText(surfaceSummary, 28);
-            _queueValue.ResetSize();
+            SetLabelTextAndResetSizeWhenChanged(_queueValue, CompactText(surfaceSummary, 28));
             _cancelProduction.FixedHoverText = canCancel ? summary : GameText.T("ui.cancel.none");
         }
 
         _cancelProduction.Disabled = !canCancel;
         RefreshProductionProviderLaneSummary();
+    }
+
+    private static void SetLabelTextAndResetSizeWhenChanged(Label label, string next)
+    {
+        if (string.Equals(label.Text, next, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        label.Text = next;
+        label.ResetSize();
     }
 
     public void SetResourceCredits(int credits)
