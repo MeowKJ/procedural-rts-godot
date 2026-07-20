@@ -87,13 +87,22 @@ jobs:
 
       - name: Capture visual QA
         shell: bash
+        env:
+          BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}
+          BATTLE_HUD_CAPTURE_RUN_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
         run: bash tools/VisualQaCapture.sh
+
+      - name: 验证 Battle HUD 证据完整性
+        shell: bash
+        run: |
+          test -s artifacts/visual-qa/battle-hud-runtime-artifact-manifest.json
+          test -s artifacts/visual-qa/battle-hud-runtime-structural-evidence.json
 
       - name: Upload verification artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-all-${{ github.run_id }}
+          name: verify-all-${{ github.run_id }}-${{ github.sha }}
           path: |
             artifacts/**
-          if-no-files-found: ignore
+          if-no-files-found: error

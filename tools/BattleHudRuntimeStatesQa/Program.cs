@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using ProceduralRts.Core;
 
 var failures = new List<string>();
 var states = BattleHudRuntimeStateCatalog.States;
 var resolutions = BattleHudRuntimeStateCatalog.Resolutions;
 var config = BattleHudRuntimeStateCatalog.CaptureConfig;
+var visualGateCases = new List<BattleHudVisualGateCase>();
 
 Require(states.Count == 6, "runtime manifest must own exactly the six #604 states", failures);
 Require(config == new BattleHudRuntimeCaptureConfig(
@@ -13,8 +15,9 @@ Require(config == new BattleHudRuntimeCaptureConfig(
         EnemyDifficulty.Normal,
         LaunchMode.Skirmish,
         WorldVisualTheme.DayCommand,
-        8),
-    "runtime capture config must freeze language, credits, seed, difficulty, launch mode, theme, and settle frames", failures);
+        8,
+        6),
+    "runtime capture config must freeze language, credits, seed, difficulty, launch mode, theme, settle frames, and render flush frames", failures);
 Require(resolutions.SequenceEqual(
     [
         new BattleHudCaptureResolution(1280, 720),
@@ -39,7 +42,12 @@ foreach (var state in states)
         : state.CommandIntent == BattleHudCommandIntentKind.None,
         $"{state.Kind} source and command intent must agree", failures);
     Require(state.Projection.Credits >= 0, $"{state.Kind} credits must be non-negative", failures);
+    foreach (var resolution in resolutions)
+    {
+        visualGateCases.Add(BattleHudVisualGate.Validate(state, resolution, failures));
+    }
 }
+Require(visualGateCases.Count == 18, "visual gate catalog must cover all 18 state-resolution captures", failures);
 
 var empty = BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.Empty).Projection;
 Require(empty.Selection.Kind == BattleHudSelectionKind.None && !empty.Production.Visible && empty.Alert is null,
@@ -78,55 +86,26 @@ Require(alert is { Kind: AlertKind.Economy, RemainingRatio: > 0 },
 
 var root = FindRoot();
 var applicator = Read(root, "scripts", "ui", "hud", "HudLayer.RuntimeStates.cs");
-var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs");
+var capture = Read(root, "scripts", "VisualQaCaptureRoot.cs")
+    + Read(root, "scripts", "VisualQaCaptureRoot.BattleHudRuntime.cs");
 var harness = Read(root, "tools", "VisualQaCapture.sh");
 var productionBattleRoot = Read(root, "scripts", "BattleRoot.cs")
     + string.Join("\n", Directory.EnumerateFiles(
         Path.Combine(root, "scripts", "battle-root"),
         "*.cs",
         SearchOption.TopDirectoryOnly).Select(File.ReadAllText));
-RequireText(applicator, "ApplyBattleHudRuntimeProjection(BattleHudRuntimeProjection projection)",
-    "HudLayer must consume the typed read-only runtime projection", failures);
-RequireText(applicator, "SetSelectedUnitStance(projection.StanceStrip.SelectedStance, projection.StanceStrip.SelectedUnitCount)",
-    "runtime state applicator must feed the source stance projection through HudLayer", failures);
 Require(!applicator.Contains("UnitBattlefield", StringComparison.Ordinal),
     "runtime state applicator must not reach into gameplay authority", failures);
 Require(!applicator.Contains("SetProcess(false)", StringComparison.Ordinal)
     && !productionBattleRoot.Contains("SetProcess(false)", StringComparison.Ordinal)
     && !productionBattleRoot.Contains("SetPhysicsProcess(false)", StringComparison.Ordinal),
     "capture-only authority freeze must not leak into HudLayer or production BattleRoot sources", failures);
-RequireText(capture, "CaptureBattleHudRuntimeStates", "Visual QA must capture the runtime state manifest", failures);
 Require(!capture.Contains("SetSandboxDeveloperControlsVisible(false)", StringComparison.Ordinal),
     "runtime capture must not hide sandbox controls and mask the real launch gate", failures);
-RequireText(capture, "AssertNormalSkirmishSandboxHidden", "runtime capture must assert the real Skirmish sandbox gate", failures);
-RequireText(capture, "RequiredNode<Control>(\"SandboxDeveloperPanel\").Visible",
-    "runtime capture must read the actual SandboxDeveloperPanel visibility", failures);
-RequireText(capture, "StageDeterministicBattleCapture", "each Battle load must stage the fixed skirmish config", failures);
-RequireText(capture, "await LoadScene(BattleScenePath);", "each runtime state must start from a fresh Battle scene", failures);
-RequireOrdered(capture, failures,
-    "private async Task CaptureBattleHudRuntimeStates(",
-    "await LoadScene(BattleScenePath);",
-    "AssertNormalSkirmishSandboxHidden();",
-    "FreezeBattleHudRuntimeProjectionAuthority();",
-    "foreach (var resolution in BattleHudRuntimeStateCatalog.Resolutions)");
-RequireText(capture, "battle.SetProcess(false);",
-    "runtime fixture must stop live BattleRoot refresh from overwriting the typed projection", failures);
-RequireText(capture, "battle.SetPhysicsProcess(false);",
-    "runtime fixture must stop live BattleRoot physics while responsive HUD layout settles", failures);
-RequireText(capture, "GuiGetFocusOwner()?.ReleaseFocus()", "runtime captures must clear transient UI focus", failures);
-RequireText(capture, "NextFrames(config.SettleFrames)", "runtime captures must use the manifest settle-frame contract", failures);
-RequireOrdered(capture, failures,
-    "private async Task CaptureBattleHudRuntimeResolution(",
-    "GetTree().Paused = false;",
-    "SetCaptureSize(new Vector2I(resolution.Width, resolution.Height));",
-    "hud.ApplyBattleHudRuntimeProjection(state.Projection);",
-    "GetViewport().GuiGetFocusOwner()?.ReleaseFocus();",
-    "await NextFrames(config.SettleFrames);",
-    "AssertNormalSkirmishSandboxHidden();",
-    "GetTree().Paused = true;",
-    "await Capture(outputPath, state.CaptureFileName(resolution));");
-RequireText(harness, "battle_hud_runtime_${state}_${width}x${height}.png",
-    "Visual QA harness must validate every state/resolution capture", failures);
+Require(!harness.Contains("for state in", StringComparison.Ordinal),
+    "Visual QA harness must not duplicate the typed runtime state catalog in bash", failures);
+RequireText(harness, "git status --porcelain=v1 --untracked-files=all",
+    "Visual QA harness must reject untracked capture inputs", failures);
 
 Require(BattleHudRuntimeStateCatalog.For(BattleHudRuntimeStateKind.ProductionBuildingSelected).Projection.Status == "PROD READY",
     "production-ready status must fit the compact 1280 top strip", failures);
@@ -142,7 +121,31 @@ if (failures.Count > 0)
     throw new InvalidOperationException("BattleHudRuntimeStatesQa FAILED:\n" + string.Join("\n", failures));
 }
 
-Console.WriteLine("BattleHudRuntimeStatesQa PASSED: six typed projection/intent states produce 18 deterministic normal-skirmish captures with no gameplay authority coupling.");
+if (args is [
+    "--write-artifact-manifest",
+    var manifestPath,
+    var structuralEvidencePath,
+    var exactCommit,
+    var captureRunNonce])
+{
+    BattleHudVisualArtifactManifestWriter.Write(
+        manifestPath,
+        structuralEvidencePath,
+        exactCommit,
+        captureRunNonce,
+        ReadRepositoryHead(root),
+        visualGateCases);
+    Console.WriteLine($"Battle HUD artifact manifest written: {manifestPath} ({visualGateCases.Count} captures, {exactCommit})");
+}
+else if (args.Length == 0)
+{
+    Console.WriteLine("BattleHudRuntimeStatesQa PASSED: one typed catalog defines 18 deterministic captures and their runtime probe contracts.");
+}
+else
+{
+    throw new ArgumentException(
+        "Usage: BattleHudRuntimeStatesQa [--write-artifact-manifest <manifest-path> <structural-evidence-path> <exact-commit> <capture-run-nonce>]");
+}
 
 static void Require(bool condition, string message, List<string> failures)
 {
@@ -154,22 +157,6 @@ static void Require(bool condition, string message, List<string> failures)
 
 static void RequireText(string source, string expected, string message, List<string> failures) =>
     Require(source.Contains(expected, StringComparison.Ordinal), message, failures);
-
-static void RequireOrdered(string source, List<string> failures, params string[] markers)
-{
-    var cursor = 0;
-    foreach (var marker in markers)
-    {
-        var index = source.IndexOf(marker, cursor, StringComparison.Ordinal);
-        if (index < 0)
-        {
-            failures.Add($"runtime capture order is missing or misplaced: {marker}");
-            return;
-        }
-
-        cursor = index + marker.Length;
-    }
-}
 
 static string Read(string root, params string[] parts) =>
     File.ReadAllText(Path.Combine([root, .. parts]));
@@ -188,4 +175,31 @@ static string FindRoot()
     }
 
     throw new InvalidOperationException("Could not locate ProceduralRts.csproj.");
+}
+
+static string ReadRepositoryHead(string root)
+{
+    using var process = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            FileName = "git",
+            WorkingDirectory = root,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        },
+    };
+    process.StartInfo.ArgumentList.Add("rev-parse");
+    process.StartInfo.ArgumentList.Add("HEAD");
+    process.Start();
+    var output = process.StandardOutput.ReadToEnd().Trim();
+    var error = process.StandardError.ReadToEnd().Trim();
+    process.WaitForExit();
+    if (process.ExitCode != 0 || output.Length != 40 || !output.All(Uri.IsHexDigit))
+    {
+        throw new InvalidOperationException($"Could not resolve repository HEAD: {error}");
+    }
+
+    return output.ToLowerInvariant();
 }

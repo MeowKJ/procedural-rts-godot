@@ -157,6 +157,17 @@ public partial class HudLayer : CanvasLayer
         return HudLayoutMath.CompactFieldText(text, maxChars);
     }
 
+    private static void SetLabelTextAndResetSizeWhenChanged(Label label, string next)
+    {
+        if (string.Equals(label.Text, next, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        label.Text = next;
+        label.ResetSize();
+    }
+
     private static string CompactMultiline(string text, int maxCharsPerLine)
     {
         return string.Join("\n", text

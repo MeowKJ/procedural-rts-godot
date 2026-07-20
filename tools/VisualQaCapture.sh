@@ -5,14 +5,35 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
 : "${GODOT_BIN:?Set GODOT_BIN to the Godot 4.7 Mono executable.}"
+: "${BATTLE_HUD_CAPTURE_COMMIT:?Set BATTLE_HUD_CAPTURE_COMMIT to the exact checkout SHA.}"
+: "${BATTLE_HUD_CAPTURE_RUN_NONCE:?Set BATTLE_HUD_CAPTURE_RUN_NONCE to this capture run.}"
 command -v xvfb-run >/dev/null
 command -v timeout >/dev/null
+
+checkout_commit="$(git rev-parse HEAD)"
+capture_commit="$BATTLE_HUD_CAPTURE_COMMIT"
+capture_run_nonce="$BATTLE_HUD_CAPTURE_RUN_NONCE"
+if [[ "$capture_commit" != "$checkout_commit" ]]; then
+  echo "Battle HUD capture commit $capture_commit does not match checkout $checkout_commit." >&2
+  exit 1
+fi
+if ! git diff --quiet -- || ! git diff --cached --quiet --; then
+  echo "Battle HUD capture requires a clean tracked working tree and index." >&2
+  exit 1
+fi
+if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
+  echo "Battle HUD capture rejects untracked files outside ignored build and artifact paths." >&2
+  exit 1
+fi
 
 output="artifacts/visual-qa"
 log="$output/visual-qa.log"
 exit_log="$output/normal-exit-qa.log"
 mkdir -p "$output"
 rm -f "$output"/*.png "$log" "$exit_log"
+rm -f \
+  "$output/battle-hud-runtime-structural-evidence.json" \
+  "$output/battle-hud-runtime-artifact-manifest.json"
 rm -f "$output"/normal-exit-qa-attempt-*.log
 
 capture_started_seconds=$SECONDS
@@ -89,21 +110,21 @@ assert_png_dimensions battle_hud_1280x720.png 1280 720
 assert_png_dimensions battle_hud_1600x900.png 1600 900
 assert_png_dimensions battle_hud_1920x1080.png 1920 1080
 
-for state in \
-  empty \
-  unit_selected \
-  production_building_selected \
-  unavailable_low_resources \
-  queue_progress \
-  alert
-do
-  for dimensions in 1280x720 1600x900 1920x1080
-  do
-    width="${dimensions%x*}"
-    height="${dimensions#*x}"
-    assert_png_dimensions "battle_hud_runtime_${state}_${width}x${height}.png" "$width" "$height"
-  done
-done
+structural_evidence="$output/battle-hud-runtime-structural-evidence.json"
+artifact_manifest="$output/battle-hud-runtime-artifact-manifest.json"
+dotnet run \
+  --project tools/BattleHudRuntimeStatesQa/BattleHudRuntimeStatesQa.csproj \
+  --no-restore \
+  -- \
+  --write-artifact-manifest \
+  "$artifact_manifest" \
+  "$structural_evidence" \
+  "$capture_commit" \
+  "$capture_run_nonce"
+if [[ ! -s "$artifact_manifest" ]]; then
+  echo "Battle HUD artifact manifest is missing or empty: $artifact_manifest" >&2
+  exit 1
+fi
 
 for file_name in \
   main_menu.png \
@@ -192,4 +213,4 @@ do
   fi
 done
 
-echo "Visual QA capture passed: six normal-skirmish HUD states at true 1280x720, 1600x900, and 1920x1080 plus real PauseQuitButton exit with clean managed texture teardown."
+echo "Visual QA capture passed: exact-commit Battle HUD manifest contains 18 runtime probes and PNG hashes across 1280x720, 1600x900, and 1920x1080; PauseQuitButton exit and managed texture teardown are clean."

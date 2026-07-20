@@ -29,6 +29,43 @@ public enum BattleHudSelectionKind
     ProductionBuilding,
 }
 
+public enum BattleHudRuntimeControlId
+{
+    ResourceStrip,
+    MinimapCluster,
+    RightRail,
+    CommandRibbon,
+    StatusLabel,
+    UnitDetailPanel,
+    SelectionTitleLabel,
+    SelectionMetaLabel,
+    SelectionStatsLabel,
+    SelectionDetailLabel,
+    UnitStanceStrip,
+    StanceHold,
+    ProductionPanel,
+    QueueSummaryLabel,
+    ProductionProviderLane0,
+    ProductionCard,
+    QueueMiniStack,
+    CancelProduction,
+    AlertRow0,
+}
+
+public enum BattleHudRuntimeSignalId
+{
+    NoSelection,
+    Status,
+    SelectionDetail,
+    UniformHoldStance,
+    BuildingDetail,
+    ProductionReady,
+    ProductionBlocked,
+    QueueProgress,
+    QueueCancel,
+    AlertPayload,
+}
+
 public readonly record struct BattleHudCaptureResolution(int Width, int Height)
 {
     public string Suffix => $"{Width}x{Height}";
@@ -41,7 +78,8 @@ public readonly record struct BattleHudRuntimeCaptureConfig(
     EnemyDifficulty EnemyDifficulty,
     LaunchMode LaunchMode,
     WorldVisualTheme Theme,
-    int SettleFrames);
+    int SettleFrames,
+    int RenderFlushFrames);
 
 public readonly record struct BattleHudSelectionProjection(
     BattleHudSelectionKind Kind,
@@ -102,14 +140,41 @@ public sealed record BattleHudRuntimeStateSpec(
     string CaptureId,
     BattleHudRuntimeSourceKind SourceKind,
     BattleHudCommandIntentKind CommandIntent,
-    BattleHudRuntimeProjection Projection)
+    BattleHudRuntimeProjection Projection,
+    IReadOnlyList<BattleHudRuntimeControlId> CriticalControls,
+    IReadOnlyList<BattleHudRuntimeSignalId> CriticalSignals)
 {
     public string CaptureFileName(BattleHudCaptureResolution resolution) =>
         $"battle_hud_runtime_{CaptureId}_{resolution.Suffix}.png";
 }
 
+public sealed record BattleHudRuntimeControlEvidence(
+    string ControlId,
+    float X,
+    float Y,
+    float Width,
+    float Height,
+    float EffectiveAlpha);
+
+public sealed record BattleHudRuntimeStructuralEvidence(
+    string Scenario,
+    string ExactCommit,
+    string CaptureRunNonce,
+    string State,
+    string CaptureId,
+    string FileName,
+    int Width,
+    int Height,
+    bool Passed,
+    IReadOnlyList<string> Checks,
+    IReadOnlyList<BattleHudRuntimeControlEvidence> Controls);
+
 public static class BattleHudRuntimeStateCatalog
 {
+    public const string Scenario = "normal-skirmish-battle-hud-runtime-v1";
+    public const string StructuralEvidenceFileName = "battle-hud-runtime-structural-evidence.json";
+    public const string ArtifactManifestFileName = "battle-hud-runtime-artifact-manifest.json";
+
     public static BattleHudRuntimeCaptureConfig CaptureConfig { get; } = new(
         GameLanguage.English,
         2400,
@@ -117,7 +182,8 @@ public static class BattleHudRuntimeStateCatalog
         EnemyDifficulty.Normal,
         LaunchMode.Skirmish,
         WorldVisualTheme.DayCommand,
-        8);
+        8,
+        6);
 
     private static readonly IReadOnlyList<BattleHudCaptureResolution> CaptureResolutions =
         Array.AsReadOnly<BattleHudCaptureResolution>(
@@ -142,7 +208,9 @@ public static class BattleHudRuntimeStateCatalog
                     BattleHudProductionProjection.None,
                     null,
                     false,
-                    "READY")),
+                    "READY"),
+                CriticalControls(),
+                Signals(BattleHudRuntimeSignalId.NoSelection, BattleHudRuntimeSignalId.Status)),
             new(
                 BattleHudRuntimeStateKind.UnitSelected,
                 "unit_selected",
@@ -153,8 +221,8 @@ public static class BattleHudRuntimeStateCatalog
                         BattleHudSelectionKind.Unit,
                         "ALLEY RUNNER",
                         "READY",
-                        "HP 180  SPD 92  RNG 140",
-                        "RECON INFANTRY / DIRECT FIRE",
+                        "HP180 SPD92 RNG140",
+                        "RECON / DIRECT FIRE",
                         "unit",
                         IconGlyph.Infantry),
                     UnitStanceStripProjection.FromSelection(UnitStance.Hold, selectedUnitCount: 1),
@@ -162,7 +230,19 @@ public static class BattleHudRuntimeStateCatalog
                     BattleHudProductionProjection.None,
                     null,
                     false,
-                    "UNIT SELECTED")),
+                    "UNIT SELECTED"),
+                CriticalControls(
+                    BattleHudRuntimeControlId.UnitDetailPanel,
+                    BattleHudRuntimeControlId.SelectionTitleLabel,
+                    BattleHudRuntimeControlId.SelectionMetaLabel,
+                    BattleHudRuntimeControlId.SelectionStatsLabel,
+                    BattleHudRuntimeControlId.SelectionDetailLabel,
+                    BattleHudRuntimeControlId.UnitStanceStrip,
+                    BattleHudRuntimeControlId.StanceHold),
+                Signals(
+                    BattleHudRuntimeSignalId.SelectionDetail,
+                    BattleHudRuntimeSignalId.UniformHoldStance,
+                    BattleHudRuntimeSignalId.Status)),
             new(
                 BattleHudRuntimeStateKind.ProductionBuildingSelected,
                 "production_building_selected",
@@ -175,7 +255,12 @@ public static class BattleHudRuntimeStateCatalog
                     AvailableProduction(),
                     null,
                     true,
-                    "PROD READY")),
+                    "PROD READY"),
+                ProductionControls(),
+                Signals(
+                    BattleHudRuntimeSignalId.BuildingDetail,
+                    BattleHudRuntimeSignalId.ProductionReady,
+                    BattleHudRuntimeSignalId.Status)),
             new(
                 BattleHudRuntimeStateKind.UnavailableLowResources,
                 "unavailable_low_resources",
@@ -192,7 +277,12 @@ public static class BattleHudRuntimeStateCatalog
                     },
                     null,
                     true,
-                    "LOW CREDITS")),
+                    "LOW CREDITS"),
+                ProductionControls(),
+                Signals(
+                    BattleHudRuntimeSignalId.BuildingDetail,
+                    BattleHudRuntimeSignalId.ProductionBlocked,
+                    BattleHudRuntimeSignalId.Status)),
             new(
                 BattleHudRuntimeStateKind.QueueProgress,
                 "queue_progress",
@@ -206,12 +296,18 @@ public static class BattleHudRuntimeStateCatalog
                     {
                         QueuedCount = 4,
                         ActiveProgress = 0.56f,
-                        QueueSummary = "ALLEY RUNNER  56%  QUEUED 4",
+                        QueueSummary = "RUNNER 56%  Q4",
                         CanCancel = true,
                     },
                     null,
                     true,
-                    "QUEUE ACTIVE")),
+                    "QUEUE ACTIVE"),
+                ProductionControls(),
+                Signals(
+                    BattleHudRuntimeSignalId.BuildingDetail,
+                    BattleHudRuntimeSignalId.QueueProgress,
+                    BattleHudRuntimeSignalId.QueueCancel,
+                    BattleHudRuntimeSignalId.Status)),
             new(
                 BattleHudRuntimeStateKind.Alert,
                 "alert",
@@ -224,7 +320,9 @@ public static class BattleHudRuntimeStateCatalog
                     BattleHudProductionProjection.None,
                     new BattleHudAlertProjection(AlertKind.Economy, "INSUFFICIENT CREDITS", 1),
                     false,
-                    "CREDIT ALERT")),
+                    "CREDIT ALERT"),
+                CriticalControls(BattleHudRuntimeControlId.AlertRow0),
+                Signals(BattleHudRuntimeSignalId.AlertPayload, BattleHudRuntimeSignalId.Status)),
         ]);
 
     public static IReadOnlyList<BattleHudCaptureResolution> Resolutions => CaptureResolutions;
@@ -238,7 +336,7 @@ public static class BattleHudRuntimeStateCatalog
         BattleHudSelectionKind.ProductionBuilding,
         "CAT BARRACKS",
         "OPERATIONAL",
-        "HP 1200 / 1200  POWER +0",
+        "HP1200/1200 PWR+0",
         "SELL REFUND 300",
         "building",
         IconGlyph.Building);
@@ -252,4 +350,36 @@ public static class BattleHudRuntimeStateCatalog
         "",
         "QUEUE EMPTY",
         false);
+
+    private static IReadOnlyList<BattleHudRuntimeControlId> CriticalControls(
+        params BattleHudRuntimeControlId[] contextualControls)
+    {
+        var controls = new List<BattleHudRuntimeControlId>
+        {
+            BattleHudRuntimeControlId.ResourceStrip,
+            BattleHudRuntimeControlId.MinimapCluster,
+            BattleHudRuntimeControlId.RightRail,
+            BattleHudRuntimeControlId.CommandRibbon,
+            BattleHudRuntimeControlId.StatusLabel,
+        };
+        controls.AddRange(contextualControls);
+        return controls.AsReadOnly();
+    }
+
+    private static IReadOnlyList<BattleHudRuntimeControlId> ProductionControls() =>
+        CriticalControls(
+            BattleHudRuntimeControlId.UnitDetailPanel,
+            BattleHudRuntimeControlId.SelectionTitleLabel,
+            BattleHudRuntimeControlId.SelectionMetaLabel,
+            BattleHudRuntimeControlId.SelectionStatsLabel,
+            BattleHudRuntimeControlId.SelectionDetailLabel,
+            BattleHudRuntimeControlId.ProductionPanel,
+            BattleHudRuntimeControlId.QueueSummaryLabel,
+            BattleHudRuntimeControlId.ProductionProviderLane0,
+            BattleHudRuntimeControlId.ProductionCard,
+            BattleHudRuntimeControlId.QueueMiniStack,
+            BattleHudRuntimeControlId.CancelProduction);
+
+    private static IReadOnlyList<BattleHudRuntimeSignalId> Signals(params BattleHudRuntimeSignalId[] signals) =>
+        Array.AsReadOnly(signals);
 }
