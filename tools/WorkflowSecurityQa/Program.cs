@@ -1,9 +1,13 @@
+using System.Text.RegularExpressions;
+
 var root = FindRoot();
 var failures = new List<string>();
 
-CheckTrustedSelfHostedWorkflow("preflight", Path.Combine(root, ".github", "workflows", "preflight.yml"), failures);
-CheckTrustedSelfHostedWorkflow("verify-all", Path.Combine(root, ".github", "workflows", "verify-all.yml"), failures);
-CheckEverySelfHostedWorkflow(root, failures);
+CheckHostedValidationWorkflow("preflight", Path.Combine(root, ".github", "workflows", "preflight.yml"), failures);
+CheckHostedValidationWorkflow("verify-all", Path.Combine(root, ".github", "workflows", "verify-all.yml"), failures);
+CheckHostedPrivilegedWorkflows(root, failures);
+CheckEveryWorkflowUsesPinnedHostedActions(root, failures);
+CheckPublicArtifactBoundary(root, failures);
 CheckAiFriendlyGitHubSurface(root, failures);
 
 if (failures.Count > 0)
@@ -17,9 +21,9 @@ if (failures.Count > 0)
     Environment.Exit(1);
 }
 
-Console.WriteLine("WorkflowSecurityQa PASSED: self-hosted CI accepts only trusted pushes and maintainer dispatches.");
+Console.WriteLine("WorkflowSecurityQa PASSED: GitHub-hosted workflows use trusted triggers, pinned actions, and public-safe artifacts.");
 
-static void CheckTrustedSelfHostedWorkflow(string name, string path, List<string> failures)
+static void CheckHostedValidationWorkflow(string name, string path, List<string> failures)
 {
     Require(File.Exists(path), $"{name} workflow is missing: {path}", failures);
     if (!File.Exists(path))
@@ -28,31 +32,135 @@ static void CheckTrustedSelfHostedWorkflow(string name, string path, List<string
     }
 
     var source = File.ReadAllText(path);
-    var triggerSection = source.Split("permissions:", 2, StringSplitOptions.None)[0];
-    Require(triggerSection.Contains("workflow_dispatch:", StringComparison.Ordinal), $"{name} must support maintainer dispatch", failures);
-    Require(triggerSection.Contains("push:", StringComparison.Ordinal), $"{name} must run for trusted pushes", failures);
-    Require(triggerSection.Contains("- main", StringComparison.Ordinal), $"{name} must cover main", failures);
-    Require(triggerSection.Contains("- 'codex/**'", StringComparison.Ordinal), $"{name} must cover trusted Codex branches", failures);
-    Require(!triggerSection.Contains("pull_request:", StringComparison.Ordinal), $"{name} must not run self-hosted jobs for pull requests", failures);
-    Require(!triggerSection.Contains("pull_request_target:", StringComparison.Ordinal), $"{name} must not use pull_request_target", failures);
-    Require(source.Contains("runs-on: [self-hosted, linux, x64, procedural-rts]", StringComparison.Ordinal), $"{name} must keep the trusted Linux runner", failures);
+    RequireExactSection(
+        source,
+        "on:\n",
+        "\npermissions:",
+        "on:\n  workflow_dispatch:\n  push:\n    branches:\n      - main\n      - 'codex/**'",
+        $"{name} triggers",
+        failures);
+    RequireExactSection(
+        source,
+        "permissions:\n",
+        "\nconcurrency:",
+        "permissions:\n  contents: read",
+        $"{name} permissions",
+        failures);
+    Require(source.Contains("runs-on: ubuntu-24.04", StringComparison.Ordinal), $"{name} must use the pinned GitHub-hosted Ubuntu image", failures);
+    Require(!Regex.IsMatch(source, @"\bsecrets\b", RegexOptions.CultureInvariant), $"{name} must not receive repository secrets", failures);
 }
 
-static void CheckEverySelfHostedWorkflow(string root, List<string> failures)
+static void CheckHostedPrivilegedWorkflows(string root, List<string> failures)
 {
     var workflows = Path.Combine(root, ".github", "workflows");
-    foreach (var path in Directory.EnumerateFiles(workflows, "*.yml"))
+    var blueprint = File.ReadAllText(Path.Combine(workflows, "project-blueprint.yml"));
+    Require(blueprint.Contains("runs-on: ubuntu-24.04", StringComparison.Ordinal), "project blueprint must use the pinned GitHub-hosted Ubuntu image", failures);
+    RequireExactSection(
+        blueprint,
+        "on:\n",
+        "\npermissions:",
+        "on:\n  workflow_dispatch:\n  schedule:\n    - cron: '17 3 * * 1'",
+        "project blueprint triggers",
+        failures);
+    RequireExactSection(
+        blueprint,
+        "permissions:\n",
+        "\nconcurrency:",
+        "permissions:\n  contents: read\n  issues: write",
+        "project blueprint permissions",
+        failures);
+
+    var status = File.ReadAllText(Path.Combine(workflows, "verify-all-status.yml"));
+    Require(status.Contains("runs-on: ubuntu-24.04", StringComparison.Ordinal), "VerifyAll status must use the pinned GitHub-hosted Ubuntu image", failures);
+    RequireExactSection(
+        status,
+        "on:\n",
+        "\npermissions:",
+        "on:\n  workflow_run:\n    workflows:\n      - VerifyAll\n    types:\n      - requested\n      - completed",
+        "VerifyAll status triggers",
+        failures);
+    RequireExactSection(
+        status,
+        "permissions:\n",
+        "\nconcurrency:",
+        "permissions:\n  actions: read\n  pull-requests: write",
+        "VerifyAll status permissions",
+        failures);
+    Require(!status.Contains("actions/checkout@", StringComparison.Ordinal), "VerifyAll status must not checkout upstream code", failures);
+    Require(!status.Contains("actions/download-artifact@", StringComparison.Ordinal), "VerifyAll status must not execute or download upstream artifacts", failures);
+}
+
+static void CheckEveryWorkflowUsesPinnedHostedActions(string root, List<string> failures)
+{
+    var workflows = Path.Combine(root, ".github", "workflows");
+    var hostedRunner = new Regex(@"^runs-on:\s+(ubuntu|windows|macos)-[A-Za-z0-9.]+$", RegexOptions.CultureInvariant);
+    var pinnedAction = new Regex(@"^uses:\s+actions/[A-Za-z0-9_.-]+@[0-9a-f]{40}(?:\s+#\s+.+)?$", RegexOptions.CultureInvariant);
+
+    foreach (var path in Directory.EnumerateFiles(workflows)
+                 .Where(path => Path.GetExtension(path) is ".yml" or ".yaml"))
     {
         var source = File.ReadAllText(path);
-        if (!source.Contains("runs-on: [self-hosted, linux, x64, procedural-rts]", StringComparison.Ordinal))
-        {
-            continue;
-        }
+        Require(!source.Contains("self-hosted", StringComparison.OrdinalIgnoreCase), $"{Path.GetFileName(path)} must not reference a self-hosted runner", failures);
+        Require(!source.Contains("pull_request_target", StringComparison.Ordinal), $"{Path.GetFileName(path)} must not use pull_request_target", failures);
 
-        var triggerSection = source.Split("permissions:", 2, StringSplitOptions.None)[0];
-        Require(!triggerSection.Contains("pull_request:", StringComparison.Ordinal), $"{Path.GetFileName(path)} must not run on pull_request", failures);
-        Require(!triggerSection.Contains("pull_request_target:", StringComparison.Ordinal), $"{Path.GetFileName(path)} must not run on pull_request_target", failures);
+        foreach (var rawLine in source.Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.StartsWith("- ", StringComparison.Ordinal))
+            {
+                line = line[2..].TrimStart();
+            }
+
+            if (line.StartsWith("runs-on:", StringComparison.Ordinal))
+            {
+                Require(hostedRunner.IsMatch(line), $"{Path.GetFileName(path)} must pin a GitHub-hosted runner image: {line}", failures);
+            }
+
+            if (line.StartsWith("uses:", StringComparison.Ordinal) && !line.StartsWith("uses: ./", StringComparison.Ordinal))
+            {
+                Require(pinnedAction.IsMatch(line), $"{Path.GetFileName(path)} must pin GitHub-owned actions to a full commit SHA: {line}", failures);
+            }
+        }
     }
+}
+
+static void CheckPublicArtifactBoundary(string root, List<string> failures)
+{
+    var path = Path.Combine(root, ".github", "workflows", "verify-all.yml");
+    var source = File.ReadAllText(path);
+    var lines = source.Split('\n').Select(line => line.Trim()).ToArray();
+
+    Require(!lines.Contains("artifacts/**", StringComparer.Ordinal), "VerifyAll must not publish every generated artifact", failures);
+    Require(!lines.Any(line => line.Contains("artifacts/dotnet", StringComparison.Ordinal)), "VerifyAll must not publish build intermediates or PDBs", failures);
+    Require(lines.Contains("artifacts/**/*.json", StringComparer.Ordinal), "VerifyAll must publish structured JSON evidence", failures);
+    Require(lines.Contains("artifacts/**/*.png", StringComparer.Ordinal), "VerifyAll must publish visual PNG evidence", failures);
+    Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "public CI artifacts must have bounded retention", failures);
+}
+
+static void RequireExactSection(
+    string source,
+    string startMarker,
+    string endMarker,
+    string expected,
+    string name,
+    List<string> failures)
+{
+    var start = source.IndexOf(startMarker, StringComparison.Ordinal);
+    if (start < 0)
+    {
+        failures.Add($"{name} is missing {startMarker.Trim()}");
+        return;
+    }
+
+    var end = source.IndexOf(endMarker, start, StringComparison.Ordinal);
+    if (end < 0)
+    {
+        failures.Add($"{name} is missing {endMarker.Trim()}");
+        return;
+    }
+
+    var actual = source[start..end].TrimEnd();
+    Require(actual.Equals(expected, StringComparison.Ordinal), $"{name} changed outside its reviewed boundary", failures);
 }
 
 static void CheckAiFriendlyGitHubSurface(string root, List<string> failures)

@@ -23,25 +23,33 @@ env:
 jobs:
   verify-all:
     name: VerifyAll
-    runs-on: [self-hosted, linux, x64, procedural-rts]
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 8.0.x
 
       - name: Cache NuGet
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             nuget-${{ runner.os }}-
+
+      - name: Install hosted runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends curl unzip xvfb file fontconfig fonts-noto-core fonts-noto-cjk
+          fc-cache -f
 
       - name: Install Godot .NET
         shell: bash
@@ -61,14 +69,6 @@ jobs:
           chmod +x "$godot_bin"
           echo "GODOT_BIN=$godot_bin" >> "$GITHUB_ENV"
           "$godot_bin" --version
-
-      - name: Install UI font fallbacks
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends fonts-noto-core fonts-noto-cjk
-          fc-cache -f
 
       - name: Restore .NET projects
         shell: bash
@@ -100,9 +100,12 @@ jobs:
 
       - name: Upload verification artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: verify-all-${{ github.run_id }}-${{ github.sha }}
           path: |
-            artifacts/**
+            artifacts/**/*.json
+            artifacts/**/*.png
+            artifacts/active-battle-perf/*.txt
           if-no-files-found: error
+          retention-days: 14
