@@ -20,12 +20,12 @@ concurrency:
 jobs:
   pr-status:
     name: 更新 VerifyAll 状态评论
-    runs-on: [self-hosted, linux, x64, procedural-rts]
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
       - name: 更新 PR 中文状态评论
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const eventRun = context.payload.workflow_run;
