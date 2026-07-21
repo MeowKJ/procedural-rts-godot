@@ -104,8 +104,11 @@ jobs:
         with:
           name: verify-all-${{ github.run_id }}-${{ github.sha }}
           path: |
-            artifacts/**/*.json
-            artifacts/**/*.png
             artifacts/active-battle-perf/*.txt
+            artifacts/ai-opponent-loop/*.json
+            artifacts/issue-568/*.json
+            artifacts/issue-569/*.json
+            artifacts/visual-qa/*.json
+            artifacts/visual-qa/*.png
           if-no-files-found: error
           retention-days: 14

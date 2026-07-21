@@ -95,9 +95,21 @@ static void CheckEveryWorkflowUsesPinnedHostedActions(string root, List<string> 
     var workflows = Path.Combine(root, ".github", "workflows");
     var hostedRunner = new Regex(@"^runs-on:\s+(ubuntu|windows|macos)-[A-Za-z0-9.]+$", RegexOptions.CultureInvariant);
     var pinnedAction = new Regex(@"^uses:\s+actions/[A-Za-z0-9_.-]+@[0-9a-f]{40}(?:\s+#\s+.+)?$", RegexOptions.CultureInvariant);
+    var reviewedWorkflows = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "preflight.yml",
+        "project-blueprint.yml",
+        "verify-all-status.yml",
+        "verify-all.yml",
+    };
+    var workflowPaths = Directory.EnumerateFiles(workflows)
+        .Where(path => Path.GetExtension(path) is ".yml" or ".yaml")
+        .OrderBy(path => path, StringComparer.Ordinal)
+        .ToArray();
+    var workflowNames = workflowPaths.Select(Path.GetFileName).ToHashSet(StringComparer.Ordinal);
+    Require(workflowNames.SetEquals(reviewedWorkflows), "workflow file set changed; every new workflow requires an explicit security review", failures);
 
-    foreach (var path in Directory.EnumerateFiles(workflows)
-                 .Where(path => Path.GetExtension(path) is ".yml" or ".yaml"))
+    foreach (var path in workflowPaths)
     {
         var source = File.ReadAllText(path);
         Require(!source.Contains("self-hosted", StringComparison.OrdinalIgnoreCase), $"{Path.GetFileName(path)} must not reference a self-hosted runner", failures);
@@ -128,12 +140,16 @@ static void CheckPublicArtifactBoundary(string root, List<string> failures)
 {
     var path = Path.Combine(root, ".github", "workflows", "verify-all.yml");
     var source = File.ReadAllText(path);
-    var lines = source.Split('\n').Select(line => line.Trim()).ToArray();
-
-    Require(!lines.Contains("artifacts/**", StringComparer.Ordinal), "VerifyAll must not publish every generated artifact", failures);
-    Require(!lines.Any(line => line.Contains("artifacts/dotnet", StringComparison.Ordinal)), "VerifyAll must not publish build intermediates or PDBs", failures);
-    Require(lines.Contains("artifacts/**/*.json", StringComparer.Ordinal), "VerifyAll must publish structured JSON evidence", failures);
-    Require(lines.Contains("artifacts/**/*.png", StringComparer.Ordinal), "VerifyAll must publish visual PNG evidence", failures);
+    RequireExactSection(
+        source,
+        "          path: |\n",
+        "\n          if-no-files-found:",
+        "          path: |\n            artifacts/active-battle-perf/*.txt\n            artifacts/ai-opponent-loop/*.json\n            artifacts/issue-568/*.json\n            artifacts/issue-569/*.json\n            artifacts/visual-qa/*.json\n            artifacts/visual-qa/*.png",
+        "VerifyAll public artifact allowlist",
+        failures);
+    Require(!source.Contains("artifacts/dotnet", StringComparison.Ordinal), "VerifyAll must not publish build intermediates or PDBs", failures);
+    Require(!source.Contains("artifacts/**/*.json", StringComparison.Ordinal), "VerifyAll must not use recursive JSON artifact globs", failures);
+    Require(!source.Contains("artifacts/**/*.png", StringComparison.Ordinal), "VerifyAll must not use recursive PNG artifact globs", failures);
     Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "public CI artifacts must have bounded retention", failures);
 }
 
