@@ -95,10 +95,18 @@ function Assert-WindowsExportTemplates {
     $godotVersion = (& $GodotPath --version | Out-String).Trim()
     Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($godotVersion)) "Godot executable did not report a version."
     Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) "APPDATA is required to resolve the Godot export template path."
-    $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\$godotVersion"
+    $templateVersion = $godotVersion
+    $officialMarker = ".official."
+    $officialIndex = $godotVersion.IndexOf($officialMarker, [StringComparison]::Ordinal)
+    if ($officialIndex -gt 0) {
+        $templateVersion = $godotVersion.Substring(0, $officialIndex)
+    }
+    $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\$templateVersion"
     foreach ($template in @("version.txt", "windows_debug_x86_64.exe", "windows_release_x86_64.exe")) {
         Assert-ReleaseCondition (Test-Path -LiteralPath (Join-Path $templateRoot $template) -PathType Leaf) "Required Godot export template is missing at $templateRoot: $template"
     }
+    $installedTemplateVersion = (Get-Content -LiteralPath (Join-Path $templateRoot "version.txt") -Raw).Trim()
+    Assert-ReleaseCondition ($installedTemplateVersion -eq $templateVersion) "Godot export template version '$installedTemplateVersion' does not match expected '$templateVersion'."
     return $godotVersion
 }
 

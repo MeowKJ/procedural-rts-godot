@@ -86,8 +86,11 @@ jobs:
             }
           }
           $templateVersion = (Get-Content -LiteralPath (Join-Path $templateSource 'version.txt') -Raw).Trim()
-          if ($templateVersion -ne $godotVersion) { throw "Godot template version '$templateVersion' does not match editor '$godotVersion'." }
-          $templateDestination = Join-Path $env:APPDATA "Godot\export_templates\$godotVersion"
+          $templateBuildPrefix = "$templateVersion.official."
+          if ($godotVersion -ne $templateVersion -and -not $godotVersion.StartsWith($templateBuildPrefix, [StringComparison]::Ordinal)) {
+            throw "Godot template version '$templateVersion' is incompatible with editor '$godotVersion'."
+          }
+          $templateDestination = Join-Path $env:APPDATA "Godot\export_templates\$templateVersion"
           New-Item -ItemType Directory -Force -Path $templateDestination | Out-Null
           Get-ChildItem -LiteralPath $templateSource -Force | ForEach-Object {
             Copy-Item -LiteralPath $_.FullName -Destination $templateDestination -Recurse -Force
