@@ -24,6 +24,7 @@ Require(sample.RootElement.GetProperty("map").GetProperty("id").GetString() == s
 var preset = File.ReadAllText(Path.Combine(root, "export_presets.cfg"));
 Require(preset.Contains($"application/file_version=\"{windowsVersion}\"", StringComparison.Ordinal), "Windows file version must match release identity");
 Require(preset.Contains($"application/product_version=\"{windowsVersion}\"", StringComparison.Ordinal), "Windows product version must match release identity");
+Require(preset.Contains("binary_format/embed_pck=true", StringComparison.Ordinal), "Windows release export must embed its PCK");
 var menu = File.ReadAllText(Path.Combine(root, "scripts", "main-menu", "MainMenuRoot.Build.cs"));
 Require(menu.Contains("ReleaseIdentity.Current.Version", StringComparison.Ordinal) && menu.Contains("ReleaseVersion", StringComparison.Ordinal), "Main menu must render canonical release identity");
 var publisher = File.ReadAllText(Path.Combine(root, "tools", "PublishWindowsPrerelease.ps1"));

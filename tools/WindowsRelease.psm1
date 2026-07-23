@@ -38,12 +38,15 @@ function Get-ReleaseIdentity {
 function Get-ReleasePresetValue {
     param([string]$Content, [string]$Name)
     $escaped = [regex]::Escape($Name)
-    $pattern = '(?m)^' + $escaped + '="(?<value>[^"]*)"$'
+    $pattern = '(?m)^' + $escaped + '[ \t]*=[ \t]*(?:"(?<quoted>[^"]*)"|(?<boolean>true|false))[ \t]*\r?$'
     $match = [regex]::Match($Content, $pattern)
     if (-not $match.Success) {
         throw "Windows export preset is missing '$Name'."
     }
-    return $match.Groups["value"].Value
+    if ($match.Groups["quoted"].Success) {
+        return $match.Groups["quoted"].Value
+    }
+    return $match.Groups["boolean"].Value
 }
 
 function Assert-WindowsExportPreset {
