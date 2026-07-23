@@ -5,6 +5,63 @@ namespace ProceduralRts;
 
 public partial class MainMenuRoot
 {
+    private bool TryStartAuthoredMapPreviewFromCommandLine()
+    {
+        if (HasSceneOverride())
+            return false;
+
+        var userArguments = OS.GetCmdlineUserArgs();
+        if (!AuthoredMapPreviewRequest.IsRequested(userArguments))
+            return false;
+
+        try
+        {
+            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments);
+            GD.Print($"Authored map preview staged: id={launch.MapId} sha256={launch.Sha256}");
+            SetProcess(false);
+            CallDeferred(nameof(LaunchAuthoredMapPreviewFromCommandLine));
+        }
+        catch (Exception exception)
+        {
+            RejectAuthoredMapPreviewFromCommandLine(exception);
+        }
+
+        return true;
+    }
+
+    private static bool HasSceneOverride()
+    {
+        foreach (var argument in OS.GetCmdlineArgs())
+        {
+            if (argument == "--scene")
+                return true;
+        }
+
+        return false;
+    }
+
+    private void LaunchAuthoredMapPreviewFromCommandLine()
+    {
+        try
+        {
+            var error = GetTree().ChangeSceneToFile(BattleScenePath);
+            if (error != Error.Ok) throw new InvalidOperationException($"Battle scene load failed: {error}.");
+        }
+        catch (Exception exception)
+        {
+            RejectAuthoredMapPreviewFromCommandLine(exception);
+        }
+    }
+
+    private void RejectAuthoredMapPreviewFromCommandLine(Exception exception)
+    {
+        SetProcess(false);
+        SkirmishSetupState.ClearAuthoredMapHandoff();
+        var message = exception.Message.Length <= 240 ? exception.Message : exception.Message[..240];
+        GD.PushError($"Authored preview command-line launch rejected: {message}");
+        GetTree().Quit(2);
+    }
+
     private void StartSkirmish()
     {
         LaunchBattle(CurrentSkirmishOptions(), GameText.T("menu.status.loading"));

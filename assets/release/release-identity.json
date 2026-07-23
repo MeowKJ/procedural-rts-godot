@@ -1,0 +1,9 @@
+{
+  "version": "0.2.0-rc.1",
+  "tag": "v0.2.0-rc.1",
+  "windowsFileVersion": "0.2.0.1",
+  "godot": "4.7-stable-mono",
+  "target": "windows-x86_64",
+  "sampleMapId": "authored-map-preview",
+  "sampleMapHash": "65ddc348ea79a76832237f30b7287436fd23f615cd04ccc3e2db524603b206e7"
+}

@@ -5,6 +5,18 @@ public sealed record AuthoredMapPreviewRequest(string AbsoluteArtifactPath, stri
     private const string PathFlag = "--authored-map-preview";
     private const string HashFlag = "--authored-map-sha256";
 
+    public static bool IsRequested(IReadOnlyList<string> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(arguments);
+        foreach (var argument in arguments)
+        {
+            if (argument is PathFlag or HashFlag)
+                return true;
+        }
+
+        return false;
+    }
+
     public static AuthoredMapPreviewRequest Parse(IReadOnlyList<string> arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);

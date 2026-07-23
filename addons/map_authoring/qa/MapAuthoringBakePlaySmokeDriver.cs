@@ -62,9 +62,11 @@ public partial class MapAuthoringBakePlaySmokeDriver : Node
             await WaitForOwnedChildExit(feature);
             Require(feature.OwnedPlayPid is null && feature.Dock?.PlayButtonText == "Play",
                 "Natural child exit must clear owned Play state.");
+            await WaitForEditorRunToSettle();
 
             feature.TogglePlayActiveScene();
-            var disposePid = feature.OwnedPlayPid ?? throw new InvalidOperationException("Dispose test child did not spawn.");
+            var disposePid = feature.OwnedPlayPid ?? throw new InvalidOperationException(
+                $"Dispose test child did not spawn: {feature.Dock?.StatusText ?? "no dock status"}");
             EditorInterface.Singleton.SetPluginEnabled(PluginName, false);
             await NextFrame();
             Require(!MapAuthoringRegistrationState.Active && !ProcessExists(disposePid),
@@ -94,6 +96,12 @@ public partial class MapAuthoringBakePlaySmokeDriver : Node
         for (var frame = 0; frame < 1200 && feature.OwnedPlayPid is not null; frame++) await ProcessFrame();
         feature.PollPlaySession();
         Require(feature.OwnedPlayPid is null, "Owned preview child did not exit after runtime smoke.");
+    }
+
+    private async Task WaitForEditorRunToSettle()
+    {
+        for (var frame = 0; frame < 120 && EditorInterface.Singleton.IsPlayingScene(); frame++) await ProcessFrame();
+        Require(!EditorInterface.Singleton.IsPlayingScene(), "Editor run state did not settle after owned preview exit.");
     }
 
     private async Task Capture(string file)

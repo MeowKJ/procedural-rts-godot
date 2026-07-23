@@ -13,11 +13,9 @@ public partial class AuthoredMapPreviewBootstrap : Node
         var userArguments = OS.GetCmdlineUserArgs();
         try
         {
-            var request = AuthoredMapPreviewRequest.Parse(userArguments);
-            var projectRoot = Path.GetFullPath(ProjectSettings.GlobalizePath("res://"));
-            var map = AuthoredMapPreviewRuntime.StageVerified(request, projectRoot);
-            _stagedMapId = map.Id;
-            _stagedHash = request.Sha256;
+            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments);
+            _stagedMapId = launch.MapId;
+            _stagedHash = launch.Sha256;
             CallDeferred(nameof(LaunchBattle));
         }
         catch (Exception exception)

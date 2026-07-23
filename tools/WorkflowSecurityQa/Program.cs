@@ -119,8 +119,17 @@ static void CheckHostedWindowsReleaseWorkflow(string root, List<string> failures
     Require(source.Contains("RELEASE_COMMIT: ${{ github.sha }}", StringComparison.Ordinal), "Windows release must bind package identity to the dispatched exact commit", failures);
     Require(source.Contains("ref: ${{ github.sha }}", StringComparison.Ordinal), "Windows release checkout must use the dispatched exact commit", failures);
     Require(source.Contains("dotnet restore tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj", StringComparison.Ordinal), "Windows release must restore ReleaseIdentityQa before its no-restore gate", failures);
+    Require(source.Contains("_mono_export_templates.tpz", StringComparison.Ordinal), "Windows release must install templates matching the Mono editor", failures);
+    Require(source.Contains("$templateSource = Join-Path $templateExtractRoot 'templates'", StringComparison.Ordinal), "Windows release must flatten the Godot template archive before export", failures);
+    Require(source.Contains("Import-Module ./tools/WindowsRelease.psm1 -Force", StringComparison.Ordinal) && source.Contains("Get-GodotExportTemplateVersion $godotVersion", StringComparison.Ordinal), "Windows release must use the shared editor-to-template version mapping", failures);
+    Require(source.Contains("templateArchiveVersion -ne $templateVersion", StringComparison.Ordinal), "Windows release must bind the template archive version to the editor template version", failures);
+    Require(source.Contains("./tools/WindowsReleaseModuleQa.ps1", StringComparison.Ordinal), "Windows release must execute the Godot template version mapping regression QA", failures);
+    Require(source.Contains("windows_debug_x86_64.exe", StringComparison.Ordinal) && source.Contains("windows_release_x86_64.exe", StringComparison.Ordinal), "Windows release must verify direct debug and release template installation", failures);
     Require(source.Contains("PackageWindowsRelease.ps1", StringComparison.Ordinal), "Windows release must package the exact commit", failures);
     Require(source.Contains("TestWindowsReleasePackage.ps1", StringComparison.Ordinal), "Windows release must run the clean-extract smoke", failures);
+    Require(source.Contains("name: Upload release-package failure diagnostics\n        if: failure()", StringComparison.Ordinal), "Windows release must preserve failure-only clean-extract diagnostics", failures);
+    Require(source.Contains("builds/release/clean-extract-runtime.stdout.log", StringComparison.Ordinal) && source.Contains("builds/release/clean-extract-runtime.stderr.log", StringComparison.Ordinal), "Windows release diagnostics must expose only clean-extract runtime logs", failures);
+    Require(source.Contains("name: windows-release-diagnostics-${{ github.run_id }}", StringComparison.Ordinal) && source.Contains("if-no-files-found: warn", StringComparison.Ordinal), "Windows release diagnostics must be bounded and tolerate pre-smoke failures", failures);
     Require(source.Contains("path: builds/release/**", StringComparison.Ordinal), "Windows release must upload only the release package root", failures);
     Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "Windows release artifacts must have bounded retention", failures);
     Require(!Regex.IsMatch(source, @"\bsecrets\b", RegexOptions.CultureInvariant), "Windows release must not receive repository secrets", failures);
