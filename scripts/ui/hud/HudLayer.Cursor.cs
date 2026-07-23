@@ -49,7 +49,7 @@ public partial class HudLayer
         Texture2D? texture = null;
         using var image = new Image();
         var absolutePath = ProjectSettings.GlobalizePath(texturePath);
-        if (image.Load(absolutePath) == Error.Ok)
+        if (Godot.FileAccess.FileExists(absolutePath) && image.Load(absolutePath) == Error.Ok)
         {
             texture = ImageTexture.CreateFromImage(image);
             if (texture is not null)

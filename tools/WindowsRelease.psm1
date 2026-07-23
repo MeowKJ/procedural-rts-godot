@@ -290,6 +290,7 @@ function Test-WindowsReleasePackage {
         $runtimeExcerpt = if ($runtimeLog.Length -gt 4000) { $runtimeLog.Substring($runtimeLog.Length - 4000) } else { $runtimeLog }
         Assert-ReleaseCondition (-not $timedOut) "Clean extracted release executable did not exit within 30 seconds. Runtime output:`n$runtimeExcerpt"
         Assert-ReleaseCondition ($process.ExitCode -eq 0) "Clean extracted release executable exited with $($process.ExitCode). Runtime output:`n$runtimeExcerpt"
+        Assert-ReleaseCondition (-not ($runtimeLog -match '(?m)^(?:ERROR|SCRIPT ERROR):')) "Clean extracted release executable emitted Godot error output. Runtime output:`n$runtimeExcerpt"
         Assert-ReleaseCondition ($runtimeLog.Contains("Authored map preview staged: id=$($Identity.sampleMapId) sha256=$($Identity.sampleMapHash)", [StringComparison]::Ordinal)) "Clean extracted runtime did not confirm the authored sample id/hash. Runtime output:`n$runtimeExcerpt"
 
         $evidence = [ordered]@{
@@ -300,6 +301,7 @@ function Test-WindowsReleasePackage {
             sampleMapId = $Identity.sampleMapId
             sampleMapHash = $Identity.sampleMapHash
             runtimeExitCode = $process.ExitCode
+            runtimeErrorFree = $true
         }
         Write-ReleaseUtf8 (Join-Path $root "clean-extract-smoke.json") (($evidence | ConvertTo-Json) + "`n")
     }
