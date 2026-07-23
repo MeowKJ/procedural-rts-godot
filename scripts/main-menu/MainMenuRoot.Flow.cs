@@ -7,6 +7,9 @@ public partial class MainMenuRoot
 {
     private bool TryStartAuthoredMapPreviewFromCommandLine()
     {
+        if (HasSceneOverride())
+            return false;
+
         var userArguments = OS.GetCmdlineUserArgs();
         if (!AuthoredMapPreviewRequest.IsRequested(userArguments))
             return false;
@@ -25,6 +28,17 @@ public partial class MainMenuRoot
         }
 
         return true;
+    }
+
+    private static bool HasSceneOverride()
+    {
+        foreach (var argument in OS.GetCmdlineArgs())
+        {
+            if (argument == "--scene")
+                return true;
+        }
+
+        return false;
     }
 
     private void LaunchAuthoredMapPreviewFromCommandLine()

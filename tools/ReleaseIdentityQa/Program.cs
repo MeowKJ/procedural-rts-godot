@@ -29,7 +29,7 @@ var menu = File.ReadAllText(Path.Combine(root, "scripts", "main-menu", "MainMenu
 Require(menu.Contains("ReleaseIdentity.Current.Version", StringComparison.Ordinal) && menu.Contains("ReleaseVersion", StringComparison.Ordinal), "Main menu must render canonical release identity");
 var mainMenu = File.ReadAllText(Path.Combine(root, "scripts", "MainMenuRoot.cs"));
 var menuFlow = File.ReadAllText(Path.Combine(root, "scripts", "main-menu", "MainMenuRoot.Flow.cs"));
-Require(mainMenu.Contains("TryStartAuthoredMapPreviewFromCommandLine", StringComparison.Ordinal) && menuFlow.Contains("AuthoredMapPreviewCommandLine.StageRequired", StringComparison.Ordinal), "Release main menu must support verified authored preview command-line smoke.");
+Require(mainMenu.Contains("TryStartAuthoredMapPreviewFromCommandLine", StringComparison.Ordinal) && menuFlow.Contains("AuthoredMapPreviewCommandLine.StageRequired", StringComparison.Ordinal) && menuFlow.Contains("HasSceneOverride", StringComparison.Ordinal), "Release main menu must support verified authored preview command-line smoke without stealing an editor scene override.");
 var publisher = File.ReadAllText(Path.Combine(root, "tools", "PublishWindowsPrerelease.ps1"));
 var windowsReleaseModuleQa = Path.Combine(root, "tools", "WindowsReleaseModuleQa.ps1");
 var acceptanceValidator = Path.Combine(root, "tools", "WindowsAcceptanceEvidence", "WindowsAcceptanceEvidence.csproj");
