@@ -40,6 +40,26 @@ internal static class MapAuthoringBakePlayScenarios
                     root, Path.Combine(root, "outside.mapspec.json")));
             Require(strictRejected, "CLI preview request must reject missing, duplicate, unknown, malformed, and outside-root input.", failures);
 
+            var releaseDirectory = Path.Combine(root, "release");
+            var releaseExecutable = Path.Combine(releaseDirectory, "ProceduralRTS.exe");
+            var releaseMaps = Path.Combine(releaseDirectory, "assets", "maps");
+            Directory.CreateDirectory(releaseMaps);
+            var releaseArtifactPath = Path.Combine(releaseMaps, "qa.mapspec.json");
+            File.WriteAllBytes(releaseArtifactPath, firstBytes);
+            var projectRootsResolve = AuthoredMapPreviewCommandLine.ResolveProjectRoot(root, releaseExecutable, path) == Path.GetFullPath(root)
+                && AuthoredMapPreviewCommandLine.ResolveProjectRoot(root, releaseExecutable, releaseArtifactPath) == Path.GetFullPath(releaseDirectory)
+                && AuthoredMapPreviewCommandLine.ResolveProjectRoot("res://", releaseExecutable, releaseArtifactPath) == Path.GetFullPath(releaseDirectory)
+                && Reject(() => AuthoredMapPreviewCommandLine.ResolveProjectRoot(root, releaseExecutable, Path.Combine(root, "outside.mapspec.json")));
+            Require(projectRootsResolve, "Preview command line must choose only the candidate whose assets/maps boundary contains the artifact.", failures);
+
+            var releaseLaunch = AuthoredMapPreviewCommandLine.StageRequired(
+                ["--authored-map-preview", releaseArtifactPath, "--authored-map-sha256", first.Sha256],
+                "res://", releaseExecutable);
+            var releaseFallbackStages = releaseLaunch.MapId == map.Id
+                && SkirmishSetupState.PendingMatchConfig.AuthoredMap?.Id == map.Id;
+            SkirmishSetupState.ClearAuthoredMapHandoff();
+            Require(releaseFallbackStages, "Exported preview command line must stage an assets/maps artifact beside the executable.", failures);
+
             SkirmishSetupState.PendingOptions = SkirmishOptions.Default;
             var request = new AuthoredMapPreviewRequest(path, first.Sha256);
             var staged = AuthoredMapPreviewRuntime.StageVerified(request, root);

@@ -16,8 +16,7 @@ public partial class MainMenuRoot
 
         try
         {
-            var projectRoot = Path.GetFullPath(ProjectSettings.GlobalizePath("res://"));
-            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments, projectRoot);
+            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments);
             GD.Print($"Authored map preview staged: id={launch.MapId} sha256={launch.Sha256}");
             SetProcess(false);
             CallDeferred(nameof(LaunchAuthoredMapPreviewFromCommandLine));
@@ -56,6 +55,7 @@ public partial class MainMenuRoot
 
     private void RejectAuthoredMapPreviewFromCommandLine(Exception exception)
     {
+        SetProcess(false);
         SkirmishSetupState.ClearAuthoredMapHandoff();
         var message = exception.Message.Length <= 240 ? exception.Message : exception.Message[..240];
         GD.PushError($"Authored preview command-line launch rejected: {message}");

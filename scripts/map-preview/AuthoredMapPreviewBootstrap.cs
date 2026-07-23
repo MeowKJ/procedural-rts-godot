@@ -13,8 +13,7 @@ public partial class AuthoredMapPreviewBootstrap : Node
         var userArguments = OS.GetCmdlineUserArgs();
         try
         {
-            var projectRoot = Path.GetFullPath(ProjectSettings.GlobalizePath("res://"));
-            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments, projectRoot);
+            var launch = AuthoredMapPreviewCommandLine.StageRequired(userArguments);
             _stagedMapId = launch.MapId;
             _stagedHash = launch.Sha256;
             CallDeferred(nameof(LaunchBattle));
