@@ -121,7 +121,9 @@ static void CheckHostedWindowsReleaseWorkflow(string root, List<string> failures
     Require(source.Contains("dotnet restore tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj", StringComparison.Ordinal), "Windows release must restore ReleaseIdentityQa before its no-restore gate", failures);
     Require(source.Contains("_mono_export_templates.tpz", StringComparison.Ordinal), "Windows release must install templates matching the Mono editor", failures);
     Require(source.Contains("$templateSource = Join-Path $templateExtractRoot 'templates'", StringComparison.Ordinal), "Windows release must flatten the Godot template archive before export", failures);
-    Require(source.Contains(@"templateBuildPrefix = ""$templateVersion.official.""", StringComparison.Ordinal), "Windows release must bind the template version to the editor build version", failures);
+    Require(source.Contains("Import-Module ./tools/WindowsRelease.psm1 -Force", StringComparison.Ordinal) && source.Contains("Get-GodotExportTemplateVersion $godotVersion", StringComparison.Ordinal), "Windows release must use the shared editor-to-template version mapping", failures);
+    Require(source.Contains("templateArchiveVersion -ne $templateVersion", StringComparison.Ordinal), "Windows release must bind the template archive version to the editor template version", failures);
+    Require(source.Contains("./tools/WindowsReleaseModuleQa.ps1", StringComparison.Ordinal), "Windows release must execute the Godot template version mapping regression QA", failures);
     Require(source.Contains("windows_debug_x86_64.exe", StringComparison.Ordinal) && source.Contains("windows_release_x86_64.exe", StringComparison.Ordinal), "Windows release must verify direct debug and release template installation", failures);
     Require(source.Contains("PackageWindowsRelease.ps1", StringComparison.Ordinal), "Windows release must package the exact commit", failures);
     Require(source.Contains("TestWindowsReleasePackage.ps1", StringComparison.Ordinal), "Windows release must run the clean-extract smoke", failures);

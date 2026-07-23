@@ -28,7 +28,9 @@ Require(preset.Contains("binary_format/embed_pck=true", StringComparison.Ordinal
 var menu = File.ReadAllText(Path.Combine(root, "scripts", "main-menu", "MainMenuRoot.Build.cs"));
 Require(menu.Contains("ReleaseIdentity.Current.Version", StringComparison.Ordinal) && menu.Contains("ReleaseVersion", StringComparison.Ordinal), "Main menu must render canonical release identity");
 var publisher = File.ReadAllText(Path.Combine(root, "tools", "PublishWindowsPrerelease.ps1"));
+var windowsReleaseModuleQa = Path.Combine(root, "tools", "WindowsReleaseModuleQa.ps1");
 var acceptanceValidator = Path.Combine(root, "tools", "WindowsAcceptanceEvidence", "WindowsAcceptanceEvidence.csproj");
+Require(File.Exists(windowsReleaseModuleQa), "Windows release module mapping QA must be checked in");
 Require(File.Exists(acceptanceValidator), "publisher must use the checked-in Windows acceptance validator");
 Require(publisher.Contains("$tagExists = $LASTEXITCODE -eq 0", StringComparison.Ordinal), "publisher must retain missing-tag state before invoking other commands");
 Require(publisher.Contains("if (-not $tagExists)", StringComparison.Ordinal), "publisher must explicitly create a missing tag at the verified commit");

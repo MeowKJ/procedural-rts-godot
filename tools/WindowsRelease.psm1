@@ -49,6 +49,23 @@ function Get-ReleasePresetValue {
     return $match.Groups["boolean"].Value
 }
 
+function Get-GodotExportTemplateVersion {
+    param([string]$GodotVersion)
+
+    $buildVersion = $GodotVersion.Trim()
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($buildVersion)) "Godot executable did not report a version."
+    $officialMarker = ".official."
+    $officialIndex = $buildVersion.IndexOf($officialMarker, [StringComparison]::Ordinal)
+    if ($officialIndex -lt 0) {
+        return $buildVersion
+    }
+
+    $templateVersion = $buildVersion.Substring(0, $officialIndex)
+    $buildMetadata = $buildVersion.Substring($officialIndex + $officialMarker.Length)
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($templateVersion) -and $buildMetadata -match '^[0-9a-f]+$') "Godot build version has malformed official metadata: $buildVersion"
+    return $templateVersion
+}
+
 function Assert-WindowsExportPreset {
     param([string]$ProjectRoot, $Identity)
 
@@ -95,12 +112,7 @@ function Assert-WindowsExportTemplates {
     $godotVersion = (& $GodotPath --version | Out-String).Trim()
     Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($godotVersion)) "Godot executable did not report a version."
     Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) "APPDATA is required to resolve the Godot export template path."
-    $templateVersion = $godotVersion
-    $officialMarker = ".official."
-    $officialIndex = $godotVersion.IndexOf($officialMarker, [StringComparison]::Ordinal)
-    if ($officialIndex -gt 0) {
-        $templateVersion = $godotVersion.Substring(0, $officialIndex)
-    }
+    $templateVersion = Get-GodotExportTemplateVersion $godotVersion
     $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\$templateVersion"
     foreach ($template in @("version.txt", "windows_debug_x86_64.exe", "windows_release_x86_64.exe")) {
         Assert-ReleaseCondition (Test-Path -LiteralPath (Join-Path $templateRoot $template) -PathType Leaf) "Required Godot export template is missing at $templateRoot: $template"
@@ -345,4 +357,4 @@ function Invoke-WindowsReleasePackage {
     }
 }
 
-Export-ModuleMember -Function Get-ReleaseIdentity, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
+Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage

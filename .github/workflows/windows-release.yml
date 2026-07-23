@@ -41,6 +41,10 @@ jobs:
           }
           Write-Host 'Trusted Windows release workflow policy verified.'
 
+      - name: Verify Godot template version mapping
+        shell: pwsh
+        run: ./tools/WindowsReleaseModuleQa.ps1
+
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
@@ -71,6 +75,8 @@ jobs:
           $godotPath = $godot.FullName
           $godotVersion = (& $godotPath --version | Out-String).Trim()
           if ([string]::IsNullOrWhiteSpace($godotVersion)) { throw 'Godot Mono console executable did not report a version.' }
+          Import-Module ./tools/WindowsRelease.psm1 -Force
+          $templateVersion = Get-GodotExportTemplateVersion $godotVersion
           $templateTgz = Join-Path $env:RUNNER_TEMP 'godot-templates.tpz'
           Invoke-WebRequest -Uri "$base/Godot_v${env:GODOT_VERSION}-${env:GODOT_RELEASE}_mono_export_templates.tpz" -OutFile $templateTgz
           $templateZip = Join-Path $env:RUNNER_TEMP 'godot-templates.zip'
@@ -85,10 +91,9 @@ jobs:
               throw "Godot export template archive is missing: templates/$template"
             }
           }
-          $templateVersion = (Get-Content -LiteralPath (Join-Path $templateSource 'version.txt') -Raw).Trim()
-          $templateBuildPrefix = "$templateVersion.official."
-          if ($godotVersion -ne $templateVersion -and -not $godotVersion.StartsWith($templateBuildPrefix, [StringComparison]::Ordinal)) {
-            throw "Godot template version '$templateVersion' is incompatible with editor '$godotVersion'."
+          $templateArchiveVersion = (Get-Content -LiteralPath (Join-Path $templateSource 'version.txt') -Raw).Trim()
+          if ($templateArchiveVersion -ne $templateVersion) {
+            throw "Godot template version '$templateArchiveVersion' is incompatible with editor '$godotVersion'."
           }
           $templateDestination = Join-Path $env:APPDATA "Godot\export_templates\$templateVersion"
           New-Item -ItemType Directory -Force -Path $templateDestination | Out-Null
