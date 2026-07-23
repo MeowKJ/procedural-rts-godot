@@ -57,6 +57,10 @@ RequireText(providerLane, "MetricsFor(HudVisualPrimitive.QueueRow)", "ProviderLa
 RequireText(providerLane, "HudVisualState.Selected", "ProviderLane must reuse foundation selected state", failures);
 RequireText(modeStrip, "HudVisualState.Selected", "Mode Strip must preserve selected state", failures);
 RequireText(modeStrip, "HudVisualState.Focused", "Mode Strip must compose focused state", failures);
+RequireText(modeStrip, "new Vector2(13, rect.Size.Y * 0.5f)", "Mode Strip must reserve a left icon lane for its compact grammar copy", failures);
+RequireText(modeStrip, "Label,", "Mode Strip must visibly draw its localized mode label", failures);
+RequireText(modeStrip, "HudVisualPrimitive.StatusBadge", "Mode Strip must render its interaction grammar as a foundation status badge", failures);
+RequireText(modeStrip, "Detail,", "Mode Strip must visibly draw its localized interaction grammar", failures);
 RequireText(upgradeCards, "HudStatusBadgeRole BadgeRole", "upgrade status data must expose an explicit badge role", failures);
 RequireText(upgradeCardControl, "StateFor(_state.BadgeRole)", "Status Badge must consume its explicit visual role", failures);
 Require(!upgradeCardControl.Contains("StatusKey.Contains", StringComparison.Ordinal), "Status Badge role must not be inferred from localization-key substrings", failures);
