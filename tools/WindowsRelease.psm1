@@ -115,7 +115,7 @@ function Assert-WindowsExportTemplates {
     $templateVersion = Get-GodotExportTemplateVersion $godotVersion
     $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\$templateVersion"
     foreach ($template in @("version.txt", "windows_debug_x86_64.exe", "windows_release_x86_64.exe")) {
-        Assert-ReleaseCondition (Test-Path -LiteralPath (Join-Path $templateRoot $template) -PathType Leaf) "Required Godot export template is missing at $templateRoot: $template"
+        Assert-ReleaseCondition (Test-Path -LiteralPath (Join-Path $templateRoot $template) -PathType Leaf) "Required Godot export template is missing at ${templateRoot}: $template"
     }
     $installedTemplateVersion = (Get-Content -LiteralPath (Join-Path $templateRoot "version.txt") -Raw).Trim()
     Assert-ReleaseCondition ($installedTemplateVersion -eq $templateVersion) "Godot export template version '$installedTemplateVersion' does not match expected '$templateVersion'."
