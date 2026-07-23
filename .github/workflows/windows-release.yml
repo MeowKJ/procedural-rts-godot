@@ -1,0 +1,95 @@
+name: Windows Release Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.7'
+  GODOT_RELEASE: 'stable'
+  RELEASE_COMMIT: ${{ github.sha }}
+
+jobs:
+  package:
+    name: Windows package and clean extract
+    runs-on: windows-2022
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Verify trusted trigger policy
+        shell: pwsh
+        run: |
+          $workflow = Get-Content -LiteralPath '.github/workflows/windows-release.yml' -Raw
+          $forbiddenTrigger = 'pull' + '_request(?:_target)?\s*:'
+          if ($workflow -match $forbiddenTrigger) {
+            throw 'Windows release workflow must not accept pull-request events.'
+          }
+          if ($workflow -notmatch '(?m)^\s*workflow_dispatch\s*:') {
+            throw 'Windows release workflow must retain maintainer-controlled workflow_dispatch.'
+          }
+          Write-Host 'Trusted Windows release workflow policy verified.'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore package dependencies
+        shell: pwsh
+        run: |
+          dotnet restore ProceduralRts.csproj
+          dotnet restore tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj
+
+      - name: Verify release identity mapping
+        shell: pwsh
+        run: dotnet run --project tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj --no-restore
+
+      - name: Install Godot Mono and export templates
+        id: godot
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = "https://github.com/godotengine/godot-builds/releases/download/${env:GODOT_VERSION}-${env:GODOT_RELEASE}"
+          $archive = Join-Path $env:RUNNER_TEMP "godot-mono.zip"
+          Invoke-WebRequest -Uri "$base/Godot_v${env:GODOT_VERSION}-${env:GODOT_RELEASE}_mono_win64.zip" -OutFile $archive
+          $destination = Join-Path $env:RUNNER_TEMP 'godot'
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
+          $godot = Get-ChildItem -LiteralPath $destination -Recurse -File -Filter '*_console.exe' | Select-Object -First 1
+          if ($null -eq $godot) { throw 'Godot Mono console executable was not found.' }
+          $templateTgz = Join-Path $env:RUNNER_TEMP 'godot-templates.tpz'
+          Invoke-WebRequest -Uri "$base/Godot_v${env:GODOT_VERSION}-${env:GODOT_RELEASE}_export_templates.tpz" -OutFile $templateTgz
+          $templateZip = Join-Path $env:RUNNER_TEMP 'godot-templates.zip'
+          Copy-Item -LiteralPath $templateTgz -Destination $templateZip -Force
+          $templateDestination = Join-Path $env:APPDATA 'Godot\export_templates\4.7.stable.mono'
+          New-Item -ItemType Directory -Force -Path $templateDestination | Out-Null
+          Expand-Archive -LiteralPath $templateZip -DestinationPath $templateDestination -Force
+          "godot=$($godot.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Package exact commit
+        shell: pwsh
+        run: |
+          ./tools/PackageWindowsRelease.ps1 -GodotPath '${{ steps.godot.outputs.godot }}' -Commit $env:RELEASE_COMMIT -OutputRoot builds/release
+
+      - name: Re-run clean extract smoke
+        shell: pwsh
+        run: ./tools/TestWindowsReleasePackage.ps1 -ReleaseRoot builds/release
+
+      - name: Upload release-package evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-release-package-${{ github.run_id }}
+          path: builds/release/**
+          if-no-files-found: error
+          retention-days: 14

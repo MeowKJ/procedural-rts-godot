@@ -6,6 +6,7 @@ var failures = new List<string>();
 CheckHostedValidationWorkflow("preflight", Path.Combine(root, ".github", "workflows", "preflight.yml"), failures);
 CheckHostedValidationWorkflow("verify-all", Path.Combine(root, ".github", "workflows", "verify-all.yml"), failures);
 CheckHostedPrivilegedWorkflows(root, failures);
+CheckHostedWindowsReleaseWorkflow(root, failures);
 CheckEveryWorkflowUsesPinnedHostedActions(root, failures);
 CheckPublicArtifactBoundary(root, failures);
 CheckAiFriendlyGitHubSurface(root, failures);
@@ -90,6 +91,41 @@ static void CheckHostedPrivilegedWorkflows(string root, List<string> failures)
     Require(!status.Contains("actions/download-artifact@", StringComparison.Ordinal), "VerifyAll status must not execute or download upstream artifacts", failures);
 }
 
+static void CheckHostedWindowsReleaseWorkflow(string root, List<string> failures)
+{
+    var path = Path.Combine(root, ".github", "workflows", "windows-release.yml");
+    Require(File.Exists(path), "Windows release workflow is missing", failures);
+    if (!File.Exists(path))
+    {
+        return;
+    }
+
+    var source = File.ReadAllText(path);
+    RequireExactSection(
+        source,
+        "on:\n",
+        "\npermissions:",
+        "on:\n  workflow_dispatch:",
+        "Windows release triggers",
+        failures);
+    RequireExactSection(
+        source,
+        "permissions:\n",
+        "\nconcurrency:",
+        "permissions:\n  contents: read",
+        "Windows release permissions",
+        failures);
+    Require(source.Contains("runs-on: windows-2022", StringComparison.Ordinal), "Windows release must use the pinned GitHub-hosted Windows image", failures);
+    Require(source.Contains("RELEASE_COMMIT: ${{ github.sha }}", StringComparison.Ordinal), "Windows release must bind package identity to the dispatched exact commit", failures);
+    Require(source.Contains("ref: ${{ github.sha }}", StringComparison.Ordinal), "Windows release checkout must use the dispatched exact commit", failures);
+    Require(source.Contains("dotnet restore tools/ReleaseIdentityQa/ReleaseIdentityQa.csproj", StringComparison.Ordinal), "Windows release must restore ReleaseIdentityQa before its no-restore gate", failures);
+    Require(source.Contains("PackageWindowsRelease.ps1", StringComparison.Ordinal), "Windows release must package the exact commit", failures);
+    Require(source.Contains("TestWindowsReleasePackage.ps1", StringComparison.Ordinal), "Windows release must run the clean-extract smoke", failures);
+    Require(source.Contains("path: builds/release/**", StringComparison.Ordinal), "Windows release must upload only the release package root", failures);
+    Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "Windows release artifacts must have bounded retention", failures);
+    Require(!Regex.IsMatch(source, @"\bsecrets\b", RegexOptions.CultureInvariant), "Windows release must not receive repository secrets", failures);
+}
+
 static void CheckEveryWorkflowUsesPinnedHostedActions(string root, List<string> failures)
 {
     var workflows = Path.Combine(root, ".github", "workflows");
@@ -101,6 +137,7 @@ static void CheckEveryWorkflowUsesPinnedHostedActions(string root, List<string> 
         "project-blueprint.yml",
         "verify-all-status.yml",
         "verify-all.yml",
+        "windows-release.yml",
     };
     var workflowPaths = Directory.EnumerateFiles(workflows)
         .Where(path => Path.GetExtension(path) is ".yml" or ".yaml")
