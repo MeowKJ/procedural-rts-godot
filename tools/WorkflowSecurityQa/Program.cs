@@ -127,6 +127,9 @@ static void CheckHostedWindowsReleaseWorkflow(string root, List<string> failures
     Require(source.Contains("windows_debug_x86_64.exe", StringComparison.Ordinal) && source.Contains("windows_release_x86_64.exe", StringComparison.Ordinal), "Windows release must verify direct debug and release template installation", failures);
     Require(source.Contains("PackageWindowsRelease.ps1", StringComparison.Ordinal), "Windows release must package the exact commit", failures);
     Require(source.Contains("TestWindowsReleasePackage.ps1", StringComparison.Ordinal), "Windows release must run the clean-extract smoke", failures);
+    Require(source.Contains("name: Upload release-package failure diagnostics\n        if: failure()", StringComparison.Ordinal), "Windows release must preserve failure-only clean-extract diagnostics", failures);
+    Require(source.Contains("builds/release/clean-extract-runtime.stdout.log", StringComparison.Ordinal) && source.Contains("builds/release/clean-extract-runtime.stderr.log", StringComparison.Ordinal), "Windows release diagnostics must expose only clean-extract runtime logs", failures);
+    Require(source.Contains("name: windows-release-diagnostics-${{ github.run_id }}", StringComparison.Ordinal) && source.Contains("if-no-files-found: warn", StringComparison.Ordinal), "Windows release diagnostics must be bounded and tolerate pre-smoke failures", failures);
     Require(source.Contains("path: builds/release/**", StringComparison.Ordinal), "Windows release must upload only the release package root", failures);
     Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "Windows release artifacts must have bounded retention", failures);
     Require(!Regex.IsMatch(source, @"\bsecrets\b", RegexOptions.CultureInvariant), "Windows release must not receive repository secrets", failures);

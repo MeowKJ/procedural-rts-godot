@@ -116,6 +116,17 @@ jobs:
         shell: pwsh
         run: ./tools/TestWindowsReleasePackage.ps1 -ReleaseRoot builds/release
 
+      - name: Upload release-package failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-release-diagnostics-${{ github.run_id }}
+          path: |
+            builds/release/clean-extract-runtime.stdout.log
+            builds/release/clean-extract-runtime.stderr.log
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload release-package evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -276,17 +276,22 @@ function Test-WindowsReleasePackage {
         $process = [System.Diagnostics.Process]::Start($start)
         $outTask = $process.StandardOutput.ReadToEndAsync()
         $errTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit(30000)) {
-            $process.Kill($true)
-            throw "Clean extracted release executable did not exit within 30 seconds."
+        $timedOut = -not $process.WaitForExit(30000)
+        if ($timedOut) {
+            if (-not $process.HasExited) {
+                $process.Kill($true)
+            }
+            $process.WaitForExit()
         }
         $stdoutText = $outTask.GetAwaiter().GetResult()
         $stderrText = $errTask.GetAwaiter().GetResult()
         Write-ReleaseUtf8 $stdout $stdoutText
         Write-ReleaseUtf8 $stderr $stderrText
-        Assert-ReleaseCondition ($process.ExitCode -eq 0) "Clean extracted release executable exited with $($process.ExitCode)."
         $runtimeLog = $stdoutText + "`n" + $stderrText
-        Assert-ReleaseCondition ($runtimeLog.Contains("Authored map preview staged: id=$($Identity.sampleMapId) sha256=$($Identity.sampleMapHash)", [StringComparison]::Ordinal)) "Clean extracted runtime did not confirm the authored sample id/hash."
+        $runtimeExcerpt = if ($runtimeLog.Length -gt 4000) { $runtimeLog.Substring($runtimeLog.Length - 4000) } else { $runtimeLog }
+        Assert-ReleaseCondition (-not $timedOut) "Clean extracted release executable did not exit within 30 seconds. Runtime output:`n$runtimeExcerpt"
+        Assert-ReleaseCondition ($process.ExitCode -eq 0) "Clean extracted release executable exited with $($process.ExitCode). Runtime output:`n$runtimeExcerpt"
+        Assert-ReleaseCondition ($runtimeLog.Contains("Authored map preview staged: id=$($Identity.sampleMapId) sha256=$($Identity.sampleMapHash)", [StringComparison]::Ordinal)) "Clean extracted runtime did not confirm the authored sample id/hash. Runtime output:`n$runtimeExcerpt"
 
         $evidence = [ordered]@{
             package = [System.IO.Path]::GetFileName($zip)
