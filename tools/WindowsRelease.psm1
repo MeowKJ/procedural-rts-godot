@@ -198,6 +198,21 @@ function Write-ReleaseChecksums {
     Write-ReleaseUtf8 $Destination (($lines -join "`n") + "`n")
 }
 
+function Get-WindowsReleaseCleanExtractArguments {
+    param([string]$SamplePath, [string]$SampleHash)
+
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($SamplePath)) "Clean extracted sample path is required."
+    Assert-ReleaseCondition ($SampleHash -match '^[a-f0-9]{64}$') "Clean extracted sample SHA-256 must be lowercase."
+    return @(
+        "--headless",
+        "--quit-after", "3",
+        "--scene", "res://scenes/AuthoredMapPreviewBootstrap.tscn",
+        "--",
+        "--authored-map-preview", $SamplePath,
+        "--authored-map-sha256", $SampleHash
+    )
+}
+
 function Test-WindowsReleasePackage {
     param([string]$ReleaseRoot, $Identity)
 
@@ -236,7 +251,7 @@ function Test-WindowsReleasePackage {
         $start.UseShellExecute = $false
         $start.RedirectStandardOutput = $true
         $start.RedirectStandardError = $true
-        foreach ($argument in @("--headless", "--quit-after", "3", "--", "--authored-map-preview", $extractedSample.FullName, "--authored-map-sha256", $Identity.sampleMapHash)) {
+        foreach ($argument in @(Get-WindowsReleaseCleanExtractArguments -SamplePath $extractedSample.FullName -SampleHash $Identity.sampleMapHash)) {
             [void]$start.ArgumentList.Add($argument)
         }
         $process = [System.Diagnostics.Process]::Start($start)
@@ -357,4 +372,4 @@ function Invoke-WindowsReleasePackage {
     }
 }
 
-Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
+Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
