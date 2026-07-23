@@ -68,14 +68,36 @@ jobs:
           Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force
           $godot = Get-ChildItem -LiteralPath $destination -Recurse -File -Filter '*_console.exe' | Select-Object -First 1
           if ($null -eq $godot) { throw 'Godot Mono console executable was not found.' }
+          $godotPath = $godot.FullName
+          $godotVersion = (& $godotPath --version | Out-String).Trim()
+          if ([string]::IsNullOrWhiteSpace($godotVersion)) { throw 'Godot Mono console executable did not report a version.' }
           $templateTgz = Join-Path $env:RUNNER_TEMP 'godot-templates.tpz'
-          Invoke-WebRequest -Uri "$base/Godot_v${env:GODOT_VERSION}-${env:GODOT_RELEASE}_export_templates.tpz" -OutFile $templateTgz
+          Invoke-WebRequest -Uri "$base/Godot_v${env:GODOT_VERSION}-${env:GODOT_RELEASE}_mono_export_templates.tpz" -OutFile $templateTgz
           $templateZip = Join-Path $env:RUNNER_TEMP 'godot-templates.zip'
           Copy-Item -LiteralPath $templateTgz -Destination $templateZip -Force
-          $templateDestination = Join-Path $env:APPDATA 'Godot\export_templates\4.7.stable.mono'
+          $templateExtractRoot = Join-Path $env:RUNNER_TEMP 'godot-templates-extracted'
+          Expand-Archive -LiteralPath $templateZip -DestinationPath $templateExtractRoot -Force
+          $templateSource = Join-Path $templateExtractRoot 'templates'
+          if (-not (Test-Path -LiteralPath $templateSource)) { throw 'Godot export template archive is missing its templates directory.' }
+          $requiredTemplates = @('version.txt', 'windows_debug_x86_64.exe', 'windows_release_x86_64.exe')
+          foreach ($template in $requiredTemplates) {
+            if (-not (Test-Path -LiteralPath (Join-Path $templateSource $template) -PathType Leaf)) {
+              throw "Godot export template archive is missing: templates/$template"
+            }
+          }
+          $templateVersion = (Get-Content -LiteralPath (Join-Path $templateSource 'version.txt') -Raw).Trim()
+          if ($templateVersion -ne $godotVersion) { throw "Godot template version '$templateVersion' does not match editor '$godotVersion'." }
+          $templateDestination = Join-Path $env:APPDATA "Godot\export_templates\$godotVersion"
           New-Item -ItemType Directory -Force -Path $templateDestination | Out-Null
-          Expand-Archive -LiteralPath $templateZip -DestinationPath $templateDestination -Force
-          "godot=$($godot.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Get-ChildItem -LiteralPath $templateSource -Force | ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination $templateDestination -Recurse -Force
+          }
+          foreach ($template in $requiredTemplates) {
+            if (-not (Test-Path -LiteralPath (Join-Path $templateDestination $template))) {
+              throw "Godot export template was not installed at the expected path: $template"
+            }
+          }
+          "godot=$godotPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Package exact commit
         shell: pwsh

@@ -92,19 +92,14 @@ function Resolve-WindowsGodot {
 function Assert-WindowsExportTemplates {
     param([string]$GodotPath)
 
-    $templateRoots = @(
-        (Join-Path $env:APPDATA "Godot\export_templates"),
-        (Join-Path $env:LOCALAPPDATA "Godot\export_templates"),
-        (Join-Path $env:APPDATA "Godot\templates")
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_) }
-
-    foreach ($root in $templateRoots) {
-        if (Get-ChildItem -LiteralPath $root -Recurse -File -Filter "windows_release_x86_64.exe" -ErrorAction SilentlyContinue | Select-Object -First 1) {
-            return
-        }
+    $godotVersion = (& $GodotPath --version | Out-String).Trim()
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($godotVersion)) "Godot executable did not report a version."
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) "APPDATA is required to resolve the Godot export template path."
+    $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\$godotVersion"
+    foreach ($template in @("version.txt", "windows_debug_x86_64.exe", "windows_release_x86_64.exe")) {
+        Assert-ReleaseCondition (Test-Path -LiteralPath (Join-Path $templateRoot $template) -PathType Leaf) "Required Godot export template is missing at $templateRoot: $template"
     }
-
-    throw "Windows export templates are required for a release export and were not found for '$GodotPath'."
+    return $godotVersion
 }
 
 function Invoke-ReleaseGit {
@@ -277,13 +272,11 @@ function Invoke-WindowsReleasePackage {
     }
     $godot = Resolve-WindowsGodot $GodotPath
     Assert-WindowsExportPreset $project $identity
-    Assert-WindowsExportTemplates $godot
+    $godotVersion = Assert-WindowsExportTemplates $godot
     $resolvedCommit = Assert-ReleaseCommit $project $identity $Commit $Tag $RequireExactTag
     $sample = Get-ReleaseSample $project $identity
     $builtAt = Invoke-ReleaseGit $project @("show", "-s", "--format=%cI", $resolvedCommit)
     $timestamp = [datetimeoffset]::Parse($builtAt, [Globalization.CultureInfo]::InvariantCulture)
-    $godotVersion = (& $godot --version | Out-String).Trim()
-    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($godotVersion)) "Godot executable did not report a version."
     Assert-ReleaseCondition ($godotVersion.StartsWith("4.7", [StringComparison]::Ordinal)) "Release export must use Godot 4.7 Mono."
 
     $output = [System.IO.Path]::GetFullPath($OutputRoot)
