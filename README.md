@@ -61,7 +61,9 @@ powershell -ExecutionPolicy Bypass -File .\tools\PackageWindowsRelease.ps1
 
 `assets/release/release-identity.json` is the canonical source for the menu
 version, Windows version mapping, release tag, BuildInfo, and authored sample
-identity. Do not edit version values in isolation.
+identity. Do not edit version values in isolation. The canonical package name is
+`ProceduralRTS-<tag>-<target>.zip` (currently
+`ProceduralRTS-v0.2.0-rc.1-windows-x86_64.zip`).
 
 Run the same strict package path with its disposable smoke output:
 
@@ -72,11 +74,29 @@ powershell -ExecutionPolicy Bypass -File .\tools\ExportSmoke.ps1
 After merged-main verification and physical Windows acceptance evidence, use
 `tools/PublishWindowsPrerelease.ps1` with `-Publish`; it refuses to publish
 without the exact release commit, checked assets, and supplied acceptance evidence.
-The evidence is a `procedural-rts.windows-acceptance` schema-v1 JSON record
+The evidence is a `procedural-rts.windows-acceptance` schema-v2 JSON record
 bound to the generated package SHA-256, authored sample id/hash, exact commit,
 UTC acceptance time, redacted Windows host metadata, and explicit successful
-interactive checks for extract, launch, preview entry, authored-map load, and
-return to normal skirmish. Validate it before publishing with:
+interactive checks for extract, desktop launch, preview entry, authored-map
+load, unit selection, move command, completed building, produced unit, resource
+gathering, combat engagement, victory outcome, pause/resume, match restart,
+return to normal skirmish, main-menu return, and clean application exit. Validate
+it before publishing with:
+
+`host.machineClass` must be `physical Windows PC`, `host.os` must identify a
+Windows desktop release, and `host.architecture` must be `x86_64`. The
+`interactive` object must set every one of these keys to `true`:
+`packageExtracted`, `desktopLaunch`, `authoredMapPreviewEntry`,
+`authoredMapLoaded`, `unitSelection`, `moveCommand`, `buildingConstructed`,
+`unitProduced`, `resourceGathering`, `combatEngagement`, `victoryOutcome`,
+`pauseAndResume`, `matchRestart`, `normalSkirmishReturn`, `mainMenuReturn`, and
+`cleanApplicationExit`. The required `attestation` object declares
+`human-physical-windows-interactive`, a redacted human operator, and a
+permalink to a #570 issue comment containing the recorded screenshots, video,
+or logs. The offline validator checks the package binding and attestation
+structure. During `-Publish`, GitHub must also resolve that exact comment and
+its body must record the exact release commit and package SHA-256; the
+maintainer still inspects the linked human evidence before releasing.
 
 ```powershell
 dotnet run --project .\tools\WindowsAcceptanceEvidence\WindowsAcceptanceEvidence.csproj -- `

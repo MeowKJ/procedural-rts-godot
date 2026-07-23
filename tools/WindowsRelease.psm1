@@ -198,6 +198,18 @@ function Write-ReleaseChecksums {
     Write-ReleaseUtf8 $Destination (($lines -join "`n") + "`n")
 }
 
+function Get-WindowsReleasePackageFileName {
+    param($Identity)
+
+    $version = [string]$Identity.version
+    $tag = [string]$Identity.tag
+    $target = [string]$Identity.target
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($version)) "Windows release identity version is required."
+    Assert-ReleaseCondition ($tag -eq "v$version") "Windows release identity tag must derive from its version."
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($target)) "Windows release identity target is required."
+    return "ProceduralRTS-$tag-$target.zip"
+}
+
 function Get-WindowsReleasePackageLayout {
     param([string]$PackageRoot, $Identity)
 
@@ -232,7 +244,7 @@ function Test-WindowsReleasePackage {
     param([string]$ReleaseRoot, $Identity)
 
     $root = Get-ReleaseProjectRoot $ReleaseRoot
-    $zip = Join-Path $root "ProceduralRTS-$($Identity.version)-windows-x86_64.zip"
+    $zip = Join-Path $root (Get-WindowsReleasePackageFileName $Identity)
     $buildInfo = Join-Path $root "BUILD_INFO.json"
     $sample = Join-Path $root "authored-map-preview.mapspec.json"
     $checksums = Join-Path $root "SHA256SUMS.txt"
@@ -383,7 +395,7 @@ function Invoke-WindowsReleasePackage {
     $externalSample = Join-Path $output "authored-map-preview.mapspec.json"
     Write-ReleaseUtf8 $externalInfo $buildInfoText
     Copy-Item -LiteralPath $sample.Path -Destination $externalSample -Force
-    $zip = Join-Path $output "ProceduralRTS-$($identity.version)-windows-x86_64.zip"
+    $zip = Join-Path $output (Get-WindowsReleasePackageFileName $identity)
     Write-DeterministicZip $packageRoot $zip $timestamp
     $checksums = Join-Path $output "SHA256SUMS.txt"
     Write-ReleaseChecksums -Files @($zip, $externalInfo, $externalSample) -Destination $checksums
@@ -398,4 +410,4 @@ function Invoke-WindowsReleasePackage {
     }
 }
 
-Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Get-WindowsReleasePackageLayout, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
+Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Get-WindowsReleasePackageFileName, Get-WindowsReleasePackageLayout, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage

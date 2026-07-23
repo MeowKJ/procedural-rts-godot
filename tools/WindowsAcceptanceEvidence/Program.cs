@@ -24,7 +24,7 @@ static void Validate(EvidenceOptions options)
 
     Require(tag == $"v{version}", "release identity tag must derive from its version");
     Require(IsCommit(options.Commit), "release commit must be a full lowercase SHA-1");
-    var packageName = $"ProceduralRTS-{version}-windows-x86_64.zip";
+    var packageName = WindowsAcceptanceContract.PackageFileName(tag, target);
     var packagePath = Path.Combine(options.ReleaseRoot, packageName);
     Require(File.Exists(packagePath), $"release package is missing: {packagePath}");
     var packageHash = Sha256(packagePath);
@@ -43,10 +43,10 @@ static void Validate(EvidenceOptions options)
         "release BUILD_INFO sample SHA-256 does not match release identity");
 
     var evidence = ReadJson(options.EvidencePath, "Windows acceptance evidence");
-    Require(RequiredString(evidence, "format", "Windows acceptance evidence") == "procedural-rts.windows-acceptance",
+    Require(RequiredString(evidence, "format", "Windows acceptance evidence") == WindowsAcceptanceContract.Format,
         "Windows acceptance evidence format is unsupported");
-    Require(RequiredInt(evidence, "schemaVersion", "Windows acceptance evidence") == 1,
-        "Windows acceptance evidence schemaVersion must be 1");
+    Require(RequiredInt(evidence, "schemaVersion", "Windows acceptance evidence") == WindowsAcceptanceContract.SchemaVersion,
+        "Windows acceptance evidence schemaVersion must be 2");
     Require(RequiredString(evidence, "version", "Windows acceptance evidence") == version,
         "Windows acceptance evidence version does not match release identity");
     Require(RequiredString(evidence, "tag", "Windows acceptance evidence") == tag,
@@ -69,22 +69,24 @@ static void Validate(EvidenceOptions options)
         "Windows acceptance evidence sample SHA-256 does not match release identity");
 
     var host = RequiredObject(evidence, "host", "Windows acceptance evidence");
-    RequiredString(host, "machineClass", "Windows acceptance evidence host");
-    RequiredString(host, "os", "Windows acceptance evidence host");
-    RequiredString(host, "architecture", "Windows acceptance evidence host");
+    Require(RequiredString(host, "machineClass", "Windows acceptance evidence host") == WindowsAcceptanceContract.PhysicalWindowsMachineClass,
+        "Windows acceptance evidence host.machineClass must declare a physical Windows PC");
+    Require(IsPhysicalWindowsDesktop(RequiredString(host, "os", "Windows acceptance evidence host")),
+        "Windows acceptance evidence host.os must identify Windows 10 or Windows 11 desktop");
+    Require(RequiredString(host, "architecture", "Windows acceptance evidence host") == "x86_64",
+        "Windows acceptance evidence host.architecture must be x86_64");
+    var attestation = RequiredObject(evidence, "attestation", "Windows acceptance evidence");
+    Require(RequiredString(attestation, "kind", "Windows acceptance evidence attestation") == WindowsAcceptanceContract.PhysicalInteractiveAttestationKind,
+        "Windows acceptance evidence attestation.kind must declare human physical-Windows interaction");
+    RequiredString(attestation, "operator", "Windows acceptance evidence attestation");
+    Require(IsIssueEvidenceUrl(RequiredString(attestation, "issueEvidenceUrl", "Windows acceptance evidence attestation")),
+        "Windows acceptance evidence attestation.issueEvidenceUrl must be a #570 issue-comment permalink");
     var acceptedAt = RequiredString(evidence, "acceptedAtUtc", "Windows acceptance evidence");
     Require(IsUtcIso8601(acceptedAt),
         "Windows acceptance evidence acceptedAtUtc must be a UTC ISO-8601 timestamp ending in Z");
 
     var interactive = RequiredObject(evidence, "interactive", "Windows acceptance evidence");
-    foreach (var check in new[]
-    {
-        "packageExtracted",
-        "desktopLaunch",
-        "authoredMapPreviewEntry",
-        "authoredMapLoaded",
-        "normalSkirmishReturn",
-    })
+    foreach (var check in WindowsAcceptanceContract.RequiredInteractiveChecks)
     {
         Require(RequiredTrue(interactive, check, "Windows acceptance evidence interactive"),
             $"Windows acceptance evidence interactive check '{check}' must be true");
@@ -98,33 +100,53 @@ static void RunSelfTest()
     try
     {
         const string version = "0.2.0-rc.1";
+        const string target = "windows-x86_64";
         const string commit = "0123456789abcdef0123456789abcdef01234567";
         const string sampleHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         var identityPath = Path.Combine(root, "release-identity.json");
         File.WriteAllText(identityPath, $$"""
-            {"version":"{{version}}","tag":"v{{version}}","target":"windows-x86_64","sampleMapId":"authored-map-preview","sampleMapHash":"{{sampleHash}}"}
+            {"version":"{{version}}","tag":"v{{version}}","target":"{{target}}","sampleMapId":"authored-map-preview","sampleMapHash":"{{sampleHash}}"}
             """);
-        var packageName = $"ProceduralRTS-{version}-windows-x86_64.zip";
+        var packageName = WindowsAcceptanceContract.PackageFileName($"v{version}", target);
+        Require(packageName == "ProceduralRTS-v0.2.0-rc.1-windows-x86_64.zip",
+            "Windows acceptance package name must retain the canonical v-prefixed tag");
         File.WriteAllBytes(Path.Combine(root, packageName), [1, 2, 3, 4]);
         var packageHash = Sha256(Path.Combine(root, packageName));
         File.WriteAllText(Path.Combine(root, "BUILD_INFO.json"), $$"""
-            {"version":"{{version}}","tag":"v{{version}}","commit":"{{commit}}","target":"windows-x86_64","sampleMapId":"authored-map-preview","sampleMapHash":"{{sampleHash}}"}
+            {"version":"{{version}}","tag":"v{{version}}","commit":"{{commit}}","target":"{{target}}","sampleMapId":"authored-map-preview","sampleMapHash":"{{sampleHash}}"}
             """);
         var evidencePath = Path.Combine(root, "windows-acceptance.json");
 
-        WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash);
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash);
         Validate(new EvidenceOptions(evidencePath, identityPath, root, commit));
 
         File.WriteAllText(evidencePath, "{}");
         RequireReject(evidencePath, identityPath, root, commit, "empty record");
-        WriteEvidence(evidencePath, version, "ffffffffffffffffffffffffffffffffffffffff", sampleHash, packageName, packageHash);
+        WriteEvidence(evidencePath, version, target, "ffffffffffffffffffffffffffffffffffffffff", sampleHash, packageName, packageHash);
         RequireReject(evidencePath, identityPath, root, commit, "stale commit");
-        WriteEvidence(evidencePath, version, commit, sampleHash, packageName, new string('b', 64));
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, new string('b', 64));
         RequireReject(evidencePath, identityPath, root, commit, "package hash mismatch");
-        WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash, acceptedAtUtc: "07/19/2026 00:00:00Z");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, acceptedAtUtc: "07/19/2026 00:00:00Z");
         RequireReject(evidencePath, identityPath, root, commit, "non-ISO acceptance timestamp");
-        WriteEvidence(evidencePath, version, commit, sampleHash, packageName, packageHash, normalSkirmishReturn: false);
-        RequireReject(evidencePath, identityPath, root, commit, "missing interactive check");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, schemaVersion: 1);
+        RequireReject(evidencePath, identityPath, root, commit, "legacy schema-v1 evidence");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, $"ProceduralRTS-{version}-{target}.zip", packageHash);
+        RequireReject(evidencePath, identityPath, root, commit, "legacy package name");
+        foreach (var check in WindowsAcceptanceContract.RequiredInteractiveChecks)
+        {
+            WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, failedInteractiveCheck: check);
+            RequireReject(evidencePath, identityPath, root, commit, $"interactive check '{check}'");
+        }
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, machineClass: "GitHub-hosted Windows runner");
+        RequireReject(evidencePath, identityPath, root, commit, "non-physical Windows host");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, hostOperatingSystem: "Windows Server 2022");
+        RequireReject(evidencePath, identityPath, root, commit, "non-desktop Windows host");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, architecture: "arm64");
+        RequireReject(evidencePath, identityPath, root, commit, "non-x86_64 Windows host");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, issueEvidenceUrl: "https://github.com/MeowKJ/procedural-rts-godot/actions/runs/1");
+        RequireReject(evidencePath, identityPath, root, commit, "non-issue physical evidence link");
+        WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, issueEvidenceUrl: "https://github.com/MeowKJ/procedural-rts-godot/issues/570#issuecomment-");
+        RequireReject(evidencePath, identityPath, root, commit, "malformed issue-comment evidence link");
     }
     finally
     {
@@ -135,34 +157,43 @@ static void RunSelfTest()
 static void WriteEvidence(
     string path,
     string version,
+    string target,
     string commit,
     string sampleHash,
     string packageName,
     string packageHash,
-    bool normalSkirmishReturn = true,
-    string acceptedAtUtc = "2026-07-19T00:00:00Z")
+    string? failedInteractiveCheck = null,
+    string machineClass = WindowsAcceptanceContract.PhysicalWindowsMachineClass,
+    string hostOperatingSystem = "Windows 11",
+    string architecture = "x86_64",
+    string issueEvidenceUrl = WindowsAcceptanceContract.ExampleIssueEvidenceUrl,
+    string acceptedAtUtc = "2026-07-19T00:00:00Z",
+    int schemaVersion = WindowsAcceptanceContract.SchemaVersion)
 {
-    File.WriteAllText(path, $$"""
+    var interactive = WindowsAcceptanceContract.RequiredInteractiveChecks.ToDictionary(
+        check => check,
+        check => !string.Equals(check, failedInteractiveCheck, StringComparison.Ordinal),
+        StringComparer.Ordinal);
+    File.WriteAllText(path, JsonSerializer.Serialize(new
+    {
+        format = WindowsAcceptanceContract.Format,
+        schemaVersion,
+        version,
+        tag = $"v{version}",
+        commit,
+        target,
+        package = new { file = packageName, sha256 = packageHash },
+        sampleMap = new { id = "authored-map-preview", sha256 = sampleHash },
+        host = new { machineClass, os = hostOperatingSystem, architecture },
+        attestation = new
         {
-          "format": "procedural-rts.windows-acceptance",
-          "schemaVersion": 1,
-          "version": "{{version}}",
-          "tag": "v{{version}}",
-          "commit": "{{commit}}",
-          "target": "windows-x86_64",
-          "package": { "file": "{{packageName}}", "sha256": "{{packageHash}}" },
-          "sampleMap": { "id": "authored-map-preview", "sha256": "{{sampleHash}}" },
-          "host": { "machineClass": "physical Windows PC", "os": "Windows 11", "architecture": "x86_64" },
-          "acceptedAtUtc": "{{acceptedAtUtc}}",
-          "interactive": {
-            "packageExtracted": true,
-            "desktopLaunch": true,
-            "authoredMapPreviewEntry": true,
-            "authoredMapLoaded": true,
-            "normalSkirmishReturn": {{normalSkirmishReturn.ToString().ToLowerInvariant()}}
-          }
-        }
-        """);
+            kind = WindowsAcceptanceContract.PhysicalInteractiveAttestationKind,
+            @operator = "redacted-human-operator",
+            issueEvidenceUrl,
+        },
+        acceptedAtUtc,
+        interactive,
+    }));
 }
 
 static void RequireReject(string evidencePath, string identityPath, string releaseRoot, string commit, string label)
@@ -243,6 +274,33 @@ static bool IsUtcIso8601(string value)
         out _);
 }
 
+static bool IsPhysicalWindowsDesktop(string operatingSystem)
+{
+    return operatingSystem.StartsWith("Windows 10", StringComparison.Ordinal)
+        || operatingSystem.StartsWith("Windows 11", StringComparison.Ordinal);
+}
+
+static bool IsIssueEvidenceUrl(string value)
+{
+    const string commentPrefix = "#issuecomment-";
+    if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        || uri.Scheme != Uri.UriSchemeHttps
+        || !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+        || !uri.AbsolutePath.Equals("/MeowKJ/procedural-rts-godot/issues/570", StringComparison.Ordinal)
+        || !string.IsNullOrEmpty(uri.Query)
+        || !uri.Fragment.StartsWith(commentPrefix, StringComparison.Ordinal))
+    {
+        return false;
+    }
+
+    return long.TryParse(
+        uri.Fragment[commentPrefix.Length..],
+        NumberStyles.None,
+        CultureInfo.InvariantCulture,
+        out var commentId)
+        && commentId > 0;
+}
+
 static bool IsCommit(string value)
 {
     return value.Length == 40 && value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
@@ -292,4 +350,35 @@ sealed record EvidenceOptions(string EvidencePath, string IdentityPath, string R
 
         return value;
     }
+}
+
+static class WindowsAcceptanceContract
+{
+    public const string Format = "procedural-rts.windows-acceptance";
+    public const int SchemaVersion = 2;
+    public const string PhysicalWindowsMachineClass = "physical Windows PC";
+    public const string PhysicalInteractiveAttestationKind = "human-physical-windows-interactive";
+    public const string ExampleIssueEvidenceUrl = "https://github.com/MeowKJ/procedural-rts-godot/issues/570#issuecomment-1";
+
+    public static readonly string[] RequiredInteractiveChecks =
+    [
+        "packageExtracted",
+        "desktopLaunch",
+        "authoredMapPreviewEntry",
+        "authoredMapLoaded",
+        "unitSelection",
+        "moveCommand",
+        "buildingConstructed",
+        "unitProduced",
+        "resourceGathering",
+        "combatEngagement",
+        "victoryOutcome",
+        "pauseAndResume",
+        "matchRestart",
+        "normalSkirmishReturn",
+        "mainMenuReturn",
+        "cleanApplicationExit",
+    ];
+
+    public static string PackageFileName(string tag, string target) => $"ProceduralRTS-{tag}-{target}.zip";
 }

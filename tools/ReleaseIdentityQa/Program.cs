@@ -38,7 +38,11 @@ Require(File.Exists(acceptanceValidator), "publisher must use the checked-in Win
 Require(publisher.Contains("$tagExists = $LASTEXITCODE -eq 0", StringComparison.Ordinal), "publisher must retain missing-tag state before invoking other commands");
 Require(publisher.Contains("if (-not $tagExists)", StringComparison.Ordinal), "publisher must explicitly create a missing tag at the verified commit");
 Require(publisher.Contains("--target $resolvedCommit", StringComparison.Ordinal), "publisher must target the verified commit when creating the prerelease");
+Require(publisher.Contains("Get-WindowsReleasePackageFileName $identity", StringComparison.Ordinal), "publisher must use the shared canonical Windows package name");
 Require(publisher.Contains("WindowsAcceptanceEvidence.csproj", StringComparison.Ordinal), "publisher must validate physical Windows acceptance evidence with the shared validator");
+Require(publisher.Contains("issues/comments/$issueCommentId", StringComparison.Ordinal), "publisher must retrieve the linked physical acceptance comment before publishing");
+Require(publisher.Contains("issueEvidenceUrl", StringComparison.Ordinal), "publisher must bind publishing to the submitted physical acceptance evidence URL");
+Require(publisher.Contains("Get-FileHash -LiteralPath $assets[0]", StringComparison.Ordinal), "publisher must verify the linked comment against the exact package SHA-256");
 
 Console.WriteLine($"ReleaseIdentityQa PASSED: {tag}, Windows {windowsVersion}, sample {sampleId} {sampleHash}.");
 

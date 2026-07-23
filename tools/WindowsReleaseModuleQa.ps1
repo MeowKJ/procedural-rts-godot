@@ -36,7 +36,11 @@ for ($index = 0; $index -lt $expectedSmokeArguments.Count; $index++) {
     }
 }
 
-$layoutIdentity = [pscustomobject]@{ version = "0.2.0-rc.1" }
+$layoutIdentity = [pscustomobject]@{ version = "0.2.0-rc.1"; tag = "v0.2.0-rc.1"; target = "windows-x86_64" }
+$packageName = Get-WindowsReleasePackageFileName $layoutIdentity
+if ($packageName -cne "ProceduralRTS-v0.2.0-rc.1-windows-x86_64.zip") {
+    throw "Release package name must derive from the canonical v-prefixed tag."
+}
 $layout = Get-WindowsReleasePackageLayout -PackageRoot "C:\clean" -Identity $layoutIdentity
 $expectedExportRoot = Join-Path "C:\clean" "ProceduralRTS-0.2.0-rc.1-windows-x86_64"
 $expectedSample = Join-Path $expectedExportRoot "assets\maps\authored-map-preview.mapspec.json"
@@ -56,4 +60,4 @@ if (-not $malformedRejected) {
     throw "Malformed Godot official metadata must be rejected."
 }
 
-Write-Output "WindowsReleaseModuleQa PASSED: template mapping, clean-extract bootstrap arguments, and package layout are strict."
+Write-Output "WindowsReleaseModuleQa PASSED: template mapping, canonical package name, clean-extract bootstrap arguments, and package layout are strict."
