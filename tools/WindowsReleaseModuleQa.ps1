@@ -37,6 +37,14 @@ for ($index = 0; $index -lt $expectedSmokeArguments.Count; $index++) {
     }
 }
 
+$layoutIdentity = [pscustomobject]@{ version = "0.2.0-rc.1" }
+$layout = Get-WindowsReleasePackageLayout -PackageRoot "C:\clean" -Identity $layoutIdentity
+$expectedExportRoot = Join-Path "C:\clean" "ProceduralRTS-0.2.0-rc.1-windows-x86_64"
+$expectedSample = Join-Path $expectedExportRoot "assets\maps\authored-map-preview.mapspec.json"
+if ($layout.ExportRoot -cne $expectedExportRoot -or $layout.Executable -cne (Join-Path $expectedExportRoot "ProceduralRTS.exe") -or $layout.EmbeddedSample -cne $expectedSample) {
+    throw "Clean-extract package layout no longer satisfies the authored map path contract."
+}
+
 $malformedRejected = $false
 try {
     Get-GodotExportTemplateVersion "4.7.stable.mono.official.not-hex" | Out-Null
@@ -49,4 +57,4 @@ if (-not $malformedRejected) {
     throw "Malformed Godot official metadata must be rejected."
 }
 
-Write-Output "WindowsReleaseModuleQa PASSED: Godot template version mapping and clean-extract bootstrap arguments are strict."
+Write-Output "WindowsReleaseModuleQa PASSED: template mapping, clean-extract bootstrap arguments, and package layout are strict."

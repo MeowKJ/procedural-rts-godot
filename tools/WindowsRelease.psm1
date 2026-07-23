@@ -198,6 +198,22 @@ function Write-ReleaseChecksums {
     Write-ReleaseUtf8 $Destination (($lines -join "`n") + "`n")
 }
 
+function Get-WindowsReleasePackageLayout {
+    param([string]$PackageRoot, $Identity)
+
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($PackageRoot)) "Windows release package root is required."
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace([string]$Identity.version)) "Windows release identity version is required."
+    $root = [System.IO.Path]::GetFullPath($PackageRoot)
+    $exportRoot = Join-Path $root "ProceduralRTS-$($Identity.version)-windows-x86_64"
+    return [pscustomobject]@{
+        Root = $root
+        ExportRoot = $exportRoot
+        Executable = Join-Path $exportRoot "ProceduralRTS.exe"
+        EmbeddedBuildInfo = Join-Path $root "BUILD_INFO.json"
+        EmbeddedSample = Join-Path $exportRoot "assets\maps\authored-map-preview.mapspec.json"
+    }
+}
+
 function Get-WindowsReleaseCleanExtractArguments {
     param([string]$SamplePath, [string]$SampleHash)
 
@@ -237,21 +253,24 @@ function Test-WindowsReleasePackage {
     Assert-ReleaseCondition (-not (Test-Path -LiteralPath $extract)) "Clean extract directory unexpectedly exists: $extract"
     try {
         Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
-        $extractedInfo = Get-ChildItem -LiteralPath $extract -Recurse -File -Filter "BUILD_INFO.json" | Select-Object -First 1
-        $extractedSample = Get-ChildItem -LiteralPath $extract -Recurse -File -Filter "authored-map-preview.mapspec.json" | Select-Object -First 1
-        $exe = Get-ChildItem -LiteralPath $extract -Recurse -File -Filter "ProceduralRTS.exe" | Select-Object -First 1
-        Assert-ReleaseCondition ($null -ne $extractedInfo -and $null -ne $extractedSample -and $null -ne $exe) "Clean package extract is incomplete."
-        Assert-ReleaseCondition ((Get-Content -LiteralPath $buildInfo -Raw) -ceq (Get-Content -LiteralPath $extractedInfo.FullName -Raw)) "Embedded BUILD_INFO.json differs from release asset."
-        Assert-ReleaseCondition (((Get-FileHash -LiteralPath $extractedSample.FullName -Algorithm SHA256).Hash.ToLowerInvariant()) -eq $Identity.sampleMapHash) "Extracted sample hash differs from release identity."
+        $layout = Get-WindowsReleasePackageLayout -PackageRoot $extract -Identity $Identity
+        $extractedInfo = $layout.EmbeddedBuildInfo
+        $extractedSample = $layout.EmbeddedSample
+        $exe = $layout.Executable
+        foreach ($path in @($extractedInfo, $extractedSample, $exe)) {
+            Assert-ReleaseCondition (Test-Path -LiteralPath $path -PathType Leaf) "Clean package extract is missing required runtime asset: $path"
+        }
+        Assert-ReleaseCondition ((Get-Content -LiteralPath $buildInfo -Raw) -ceq (Get-Content -LiteralPath $extractedInfo -Raw)) "Embedded BUILD_INFO.json differs from release asset."
+        Assert-ReleaseCondition (((Get-FileHash -LiteralPath $extractedSample -Algorithm SHA256).Hash.ToLowerInvariant()) -eq $Identity.sampleMapHash) "Extracted sample hash differs from release identity."
 
         $stdout = Join-Path $root "clean-extract-runtime.stdout.log"
         $stderr = Join-Path $root "clean-extract-runtime.stderr.log"
         $start = [System.Diagnostics.ProcessStartInfo]::new()
-        $start.FileName = $exe.FullName
+        $start.FileName = $exe
         $start.UseShellExecute = $false
         $start.RedirectStandardOutput = $true
         $start.RedirectStandardError = $true
-        foreach ($argument in @(Get-WindowsReleaseCleanExtractArguments -SamplePath $extractedSample.FullName -SampleHash $Identity.sampleMapHash)) {
+        foreach ($argument in @(Get-WindowsReleaseCleanExtractArguments -SamplePath $extractedSample -SampleHash $Identity.sampleMapHash)) {
             [void]$start.ArgumentList.Add($argument)
         }
         $process = [System.Diagnostics.Process]::Start($start)
@@ -319,9 +338,9 @@ function Invoke-WindowsReleasePackage {
         Remove-Item -LiteralPath $output -Recurse -Force
     }
     $packageRoot = Join-Path $output "package"
-    $exportRoot = Join-Path $packageRoot "ProceduralRTS-$($identity.version)-windows-x86_64"
-    New-Item -ItemType Directory -Force -Path $exportRoot | Out-Null
-    $exe = Join-Path $exportRoot "ProceduralRTS.exe"
+    $layout = Get-WindowsReleasePackageLayout -PackageRoot $packageRoot -Identity $identity
+    New-Item -ItemType Directory -Force -Path $layout.ExportRoot | Out-Null
+    $exe = $layout.Executable
 
     Push-Location $project
     try {
@@ -348,9 +367,10 @@ function Invoke-WindowsReleasePackage {
         sampleMapHash = $sample.Hash
     }
     $buildInfoText = ($buildInfo | ConvertTo-Json) + "`n"
-    $embeddedInfo = Join-Path $packageRoot "BUILD_INFO.json"
-    $embeddedSample = Join-Path $packageRoot "authored-map-preview.mapspec.json"
+    $embeddedInfo = $layout.EmbeddedBuildInfo
+    $embeddedSample = $layout.EmbeddedSample
     Write-ReleaseUtf8 $embeddedInfo $buildInfoText
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $embeddedSample) | Out-Null
     Copy-Item -LiteralPath $sample.Path -Destination $embeddedSample -Force
 
     $externalInfo = Join-Path $output "BUILD_INFO.json"
@@ -372,4 +392,4 @@ function Invoke-WindowsReleasePackage {
     }
 }
 
-Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
+Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Get-WindowsReleasePackageLayout, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
