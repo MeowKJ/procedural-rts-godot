@@ -27,7 +27,8 @@ if (failures.Count > 0)
     throw new InvalidOperationException("HUD desktop QA failed:\n" + string.Join("\n", failures));
 }
 
-var repoRoot = FindRepoRoot();
+var repoRoot = DesktopHudQaRepoRoot.Resolve(args);
+Console.WriteLine($"DesktopHudQa root: {repoRoot}");
 AssertCommandFailurePresentation();
 AssertCatalogInspectorReducer();
 UnitStancePresentationQa.AssertCatalog(); UnitStanceStripQa.AssertProjectionAndSource(repoRoot); CommandRibbonContextQa.AssertResolver();
@@ -116,23 +117,6 @@ static void Require(bool condition, string message)
     {
         throw new InvalidOperationException(message);
     }
-}
-
-static string FindRepoRoot()
-{
-    var current = new DirectoryInfo(Directory.GetCurrentDirectory());
-    while (current is not null)
-    {
-        if (File.Exists(Path.Combine(current.FullName, "ProceduralRts.csproj"))
-            && File.Exists(Path.Combine(current.FullName, "scripts", "ui", "HudLayer.cs")))
-        {
-            return current.FullName;
-        }
-
-        current = current.Parent;
-    }
-
-    throw new InvalidOperationException("Could not find procedural-rts-godot repository root for HUD source checks.");
 }
 
 static void AssertHudFactoryExtraction(string root)
