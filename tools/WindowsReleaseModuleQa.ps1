@@ -48,6 +48,83 @@ if ($layout.ExportRoot -cne $expectedExportRoot -or $layout.Executable -cne (Joi
     throw "Clean-extract package layout no longer satisfies the authored map path contract."
 }
 
+function Assert-MergedMainReleaseRejected {
+    param(
+        [string]$Name,
+        [bool]$ReleaseCommitIsOnMain,
+        [object[]]$VerifyAllRuns
+    )
+
+    $rejected = $false
+    try {
+        Assert-VerifiedMergedMainRelease -ResolvedCommit "0123456789abcdef0123456789abcdef01234567" -ReleaseCommitIsOnMain $ReleaseCommitIsOnMain -VerifyAllRuns $VerifyAllRuns | Out-Null
+    }
+    catch {
+        $rejected = $true
+    }
+    if (-not $rejected) {
+        throw "Merged-main release gate accepted $Name."
+    }
+}
+
+$verifiedMainRun = [pscustomobject]@{
+    id = 200
+    run_number = 10
+    head_sha = "0123456789abcdef0123456789abcdef01234567"
+    head_branch = "main"
+    event = "push"
+    status = "completed"
+    conclusion = "success"
+    path = ".github/workflows/verify-all.yml"
+}
+foreach ($status in @("ahead", "identical")) {
+    $comparison = [pscustomobject]@{ base_commit = [pscustomobject]@{ sha = $verifiedMainRun.head_sha }; status = $status }
+    if (-not (Test-ReleaseCommitOnMain -ResolvedCommit $verifiedMainRun.head_sha -MainComparison $comparison)) {
+        throw "Release commit main comparison must accept status '$status'."
+    }
+}
+foreach ($status in @("behind", "diverged")) {
+    $comparison = [pscustomobject]@{ base_commit = [pscustomobject]@{ sha = $verifiedMainRun.head_sha }; status = $status }
+    if (Test-ReleaseCommitOnMain -ResolvedCommit $verifiedMainRun.head_sha -MainComparison $comparison) {
+        throw "Release commit main comparison must reject status '$status'."
+    }
+}
+if (Test-ReleaseCommitOnMain -ResolvedCommit $verifiedMainRun.head_sha -MainComparison ([pscustomobject]@{ base_commit = [pscustomobject]@{ sha = "ffffffffffffffffffffffffffffffffffffffff" }; status = "ahead" })) {
+    throw "Release commit main comparison must reject a mismatched base SHA."
+}
+$releaseTag = "v0.2.0-rc.1"
+$releaseCommit = $verifiedMainRun.head_sha
+if ($null -ne (Resolve-RemoteReleaseTagCommit -Tag $releaseTag -LsRemoteLines @())) {
+    throw "Missing remote release tag must resolve to null."
+}
+if ((Resolve-RemoteReleaseTagCommit -Tag $releaseTag -LsRemoteLines @("$releaseCommit`trefs/tags/$releaseTag")) -cne $releaseCommit) {
+    throw "Lightweight remote release tag must resolve to its commit."
+}
+$annotatedTagObject = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+if ((Resolve-RemoteReleaseTagCommit -Tag $releaseTag -LsRemoteLines @("$annotatedTagObject`trefs/tags/$releaseTag", "$releaseCommit`trefs/tags/$releaseTag^{}")) -cne $releaseCommit) {
+    throw "Annotated remote release tag must resolve to its peeled commit."
+}
+$malformedRemoteTagRejected = $false
+try {
+    Resolve-RemoteReleaseTagCommit -Tag $releaseTag -LsRemoteLines @("not-a-sha`trefs/tags/$releaseTag") | Out-Null
+}
+catch {
+    $malformedRemoteTagRejected = $true
+}
+if (-not $malformedRemoteTagRejected) {
+    throw "Malformed remote release tag output must be rejected."
+}
+Assert-VerifiedMergedMainRelease -ResolvedCommit "0123456789abcdef0123456789abcdef01234567" -ReleaseCommitIsOnMain $true -VerifyAllRuns @($verifiedMainRun) | Out-Null
+Assert-MergedMainReleaseRejected -Name "a commit outside main" -ReleaseCommitIsOnMain $false -VerifyAllRuns @($verifiedMainRun)
+Assert-MergedMainReleaseRejected -Name "a branch VerifyAll run" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "codex/release"; event = "push"; status = "completed"; conclusion = "success"; path = $verifiedMainRun.path })
+Assert-MergedMainReleaseRejected -Name "a manually dispatched VerifyAll run" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "main"; event = "workflow_dispatch"; status = "completed"; conclusion = "success"; path = $verifiedMainRun.path })
+Assert-MergedMainReleaseRejected -Name "a wrong release SHA" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = "ffffffffffffffffffffffffffffffffffffffff"; head_branch = "main"; event = "push"; status = "completed"; conclusion = "success"; path = $verifiedMainRun.path })
+Assert-MergedMainReleaseRejected -Name "a failed VerifyAll run" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "main"; event = "push"; status = "completed"; conclusion = "failure"; path = $verifiedMainRun.path })
+Assert-MergedMainReleaseRejected -Name "an in-progress VerifyAll run" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "main"; event = "push"; status = "in_progress"; conclusion = ""; path = $verifiedMainRun.path })
+Assert-MergedMainReleaseRejected -Name "a wrong workflow path" -ReleaseCommitIsOnMain $true -VerifyAllRuns @([pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "main"; event = "push"; status = "completed"; conclusion = "success"; path = ".github/workflows/preflight.yml" })
+Assert-MergedMainReleaseRejected -Name "an empty VerifyAll result" -ReleaseCommitIsOnMain $true -VerifyAllRuns @()
+Assert-MergedMainReleaseRejected -Name "a newer failed merged-main VerifyAll run" -ReleaseCommitIsOnMain $true -VerifyAllRuns @($verifiedMainRun, [pscustomobject]@{ id = 201; run_number = 11; head_sha = $verifiedMainRun.head_sha; head_branch = "main"; event = "push"; status = "completed"; conclusion = "failure"; path = $verifiedMainRun.path })
+
 $malformedRejected = $false
 try {
     Get-GodotExportTemplateVersion "4.7.stable.mono.official.not-hex" | Out-Null
@@ -60,4 +137,4 @@ if (-not $malformedRejected) {
     throw "Malformed Godot official metadata must be rejected."
 }
 
-Write-Output "WindowsReleaseModuleQa PASSED: template mapping, canonical package name, clean-extract bootstrap arguments, and package layout are strict."
+Write-Output "WindowsReleaseModuleQa PASSED: template mapping, canonical package name, clean-extract bootstrap arguments, package layout, remote tag resolution, main reachability, and merged-main VerifyAll gate are strict."

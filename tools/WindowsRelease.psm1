@@ -210,6 +210,86 @@ function Get-WindowsReleasePackageFileName {
     return "ProceduralRTS-$tag-$target.zip"
 }
 
+function Test-ReleaseCommitOnMain {
+    param([string]$ResolvedCommit, $MainComparison)
+
+    if ($ResolvedCommit -notmatch '^[a-f0-9]{40}$' -or $null -eq $MainComparison -or $null -eq $MainComparison.base_commit) {
+        return $false
+    }
+
+    return (
+        ([string]$MainComparison.base_commit.sha -ceq $ResolvedCommit) -and
+        (@("ahead", "identical") -contains [string]$MainComparison.status)
+    )
+}
+
+function Resolve-RemoteReleaseTagCommit {
+    param([string]$Tag, [string[]]$LsRemoteLines)
+
+    Assert-ReleaseCondition (-not [string]::IsNullOrWhiteSpace($Tag)) "Remote release tag is required."
+    $tagReference = "refs/tags/$Tag"
+    $peeledReference = "$tagReference^{}"
+    $directHashes = @()
+    $peeledHashes = @()
+    foreach ($line in $LsRemoteLines) {
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
+
+        $match = [regex]::Match($line, '^(?<hash>[a-f0-9]{40})\t(?<reference>.+)$')
+        Assert-ReleaseCondition $match.Success "Malformed remote tag reference: $line"
+        $hash = $match.Groups["hash"].Value
+        $reference = $match.Groups["reference"].Value
+        if ($reference -eq $tagReference) {
+            $directHashes += $hash
+        }
+        elseif ($reference -eq $peeledReference) {
+            $peeledHashes += $hash
+        }
+        else {
+            throw "Unexpected remote tag reference: $reference"
+        }
+    }
+
+    Assert-ReleaseCondition ($directHashes.Count -le 1) "Remote release tag '$Tag' resolved more than once."
+    Assert-ReleaseCondition ($peeledHashes.Count -le 1) "Remote annotated release tag '$Tag' resolved more than once."
+    if ($peeledHashes.Count -eq 1) {
+        return $peeledHashes[0]
+    }
+    if ($directHashes.Count -eq 1) {
+        return $directHashes[0]
+    }
+    return $null
+}
+
+function Assert-VerifiedMergedMainRelease {
+    param(
+        [string]$ResolvedCommit,
+        [bool]$ReleaseCommitIsOnMain,
+        [object[]]$VerifyAllRuns
+    )
+
+    Assert-ReleaseCondition ($ResolvedCommit -match '^[a-f0-9]{40}$') "Release commit must be a full lowercase SHA-1."
+    Assert-ReleaseCondition $ReleaseCommitIsOnMain "Release commit must be reachable from the current main branch."
+    $mergedMainRuns = @(
+        $VerifyAllRuns | Where-Object {
+            $null -ne $_ -and
+            ([string]$_.head_sha -ceq $ResolvedCommit) -and
+            ([string]$_.head_branch -ceq "main") -and
+            ([string]$_.event -ceq "push") -and
+            ([string]$_.path -ceq ".github/workflows/verify-all.yml") -and
+            ([string]$_.id -match '^\d+$') -and
+            ([string]$_.run_number -match '^\d+$')
+        }
+    )
+    Assert-ReleaseCondition ($mergedMainRuns.Count -gt 0) "Release commit requires an exact merged-main VerifyAll push run."
+    $latestRun = $mergedMainRuns |
+        Sort-Object @{ Expression = { [int64]$_.run_number }; Descending = $true }, @{ Expression = { [int64]$_.id }; Descending = $true } |
+        Select-Object -First 1
+    Assert-ReleaseCondition (([string]$latestRun.status -ceq "completed") -and ([string]$latestRun.conclusion -ceq "success")) "Latest exact merged-main VerifyAll push run must have completed successfully."
+    return $latestRun
+}
+
 function Get-WindowsReleasePackageLayout {
     param([string]$PackageRoot, $Identity)
 
@@ -410,4 +490,4 @@ function Invoke-WindowsReleasePackage {
     }
 }
 
-Export-ModuleMember -Function Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Get-WindowsReleasePackageFileName, Get-WindowsReleasePackageLayout, Invoke-WindowsReleasePackage, Test-WindowsReleasePackage
+Export-ModuleMember -Function Assert-VerifiedMergedMainRelease, Get-GodotExportTemplateVersion, Get-ReleaseIdentity, Get-WindowsReleaseCleanExtractArguments, Get-WindowsReleasePackageFileName, Get-WindowsReleasePackageLayout, Invoke-WindowsReleasePackage, Resolve-RemoteReleaseTagCommit, Test-ReleaseCommitOnMain, Test-WindowsReleasePackage

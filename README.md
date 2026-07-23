@@ -95,8 +95,13 @@ Windows desktop release, and `host.architecture` must be `x86_64`. The
 permalink to a #570 issue comment containing the recorded screenshots, video,
 or logs. The offline validator checks the package binding and attestation
 structure. During `-Publish`, GitHub must also resolve that exact comment and
-its body must record the exact release commit and package SHA-256; the
-maintainer still inspects the linked human evidence before releasing.
+its body must record the exact release commit and package SHA-256. It also
+requires that commit to be reachable from `main` and to have its latest
+exact-SHA `VerifyAll` push run on `main` succeed; branch CI or a manually
+dispatched VerifyAll cannot substitute for that gate. The remote tag is peeled
+and checked against that exact SHA, then `--verify-tag` prevents automatic tag
+creation. The maintainer still inspects the linked human evidence before
+releasing.
 
 ```powershell
 dotnet run --project .\tools\WindowsAcceptanceEvidence\WindowsAcceptanceEvidence.csproj -- `

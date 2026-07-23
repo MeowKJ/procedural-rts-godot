@@ -35,6 +35,7 @@ var windowsReleaseModuleQa = Path.Combine(root, "tools", "WindowsReleaseModuleQa
 var acceptanceValidator = Path.Combine(root, "tools", "WindowsAcceptanceEvidence", "WindowsAcceptanceEvidence.csproj");
 Require(File.Exists(windowsReleaseModuleQa), "Windows release module mapping QA must be checked in");
 Require(File.Exists(acceptanceValidator), "publisher must use the checked-in Windows acceptance validator");
+var windowsReleaseModuleQaText = File.ReadAllText(windowsReleaseModuleQa);
 Require(publisher.Contains("$tagExists = $LASTEXITCODE -eq 0", StringComparison.Ordinal), "publisher must retain missing-tag state before invoking other commands");
 Require(publisher.Contains("if (-not $tagExists)", StringComparison.Ordinal), "publisher must explicitly create a missing tag at the verified commit");
 Require(publisher.Contains("--target $resolvedCommit", StringComparison.Ordinal), "publisher must target the verified commit when creating the prerelease");
@@ -43,6 +44,23 @@ Require(publisher.Contains("WindowsAcceptanceEvidence.csproj", StringComparison.
 Require(publisher.Contains("issues/comments/$issueCommentId", StringComparison.Ordinal), "publisher must retrieve the linked physical acceptance comment before publishing");
 Require(publisher.Contains("issueEvidenceUrl", StringComparison.Ordinal), "publisher must bind publishing to the submitted physical acceptance evidence URL");
 Require(publisher.Contains("Get-FileHash -LiteralPath $assets[0]", StringComparison.Ordinal), "publisher must verify the linked comment against the exact package SHA-256");
+Require(publisher.Contains("compare/$resolvedCommit...main", StringComparison.Ordinal), "publisher must verify that the release commit is reachable from main");
+Require(publisher.Contains("actions/workflows/verify-all.yml/runs?branch=main&event=push&head_sha=$resolvedCommit", StringComparison.Ordinal), "publisher must retrieve merged-main VerifyAll runs for the exact release commit");
+Require(publisher.Contains("ls-remote --tags origin", StringComparison.Ordinal), "publisher must resolve the remote release tag before publishing");
+Require(publisher.Contains("--verify-tag", StringComparison.Ordinal), "publisher must require an existing verified remote tag before creating a release");
+Require(publisher.Contains("Test-ReleaseCommitOnMain", StringComparison.Ordinal), "publisher must use the shared main reachability contract");
+Require(publisher.Contains("Assert-VerifiedMergedMainRelease", StringComparison.Ordinal), "publisher must require an exact merged-main VerifyAll result before publishing");
+Require(windowsReleaseModuleQaText.Contains("Test-ReleaseCommitOnMain", StringComparison.Ordinal), "Windows release module QA must cover main reachability");
+Require(windowsReleaseModuleQaText.Contains("Assert-VerifiedMergedMainRelease", StringComparison.Ordinal), "Windows release module QA must cover the merged-main VerifyAll gate");
+Require(windowsReleaseModuleQaText.Contains("Resolve-RemoteReleaseTagCommit", StringComparison.Ordinal), "Windows release module QA must cover remote release tag resolution");
+var mergedMainGateIndex = publisher.IndexOf("Assert-VerifiedMergedMainRelease", StringComparison.Ordinal);
+var remoteTagGateIndex = publisher.IndexOf("$remoteTagCommit = Get-RemoteReleaseTagCommit", StringComparison.Ordinal);
+var tagCreationIndex = publisher.IndexOf("git -C $project tag -a", StringComparison.Ordinal);
+var releaseCreationIndex = publisher.IndexOf("gh release create", StringComparison.Ordinal);
+Require(mergedMainGateIndex >= 0 && tagCreationIndex > mergedMainGateIndex && releaseCreationIndex > mergedMainGateIndex,
+    "publisher must check exact merged-main VerifyAll before creating a tag or release");
+Require(remoteTagGateIndex > mergedMainGateIndex && tagCreationIndex > remoteTagGateIndex && releaseCreationIndex > remoteTagGateIndex,
+    "publisher must verify the remote release tag after merged-main verification and before creating a tag or release");
 
 Console.WriteLine($"ReleaseIdentityQa PASSED: {tag}, Windows {windowsVersion}, sample {sampleId} {sampleHash}.");
 

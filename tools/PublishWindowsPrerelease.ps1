@@ -11,7 +11,18 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot "WindowsRelease.psm1") -Force
+
+function Get-RemoteReleaseTagCommit {
+    param([string]$ProjectRoot, [string]$Tag)
+
+    $lines = & git -C $ProjectRoot ls-remote --tags origin "refs/tags/$Tag" "refs/tags/$Tag^{}"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not resolve remote release tag '$Tag'."
+    }
+    return Resolve-RemoteReleaseTagCommit -Tag $Tag -LsRemoteLines @($lines)
+}
 
 $project = (Resolve-Path $ProjectRoot).Path
 $identity = Get-ReleaseIdentity $project
@@ -52,7 +63,7 @@ foreach ($asset in $assets) {
 }
 
 if (-not $Publish) {
-    Write-Output "Publish preflight passed for $($identity.tag) at $resolvedCommit. Re-run with -Publish after confirming the physical Windows acceptance evidence."
+    Write-Output "Local publish preflight passed for $($identity.tag) at $resolvedCommit. -Publish still requires an exact merged-main VerifyAll run and verified physical Windows acceptance evidence."
     exit 0
 }
 
@@ -88,12 +99,44 @@ if (-not $commentBody.Contains($resolvedCommit, [StringComparison]::Ordinal) -or
     throw "Issue #570 acceptance comment must record the exact release commit and package SHA-256."
 }
 
-if (-not $tagExists) {
-    & git -C $project tag -a $identity.tag $resolvedCommit -m "Procedural RTS $($identity.version)"
-    if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag $($identity.tag)." }
-    & git -C $project push origin $identity.tag
-    if ($LASTEXITCODE -ne 0) { throw "Failed to push release tag $($identity.tag)." }
+$mainComparisonJson = (& gh api "repos/MeowKJ/procedural-rts-godot/compare/$resolvedCommit...main" | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not verify whether release commit $resolvedCommit is reachable from main."
 }
 
-& gh release create $identity.tag @assets --repo MeowKJ/procedural-rts-godot --target $resolvedCommit --title "Procedural RTS $($identity.version)" --prerelease --notes "Windows x86_64 Map Authoring Preview RC. This prerelease is unsigned and has no installer or auto-update. It does not include macOS packaging, Linux runtime acceptance, or campaign expansion. Verify SHA256SUMS.txt before running."
+$mainComparison = $mainComparisonJson | ConvertFrom-Json
+$releaseCommitIsOnMain = Test-ReleaseCommitOnMain -ResolvedCommit $resolvedCommit -MainComparison $mainComparison
+$verifyAllRunsJson = (& gh api "repos/MeowKJ/procedural-rts-godot/actions/workflows/verify-all.yml/runs?branch=main&event=push&head_sha=$resolvedCommit&per_page=100" | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not retrieve VerifyAll runs for release commit $resolvedCommit."
+}
+
+$verifyAllRuns = @(($verifyAllRunsJson | ConvertFrom-Json).workflow_runs)
+Assert-VerifiedMergedMainRelease -ResolvedCommit $resolvedCommit -ReleaseCommitIsOnMain $releaseCommitIsOnMain -VerifyAllRuns $verifyAllRuns | Out-Null
+
+$remoteTagCommit = Get-RemoteReleaseTagCommit -ProjectRoot $project -Tag $identity.tag
+if ($null -ne $remoteTagCommit -and $remoteTagCommit -ne $resolvedCommit) {
+    throw "Remote tag '$($identity.tag)' points at $remoteTagCommit rather than verified commit $resolvedCommit."
+}
+
+if ($null -eq $remoteTagCommit) {
+    if (-not $tagExists) {
+        & git -C $project tag -a $identity.tag $resolvedCommit -m "Procedural RTS $($identity.version)"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to create release tag $($identity.tag)." }
+    }
+    & git -C $project push origin "refs/tags/$($identity.tag)"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to push release tag $($identity.tag)." }
+
+    $remoteTagCommit = Get-RemoteReleaseTagCommit -ProjectRoot $project -Tag $identity.tag
+    if ($remoteTagCommit -ne $resolvedCommit) {
+        throw "Remote tag '$($identity.tag)' did not resolve to verified commit $resolvedCommit after push."
+    }
+}
+
+$remoteTagCommit = Get-RemoteReleaseTagCommit -ProjectRoot $project -Tag $identity.tag
+if ($remoteTagCommit -ne $resolvedCommit) {
+    throw "Remote tag '$($identity.tag)' no longer resolves to verified commit $resolvedCommit."
+}
+
+& gh release create $identity.tag @assets --repo MeowKJ/procedural-rts-godot --verify-tag --target $resolvedCommit --title "Procedural RTS $($identity.version)" --prerelease --notes "Windows x86_64 Map Authoring Preview RC. This prerelease is unsigned and has no installer or auto-update. It does not include macOS packaging, Linux runtime acceptance, or campaign expansion. Verify SHA256SUMS.txt before running."
 if ($LASTEXITCODE -ne 0) { throw "Failed to publish prerelease $($identity.tag)." }
