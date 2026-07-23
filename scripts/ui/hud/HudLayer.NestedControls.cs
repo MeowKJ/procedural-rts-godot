@@ -175,7 +175,31 @@ public partial class HudLayer : CanvasLayer
                 true);
 
             var glyph = CatalogModeGlyph(Mode);
-            DrawIconGlyph(this, glyph, rect.GetCenter(), 24, new Color(style.Accent, _selected || focused ? 1f : 0.72f));
+            var signalStrength = _selected || focused ? 1f : 0.72f;
+            DrawIconGlyph(this, glyph, new Vector2(13, rect.Size.Y * 0.5f), 16, new Color(style.Accent, signalStrength));
+
+            var labelBounds = new Rect2(new Vector2(23, 3), new Vector2(rect.Size.X - 27, 14));
+            DrawString(
+                UiFontProfile.DrawFont(metrics.DetailFontRole),
+                labelBounds.Position + new Vector2(0, metrics.DetailFontSize),
+                Label,
+                HorizontalAlignment.Left,
+                labelBounds.Size.X,
+                metrics.DetailFontSize,
+                new Color(style.Text, _selected || focused ? 0.98f : 0.82f));
+
+            var chipMetrics = HudVisualFoundation.MetricsFor(HudVisualPrimitive.StatusBadge);
+            var chipBounds = new Rect2(new Vector2(22, 19), new Vector2(rect.Size.X - 26, 10));
+            var chipStyle = HudVisualFoundation.For(CurrentPalette, HudVisualPrimitive.StatusBadge, state, style.Accent);
+            DrawStyleBox(UiFactory.CreateHudFoundationStyleBox(chipStyle, chipMetrics), chipBounds);
+            DrawString(
+                UiFontProfile.DrawFont(chipMetrics.DetailFontRole),
+                chipBounds.Position + new Vector2(chipMetrics.ContentPadding, chipBounds.Size.Y - chipMetrics.ItemSpacing),
+                Detail,
+                HorizontalAlignment.Center,
+                chipBounds.Size.X - chipMetrics.ContentPadding * 2,
+                chipMetrics.DetailFontSize,
+                chipStyle.Text);
         }
     }
 
