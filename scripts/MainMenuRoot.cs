@@ -30,6 +30,8 @@ public partial class MainMenuRoot : Control
     public override void _Ready()
     {
         SkirmishSetupState.ClearAuthoredMapHandoff();
+        if (TryStartAuthoredMapPreviewFromCommandLine())
+            return;
         DisplayAudioSettings.LoadAndApply();
 
         SetAnchorsPreset(LayoutPreset.FullRect);

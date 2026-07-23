@@ -23,7 +23,6 @@ $smokeArguments = @(Get-WindowsReleaseCleanExtractArguments -SamplePath "C:\clea
 $expectedSmokeArguments = @(
     "--headless",
     "--quit-after", "3",
-    "--scene", "res://scenes/AuthoredMapPreviewBootstrap.tscn",
     "--",
     "--authored-map-preview", "C:\clean\authored-map-preview.mapspec.json",
     "--authored-map-sha256", "65ddc348ea79a76832237f30b7287436fd23f615cd04ccc3e2db524603b206e7"

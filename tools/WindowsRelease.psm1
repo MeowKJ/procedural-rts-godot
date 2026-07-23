@@ -222,7 +222,6 @@ function Get-WindowsReleaseCleanExtractArguments {
     return @(
         "--headless",
         "--quit-after", "3",
-        "--scene", "res://scenes/AuthoredMapPreviewBootstrap.tscn",
         "--",
         "--authored-map-preview", $SamplePath,
         "--authored-map-sha256", $SampleHash
