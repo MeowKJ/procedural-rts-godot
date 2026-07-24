@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\M7ReadyUiQa\M7ReadyUiQa.cs" Link="M7ReadyUiQa.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\HudLayoutMath.cs" Link="HudLayoutMath.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\CommandFailurePresentation.cs" Link="CommandFailurePresentation.cs" />
     <Compile Include="..\..\scripts\core\presentation\ui\CatalogInspectorState.cs" Link="CatalogInspectorState.cs" />

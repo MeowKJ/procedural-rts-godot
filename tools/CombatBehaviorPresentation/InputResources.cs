@@ -199,6 +199,12 @@ static partial class Program
             throw new InvalidOperationException("smart right-click ground branch should route selected units through UnitBattlefield EntityCommandBuffer move commands");
         }
 
+        if (!smartClickBattlefield.NeedsRepairSupport(PlayerSlotId.One, smartClickAlly)
+            || !smartClickBattlefield.NeedsRepairSupportBuilding(PlayerSlotId.One, smartClickRefinery.Id))
+        {
+            throw new InvalidOperationException("damaged friendly repair targets should expose missing-repairer support feedback before a repair-capable unit is selected");
+        }
+
         smartClickBattlefield.SelectUnitsByIds(PlayerSlotId.One, [smartClickEngineer.Id]);
         var smartClickBeforeRepair = smartClickBattlefield.AppliedInputCommandCount;
         if (!smartClickBattlefield.CanRepairSelected(PlayerSlotId.One, smartClickAlly)
@@ -208,6 +214,16 @@ static partial class Program
             || smartClickBattlefield.UnitEntityByInstanceId(smartClickEngineer.Id)?.Components.Require<CommandableComponentState>().CommandVisualTarget != smartClickAlly.Position)
         {
             throw new InvalidOperationException("smart right-click damaged ally branch should route selected repairers through UnitBattlefield EntityCommandBuffer repair commands");
+        }
+
+        var stalledRepairProjection = smartClickBattlefield.RepairOrderProjections(PlayerSlotId.One);
+        if (stalledRepairProjection.Count != 1
+            || stalledRepairProjection[0].Repairer != smartClickEngineer.EntityId
+            || stalledRepairProjection[0].Target != smartClickAlly.EntityId
+            || stalledRepairProjection[0].StallReason != RepairOrderStallReason.InsufficientCredits
+            || !stalledRepairProjection[0].IsStalled)
+        {
+            throw new InvalidOperationException("smart right-click repair projection should expose insufficient-credit repair stalls without changing repair command routing");
         }
 
         var smartClickBeforeBuildingRepair = smartClickBattlefield.AppliedInputCommandCount;

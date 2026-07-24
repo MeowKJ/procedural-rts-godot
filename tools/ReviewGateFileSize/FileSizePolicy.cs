@@ -35,6 +35,7 @@ static class FileSizePolicy
         "tools/ReviewGateDomains/",
         "tools/ReviewGateFileSize/",
         "tools/ReviewGateMapAuthoring/",
+        "tools/ReviewGateM7Ui/",
         "tools/ReviewGateReservations/",
     ];
 

@@ -3,7 +3,7 @@ static class PresentationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireHudAndTheme(root, result);
-        CommandConsoleReviewGate.Check(root, result);
+        CommandConsoleReviewGate.Check(root, result); M7ReadyUiReviewGate.Check(root, result);
         RequireWorldPresentation(root, result);
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);

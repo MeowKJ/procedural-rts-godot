@@ -9,8 +9,14 @@ public partial class HudLayer : CanvasLayer
     private readonly List<AbilityCardState> _abilityCardStates = [];
     private readonly HashSet<AbilityKind> _abilityCardActiveKinds = [];
     private readonly List<AbilityKind> _abilityCardStaleKinds = [];
+    private int _abilitySourceUnitCount;
 
     public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)
+    {
+        SetAbilityCardState(states, 0);
+    }
+
+    public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states, int sourceUnitCount)
     {
         _abilityCardStates.Clear();
         for (var index = 0; index < states.Count; index++)
@@ -18,6 +24,7 @@ public partial class HudLayer : CanvasLayer
             _abilityCardStates.Add(states[index]);
         }
 
+        _abilitySourceUnitCount = Math.Max(0, sourceUnitCount);
         RefreshCommandCards();
     }
 
@@ -75,9 +82,32 @@ public partial class HudLayer : CanvasLayer
             _abilityCards.Remove(stale);
         }
 
-        SetCatalogInspectorDefault(visibleCount == 0
-            ? GameText.T("ui.catalog.abilitiesEmpty")
-            : GameText.Format("ui.catalog.abilitiesCount", visibleCount));
+        SetCatalogInspectorDefault(AbilityCatalogSourceContextText(visibleCount));
+    }
+
+    private string AbilityCatalogSourceContextText(int visibleCount)
+    {
+        if (visibleCount == 0 || _abilitySourceUnitCount == 0)
+        {
+            return GameText.T("ui.catalog.abilitiesSourceNone");
+        }
+
+        return _abilitySourceUnitCount == 1
+            ? GameText.Format("ui.catalog.abilitiesSourceSelected", visibleCount)
+            : GameText.Format("ui.catalog.abilitiesSourceMixed", _abilitySourceUnitCount, visibleCount);
+    }
+
+    private string AbilityRailSourceContextText()
+    {
+        var visibleCount = Math.Min(_abilityCardStates.Count, 12);
+        if (visibleCount == 0 || _abilitySourceUnitCount == 0)
+        {
+            return GameText.T("ui.providerLane.abilitiesSourceNone");
+        }
+
+        return _abilitySourceUnitCount == 1
+            ? GameText.Format("ui.providerLane.abilitiesSourceSelected", visibleCount)
+            : GameText.Format("ui.providerLane.abilitiesSourceMixed", _abilitySourceUnitCount);
     }
 
     private AbilityCard AddAbilityCard(Control parent, AbilityKind kind)
