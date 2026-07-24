@@ -63,6 +63,8 @@ Console.WriteLine();
 var failures = new List<string>();
 PrintCombatChemistryCoverage(failures);
 Console.WriteLine();
+PrintUnitProductionCoverage(failures);
+Console.WriteLine();
 
 foreach (var scenario in scenarios)
 {
@@ -121,6 +123,71 @@ void PrintCombatChemistryCoverage(List<string> failures)
     RequireCoverage(Nearly(resistanceProbe.MultiplierFor(DamageElementIds.Energy), 0.75f), "Element defense probe must cover sparse resistance multipliers.", failures);
     RequireCoverage(overload?.ReactionId == ElementReactionIds.Overload, "Element reaction coverage must include EnergyCharge + Explosive -> Overload.", failures);
     RequireCoverage(ElementPresentationCatalog.Definitions.Count == DamageElementIds.All.Count, "Every damage element must have presentation metadata.", failures);
+}
+
+void PrintUnitProductionCoverage(List<string> failures)
+{
+    var productionDesignIds = UnitDesignCatalog.Designs.Values
+        .Where(design => design.Production is not null)
+        .Select(design => design.Id)
+        .ToHashSet(StringComparer.Ordinal);
+    var descriptors = UnitDesignDefinitionCatalog.RuntimeDescriptors.Values
+        .OrderBy(descriptor => descriptor.Faction)
+        .ThenBy(descriptor => descriptor.TechTier)
+        .ThenBy(descriptor => descriptor.DesignId, StringComparer.Ordinal)
+        .ToArray();
+    var productionDescriptors = descriptors
+        .Where(descriptor => productionDesignIds.Contains(descriptor.DesignId))
+        .ToArray();
+    var nonProductionDescriptors = descriptors
+        .Where(descriptor => !productionDesignIds.Contains(descriptor.DesignId))
+        .ToArray();
+    var byFaction = productionDescriptors
+        .GroupBy(descriptor => descriptor.Faction)
+        .OrderBy(group => group.Key)
+        .Select(group => $"{group.Key}={group.Count()}")
+        .ToArray();
+    var byCategory = productionDescriptors
+        .Where(descriptor => descriptor.ProductionCategory is not null)
+        .GroupBy(descriptor => descriptor.ProductionCategory!.Value)
+        .OrderBy(group => group.Key)
+        .Select(group => $"{group.Key}={group.Count()}")
+        .ToArray();
+    var byTier = productionDescriptors
+        .GroupBy(descriptor => descriptor.TechTier)
+        .OrderBy(group => group.Key)
+        .Select(group => $"T{group.Key}={group.Count()}")
+        .ToArray();
+
+    Console.WriteLine("Unit production tuning coverage");
+    Console.WriteLine($"  production units {productionDescriptors.Length}/{descriptors.Length}; by faction {string.Join(", ", byFaction)}");
+    Console.WriteLine($"  by category {string.Join(", ", byCategory)}; by tier {string.Join(", ", byTier)}");
+    Console.WriteLine($"  non-production units: {FormatNonProductionDescriptors(nonProductionDescriptors)}");
+
+    foreach (var descriptor in productionDescriptors)
+    {
+        RequireCoverage(descriptor.Cost > 0, $"{descriptor.DesignId}: production unit must have positive cost.", failures);
+        RequireCoverage(descriptor.TechTier >= 0, $"{descriptor.DesignId}: production unit must have non-negative tech tier.", failures);
+        RequireCoverage(descriptor.ProductionCategory is not null, $"{descriptor.DesignId}: production category must be authored.", failures);
+        RequireCoverage(descriptor.ProductionDuration is > 0, $"{descriptor.DesignId}: production duration must be positive.", failures);
+        RequireCoverage(descriptor.ProductionLaneIndex is >= 0, $"{descriptor.DesignId}: production lane index must be non-negative.", failures);
+        RequireCoverage(!string.IsNullOrWhiteSpace(descriptor.ProductionLaneKey), $"{descriptor.DesignId}: production lane key must be authored.", failures);
+        RequireCoverage(!string.IsNullOrWhiteSpace(descriptor.ProducerKind), $"{descriptor.DesignId}: producer kind must be authored.", failures);
+    }
+
+    RequireCoverage(descriptors.Length == UnitDesignCatalog.Designs.Count, "Runtime descriptor coverage must match the discovered unit design catalog.", failures);
+    RequireCoverage(productionDescriptors.Length > 0, "Unit production tuning coverage must include at least one production unit.", failures);
+    RequireCoverage(nonProductionDescriptors.Length > 0, "Unit production tuning coverage must report at least one non-production unit separately.", failures);
+    RequireCoverage(byFaction.Length > 0, "Unit production tuning coverage must group production units by faction.", failures);
+    RequireCoverage(byCategory.Length > 0, "Unit production tuning coverage must group production units by category.", failures);
+    RequireCoverage(byTier.Length > 0, "Unit production tuning coverage must group production units by tech tier.", failures);
+}
+
+string FormatNonProductionDescriptors(IReadOnlyList<UnitSpecRuntimeDescriptor> descriptors)
+{
+    return descriptors.Count == 0
+        ? "none"
+        : string.Join(", ", descriptors.Select(descriptor => $"{descriptor.DesignId}(T{descriptor.TechTier})"));
 }
 
 IEnumerable<string> DefenseEntries(string owner, ElementDefenseProfile? defense)
