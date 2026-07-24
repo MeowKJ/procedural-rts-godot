@@ -132,6 +132,7 @@ static void AssertHudFactoryExtraction(string root)
     var settingsOverlay = File.ReadAllText(Path.Combine(root, "scripts", "ui", "SettingsOverlayLayer.cs"));
     var englishText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.English.cs"));
     var chineseText = File.ReadAllText(Path.Combine(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs"));
+    M7ReadyUiQa.AssertSource(root);
 
     RequireText(cursorCatalog, "public enum BattleCursorState", "Battle cursor states must live in a central catalog.");
     RequireText(cursorCatalog, "BuildValid and BuildInvalid must share a hotspot", "Cursor catalog validation must guard build valid/invalid hotspot parity.");
@@ -199,8 +200,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogOverviewBuildStartableCount()", "Build catalog overview must summarize startable cards for the selected build category.");
     RequireText(hudLayer, "CatalogOverviewTrainQueueableCount()", "Train catalog overview must summarize queueable cards for the selected train category.");
     RequireText(hudLayer, "CatalogOverviewReadyAbilityCount(visibleCount)", "Abilities catalog overview must summarize ready or active selected-unit abilities.");
-    RequireText(hudLayer, "AbilityCatalogSourceContextText(visibleCount)", "Abilities catalog status must explain selected-unit source context.");
-    RequireText(hudLayer, "AbilityRailSourceContextText()", "Abilities right rail must expose selected-unit source context instead of provider lanes.");
     RequireText(hudLayer, "CatalogOverviewProviderScopeText(_selectedProductionProviderLaneScope)", "Train catalog overview must expose the selected provider scope.");
     RequireText(hudLayer, "RefreshProductionProviderLaneButtons();\n        RefreshCatalogOverview();\n        RefreshRepeatProductionControl();", "Train provider lane clicks must immediately refresh provider-scope overview text.");
     RequireText(hudLayer, "RefreshProductionProviderLaneButtons();\n        RefreshCatalogOverview();\n    }\n\n    private void ValidateProductionProviderLaneSelection()", "Build provider lane clicks must immediately refresh provider-scope overview text.");
@@ -227,7 +226,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "tab.Pressed += () => SelectProductionCategory(category);", "Train category tabs must update the production category page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Build;", "Build category tabs must only be visible on the Build catalog page.");
     RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Train;", "Train category tabs must only be visible on the Train catalog page.");
-    RequireText(hudLayer, "tab.Visible = mode == CatalogModeKind.Upgrades;", "Upgrade category tabs must only be visible on the Upgrades catalog page.");
     RequireText(hudLayer, "state.Category != _selectedProductionCategory", "Train command grid must filter by the selected production category.");
     RequireText(hudLayer, "DrawStatusBadge(size, metrics)", "Build and Train command cards must render compact availability badges using foundation metrics.");
     RequireText(hudLayer, "CommandCardStatusBadgeText(enabled, queued, _progress, disabledReasonKey)", "Command-card status badges must derive from enabled, queue, progress, and disabled-reason state.");
@@ -235,21 +233,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "CatalogModeKind.Abilities => GameText.T(\"ui.catalog.abilitiesSurface\")", "Abilities mode must own a distinct right-panel surface label.");
     RequireText(hudLayer, "CatalogModeKind.Upgrades => GameText.T(\"ui.catalog.upgradesSurface\")", "Upgrades mode must own a distinct right-panel surface label.");
     RequireText(hudLayer, "CatalogOverviewUpgradeProjectCount()", "Upgrades mode must expose a shell overview with project count and selected-source requirement.");
-    RequireText(hudLayer, "List<UpgradeCategoryTab> _upgradeCategoryTabs", "Upgrades mode must retain category tabs so selected state can update after clicks.");
-    RequireText(hudLayer, "private UpgradeProjectAccentKind _selectedUpgradeCategory = UpgradeProjectAccentKind.Combat", "Upgrades mode must default to the Combat project category.");
-    RequireText(hudLayer, "AddUpgradeCategoryTab(_rightProductionPanel, IconGlyph.Ability, GameText.T(\"ui.upgrade.category.combat\")", "Upgrades mode must expose a localized Combat category tab.");
-    RequireText(hudLayer, "AddUpgradeCategoryTab(_rightProductionPanel, IconGlyph.Scan, GameText.T(\"ui.upgrade.category.vision\")", "Upgrades mode must expose a localized Vision category tab.");
-    RequireText(hudLayer, "AddUpgradeCategoryTab(_rightProductionPanel, IconGlyph.Repair, GameText.T(\"ui.upgrade.category.support\")", "Upgrades mode must expose a localized Support category tab.");
-    RequireText(hudLayer, "Name = $\"UpgradeCategory{category}\"", "Upgrades category tabs must expose stable node names for QA.");
-    RequireText(hudLayer, "tab.Pressed += () => SelectUpgradeCategory(category);", "Upgrades category tabs must update the selected project category.");
-    RequireText(hudLayer, "state.Accent != _selectedUpgradeCategory", "Upgrades project-shell cards must filter by the selected category.");
-    RequireText(hudLayer, "VisibleUpgradeProjectShellCount()", "Upgrades overview/status must count only the selected category.");
-    RequireText(englishText, "[\"ui.upgrade.category.combat\"]", "English Combat upgrade category text must exist.");
-    RequireText(englishText, "[\"ui.upgrade.category.vision\"]", "English Vision upgrade category text must exist.");
-    RequireText(englishText, "[\"ui.upgrade.category.support\"]", "English Support upgrade category text must exist.");
-    RequireText(chineseText, "[\"ui.upgrade.category.combat\"]", "Chinese Combat upgrade category text must exist.");
-    RequireText(chineseText, "[\"ui.upgrade.category.vision\"]", "Chinese Vision upgrade category text must exist.");
-    RequireText(chineseText, "[\"ui.upgrade.category.support\"]", "Chinese Support upgrade category text must exist.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.overview.abilitiesEmpty\")", "Abilities mode overview must expose a no-source state before support units are selected.");
     RequireText(hudLayer, "UpgradeProjectCatalogStatusText()", "Catalog inspector restore must keep Upgrades on its project-card shell status.");
     RequireText(hudLayer, "GameText.T(\"ui.upgrade.source.researchBuilding\")", "Upgrades project-shell status must show the selected-source class without adding provider lanes.");
@@ -261,9 +244,6 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(hudLayer, "ResearchRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit research commands.");
     ForbidText(hudLayer, "UpgradeRequested?.Invoke", "Upgrades project-shell cards must stay read-only and not emit upgrade commands.");
     RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states)", "HUD must expose selected-unit ability card state separately from production cards.");
-    RequireText(hudLayer, "public void SetAbilityCardState(IReadOnlyList<AbilityCardState> states, int sourceUnitCount)", "HUD must accept selected ability source counts without duplicating ability rules.");
-    RequireText(hudLayer, "SetAbilityCardState(states, 0)", "Legacy ability-card callers must not invent selected-unit source context.");
-    RequireText(hudLayer, "_abilitySourceUnitCount = Math.Max(0, sourceUnitCount)", "HUD ability source context must clamp source counts safely.");
     RequireText(hudLayer, "Dictionary<AbilityKind, AbilityCard> _abilityCards", "Ability cards must not reuse production command buttons.");
     RequireText(hudLayer, "private partial class AbilityCard : Button", "Abilities mode must render dedicated ability cards.");
     RequireText(hudLayer, "Name = $\"AbilityCard{kind}\"", "Ability cards must expose stable node names for structure/screenshot QA.");
@@ -336,7 +316,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "GameText.T(\"ui.catalog.train\")", "Right command panel Train mode label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.trainSurface\")", "Right command panel train grid section label must be i18n-backed.");
     RequireText(hudLayer, "GameText.T(\"ui.catalog.abilities\")", "Right command panel Abilities mode label must be i18n-backed.");
-    RequireText(hudLayer, "GameText.T(\"ui.catalog.abilitiesSourceNone\")", "Abilities mode empty source state must be i18n-backed.");
     RequireText(hudLayer, "96 + row * 58", "Right command panel production cells must keep fixed grid spacing below the catalog strip.");
     RequireText(hudLayer, "_visibleCommandCardStates.Count >= 12", "Right command panel must cap production cells to the 12-slot fixed grid.");
     RequireText(hudLayer, "Math.Min(_abilityCardStates.Count, 12)", "Abilities mode must use the same fixed 12-slot grid cap.");
@@ -423,8 +402,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(settingsOverlay, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.");
     RequireText(settingsOverlay, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.");
     RequireText(settingsOverlay, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.");
-    RequireText(settingsOverlay, "_status.Text = SettingsControlsSectionStatusText(_selectedControlsSectionIndex)", "Settings controls section selection must preview remap status without mutating bindings.");
-    RequireText(settingsOverlay, "SettingsControlsSectionStatusText(int sectionIndex)", "Settings controls remap status must be localized through a helper.");
     RequireText(settingsOverlay, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.");
     RequireText(settingsOverlay, "GameText.T(\"settings.controls.tooltip\")", "Settings overlay controls overview must explain its read-only remap staging state.");
     RequireText(settingsOverlay, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.");
@@ -436,7 +413,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.");
     RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.");
     RequireText(englishText, "[\"settings.controls.tooltip\"]", "English settings controls tooltip must exist.");
-    RequireText(englishText, "[\"settings.controls.sectionStatus\"] = \"{0} selected; remap later\"", "English controls section remap-status feedback must exist.");
     ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
     RequireText(englishText, "[\"ui.catalog.overview.build\"]", "English HUD catalog build overview text must exist.");
     RequireText(englishText, "[\"ui.catalog.overview.train\"]", "English HUD catalog train overview text must exist.");
@@ -455,11 +431,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.providerLane.summaryOffline\"] = \"OFF\"", "English HUD provider summary must use a rail-safe offline code.");
     RequireText(englishText, "[\"ui.providerLane.upgradesNone\"] = \"NO\\nTECH\\nLANE\"", "English Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(englishText, "[\"ui.providerLane.abilitiesNone\"] = \"UNIT\\nABIL\"", "English Abilities rail hint must make selected-unit ability context explicit.");
-    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"NO\\nABIL\\nSRC\"", "English Abilities rail no-source context must exist.");
-    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"UNIT\\nABIL\\n{0}\"", "English Abilities rail selected-source context must exist.");
-    RequireText(englishText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"MIX\\nSRC\\n{0}\"", "English Abilities rail mixed-source context must exist.");
-    RequireText(englishText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"Selected source\\n{0} ability cards\"", "English Abilities selected-source status must exist.");
-    RequireText(englishText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} selected sources\\n{1} ability cards\"", "English Abilities mixed-source status must exist.");
     ForbidText(englishText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(englishText, "\\n{2} cr  {3}s", "English catalog inspector strings must use a two-line metrics layout.");
     RequireText(englishText, "[\"ui.ability.shieldField\"]", "English ability-card ShieldField label must exist.");
@@ -468,9 +439,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(englishText, "[\"ui.constructionProviderLane.tooltip\"]", "English Build provider lane tooltip must use construction-specific copy.");
     RequireText(englishText, "[\"preview.repair.unit\"] = \"REPAIR UNIT\"", "English repair preview must distinguish unit repair targets.");
     RequireText(englishText, "[\"preview.repair.structure\"] = \"REPAIR STRUCTURE\"", "English repair preview must distinguish structure repair targets.");
-    RequireText(englishText, "[\"preview.repair.needSupport\"] = \"NEED REPAIRER\"", "English repair preview must expose missing repair support.");
     RequireText(englishText, "[\"preview.repair.invalid\"] = \"NO REPAIR TARGET\"", "English repair preview must label invalid repair targets.");
-    RequireText(englishText, "[\"repair.stalled.noCredits\"] = \"Repair stalled: need credits\"", "English repair status must expose insufficient-credit stalls.");
     RequireText(englishText, "[\"preview.rally.point\"] = \"RALLY POINT\"", "English rally point preview text must exist.");
     RequireText(englishText, "[\"preview.rally.resource\"] = \"RALLY RESOURCE\"", "English rally resource preview text must exist.");
     RequireText(englishText, "[\"preview.rally.friendly\"] = \"RALLY FOLLOW\"", "English rally friendly-unit preview text must exist.");
@@ -522,7 +491,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.");
     RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.");
     RequireText(chineseText, "[\"settings.controls.tooltip\"]", "Chinese settings controls tooltip must exist.");
-    RequireText(chineseText, "[\"settings.controls.sectionStatus\"] = \"已选择 {0}；后续重绑定\"", "Chinese controls section remap-status feedback must exist.");
     ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.");
     RequireText(chineseText, "[\"ui.catalog.overview.build\"]", "Chinese HUD catalog build overview text must exist.");
     RequireText(chineseText, "[\"ui.catalog.overview.train\"]", "Chinese HUD catalog train overview text must exist.");
@@ -541,11 +509,6 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.providerLane.summaryOffline\"]", "Chinese HUD provider summary must use a rail-safe offline code.");
     RequireText(chineseText, "[\"ui.providerLane.upgradesNone\"] = \"无\\n科技\\n通道\"", "Chinese Upgrades rail hint must make the no-provider-lane state explicit.");
     RequireText(chineseText, "[\"ui.providerLane.abilitiesNone\"] = \"单位\\n能力\"", "Chinese Abilities rail hint must make selected-unit ability context explicit.");
-    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceNone\"] = \"无\\n能力\\n来源\"", "Chinese Abilities rail no-source context must exist.");
-    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceSelected\"] = \"单位\\n能力\\n{0}\"", "Chinese Abilities rail selected-source context must exist.");
-    RequireText(chineseText, "[\"ui.providerLane.abilitiesSourceMixed\"] = \"混合\\n来源\\n{0}\"", "Chinese Abilities rail mixed-source context must exist.");
-    RequireText(chineseText, "[\"ui.catalog.abilitiesSourceSelected\"] = \"已选来源\\n{0} 张能力卡\"", "Chinese Abilities selected-source status must exist.");
-    RequireText(chineseText, "[\"ui.catalog.abilitiesSourceMixed\"] = \"{0} 个能力来源\\n{1} 张能力卡\"", "Chinese Abilities mixed-source status must exist.");
     ForbidText(chineseText, "[\"ui.providerLane.available\"]", "Provider summary must not use long availability text in the narrow right rail.");
     RequireText(chineseText, "\\n{2} 资金", "Chinese catalog inspector strings must use a two-line metrics layout.");
     RequireText(chineseText, "[\"ui.ability.shieldField\"]", "Chinese ability-card ShieldField label must exist.");
@@ -554,16 +517,10 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(chineseText, "[\"ui.constructionProviderLane.tooltip\"]", "Chinese Build provider lane tooltip must use construction-specific copy.");
     RequireText(chineseText, "[\"preview.repair.unit\"] = \"修理单位\"", "Chinese repair preview must distinguish unit repair targets.");
     RequireText(chineseText, "[\"preview.repair.structure\"] = \"修理建筑\"", "Chinese repair preview must distinguish structure repair targets.");
-    RequireText(chineseText, "[\"preview.repair.needSupport\"] = \"需要修理单位\"", "Chinese repair preview must expose missing repair support.");
     RequireText(chineseText, "[\"preview.repair.invalid\"] = \"无法修理\"", "Chinese repair preview must label invalid repair targets.");
-    RequireText(chineseText, "[\"repair.stalled.noCredits\"] = \"修理暂停：资金不足\"", "Chinese repair status must expose insufficient-credit stalls.");
     RequireText(chineseText, "[\"preview.rally.point\"] = \"集结到地点\"", "Chinese rally point preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.resource\"] = \"集结到资源\"", "Chinese rally resource preview text must exist.");
     RequireText(chineseText, "[\"preview.rally.friendly\"] = \"跟随友军集结\"", "Chinese rally friendly-unit preview text must exist.");
-    RequireText(hudSync, "RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount)", "BattleRoot must collect selected-unit ability source counts beside ability cards.");
-    RequireText(hudSync, "_hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount)", "BattleRoot must feed selected ability source context into the HUD.");
-    RequireText(hudSync, "unitContributedAbility = true", "BattleRoot ability source count must be driven by the same HUD ability filter as ability cards.");
-    RequireText(hudSync, "abilitySourceUnitCount++", "BattleRoot must count selected units that contribute HUD abilities.");
     RequireText(hudSync, "_unitBattlefield.UnitEntityByInstanceId(unit.Id)", "BattleRoot ability cards must read the selected unit runtime mirror for cooldown state.");
     RequireText(hudSync, "AbilityCooldownRemaining(entity, ability.Kind)", "BattleRoot ability cards must include runtime cooldown state.");
     RequireText(hudSync, "AddOrMergeSelectedAbilityCard(", "BattleRoot must aggregate HUD ability cards across multi-selected support units.");

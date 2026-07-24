@@ -10,6 +10,7 @@
     <Compile Include="..\ReviewGateCombat\**\*.cs" Link="ReviewGateCombat\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateDomains\**\*.cs" Link="ReviewGateDomains\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateMapAuthoring\**\*.cs" Link="ReviewGateMapAuthoring\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ReviewGateM7Ui\**\*.cs" Link="ReviewGateM7Ui\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateFileSize\**\*.cs" Link="ReviewGateFileSize\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGatePresentation\**\*.cs" Link="ReviewGatePresentation\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\ReviewGateProjectile\**\*.cs" Link="ReviewGateProjectile\%(RecursiveDir)%(Filename)%(Extension)" />

@@ -214,11 +214,11 @@ public partial class HudLayer : CanvasLayer
             CustomMinimumSize = new Vector2(31, 32),
             FocusMode = Control.FocusModeEnum.Click,
             MouseFilter = Control.MouseFilterEnum.Stop,
-            TooltipText = tooltip,
         };
         tab.Size = tab.CustomMinimumSize;
         RegisterUpgradeCategoryTab(tab);
         tab.Pressed += () => SelectUpgradeCategory(category);
+        BindFixedHoverText(tab, $"upgrade-tab.{category}", () => tooltip, () => UpgradeProjectAccent(category));
         parent.AddChild(tab);
     }
 

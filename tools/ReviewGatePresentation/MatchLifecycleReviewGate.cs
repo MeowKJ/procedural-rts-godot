@@ -41,17 +41,13 @@ static class MatchLifecycleReviewGate
         RequireText(settings, "Name = \"ControlsBindingSectionRows\"", "Settings overlay must expose stable controls section rows.", result);
         RequireText(settings, "SettingsControlsOverviewText()", "Settings overlay controls overview must use shared binding catalog rows.", result);
         RequireText(settings, "SettingsControlsSectionText(_selectedControlsSectionIndex)", "Settings overlay controls section rows must refresh from the selected shared binding section.", result);
-        RequireText(settings, "_status.Text = SettingsControlsSectionStatusText(_selectedControlsSectionIndex)", "Settings controls section selection must preview remap status without mutating bindings.", result);
-        RequireText(settings, "SettingsControlsSectionStatusText(int sectionIndex)", "Settings controls remap status must be localized through a helper.", result);
         RequireText(settings, "ControlBindingCatalog.Sections[index].TitleKey", "Settings overlay controls section selector must read titles from the shared binding catalog.", result);
         RequireText(settings, "_controlsOverview.Text = SettingsControlsOverviewText()", "Settings overlay language refresh must update shared binding catalog rows.", result);
         ForbidText(settings, "\"hotkeys.camera.1\"", "Settings overlay must not duplicate binding row keys outside ControlBindingCatalog.", result);
         RequireText(englishText, "[\"settings.controls\"] = \"CONTROLS\"", "English settings controls label must exist.", result);
-        RequireText(englishText, "[\"settings.controls.sectionStatus\"] = \"{0} selected; remap later\"", "English controls section remap-status feedback must exist.", result);
         RequireText(englishText, "[\"hotkeys.build.4\"] = \"Shift-click trains x5\"", "English hotkey legend must expose batch production controls.", result);
         ForbidText(englishText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
         RequireText(chineseText, "[\"settings.controls\"] = \"控制\"", "Chinese settings controls label must exist.", result);
-        RequireText(chineseText, "[\"settings.controls.sectionStatus\"] = \"已选择 {0}；后续重绑定\"", "Chinese controls section remap-status feedback must exist.", result);
         RequireText(chineseText, "[\"hotkeys.build.4\"] = \"Shift 点击训练 x5\"", "Chinese hotkey legend must expose batch production controls.", result);
         ForbidText(chineseText, "[\"settings.controlsOverview\"]", "Settings controls overview must not drift from the shared binding catalog.", result);
     }

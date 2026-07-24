@@ -3,7 +3,7 @@ static class PresentationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireHudAndTheme(root, result);
-        CommandConsoleReviewGate.Check(root, result);
+        CommandConsoleReviewGate.Check(root, result); M7ReadyUiReviewGate.Check(root, result);
         RequireWorldPresentation(root, result);
         RequireVisualQa(root, result);
         BattleRootHudAllocationReviewGate.Check(root, result);
@@ -26,12 +26,6 @@ static class PresentationReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
         ReviewGateSource.RequireTextInFile(root, result, "Owner", "scripts", "core", "entities", "EntityRenderPalette.cs");
         ReviewGateSource.RequireTextInFile(root, result, "WorldVisualThemeState", "scripts", "core", "presentation", "theme", "WorldVisualThemeState.cs");
-        var hudTheme = ReviewGateSource.Read(root, "scripts", "ui", "SoftOldCityTheme.cs");
-        RequireText(hudTheme, "public static readonly SoftOldCityHudPalette NightRadar", "NightRadar HUD theme must have a dedicated radar-terminal palette.", result);
-        RequireText(hudTheme, "PanelBorderStrong: new Color(SoftOldCityPalette.NightRadar", "NightRadar HUD theme must use the radar accent for strong borders.", result);
-        RequireText(hudTheme, "Text: new Color(SoftOldCityPalette.NightRadarSoft", "NightRadar HUD theme must use the soft radar text color.", result);
-        RequireText(hudTheme, "WorldVisualTheme.NightRadar => NightRadar", "NightRadar visual theme must map to its dedicated HUD palette.", result);
-        ForbidText(hudTheme, "WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk", "NightRadar HUD theme must not alias the DuskDefense palette.", result);
     }
     private static void RequireWorldPresentation(string root, GateResult result)
     {
