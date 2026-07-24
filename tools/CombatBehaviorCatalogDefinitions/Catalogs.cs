@@ -112,6 +112,39 @@ static partial class Program
 
         var unitDesignRuntimeDefinitions = UnitDesignDefinitionCatalog.RuntimeDescriptors.Values.ToArray();
         var unitDesignWorkerDefinitions = UnitDesignDefinitionCatalog.WithRole(UnitRoleTag.Worker).ToArray();
+        var nonProductionDescriptorCount = 0;
+        foreach (var spec in UnitDesignCatalog.Designs.Values.Select(design => design.ToSpec()))
+        {
+            var descriptor = UnitDesignDefinitionCatalog.ForSpec(spec);
+            if (descriptor.Cost != spec.Stats.Cost
+                || descriptor.ProductionCategory != spec.Production?.Category
+                || descriptor.ProductionDuration != spec.Production?.Duration
+                || descriptor.ProducerKind != spec.Production?.ProducerKind
+                || descriptor.ProductionLaneIndex != spec.Production?.LaneIndex
+                || descriptor.ProductionLaneKey != spec.Production?.LaneKey)
+            {
+                throw new InvalidOperationException($"{spec.Id} runtime descriptor should mirror UnitSpec production tuning metadata");
+            }
+
+            if (spec.Production is null)
+            {
+                nonProductionDescriptorCount++;
+                if (descriptor.ProductionCategory is not null
+                    || descriptor.ProductionDuration is not null
+                    || descriptor.ProducerKind is not null
+                    || descriptor.ProductionLaneIndex is not null
+                    || descriptor.ProductionLaneKey is not null)
+                {
+                    throw new InvalidOperationException($"{spec.Id} non-production runtime descriptor should keep production metadata null");
+                }
+            }
+        }
+
+        if (nonProductionDescriptorCount == 0)
+        {
+            throw new InvalidOperationException("UnitDesign catalog QA should cover at least one non-production runtime descriptor");
+        }
+
         if (!unitDesignRuntimeDefinitions.Any(definition => definition.MovementDomain == MovementDomain.Land)
             || !unitDesignRuntimeDefinitions.Any(definition => definition.MovementDomain == MovementDomain.Air))
         {
@@ -322,7 +355,13 @@ static partial class Program
             || dogGuardRuntimeDefinition.SightRange != dogGuardDesign.Stats.SightRange
             || dogGuardRuntimeDefinition.AttackRange != WeaponCatalog.Weapons[dogGuardDesign.PrimaryWeapon.WeaponKind].Range
             || dogGuardRuntimeDefinition.Damage != WeaponCatalog.Ammo[WeaponCatalog.Weapons[dogGuardDesign.PrimaryWeapon.WeaponKind].AmmoKind].BaseDamage
-            || dogGuardRuntimeDefinition.TechTier != dogGuardDesign.Stats.TechTier)
+            || dogGuardRuntimeDefinition.TechTier != dogGuardDesign.Stats.TechTier
+            || dogGuardRuntimeDefinition.Cost != dogGuardDesign.Stats.Cost
+            || dogGuardRuntimeDefinition.ProductionCategory != dogGuardDesign.Production?.Category
+            || dogGuardRuntimeDefinition.ProductionDuration != dogGuardDesign.Production?.Duration
+            || dogGuardRuntimeDefinition.ProducerKind != dogGuardDesign.Production?.ProducerKind
+            || dogGuardRuntimeDefinition.ProductionLaneIndex != dogGuardDesign.Production?.LaneIndex
+            || dogGuardRuntimeDefinition.ProductionLaneKey != dogGuardDesign.Production?.LaneKey)
         {
             throw new InvalidOperationException("UnitDesign definition catalog should project UnitSpec runtime stats directly without legacy runtime projections");
         }
