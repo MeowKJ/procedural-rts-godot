@@ -204,8 +204,17 @@ public static class WeaponMath
         }
 
         var (weight, armor, domain, elementDefense, targetTraits) = ResolveDamageTargetProfile(world, target);
-        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attackerOwner, 1f);
-        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier, elementDefense, targetTraits);
+        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attackerOwner, ammo.DamageElementId, 1f);
+        var targetIncomingElementDamageMultiplier = UpgradeResolver.IncomingElementDamageMultiplier(world, target, ammo.DamageElementId);
+        return DamageResolver.Resolve(
+            ammo,
+            weight,
+            domain,
+            armor,
+            attackerDamageMultiplier,
+            elementDefense,
+            targetTraits,
+            targetIncomingElementDamageMultiplier);
     }
 
     public static float BaseDamage(EntityWorld world, EntityInstance attacker, WeaponDefinition weaponDef, EntityInstance target)
@@ -216,8 +225,17 @@ public static class WeaponMath
         }
 
         var (weight, armor, domain, elementDefense, targetTraits) = ResolveDamageTargetProfile(world, target);
-        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attacker, 1f);
-        return DamageResolver.Resolve(ammo, weight, domain, armor, attackerDamageMultiplier, elementDefense, targetTraits);
+        var attackerDamageMultiplier = UpgradeResolver.Damage(world, attacker, ammo.DamageElementId, 1f);
+        var targetIncomingElementDamageMultiplier = UpgradeResolver.IncomingElementDamageMultiplier(world, target, ammo.DamageElementId);
+        return DamageResolver.Resolve(
+            ammo,
+            weight,
+            domain,
+            armor,
+            attackerDamageMultiplier,
+            elementDefense,
+            targetTraits,
+            targetIncomingElementDamageMultiplier);
     }
 
     private static float PriorityFor<T>(IReadOnlyDictionary<T, float> values, T key)

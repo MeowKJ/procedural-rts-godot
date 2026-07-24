@@ -25,5 +25,18 @@ public static class UpgradeCatalog
                 UpgradeIds.FieldRepairs,
                 "Field Repairs",
                 new UpgradeModifier(HealthRegenMultiplier: 1.75f)),
+            [UpgradeIds.EnergyCapacitors] = new(
+                UpgradeIds.EnergyCapacitors,
+                "Energy Capacitors",
+                new UpgradeModifier(
+                    OutgoingElementDamageMultipliers: new SortedDictionary<string, float>(StringComparer.Ordinal)
+                    {
+                        [DamageElementIds.Energy] = 1.18f,
+                    },
+                    IncomingElementDamageMultipliers: new SortedDictionary<string, float>(StringComparer.Ordinal)
+                    {
+                        [DamageElementIds.Explosive] = 0.9f,
+                    },
+                    VisualDeltaIds: ["visual.delta.energy_capacitors"])),
         };
 }
