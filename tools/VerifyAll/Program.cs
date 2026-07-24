@@ -82,6 +82,11 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("battle-hud-runtime-states-qa", "dotnet", "run --project tools/BattleHudRuntimeStatesQa/BattleHudRuntimeStatesQa.csproj --no-restore"),
         Dotnet("cursor-catalog-qa", "dotnet", "run --project tools/CursorCatalogQa/CursorCatalogQa.csproj --no-restore"),
         Dotnet("desktop-hud-qa", "dotnet", "run --project tools/DesktopHudQa/DesktopHudQa.csproj --no-restore"),
+        Dotnet(
+            "desktop-hud-qa-cross-cwd",
+            "dotnet",
+            $"run --project \"{Path.Combine(root, "tools", "DesktopHudQa", "DesktopHudQa.csproj")}\" --no-restore")
+            with { WorkingDirectory = Path.GetTempPath() },
         Dotnet("review-gate", "dotnet", "run --project tools/ReviewGate/ReviewGate.csproj --no-restore"),
     };
 
@@ -141,7 +146,7 @@ static StepResult RunStep(string root, VerifyStep step)
     {
         FileName = step.FileName,
         Arguments = step.Arguments,
-        WorkingDirectory = root,
+        WorkingDirectory = step.WorkingDirectory ?? root,
         UseShellExecute = false,
         RedirectStandardOutput = true,
         RedirectStandardError = true,
@@ -198,6 +203,7 @@ sealed record VerifyStep(
     IReadOnlyDictionary<string, string>? EnvironmentVariables = null)
 {
     public IReadOnlyDictionary<string, string> Environment { get; init; } = EnvironmentVariables ?? new Dictionary<string, string>();
+    public string? WorkingDirectory { get; init; }
     public string CommandLine
     {
         get
