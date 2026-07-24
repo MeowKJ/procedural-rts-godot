@@ -39,7 +39,13 @@ public static class UnitDesignDefinitionCatalog
             spec.Stats.TechTier,
             spec.RoleTags,
             spec.Stats.ElementDefense,
-            TargetTraitProfile.FromRoleTags(spec.RoleTags, spec.Stats.TargetTraits));
+            TargetTraitProfile.FromRoleTags(spec.RoleTags, spec.Stats.TargetTraits),
+            spec.Stats.Cost,
+            spec.Production?.Category,
+            spec.Production?.Duration,
+            spec.Production?.ProducerKind,
+            spec.Production?.LaneIndex,
+            spec.Production?.LaneKey);
     }
 
     public static IEnumerable<UnitSpecRuntimeDescriptor> WithRole(UnitRoleTag roleTag)
