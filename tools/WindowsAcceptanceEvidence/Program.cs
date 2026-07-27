@@ -129,9 +129,9 @@ static void RunSelfTest()
         WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, acceptedAtUtc: "07/19/2026 00:00:00Z");
         RequireReject(evidencePath, identityPath, root, commit, "non-ISO acceptance timestamp");
         WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, schemaVersion: 1);
-        RequireReject(evidencePath, identityPath, root, commit, "legacy schema-v1 evidence");
+        RequireReject(evidencePath, identityPath, root, commit, "retired schema-v1 evidence");
         WriteEvidence(evidencePath, version, target, commit, sampleHash, $"ProceduralRTS-{version}-{target}.zip", packageHash);
-        RequireReject(evidencePath, identityPath, root, commit, "legacy package name");
+        RequireReject(evidencePath, identityPath, root, commit, "retired package name");
         foreach (var check in WindowsAcceptanceContract.RequiredInteractiveChecks)
         {
             WriteEvidence(evidencePath, version, target, commit, sampleHash, packageName, packageHash, failedInteractiveCheck: check);

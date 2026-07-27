@@ -30,7 +30,7 @@ public static class TypedMapEntityProjection
             MapBuildingQuarterTurns.RequireRootLocal(transform.Rotation),
             node.OverrideHp ? node.Hp : null,
             node.BuildProgress,
-            node.HasLegacyId ? node.LegacyId : null);
+            node.HasRuntimeId ? node.RuntimeId : null);
     }
 
     public static MapUnitSeedSpec Unit(MapRoot root, Unit node)

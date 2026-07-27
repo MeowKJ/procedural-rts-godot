@@ -11,11 +11,11 @@ public sealed record WeaponMountSpec(
     float ArcRadians,
     float TurnRate,
     bool FireWhileMoving,
-    WeaponKind? LegacyWeaponKind = null)
+    WeaponKind? WeaponKindAlias = null)
 {
-    public WeaponKind WeaponKind => LegacyWeaponKind
-        ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
-        ?? throw new InvalidOperationException($"Weapon mount '{MountId}' uses non-legacy weapon '{WeaponId}'.");
+    public WeaponKind WeaponKind => WeaponKindAlias
+        ?? WeaponCatalog.KindForWeaponId(WeaponId)
+        ?? throw new InvalidOperationException($"Weapon mount '{MountId}' has no WeaponKind alias for '{WeaponId}'.");
 
     public static WeaponMountSpec BodyFixed(string mountId, WeaponKind weaponKind, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, bool fireWhileMoving)
     {
@@ -27,9 +27,9 @@ public sealed record WeaponMountSpec(
         return BodyFixed(mountId, weaponId, anchor, muzzleOffset, arcRadians, fireWhileMoving, null);
     }
 
-    private static WeaponMountSpec BodyFixed(string mountId, string weaponId, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, bool fireWhileMoving, WeaponKind? legacyWeaponKind)
+    private static WeaponMountSpec BodyFixed(string mountId, string weaponId, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, bool fireWhileMoving, WeaponKind? weaponKindAlias)
     {
-        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.BodyFixed, anchor, muzzleOffset, arcRadians, 0, fireWhileMoving, legacyWeaponKind);
+        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.BodyFixed, anchor, muzzleOffset, arcRadians, 0, fireWhileMoving, weaponKindAlias);
     }
 
     public static WeaponMountSpec Independent(string mountId, WeaponKind weaponKind, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, float turnRate, bool fireWhileMoving)
@@ -42,9 +42,9 @@ public sealed record WeaponMountSpec(
         return Independent(mountId, weaponId, anchor, muzzleOffset, arcRadians, turnRate, fireWhileMoving, null);
     }
 
-    private static WeaponMountSpec Independent(string mountId, string weaponId, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, float turnRate, bool fireWhileMoving, WeaponKind? legacyWeaponKind)
+    private static WeaponMountSpec Independent(string mountId, string weaponId, Vector2 anchor, Vector2 muzzleOffset, float arcRadians, float turnRate, bool fireWhileMoving, WeaponKind? weaponKindAlias)
     {
-        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.Independent, anchor, muzzleOffset, arcRadians, turnRate, fireWhileMoving, legacyWeaponKind);
+        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.Independent, anchor, muzzleOffset, arcRadians, turnRate, fireWhileMoving, weaponKindAlias);
     }
 
     public static WeaponMountSpec Omni(string mountId, WeaponKind weaponKind, Vector2 anchor, bool fireWhileMoving)
@@ -57,8 +57,8 @@ public sealed record WeaponMountSpec(
         return Omni(mountId, weaponId, anchor, fireWhileMoving, null);
     }
 
-    private static WeaponMountSpec Omni(string mountId, string weaponId, Vector2 anchor, bool fireWhileMoving, WeaponKind? legacyWeaponKind)
+    private static WeaponMountSpec Omni(string mountId, string weaponId, Vector2 anchor, bool fireWhileMoving, WeaponKind? weaponKindAlias)
     {
-        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.Omni, anchor, Vector2.Zero, MathF.Tau, 0, fireWhileMoving, legacyWeaponKind);
+        return new WeaponMountSpec(mountId, weaponId, WeaponMountFacingMode.Omni, anchor, Vector2.Zero, MathF.Tau, 0, fireWhileMoving, weaponKindAlias);
     }
 }

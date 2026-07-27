@@ -70,7 +70,7 @@ static partial class Program
             || buildSpecRuntimeProjection is null
             || buildSpecRuntimeViewProjection is null
             || buildSpecRuntimeIdentity is null
-            || buildSpecRuntimeIdentity.LegacyBuildingId != buildSpecRuntimeBarracks.Id
+            || buildSpecRuntimeIdentity.BuildingId != buildSpecRuntimeBarracks.Id
             || buildSpecRuntimeIdentity.Kind != BuildingDesignIds.Barracks
             || buildSpecRuntimeIdentity.PlayerSlotId != PlayerSlotId.One
             || buildSpecRuntimeIdentity.Faction != UnitFactionId.Dog
@@ -123,14 +123,14 @@ static partial class Program
         if (!projectedBuildingCullingRect.HasPoint(buildSpecRuntimePresentation.Value.Entity.Position)
             || projectedBuildingCullingRect.Size != new Vector2(144, 112))
         {
-            throw new InvalidOperationException("building view culling should use UnitBattlefield EntityWorld presentation projection position and footprint instead of legacy BuildingModel world rectangles");
+            throw new InvalidOperationException("building view culling should use UnitBattlefield EntityWorld presentation projection position and footprint");
         }
 
         if (!buildSpecRuntimeBattlefield.SetBuildingTargetSelected(buildSpecRuntimeBarracks.Id, true)
             || buildSpecRuntimeBattlefield.BuildingProjection(buildSpecRuntimeBarracks.Id)?.Selected != true
             || BuildingEntityForTargetId(buildSpecRuntimeBattlefield, buildSpecRuntimeBarracks.Id)?.Components.Require<SelectableComponentState>().Selected != true)
         {
-            throw new InvalidOperationException("building selection projection should sync legacy building selection into EntityWorld SelectableComponentState");
+            throw new InvalidOperationException("building selection projection should sync retired building selection into EntityWorld SelectableComponentState");
         }
 
         buildSpecRuntimeEntity!.Components.Remove<BuildingIdentityComponentState>();
@@ -245,7 +245,7 @@ static partial class Program
             [buildSpecRuntimeEntity, BuildingDesignIds.Barracks, PlayerSlotId.One, UnitFactionId.Dog])!;
         if (adoptedExistingId != buildSpecRuntimeBarracks.Id
             || buildSpecRuntimeEntity.Components.TryGet<BuildingIdentityComponentState>(out var restoredIdentity) == false
-            || restoredIdentity.LegacyBuildingId != buildSpecRuntimeBarracks.Id)
+            || restoredIdentity.BuildingId != buildSpecRuntimeBarracks.Id)
         {
             throw new InvalidOperationException("building adoption should reuse the reverse EntityId index and restore EntityWorld identity without requiring temporary seed storage");
         }

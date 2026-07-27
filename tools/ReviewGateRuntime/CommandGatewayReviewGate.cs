@@ -26,9 +26,8 @@ static class CommandGatewayReviewGate
         RequireText(payload, "IReadOnlyList<EntityId>?", "Gateway payload subjects must be read-only entity ids.", result);
         RequireText(payload, "PlayerCommandBuildFacing(int Version, int QuarterTurns)", "Build facing must use the bounded versioned quarter-turn value object.", result);
         RequireText(payload, "TryResolveCanonicalRadians(out float radians)", "Build facing validation and canonical-radian mapping must share one resolver.", result);
-        RequireText(payload, "return QuarterTurns == 0;", "Shared Build-facing resolver must accept legacy v0 only at quarter-turn zero.", result);
         RequireText(payload, "Version != 1 || QuarterTurns is < 0 or > 3", "Shared Build-facing resolver must reject unknown versions and non-cardinal schema v1 values.", result);
-        RequireText(payload, "PlayerCommandBuildFacing BuildFacing = default", "Build facing must remain an optional trailing payload field for legacy source compatibility.", result);
+        RequireText(payload, "PlayerCommandBuildFacing BuildFacing = default", "Non-build payload factories may leave the trailing build-facing field unset.", result);
         RequireText(payload, "PlayerCommandPayload ForBuild(string specId, float x, float y, int quarterTurns)", "Build payloads must expose a focused schema v1 writer factory.", result);
         ForbidText(payload, "CanonicalRadians =>", "Build facing must not expose an unconditional radians conversion that bypasses schema validation.", result);
         var payloadValidation = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.PayloadValidation.cs");

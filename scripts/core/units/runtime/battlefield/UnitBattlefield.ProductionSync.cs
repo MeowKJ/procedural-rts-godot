@@ -42,13 +42,13 @@ public sealed partial class UnitBattlefield
         foreach (var entity in _entityWorld.OrderedEntities)
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                || !_productionBuildingIdSeen.Add(identity.LegacyBuildingId)
-                || BuildingProductionQueue(identity.LegacyBuildingId).Count == 0)
+                || !_productionBuildingIdSeen.Add(identity.BuildingId)
+                || BuildingProductionQueue(identity.BuildingId).Count == 0)
             {
                 continue;
             }
 
-            result.Add(identity.LegacyBuildingId);
+            result.Add(identity.BuildingId);
         }
     }
 

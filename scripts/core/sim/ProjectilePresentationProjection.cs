@@ -18,11 +18,11 @@ public readonly record struct ProjectilePresentationProjection(
     HitRule HitRule,
     float FlightProgress,
     float ArcHeight,
-    AmmoKind? LegacyAmmoKind,
+    AmmoKind? AmmoKindAlias,
     ProjectileVfxStyle Style,
     Color Accent)
 {
-    public bool IsSeekerRocket => LegacyAmmoKind == AmmoKind.SeekerRocket;
+    public bool IsSeekerRocket => AmmoKindAlias == AmmoKind.SeekerRocket;
     public bool HasGroundShadow => Behavior == ProjectileBehavior.Ballistic && ArcHeight > 0.5f;
     public float CullingRadius => Style.HeadRadius + Style.CullingPadding + ArcHeight;
     public float TailLength => Style.TailLength;
@@ -113,7 +113,7 @@ public static class ProjectilePresentationProjector
             projectile.HitRule,
             flightProgress,
             arcHeight,
-            ammo.LegacyKind,
+            ammo.KindAlias,
             ProjectileVfxMath.StyleFor(ammo),
             AccentFor(world, viewer, sourceOwner, ElementPresentationCatalog.ProjectileAccentFor(ammo.DamageElementId, ammo.Accent)));
     }

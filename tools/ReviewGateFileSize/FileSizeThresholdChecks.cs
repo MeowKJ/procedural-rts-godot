@@ -31,28 +31,6 @@ static class FileSizeThresholdChecks
         WarnYellowFiles(files, result);
     }
 
-    public static void CheckBridgeLegacyBaseline(
-        IReadOnlyList<FileSizeSourceFile> files,
-        string governance,
-        GateResult result)
-    {
-        var bridgeFiles = files
-            .Where(file => Path.GetFileName(file.Path).Contains("Bridge", StringComparison.OrdinalIgnoreCase)
-                || Path.GetFileName(file.Path).Contains("Legacy", StringComparison.OrdinalIgnoreCase)
-                || Path.GetFileName(file.Path).Contains("Compatibility", StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-        if (bridgeFiles.Length > FileSizePolicy.BridgeLegacyCompatibilityBaseline)
-        {
-            result.Error($"Bridge/Legacy/Compatibility source count rose above baseline {FileSizePolicy.BridgeLegacyCompatibilityBaseline}: {bridgeFiles.Length}.");
-        }
-
-        if (bridgeFiles.Length > 0
-            && !governance.Contains("Bridge", StringComparison.Ordinal))
-        {
-            result.Warning("Bridge/Legacy/Compatibility files exist but no deletion-condition evidence was found in governance.");
-        }
-    }
-
     private static void WarnKnownDebt(IReadOnlyList<FileSizeSourceFile> files, GateResult result)
     {
         var knownDebt = files

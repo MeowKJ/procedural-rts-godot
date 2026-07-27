@@ -10,7 +10,7 @@ public static class ImpactVfxMath
         AmmoDefinition ammo,
         float damage)
     {
-        return StyleFor(weightClass, movementDomain, ammo.LegacyKind, damage, ammo.DamageElementId);
+        return StyleFor(weightClass, movementDomain, ammo.KindAlias, damage, ammo.DamageElementId);
     }
 
     public static ImpactVfxStyle StyleFor(

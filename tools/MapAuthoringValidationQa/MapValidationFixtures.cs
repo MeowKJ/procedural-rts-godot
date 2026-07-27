@@ -25,7 +25,7 @@ static class MapValidationFixtures
         int owner = 1,
         FactionId? faction = null,
         float facing = 0,
-        int? legacyId = null)
+        int? runtimeId = null)
     {
         var spec = BuildSpecCatalog.For(kind);
         var footprint = spec.FootprintCells.Rotated(facing);
@@ -37,7 +37,7 @@ static class MapValidationFixtures
                 PlacementMath.SnapAnchor(x, footprint.WidthCells),
                 PlacementMath.SnapAnchor(y, footprint.HeightCells)),
             facing,
-            LegacyId: legacyId);
+            RuntimeId: runtimeId);
     }
 
     public static MapSpec WithBuildings(params MapBuildingSeedSpec[] buildings)
@@ -71,7 +71,7 @@ static class MapValidationFixtures
             map.Id,
             $"{map.WorldSize.Width:R},{map.WorldSize.Height:R}",
             string.Join(',', map.OwnerStarts.Select(value => $"{value.OwnerId.Value}:{value.Position.X:R}:{value.Position.Y:R}")),
-            string.Join(',', map.Buildings.Select(value => $"{value.Kind}:{value.Position.X:R}:{value.Position.Y:R}:{value.Facing:R}:{value.LegacyId}")),
+            string.Join(',', map.Buildings.Select(value => $"{value.Kind}:{value.Position.X:R}:{value.Position.Y:R}:{value.Facing:R}:{value.RuntimeId}")),
             string.Join(',', map.Resources.Select(value => $"{value.Id}:{value.Position.X:R}:{value.Position.Y:R}:{value.Radius:R}")),
             string.Join(',', map.Obstacles.Select(value => $"{value.Id}:{value.Bounds.X:R}:{value.Bounds.Y:R}:{value.Bounds.Width:R}:{value.Bounds.Height:R}")),
             string.Join(',', map.TerrainCells.Select(value => $"{value.Id}:{value.Bounds.X:R}:{value.Bounds.Y:R}:{value.Bounds.Width:R}:{value.Bounds.Height:R}:{value.MovementCost:R}")));

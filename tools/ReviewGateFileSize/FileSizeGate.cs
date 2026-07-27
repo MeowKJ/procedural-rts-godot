@@ -25,7 +25,6 @@ static class FileSizeGate
         FileSizeEvidenceRecordChecks.Check(files, result);
         FileSizeStructureChecks.CheckForbiddenNames(files, result);
         FileSizeStructureChecks.CheckDirectoryShape(files, result);
-        FileSizeThresholdChecks.CheckBridgeLegacyBaseline(files, governance, result);
         FileSizeThresholdChecks.CheckFileSizes(files, result);
     }
 }

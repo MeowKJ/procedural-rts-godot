@@ -30,7 +30,7 @@ Add one concrete `WeaponDesign` class under `scripts/core/combat/weapons/` and,
 when needed, one concrete `AmmoDesign` class under `scripts/core/combat/ammo/`.
 `WeaponCatalog` discovers both by reflection, validates weapon-to-ammo links, and
 keeps deterministic string-id lookup for runtime combat systems. Existing
-`WeaponKind` and `AmmoKind` values are compatibility aliases only; a brand-new
+`WeaponKind` and `AmmoKind` values are optional built-in aliases; a brand-new
 weapon or ammo can be added with a new design class and stable string id, without
 editing the enum or catalog.
 

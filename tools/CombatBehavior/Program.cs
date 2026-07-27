@@ -12,19 +12,11 @@ static partial class Program
         AssertUnitDesignRosters();
         AssertUnitBattlefieldCommandsAndCombat();
         AssertUnitBattlefieldProduction();
-        AssertRuntimeSnapshotsSmartClickAndBuildingWeapons();
         AssertCommandAcknowledgementEvents();
-        AssertRelationsAndFactionPresentation();
-        AssertProductionPresentationAndBuildOptions();
         AssertTerrainThemesAndSignals();
         AssertSelectionVfxFogAndWeapons();
         AssertPresentationDescriptorsAndLocalization();
         AssertTacticalAudioDedupe();
-        AssertLegacyCombatRules();
-        AssertLegacyMovementAndAttackTracking();
-        AssertLegacyProductionEconomy();
-        AssertSkirmishAiAndSetup();
-        AssertDifficultyWavesAndOutcomes();
     }
 
     private static class UnitDesignIds
@@ -72,50 +64,12 @@ static partial class Program
         return owner == Owner.Player ? FactionId.Dog : FactionId.Cat;
     }
 
-    static UnitModel Unit(int id, string designId, Owner owner, Vector2 position, UnitStance stance, FactionId? factionId = null)
-    {
-        return Unit(id, RuntimeDescriptorFor(designId), owner, position, stance, factionId);
-    }
-
-    static UnitModel Unit(int id, UnitSpecRuntimeDescriptor descriptor, Owner owner, Vector2 position, UnitStance stance, FactionId? factionId = null)
-    {
-        return new UnitModel
-        {
-            Id = id,
-            DesignId = descriptor.DesignId,
-            Owner = owner,
-            FactionId = factionId ?? DefaultFactionForOwner(owner),
-            Position = position,
-            AnchorPosition = position,
-            Hp = descriptor.MaxHp,
-            Stance = stance,
-        };
-    }
-
-    static BuildingModel Building(int id, string kind, Owner owner, Vector2 position, FactionId? factionId = null)
-    {
-        return new BuildingModel
-        {
-            Id = id,
-            Kind = kind,
-            Owner = owner,
-            FactionId = factionId ?? DefaultFactionForOwner(owner),
-            Position = position,
-            Hp = BuildSpecCatalog.For(kind).MaxHp,
-        };
-    }
-
     static EntityInstance? BuildingEntityForTargetId(UnitBattlefield battlefield, int buildingId)
     {
         return battlefield.BuildingEntityIdByTargetId(buildingId) is { } entityId
             && battlefield.EntityWorld.TryGet(entityId, out var entity)
                 ? entity
                 : null;
-    }
-
-    static bool IsHarvesterUnit(UnitModel unit)
-    {
-        return GameState.IsHarvesterUnit(unit);
     }
 
     static bool IsHarvesterDesign(string designId)
@@ -144,35 +98,41 @@ static partial class Program
             .ToArray();
     }
 
-    static bool IsCombatUnit(UnitModel unit)
+    static float EffectiveDamageAgainst(AmmoKind ammoKind, UnitSpecRuntimeDescriptor target)
     {
-        return !IsHarvesterUnit(unit);
+        return DamageResolver.Resolve(
+            WeaponCatalog.Ammo[ammoKind],
+            target.WeightClass,
+            target.MovementDomain,
+            target.ArmorTag,
+            targetElementDefense: target.ElementDefense,
+            targetTraits: target.TargetTraits);
     }
 
-    static void Advance(GameState state, float seconds)
+    static float EffectiveDamageAgainst(AmmoKind ammoKind, BuildSpec target)
     {
-        for (var elapsed = 0f; elapsed < seconds; elapsed += 0.05f)
-        {
-            state.Update(0.05);
-        }
+        return DamageResolver.Resolve(
+            WeaponCatalog.Ammo[ammoKind],
+            UnitWeightClass.Heavy,
+            MovementDomain.Land,
+            target.ArmorTag,
+            targetElementDefense: target.ElementDefense,
+            targetTraits: target.TargetTraits);
     }
 
-    static GameState EmptyState()
+    static bool WeaponCanTarget(WeaponDefinition weapon, UnitSpecRuntimeDescriptor target)
     {
-        var state = new GameState();
-        state.Units.Clear();
-        state.Buildings.Clear();
-        state.ResourceFields.Clear();
-        state.Projectiles.Clear();
-        state.Beams.Clear();
-        return state;
+        return weapon.TargetProfile.CanTarget(target);
     }
 
-    static Vector2 FinalMoveDestination(UnitModel unit)
+    static float WeaponTargetPriority(WeaponDefinition weapon, UnitSpecRuntimeDescriptor target)
     {
-        return unit.Path.Count == 0
-            ? unit.MoveTarget ?? unit.Position
-            : unit.Path.Last();
+        return weapon.TargetProfile.Priority(target);
+    }
+
+    static float WeaponTargetPriority(WeaponDefinition weapon, BuildSpec target)
+    {
+        return weapon.TargetProfile.Priority(target);
     }
 
     static float ColorDistance(Color a, Color b)
@@ -224,12 +184,4 @@ static partial class Program
         "dog.harvester",
     ];
 
-    static int ManualEnemyCombatOrders(GameState state)
-    {
-        return state.Units.Count(unit =>
-            unit.Owner == Owner.Enemy
-            && IsCombatUnit(unit)
-            && unit.AttackTargetIsManual
-            && unit.AttackTargetId is not null);
-    }
 }

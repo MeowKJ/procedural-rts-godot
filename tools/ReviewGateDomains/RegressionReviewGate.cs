@@ -23,7 +23,6 @@ static class RegressionReviewGate
         RequireAbilitySystemCooldownBufferEvidence(root, result);
         EnemyAttackWaveAiReviewGate.Check(root, result);
         EnemyProductionAiReviewGate.Check(root, result);
-        GameStateAllocationReviewGate.Check(root, result);
     }
     private static void RequireToolProjects(string root, GateResult result)
     {
@@ -31,7 +30,6 @@ static class RegressionReviewGate
         {
             "tools/SimReplay/SimReplay.csproj",
             "tools/CombatBehavior/CombatBehavior.csproj",
-            "tools/SimulationSmoke/SimulationSmoke.csproj",
             "tools/FogOfWarQa/FogOfWarQa.csproj",
             "tools/PerfSmoke/PerfSmoke.csproj",
             "tools/PlayerLoopQa/PlayerLoopQa.csproj",
@@ -106,7 +104,7 @@ static class RegressionReviewGate
         ForbidText(effects, "ProjectileProjections().Count", "CombatEffectsLayer.ActiveEffectCount must not allocate projectile projections just to count them.", result);
         var draw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
         RequireText(draw, "ProjectileProjections(_projectileProjections)", "CombatEffectsLayer.DrawProjectiles must fill the reusable projectile projection buffer.", result);
-        ForbidText(draw, "State.Projectiles", "CombatEffectsLayer must not draw retired GameState projectiles.", result);
+        ForbidText(draw, "State.Projectiles", "CombatEffectsLayer must not draw projectiles from an external state container.", result);
         RequireText(draw, "projectile.Style", "ECS projectiles must carry the shared projectile readability style.", result);
         RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding + arcHeight)", "Projectile culling must include the tracer segment and ballistic arc height.", result);
         RequireText(draw, "IsProjectileVisibleToPlayer(visibilityTail, visibilityHead)", "Projectiles drawn above fog must remain gated by ground-plane player visibility.", result);
@@ -123,8 +121,6 @@ static class RegressionReviewGate
         RequireText(projectileStyle, "MinimumHeadRadius = 3.4f", "Ordinary projectile heads must keep a readable minimum radius.", result);
         RequireText(projectileStyle, "MinimumCoreAlpha = 0.82f", "Projectile cores must remain bright enough under theme/fog overlays.", result);
         RequireText(projectileStyle, "AmmoKind.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
-        var gameStateCombat = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "GameState.cs"));
-        RequireText(gameStateCombat, "ProjectileVfxMath.StyleFor(ammo)", "Legacy GameState projectiles must initialize from the shared projectile readability style.", result);
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         RequireText(battleRoot, "AddChild(_fogOfWar);\n\n        _combatEffects", "CombatEffectsLayer must be added after fog so visible projectiles render above the fog overlay.", result);
 
@@ -176,7 +172,7 @@ static class RegressionReviewGate
         RequireText(constructionSystem, "CollectRequiredBuildings(BuildSpec spec, List<string> result)", "Construction required-building ordering must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "CollectOrderedSubjects(IReadOnlyList<EntityId> subjects, List<EntityId> result)", "Construction subject ordering must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "foreach (var entity in world.OrderedEntities)", "Construction completed-building prerequisite checks must use an explicit scan.", result);
-        ForbidText(constructionSystem, "PlacementMath.ValidateBuildableArea(", "ConstructionSystem must not delegate live placement back to the legacy split preprocessing API.", result);
+        ForbidText(constructionSystem, "PlacementMath.ValidateBuildableArea(", "ConstructionSystem must not delegate live placement back to the retired split preprocessing API.", result);
         ForbidText(constructionSystem, "terrainAt: (", "Construction placement must not allocate a captured terrain delegate per query.", result);
         ForbidText(constructionSystem, "world.OrderedEntities.Any(entity => IsCompletedBuilding", "Construction completed-building prerequisite checks must not allocate LINQ Any iterators.", result);
         ForbidText(constructionSystem, "RequiredBuildings.OrderBy(kind => kind)", "Construction prerequisites must not allocate ordered required-building enumerables.", result);

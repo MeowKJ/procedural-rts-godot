@@ -111,8 +111,8 @@ jobs:
               const existing = comments.find(comment =>
                 comment.user?.type === "Bot" && comment.body?.includes(marker));
               const metadataRunMatch = existing?.body?.match(/<!-- verify-all-meta\s+schema=1\s+run=(\d+)\b/);
-              const legacyRunMatch = existing?.body?.match(/\*\*Run:\*\*\s*\[(\d+)\]/);
-              const existingRunMatch = metadataRunMatch || legacyRunMatch;
+              const retiredRunMatch = existing?.body?.match(/\*\*Run:\*\*\s*\[(\d+)\]/);
+              const existingRunMatch = metadataRunMatch || retiredRunMatch;
               const existingRunId = existingRunMatch ? Number(existingRunMatch[1]) : null;
               if (existingRunId !== null && existingRunId > run.id) {
                 core.notice(`PR #${pullRequest.number} 已指向较新的 VerifyAll 运行 ${existingRunId}，跳过旧运行 ${run.id}。`);

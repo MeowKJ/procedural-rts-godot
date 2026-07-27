@@ -14,7 +14,7 @@ public sealed partial class UnitBattlefield
         }
 
         return new BuildingHoverProjection(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             identity.Kind,
             identity.PlayerSlotId,
             projection.Value.Entity.Position,
@@ -52,7 +52,7 @@ public sealed partial class UnitBattlefield
 
         var spec = BuildSpecCatalog.For(identity.Kind);
         return new BuildingHitPulseProjection(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             projection.Value.Entity.Position,
             projection.Value.Radius,
             projection.Value.HitPulse,
@@ -112,7 +112,7 @@ public sealed partial class UnitBattlefield
         }
 
         return new BuildingMinimapProjection(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             projection.Value.Entity.Position,
             footprint,
             identity.PlayerSlotId,

@@ -15,7 +15,7 @@ public static class ProjectileVfxMath
 
     public static ProjectileVfxStyle StyleFor(AmmoDefinition ammo)
     {
-        return StyleFor(ammo.LegacyKind, ammo.DamageElementId) with
+        return StyleFor(ammo.KindAlias, ammo.DamageElementId) with
         {
             MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammo.Behavior),
         };
@@ -30,7 +30,7 @@ public static class ProjectileVfxMath
     {
         var style = ElementPresentationCatalog.TryFor(damageElementId, out var element)
             ? element.Projectile
-            : LegacyStyleFor(ammoKind);
+            : StyleForKind(ammoKind);
         return style with
         {
             MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammoKind),
@@ -59,7 +59,7 @@ public static class ProjectileVfxMath
         };
     }
 
-    private static ProjectileVfxStyle LegacyStyleFor(AmmoKind? ammoKind)
+    private static ProjectileVfxStyle StyleForKind(AmmoKind? ammoKind)
     {
         return ammoKind switch
         {

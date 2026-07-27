@@ -135,7 +135,7 @@ public partial class BattleRoot
             && WeaponCatalog.AmmoDefinitions.TryGetValue(weapon.AmmoId, out var ammo)
             ? ammo.Accent
             : new Color("#f6c55c");
-        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
+        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponKindAlias);
     }
 
     private void OnProjectileImpacted(ProjectileImpactEvent impact)
@@ -155,7 +155,7 @@ public partial class BattleRoot
             ammo.Behavior == ProjectileBehavior.Ballistic ? UnitWeightClass.Heavy : UnitWeightClass.Light,
             MovementDomain.Land,
             ammo.BaseDamage,
-            ammo.LegacyKind,
+            ammo.KindAlias,
             ammo.DamageElementId);
         if (ammo.Behavior == ProjectileBehavior.Ballistic || ammo.SplashRadius > 0)
         {

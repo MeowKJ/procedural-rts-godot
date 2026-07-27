@@ -58,7 +58,7 @@ public sealed partial class UnitBattlefield
                 unit.AttackCooldownRemaining = weapon.Mounts.Count == 0 ? 0 : weapon.Mounts[0].CooldownRemaining;
                 unit.AttackTargetKind = weapon.AttackTargetKind;
                 unit.AttackTargetIsManual = weapon.AttackTargetIsManual;
-                unit.AttackTargetId = LegacyTargetId(weapon.AttackTarget, weapon.AttackTargetKind);
+                unit.AttackTargetId = TargetIdForEntity(weapon.AttackTarget, weapon.AttackTargetKind);
             }
         }
     }

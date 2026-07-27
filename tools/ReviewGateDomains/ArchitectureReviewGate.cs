@@ -73,7 +73,7 @@ static class ArchitectureReviewGate
         RequireText(observation, "IReadOnlyList<ObservedEntity> VisibleEntities", "ObservationView visible entities must be read-only.", result);
         RequireText(observation, "IReadOnlyList<ObservedCommandAffordance> CommandAffordances", "ObservationView command affordances must be read-only.", result);
 
-        foreach (var forbidden in new[] { "using Godot", "GameState", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
+        foreach (var forbidden in new[] { "using Godot", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
         {
             ReviewGateSource.ForbidTextInSources(root, result, forbidden, "scripts/core/players");
         }

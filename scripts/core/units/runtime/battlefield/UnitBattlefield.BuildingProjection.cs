@@ -50,7 +50,7 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            result.Add(identity.LegacyBuildingId);
+            result.Add(identity.BuildingId);
         }
 
         result.Sort(CompareBuildingIds);
@@ -72,7 +72,7 @@ public sealed partial class UnitBattlefield
         var spec = BuildSpecCatalog.For(identity.Kind);
 
         return new UnitBattlefieldBuildingSnapshot(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             identity.Kind,
             identity.PlayerSlotId,
             identity.Faction,
@@ -125,7 +125,7 @@ public sealed partial class UnitBattlefield
         }
 
         return new BuildingViewProjection(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             identity.Kind,
             identity.PlayerSlotId,
             identity.Faction,
@@ -224,7 +224,7 @@ public sealed partial class UnitBattlefield
 
         var spec = BuildSpecCatalog.For(identity.Kind);
         return new BuildingSelectionProjection(
-            identity.LegacyBuildingId,
+            identity.BuildingId,
             identity.Kind,
             identity.PlayerSlotId,
             identity.Faction,

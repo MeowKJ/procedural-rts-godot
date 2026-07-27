@@ -2,7 +2,7 @@
 
 状态：M8 统一玩家控制架构锁定稿。
 
-本 ADR 定义玩家身份、控制来源、AI/模型、观测、命令入口和模拟裁判的边界。它不要求一次重写现有 `BattleRoot`、`UnitBattlefield`、`GameState` 或 Godot 输入节点，但后续控制器、AI、回放和外部模型接入都必须朝这里收敛。
+本 ADR 定义玩家身份、控制来源、AI/模型、观测、命令入口和模拟裁判的边界。当前 live runtime 已收敛到 `UnitBattlefield` 持有的单一 `EntityWorld`；后续控制器、AI、回放和外部模型接入必须保持这条边界。
 
 ## 核心原则
 
@@ -18,7 +18,7 @@
 
 `SimulationAuthority` 是裁判。它拥有固定 tick、命令排序、合法性验证和 `EntityWorld` 推进权。
 
-`CommandSystem` 是模拟命令的唯一入口。任何 controller 或 agent 都不能直接写 `GameState`、`EntityWorld`、单位状态、建筑状态、资源、目标或冷却。
+`CommandSystem` 是模拟命令的唯一入口。任何 controller 或 agent 都不能直接写 `EntityWorld`、单位状态、建筑状态、资源、目标或冷却。
 
 ## 最小对象边界
 
@@ -99,7 +99,7 @@ SimulationAuthority
 - Produces projections, events and state hashes
 ```
 
-现阶段 `BattleRoot` 仍是 live Godot 编排者，`UnitBattlefield` / `GameState` 仍是兼容路径。迁移目标是让它们调用 authority/gateway，而不是让 controller 直接调用 runtime mutation API。
+`BattleRoot` 是 live Godot 编排者，只提交 frame delta、玩家意图并消费投影/事件。`UnitBattlefield` 持有唯一 `EntityWorld` 和固定时钟，负责在 tick 边界排空 gateway 命令并推进系统管线。`WorldPresentationEnvironment` 只持有雾、主题和信号节点等表现服务，不保存模拟状态。
 
 ## 标准数据流
 
@@ -204,25 +204,25 @@ Presentation 层只接收：
 
 Presentation 层不能读写 authoritative component state。
 
-## 与现有代码的迁移关系
+## 与现有代码的落地关系
 
-已存在并应复用：
+已落地并应复用：
 
 - `PlayerSlotId` 表示 live runtime 的玩家席位。
 - `OwnerId` 表示 sim runtime ownership。
 - `OwnerRelationTable` 决定敌我关系。
 - `EntityCommandBuffer` / `CommandSystem` 是 sim 命令入口。
 - `VisibilityIndex` / `VisionSystem` 是隐藏信息边界的基础。
-- `SelectionController`、`BuildPlacementController`、`ProductionController` 和 enemy AI controllers 已经表达输入来源，但还不是统一 `PlayerController`。
+- `CommandGateway` 是所有 live 玩家和 AI 命令的协议入口。
+- `SelectionController`、`BuildPlacementController`、`ProductionController` 和 scripted AI controllers 只表达输入来源，不拥有权威状态。
+- 普通遭遇战与 authored map 都通过 `MapSpec -> MapLoader.Load -> UnitBattlefield.AdoptLoadedMap` 建立同一条运行链。
 
-后续迁移顺序：
+后续扩展顺序：
 
-1. 先增加最小 `PlayerController` / `PlayerAgent` contract，不重接现有输入。
-2. 增加 `ObservationView` 只读快照，先覆盖 EntityWorld/headless QA 所需字段。
-3. 增加 `CommandGateway` 壳和验证结果类型，先转发现有 sim commands。
-4. 将 `SelectionController`、`ProductionController`、`BuildPlacementController` 变成 Human controller 适配器。
-5. 将 enemy production/attack wave AI 变成 ScriptedBot controller。
-6. 最后才接入 replay/network/external agent transport。
+1. 扩展 `ObservationView` 时先保持可见性裁剪和只读快照边界。
+2. 新 controller / agent 只产生 `PlayerCommand`，不得获得 world 写权限。
+3. replay、network 和 external agent transport 复用同一 gateway schema。
+4. prediction / reconciliation 只能叠加在命令和投影边界上，不能创建第二权威 world。
 
 ## 非目标
 
@@ -230,7 +230,7 @@ Presentation 层不能读写 authoritative component state。
 - 不接入真实 LLM API。
 - 不训练 RL 模型。
 - 不改变战斗平衡、阵营内容、剧情或 UI 视觉。
-- 不把现有 `GameState` / `UnitBattlefield` 一次性删除。
+- 不把 `UnitBattlefield` 变成第二份模拟状态容器。
 - 不允许任何 controller、agent 或 transport 直接写权威状态。
 
 ## 后续实现 Issue

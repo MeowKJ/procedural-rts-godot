@@ -456,11 +456,11 @@ static void AssertCommandGatewayLivePlayerLoop()
 
     var buildBattlefield = NewBattlefield(20000);
     AddBuilding(buildBattlefield, 40, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 760));
-    var buildPayload = PlayerCommandPayload.ForSpec(BuildingDesignIds.PowerPlant) with
-    {
-        HasTargetPoint = true,
-        TargetPoint = new PlayerCommandPoint(940, 760),
-    };
+    var buildPayload = PlayerCommandPayload.ForBuild(
+        BuildingDesignIds.PowerPlant,
+        940,
+        760,
+        quarterTurns: 0);
     var buildResult = buildBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Build, buildPayload);
     Advance(buildBattlefield, 0.2f);
     Require(buildResult.AcceptedCount == 1

@@ -40,17 +40,15 @@ static class PathfindingAllocationReviewGate
         ForbidText(math, "var points = new List<PathPoint>(Math.Max(0, cells.Count - 1))", "ReconstructPath must not allocate point scratch lists.", result);
         ForbidText(math, "var result = new List<PathPoint> { points[0] }", "SmoothCollinear must not allocate local result lists.", result);
         ForbidText(math, "var result = new List<PathPoint>()", "PruneByLineOfSight must not allocate local result lists.", result);
-        ForbidText(math, "var shared = FindPathWithDebug(\n            anchorX", "Shared-corridor root path must not use the allocating compatibility workspace.", result);
-        ForbidText(math, "var fallback = FindPathWithDebug(\n                member.StartX", "Shared-corridor fallback path must not use the allocating compatibility workspace.", result);
-        ForbidText(math, "var connector = FindPathWithDebug(\n                member.StartX", "Shared-corridor connector path must not use the allocating compatibility workspace.", result);
-        ForbidText(math, "var exit = FindPathWithDebug(\n                    last.X", "Shared-corridor exit path must not use the allocating compatibility workspace.", result);
+        ForbidText(math, "var shared = FindPathWithDebug(\n            anchorX", "Shared-corridor root path must not use the allocating alternate workspace.", result);
+        ForbidText(math, "var fallback = FindPathWithDebug(\n                member.StartX", "Shared-corridor fallback path must not use the allocating alternate workspace.", result);
+        ForbidText(math, "var connector = FindPathWithDebug(\n                member.StartX", "Shared-corridor connector path must not use the allocating alternate workspace.", result);
+        ForbidText(math, "var exit = FindPathWithDebug(\n                    last.X", "Shared-corridor exit path must not use the allocating alternate workspace.", result);
         ForbidText(math, "obstacles.ToHashSet()", "Pathfinding passability setup must not allocate blocker sets through LINQ materialization.", result);
         ForbidText(math, "terrain.ToDictionary(", "Pathfinding passability setup must not allocate terrain lookup dictionaries through LINQ materialization.", result);
         ForbidText(math, "IEnumerable<(GridObstacle Cell, float Cost)> ValidNeighbors", "Pathfinding neighbor expansion must not use an iterator helper.", result);
         ForbidText(math, "yield return (cell, offset.Cost)", "Pathfinding neighbor expansion must not allocate yield iterator state.", result);
         ForbidText(math, ".Skip(", "PathfindingMath hot paths must not allocate Skip iterators.", result);
-        var pathing = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.PathingAvoidance.cs"); RequireText(pathing, "PathfindingMath.FindPathWithDebug(\n                _legacyPathWorkspace,", "Legacy AssignPath must reuse a caller-owned pathfinding workspace.", result); RequireText(pathing, "for (var index = 1; index < unit.GlobalCorridor.Count; index++)", "Legacy AssignPath must enqueue the global corridor with an index loop.", result); ForbidText(pathing, "PathfindingMath.FindPathWithDebug(\n                unit.Position.X", "Legacy AssignPath must not call the allocating pathfinding compatibility overload.", result); ForbidText(pathing, "unit.GlobalCorridor.Skip(1)", "Legacy AssignPath must not allocate a Skip iterator.", result);
-        var commands = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.CommandBuffers.cs"); RequireText(commands, "PathfindingMath.FindSharedCorridor(\n            _legacyPathWorkspace,", "Legacy shared move pathing must reuse a caller-owned workspace.", result); RequireText(commands, "_legacyPathCorridorAssignments);", "Legacy shared move pathing must reuse an assignment result buffer.", result); ForbidText(commands, "PathfindingMath.FindSharedCorridor(\n            _legacyPathCorridorMembers,", "Legacy shared move pathing must not call the allocating shared-corridor compatibility overload.", result);
         var pathfindingSystem = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "sim", "systems", "PathfindingSystem.cs"));
         RequireText(pathfindingSystem, "private readonly PathfindingWorkspace _pathWorkspace = new();", "PathfindingSystem must own a reusable single-path workspace.", result);
         RequireText(pathfindingSystem, "private readonly List<GridObstacle> _cachedEnvironmentObstacles = [];", "PathfindingSystem must retain authored raster obstacles separately from dynamic blockers.", result);
@@ -62,7 +60,7 @@ static class PathfindingAllocationReviewGate
         RequireText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            _pathWorkspace,", "PathfindingSystem single-path planning must use the workspace overload.", result);
         RequireText(pathfindingSystem, "PathfindingMath.FindSharedCorridor(\n                _pathWorkspace,", "PathfindingSystem shared-corridor planning must use the workspace overload.", result);
         RequireText(pathfindingSystem, "_sharedAssignmentResults);", "PathfindingSystem shared-corridor planning must use the assignment buffer overload.", result);
-        ForbidText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            entity.Transform.Position.X", "PathfindingSystem single-path planning must not use the allocating compatibility overload.", result);
+        ForbidText(pathfindingSystem, "PathfindingMath.FindPathWithDebug(\n            entity.Transform.Position.X", "PathfindingSystem single-path planning must not use the allocating alternate overload.", result);
         var cacheQa = ReviewGateSource.Read(root, "tools", "PathfindingEnvironmentCacheQa", "Program.cs");
         RequireText(cacheQa, "warmed shared replans", "Pathfinding cache QA must report warmed multi-unit replan evidence.", result);
         RequireText(cacheQa, "uncached-equivalent rebuilds", "Pathfinding cache QA must report its before/after raster baseline.", result);
@@ -71,6 +69,5 @@ static class PathfindingAllocationReviewGate
         var terrainPassability = ReviewGateSource.Read(root, "scripts", "core", "terrain", "TerrainPassability.cs"); RequireText(terrainPassability, "MovementDomain.Air => TerrainLayer.Ground | TerrainLayer.Water | TerrainLayer.Coast | TerrainLayer.Air", "Air pathing must stay able to cross every terrain layer.", result); RequireText(terrainPassability, "return domain == MovementDomain.Air;", "Air pathing must keep ignoring static building blockers.", result);
         var workspace = ReviewGateSource.Read(root, "scripts", "core", "pathing", "PathfindingWorkspace.cs"); foreach (var token in new[] { "SharedCorridorPoints", "SharedCorridorRawCells", "SharedCorridorBlocked", "SharedCorridorTerrainByCell", "ReconstructedCells", "ReconstructedPoints", "SmoothedPoints", "PrunedPoints", "FinalPathPoints" })
             RequireText(workspace, token, "PathfindingWorkspace must own pathfinding scratch storage.", result);
-        var gameState = ReviewGateSource.Read(root, "scripts", "core", "GameState.cs"); RequireText(gameState, "private readonly PathfindingWorkspace _legacyPathWorkspace = new();", "Legacy GameState must own a reusable pathfinding workspace.", result); RequireText(gameState, "private readonly List<PathfindingCorridorAssignment> _legacyPathCorridorAssignments = [];", "Legacy GameState must own a reusable shared-corridor assignment buffer.", result);
     }
 }

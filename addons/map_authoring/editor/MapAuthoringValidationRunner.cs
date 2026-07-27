@@ -52,7 +52,7 @@ public static class MapAuthoringValidationRunner
         {
             var source = index.Entries.FirstOrDefault(value => value.Node == node)?.Source
                 ?? index.Resolve(new MapValidationSource(MapValidationSourceKind.Root, 0, root.Id));
-            diagnostics.Add(MapValidationService.UnrepresentableTransform(source, "legacy_metadata"));
+            diagnostics.Add(MapValidationService.UnrepresentableTransform(source, "unsupported_metadata"));
         }
         foreach (var entry in index.Entries.OrderBy(value => value.Source.SceneOrder))
         {

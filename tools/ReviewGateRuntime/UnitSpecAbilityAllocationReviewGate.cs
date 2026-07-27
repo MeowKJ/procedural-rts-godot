@@ -5,20 +5,18 @@ static class UnitSpecAbilityAllocationReviewGate
         var unitSpec = ReviewGateSource.Read(root, "scripts", "core", "units", "UnitSpec.cs");
         RequireText(unitSpec, "public bool HasAbility(AbilityKind kind)", "UnitSpec ability checks must expose an explicit no-LINQ scan.", result);
         RequireText(unitSpec, "public bool TryGetAbility(AbilityKind kind, out AbilitySpec ability)", "UnitSpec ability lookup must expose an explicit no-LINQ scan.", result);
-        var gameState = ReviewGateSource.Read(root, "scripts", "core", "GameState.cs");
         var battleRootSelection = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Selection.cs");
         var selectionController = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Utilities.cs");
         var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
         var syncRuntime = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SyncRuntime.cs");
         var entityBridge = ReviewGateSource.Read(root, "scripts", "core", "entities", "UnitSpecEntityBridge.cs");
-        var runtimeSources = gameState
-            + battleRootSelection
+        var runtimeSources = battleRootSelection
             + selectionController
             + commandBridge
             + syncRuntime
             + entityBridge;
 
-        RequireText(runtimeSources, "spec.HasAbility(AbilityKind.Harvest)", "Legacy/BattleRoot/controller harvester checks must use UnitSpec.HasAbility.", result);
+        RequireText(runtimeSources, "spec.HasAbility(AbilityKind.Harvest)", "Runtime and controller harvester checks must use UnitSpec.HasAbility.", result);
         RequireText(commandBridge, "unit.Spec.HasAbility(AbilityKind.RepairField)", "UnitBattlefield repair checks must use UnitSpec.HasAbility.", result);
         RequireText(entityBridge, "unitSpec.TryGetAbility(AbilityKind.Build, out var build)", "Entity bridge build-radius lookup must use UnitSpec.TryGetAbility.", result);
         RequireText(entityBridge, "ActiveAbilityCount(unitSpec)", "Entity bridge active ability runtime state must avoid LINQ ability projections.", result);

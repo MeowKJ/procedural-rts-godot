@@ -35,11 +35,11 @@ public static class UnitPresentationCatalog
             throw new InvalidOperationException($"UnitDesign '{spec.Id}' cannot be used as a production presentation because it has no ProductionSpec.");
         }
 
-        var compatibility = Production[kind];
+        var kindPresentation = Production[kind];
         var unit = ForSpec(spec);
         return new ProductionPresentationDescriptor(
             kind,
-            compatibility.TooltipKey,
+            kindPresentation.TooltipKey,
             unit.ShortCode,
             unit.Icon,
             unit.Accent,

@@ -30,7 +30,7 @@ public sealed record WeaponFiredEvent(
     string WeaponId,
     Vector2 Muzzle,
     Vector2 TargetPosition,
-    WeaponKind? LegacyWeaponKind = null) : SimEvent(Tick)
+    WeaponKind? WeaponKindAlias = null) : SimEvent(Tick)
 {
     public WeaponFiredEvent(
         int Tick,
@@ -43,9 +43,9 @@ public sealed record WeaponFiredEvent(
     {
     }
 
-    public WeaponKind Weapon => LegacyWeaponKind
-        ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
-        ?? throw new InvalidOperationException($"Weapon fired event uses non-legacy weapon '{WeaponId}'.");
+    public WeaponKind Weapon => WeaponKindAlias
+        ?? WeaponCatalog.KindForWeaponId(WeaponId)
+        ?? throw new InvalidOperationException($"Weapon fired event has no WeaponKind alias for '{WeaponId}'.");
 }
 
 public sealed record ProjectileImpactEvent(

@@ -76,8 +76,8 @@ public sealed record ProjectileComponentState(
     float FlightDuration,
     float LifetimeRemaining,
     bool Interceptable = false,
-    WeaponKind? LegacyWeaponKind = null,
-    AmmoKind? LegacyAmmoKind = null) : EntityComponentState
+    WeaponKind? WeaponKindAlias = null,
+    AmmoKind? AmmoKindAlias = null) : EntityComponentState
 {
     public ProjectileComponentState(
         EntityId Source,
@@ -124,13 +124,13 @@ public sealed record ProjectileComponentState(
         ? 1
         : Mathf.Clamp(Age / FlightDuration, 0, 1);
 
-    public WeaponKind WeaponKind => LegacyWeaponKind
-        ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
-        ?? throw new InvalidOperationException($"Projectile uses non-legacy weapon '{WeaponId}'.");
+    public WeaponKind WeaponKind => WeaponKindAlias
+        ?? WeaponCatalog.KindForWeaponId(WeaponId)
+        ?? throw new InvalidOperationException($"Projectile has no WeaponKind alias for '{WeaponId}'.");
 
-    public AmmoKind AmmoKind => LegacyAmmoKind
-        ?? WeaponCatalog.LegacyKindForAmmo(AmmoId)
-        ?? throw new InvalidOperationException($"Projectile uses non-legacy ammo '{AmmoId}'.");
+    public AmmoKind AmmoKind => AmmoKindAlias
+        ?? WeaponCatalog.KindForAmmoId(AmmoId)
+        ?? throw new InvalidOperationException($"Projectile has no AmmoKind alias for '{AmmoId}'.");
 }
 
 public sealed record VeterancyComponentState(
@@ -209,7 +209,7 @@ public sealed record FootprintComponentState(Vector2 Size, MovementDomain Placem
 }
 
 public sealed record BuildingIdentityComponentState(
-    int LegacyBuildingId,
+    int BuildingId,
     string Kind,
     PlayerSlotId PlayerSlotId,
     UnitFactionId Faction) : EntityComponentState;

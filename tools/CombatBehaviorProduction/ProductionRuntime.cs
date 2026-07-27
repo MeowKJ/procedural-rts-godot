@@ -38,7 +38,7 @@ static partial class Program
             || buildingHitPulseProjections[0].Radius != unitProductionBarracksRadius
             || buildingHitPulseProjections[0].HitPulse <= 0)
         {
-            throw new InvalidOperationException("building hit pulses should project through UnitBattlefield EntityWorld presentation pulses instead of legacy GameState building pulses");
+            throw new InvalidOperationException("building hit pulses should project through UnitBattlefield EntityWorld presentation pulses");
         }
 
         var unitProductionEnemyHq = unitProductionBattlefield.UpsertBuildingTarget(
@@ -121,7 +121,7 @@ static partial class Program
             || unitProductionBattlefield.BuildingProductionQueue(unitProductionBarracks.Id).Count != 1
             || unitProductionBattlefield.EntityWorld.ResourceInventory(OwnerId.FromPlayerSlot(PlayerSlotId.One)).Credits != 380)
         {
-            throw new InvalidOperationException("UnitBattlefield rally and production enqueue should route through EntityWorld SetRallyPointEntityCommand/ProduceEntityCommand; production enqueue should route through EntityWorld ProduceEntityCommand and sync credits/queue back to legacy runtime");
+            throw new InvalidOperationException("UnitBattlefield rally and production enqueue should route through EntityWorld SetRallyPointEntityCommand/ProduceEntityCommand; production enqueue should route through EntityWorld ProduceEntityCommand and sync credits/queue back to retired runtime");
         }
 
         for (var step = 0; step < 210; step++)
@@ -150,7 +150,7 @@ static partial class Program
             || unitProductionBattlefield.BuildingProjection(unitProductionBarracks.Id)?.Selected != true
             || BuildingEntityForTargetId(unitProductionBattlefield, unitProductionBarracks.Id)?.Components.Require<SelectableComponentState>().Selected != true)
         {
-            throw new InvalidOperationException("building click selection should route through UnitBattlefield EntityWorld SetSelectionEntityCommand instead of legacy GameState.SelectPlayerBuildingAt");
+            throw new InvalidOperationException("building click selection should route through UnitBattlefield EntityWorld SetSelectionEntityCommand");
         }
 
         if (!unitProductionBattlefield.SetSelectedBuildingRallyPoints(PlayerSlotId.One, new Vector2(5000, -200), out var selectedBuildingRallyStatus)
@@ -165,7 +165,7 @@ static partial class Program
 
         if (!unitProductionBattlefield.HasSelectedBuildings(PlayerSlotId.One))
         {
-            throw new InvalidOperationException("building command preview should query selected buildings through UnitBattlefield EntityWorld projections instead of legacy GameState selections");
+            throw new InvalidOperationException("building command preview should query selected buildings through UnitBattlefield EntityWorld projections");
         }
 
         var buildingSellBattlefield = new UnitBattlefield();
@@ -214,7 +214,7 @@ static partial class Program
             || selectedBuildingSelectionProjection[0].Icon == IconGlyph.None
             || string.IsNullOrWhiteSpace(selectedBuildingSelectionProjection[0].ShortCode))
         {
-            throw new InvalidOperationException("building selection HUD should read selected building data from UnitBattlefield EntityWorld projections instead of legacy GameState selected buildings");
+            throw new InvalidOperationException("building selection HUD should read selected building data from UnitBattlefield EntityWorld projections");
         }
 
         var selectedBuildingRallyProjection = unitProductionBattlefield.SelectedBuildingRallyProjections(PlayerSlotId.One);
@@ -223,7 +223,7 @@ static partial class Program
             || selectedBuildingRallyProjection[0].RallyPoint != new Vector2(820, 80)
             || selectedBuildingRallyProjection[0].RallyPulse <= 0)
         {
-            throw new InvalidOperationException("selected building rally projection should expose EntityWorld-selected producer rally lines without reading legacy GameState selected buildings");
+            throw new InvalidOperationException("selected building rally projection should expose EntityWorld-selected producer rally lines");
         }
 
         var producedEntity = unitProductionBattlefield.UnitEntityByInstanceId(unitProductionEvents[0].Id);
@@ -238,7 +238,7 @@ static partial class Program
             || !producerEntity.Components.TryGet<ProductionQueueComponentState>(out var producerQueueAfterCompletion)
             || producerQueueAfterCompletion.Items.Count != 0)
         {
-            throw new InvalidOperationException("UnitBattlefield production completion should adopt EntityWorld-spawned units and sync producer queues back to legacy runtime");
+            throw new InvalidOperationException("UnitBattlefield production completion should adopt EntityWorld-spawned units and sync producer queues back to retired runtime");
         }
 
         unitProductionBattlefield.SetCredits(PlayerSlotId.One, 500);
@@ -409,7 +409,7 @@ static partial class Program
             || cancelProducerQueue.Items.Count != 0
             || unitCancelBattlefield.EntityWorld.ResourceInventory(OwnerId.FromPlayerSlot(PlayerSlotId.One)).Credits != 440)
         {
-            throw new InvalidOperationException("UnitBattlefield production cancel should route through EntityWorld CancelProductionEntityCommand and sync credits/queue back to legacy runtime");
+            throw new InvalidOperationException("UnitBattlefield production cancel should route through EntityWorld CancelProductionEntityCommand and sync credits/queue back to retired runtime");
         }
 
         var enemyProductionBattlefield = new UnitBattlefield();
@@ -449,7 +449,7 @@ static partial class Program
             || enemyProductionBattlefield.BuildingRallyPoint(enemyFactory.Id) is null
             || enemyProductionBattlefield.Credits(PlayerSlotId.Two) != 2375)
         {
-            throw new InvalidOperationException("new enemy production AI should queue faction production through UnitBattlefield instead of hidden GameState units");
+            throw new InvalidOperationException("enemy production AI should queue faction production through UnitBattlefield");
         }
 
         for (var step = 0; step < 330; step++)

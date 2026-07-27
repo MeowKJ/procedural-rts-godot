@@ -193,11 +193,7 @@ static partial class Program
             1,
             1,
             PlayerCommandKind.Build,
-            PlayerCommandPayload.ForSpec(hqSpec.Kind) with
-            {
-                HasTargetPoint = true,
-                TargetPoint = outsidePoint,
-            });
+            PlayerCommandPayload.ForBuild(hqSpec.Kind, outsidePoint.X, outsidePoint.Y, quarterTurns: 0));
         var outsideEnqueued = battlefield.TryEnqueue(
             outsideCommand,
             out var outsideEnvelope,

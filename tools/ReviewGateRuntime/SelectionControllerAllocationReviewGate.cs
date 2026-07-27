@@ -5,9 +5,6 @@ static class SelectionControllerAllocationReviewGate
         var controller = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "SelectionController.cs"));
         RequireText(controller, "public required UnitBattlefield UnitBattlefield", "SelectionController must require the live UnitBattlefield authority.", result);
         RequireText(controller, "private bool HasSelectedRuntimeHarvester()", "SelectionController harvest affordance must scan runtime harvesters explicitly.", result);
-        ForbidText(controller, "GameState", "SelectionController must not depend on the retired GameState compatibility chain.", result);
-        ForbidText(controller, "UnitModel", "SelectionController must not retain legacy UnitModel input state.", result);
-        ForbidText(controller, "BuildingModel", "SelectionController must not retain legacy BuildingModel input state.", result);
         RequireText(controller, "List<UnitInstance> _runtimeCommandLineUnitBuffer", "SelectionController command-line preview must reuse runtime selected-unit storage.", result);
         RequireText(controller, "List<int> _selectionHotkeyUnitIdBuffer", "SelectionController selection hotkeys must retain reusable unit-id storage.", result);
         RequireText(controller, "Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers", "SelectionController command-line target markers must reuse dictionary storage.", result);

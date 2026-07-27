@@ -271,7 +271,7 @@ public partial class HudLayer : CanvasLayer
     private static string ProductionOptionId(ProductionOptionState state)
     {
         return string.IsNullOrWhiteSpace(state.UnitDesignId)
-            ? $"legacy.{state.Kind}"
+            ? $"production-kind.{state.Kind}"
             : $"design.{state.UnitDesignId}";
     }
 

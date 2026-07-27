@@ -26,7 +26,7 @@ Every large subsystem must keep a stable entrypoint file:
 
 - `CombatSystem.cs`
 - `UnitBattlefield.cs`
-- `GameState.cs`
+- `EntityWorld.cs`
 - `BattleRoot.cs`
 - `HudLayer.cs`
 - `tools/ReviewGate/Program.cs`
@@ -45,7 +45,7 @@ Good first-stage examples:
 - `UnitBattlefield.Buildings.cs`
 - `UnitBattlefield.Production.cs`
 - `UnitBattlefield.CombatBridge.cs`
-- `UnitBattlefield.LegacySync.cs`
+- `UnitBattlefield.RuntimeSync.cs`
 
 Move code first. Do not change semantics in the same slice. After build and
 replay gates pass, a later slice may convert partial files into composed helper
@@ -79,7 +79,6 @@ Allowed suffixes:
 - `*Math.cs`
 - `*Projection.cs`
 - `*Bridge.cs`
-- `*LegacySync.cs`
 - `*State.cs`
 - `*ComponentState.cs`
 - `*Spec.cs`

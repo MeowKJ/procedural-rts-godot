@@ -22,10 +22,10 @@ public sealed record AmmoDefinition
     public string DamageElementId { get; init; }
     public CounterRuleProfile CounterRules { get; init; }
     public SpecialAttackHook Hooks { get; init; }
-    public AmmoKind? LegacyKind { get; init; }
+    public AmmoKind? KindAlias { get; init; }
 
-    public AmmoKind Kind => LegacyKind
-        ?? throw new InvalidOperationException($"Ammo '{Id}' has no legacy AmmoKind enum alias.");
+    public AmmoKind Kind => KindAlias
+        ?? throw new InvalidOperationException($"Ammo '{Id}' has no AmmoKind alias.");
 
     public AmmoDefinition(
         AmmoKind Kind,
@@ -86,7 +86,7 @@ public sealed record AmmoDefinition
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
         bool Interceptable = false,
-        AmmoKind? LegacyKind = null,
+        AmmoKind? KindAlias = null,
         string? DamageElementId = null,
         CounterRuleProfile? CounterRules = null)
     {
@@ -111,6 +111,6 @@ public sealed record AmmoDefinition
         _ = DamageElementCatalog.For(this.DamageElementId);
         this.CounterRules = CounterRules ?? CounterRuleProfile.Neutral;
         this.Hooks = Hooks;
-        this.LegacyKind = LegacyKind;
+        this.KindAlias = KindAlias;
     }
 }

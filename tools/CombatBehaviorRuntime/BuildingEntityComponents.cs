@@ -105,7 +105,7 @@ static partial class Program
             || hqTargetSpec.ArmorTag != bridgeHqBuildSpec.ArmorTag
             || hqTargetSpec.WeaponKind != bridgeHqBuildSpec.WeaponKind
             || !hqEntitySpec.Tags.Contains("Weapon")
-            || hqIdentity.LegacyBuildingId != hqTarget.Id
+            || hqIdentity.BuildingId != hqTarget.Id
             || hqIdentity.Kind != hqTarget.Kind
             || hqIdentity.PlayerSlotId != hqTarget.PlayerSlotId
             || hqIdentity.Faction != hqTarget.Faction
@@ -113,7 +113,7 @@ static partial class Program
             || hqWeapon.AttackTarget.Value != dogMirrorEntity.Id.Value
             || barracksEntitySpec.Kind != EntityKind.Building
             || !barracksEntitySpec.Tags.Contains("Producer")
-            || barracksIdentity.LegacyBuildingId != barracksTarget.Id
+            || barracksIdentity.BuildingId != barracksTarget.Id
             || barracksIdentity.Kind != barracksTarget.Kind
             || barracksIdentity.PlayerSlotId != barracksTarget.PlayerSlotId
             || barracksIdentity.Faction != barracksTarget.Faction
@@ -121,7 +121,7 @@ static partial class Program
             || barracksConstruction.Progress != 0.7f
             || barracksProduction.Items.Count != 1
             || barracksEntity.Components.Require<PowerComponentState>().Powered
-            || refineryIdentity.LegacyBuildingId != refineryTarget.Id
+            || refineryIdentity.BuildingId != refineryTarget.Id
             || refineryIdentity.Kind != refineryTarget.Kind
             || refineryIdentity.PlayerSlotId != refineryTarget.PlayerSlotId
             || refineryIdentity.Faction != refineryTarget.Faction

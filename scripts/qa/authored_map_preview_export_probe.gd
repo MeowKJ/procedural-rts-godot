@@ -12,7 +12,7 @@ func _ready() -> void:
 		return
 	var length := file.get_length()
 	file.close()
-	if length != 1876:
+	if length != 1880:
 		_fail("Export PCK artifact length differs from canonical parity.")
 		return
 	if FileAccess.file_exists("res://addons/map_authoring/plugin.cfg") \

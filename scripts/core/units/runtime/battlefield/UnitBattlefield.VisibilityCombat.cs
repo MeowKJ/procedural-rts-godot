@@ -349,7 +349,7 @@ public sealed partial class UnitBattlefield
             weapon.Id,
             attacker.Facing,
             attacker.AttackCooldownRemaining,
-            weapon.LegacyKind);
+            weapon.KindAlias);
         var damage = WeaponMath.BaseDamage(_entityWorld, attackerEntity.OwnerId, weapon, targetEntity);
         WeaponEngagementResolution.Fire(
             new SimContext(_entityWorld, _inputCommandTick, 0, []),

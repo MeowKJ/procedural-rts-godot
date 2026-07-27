@@ -4,23 +4,23 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private int? ResourceFieldEntityId(int? legacyFieldId)
+    private int? ResourceFieldEntityId(int? fieldId)
     {
-        return legacyFieldId is int id && _resourceFieldEntityIds.TryGetValue(id, out var entityId)
+        return fieldId is int id && _resourceFieldEntityIds.TryGetValue(id, out var entityId)
             ? entityId.Value
             : null;
     }
 
-    private int? BuildingTargetEntityId(int? legacyBuildingId)
+    private int? BuildingTargetEntityId(int? buildingId)
     {
-        return legacyBuildingId is int id && _buildingTargetEntityIds.TryGetValue(id, out var entityId)
+        return buildingId is int id && _buildingTargetEntityIds.TryGetValue(id, out var entityId)
             ? entityId.Value
             : null;
     }
 
-    private int? UnitEntityId(int? legacyUnitId)
+    private int? UnitEntityId(int? unitId)
     {
-        return legacyUnitId is int id
+        return unitId is int id
             ? UnitById(id)?.EntityId.Value
             : null;
     }
@@ -73,8 +73,8 @@ public sealed partial class UnitBattlefield
         if (entity.Components.TryGet<HarvesterComponentState>(out var harvester))
         {
             unit.HarvesterMode = harvester.Mode;
-            unit.HarvestFieldId = LegacyResourceFieldId(harvester.FieldId);
-            unit.HarvestRefineryId = LegacyBuildingTargetId(harvester.RefineryId);
+            unit.HarvestFieldId = ResourceFieldIdForEntity(harvester.FieldId);
+            unit.HarvestRefineryId = BuildingIdForEntity(harvester.RefineryId);
             unit.HarvestPulse = Mathf.Clamp(harvester.HarvestPulse, 0, 1);
             unit.HarvesterRetreating = harvester.Retreating;
         }
@@ -101,7 +101,7 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            var docked = LegacyUnitId(dock.DockedEntityId);
+            var docked = UnitIdForEntity(dock.DockedEntityId);
             var wasDocked = _lastDockedHarvesterIds.TryGetValue(refineryId, out var previous)
                 ? previous
                 : null;
@@ -113,7 +113,7 @@ public sealed partial class UnitBattlefield
         }
     }
 
-    private int? LegacyUnitId(int? entityId)
+    private int? UnitIdForEntity(int? entityId)
     {
         return entityId is int id
             ? UnitByEntityId(new EntityId(id))?.Id

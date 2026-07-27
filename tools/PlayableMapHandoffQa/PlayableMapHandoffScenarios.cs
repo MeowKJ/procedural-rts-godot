@@ -9,35 +9,23 @@ internal static class PlayableMapHandoffScenarios
         ValidateAtomicStaging(authored, failures);
         MapPreflightAtomicScenarios.Run(authored, failures);
         MapEnvironmentHashScenarios.Run(authored, failures);
-        ValidateDefaultCompatibility(authored, failures);
+        ValidateDefaultHandoff(authored, failures);
     }
 
     private static void ValidateLoadedProjection(MapSpec map, List<string> failures)
     {
-        var config = MatchConfig.ForAuthoredMap(map, EnemyDifficulty.Hard);
-        var state = new GameState(config);
         var world = MapLoader.Load(map);
         var battlefield = UnitBattlefield.AdoptLoadedMap(world, map);
 
-        Require(state.ActiveMapSpec == map, "authored GameState should retain the pure MapSpec handoff.", failures);
-        Require(state.WorldSize == map.WorldSize.ToVector2(), "authored GameState should use loaded world bounds.", failures);
-        Require(state.RuntimeMapEnvironment.WorldSize == map.WorldSize, "authored GameState should observe the loaded immutable environment.", failures);
-        Require(state.Credits(Owner.Player) == 1800 && state.Credits(Owner.Enemy) == 2100,
-            "authored GameState should preserve asymmetric owner credits.", failures);
-        Require(state.ResourceFields.Count == map.Resources.Count
-            && state.MapObstacles.Count == map.Obstacles.Count
-            && state.Buildings.Count == map.Buildings.Count
-            && state.Units.Count == map.Units.Count,
-            "authored GameState should project every loaded resource, obstacle, building, and unit exactly once.", failures);
-
         var expectedBuilding = map.Buildings[0];
-        var projectedBuilding = state.Buildings.Single(building => building.Id == 77);
+        var projectedBuilding = battlefield.BuildingSnapshots().Single(building => building.Id == 77);
+        var projectedPresentation = battlefield.BuildingPresentationProjection(projectedBuilding.Id);
         Require(projectedBuilding.Kind == expectedBuilding.Kind
             && projectedBuilding.Position == expectedBuilding.Position.ToVector2()
             && MathF.Abs(projectedBuilding.Facing - expectedBuilding.Facing) < 0.0001f
             && MathF.Abs(projectedBuilding.Hp - 725) < 0.0001f
-            && MathF.Abs(projectedBuilding.BuildProgress - 0.95f) < 0.0001f,
-            "authored legacy projection should preserve building id, transform, hp, and build progress.", failures);
+            && projectedPresentation is { BuildProgress: 0.95f },
+            "authored EntityWorld projection should preserve building id, transform, hp, and build progress.", failures);
 
         Require(battlefield.EntityWorld == world, "UnitBattlefield should adopt the exact EntityWorld produced by MapLoader.", failures);
         Require(battlefield.WorldSize == map.WorldSize.ToVector2(), "UnitBattlefield should use authored world bounds.", failures);
@@ -122,7 +110,7 @@ internal static class PlayableMapHandoffScenarios
         }
     }
 
-    private static void ValidateDefaultCompatibility(MapSpec authored, List<string> failures)
+    private static void ValidateDefaultHandoff(MapSpec authored, List<string> failures)
     {
         var previous = SkirmishSetupState.PendingMatchConfig;
         try
@@ -171,7 +159,7 @@ internal static class PlayableMapHandoffScenarios
             ],
             Buildings = source.Buildings
                 .Select((building, index) => index == 0
-                    ? building with { LegacyId = 77, Hp = 725, BuildProgress = 0.95f }
+                    ? building with { RuntimeId = 77, Hp = 725, BuildProgress = 0.95f }
                     : building)
                 .ToArray(),
         };

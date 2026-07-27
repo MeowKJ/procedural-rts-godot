@@ -12,6 +12,6 @@ public partial class Building : Node2D
     [Export] public bool OverrideHp { get; set; }
     [Export] public float Hp { get; set; } = 1000;
     [Export] public float BuildProgress { get; set; } = 1;
-    [Export] public bool HasLegacyId { get; set; }
-    [Export] public int LegacyId { get; set; }
+    [Export] public bool HasRuntimeId { get; set; }
+    [Export] public int RuntimeId { get; set; }
 }

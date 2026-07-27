@@ -6,16 +6,16 @@ public static class WeaponCatalog
 {
     private static readonly Lazy<IReadOnlyDictionary<string, WeaponDefinition>> DiscoveredWeaponDefinitions = new(DiscoverWeapons);
     private static readonly Lazy<IReadOnlyDictionary<string, AmmoDefinition>> DiscoveredAmmoDefinitions = new(DiscoverAmmo);
-    private static readonly Lazy<IReadOnlyDictionary<WeaponKind, WeaponDefinition>> LegacyWeapons = new(BuildLegacyWeapons);
-    private static readonly Lazy<IReadOnlyDictionary<AmmoKind, AmmoDefinition>> LegacyAmmo = new(BuildLegacyAmmo);
+    private static readonly Lazy<IReadOnlyDictionary<WeaponKind, WeaponDefinition>> WeaponsByKind = new(BuildWeaponsByKind);
+    private static readonly Lazy<IReadOnlyDictionary<AmmoKind, AmmoDefinition>> AmmoByKind = new(BuildAmmoByKind);
 
     public static IReadOnlyDictionary<string, WeaponDefinition> WeaponDefinitions => DiscoveredWeaponDefinitions.Value;
 
     public static IReadOnlyDictionary<string, AmmoDefinition> AmmoDefinitions => DiscoveredAmmoDefinitions.Value;
 
-    public static IReadOnlyDictionary<WeaponKind, WeaponDefinition> Weapons => LegacyWeapons.Value;
+    public static IReadOnlyDictionary<WeaponKind, WeaponDefinition> Weapons => WeaponsByKind.Value;
 
-    public static IReadOnlyDictionary<AmmoKind, AmmoDefinition> Ammo => LegacyAmmo.Value;
+    public static IReadOnlyDictionary<AmmoKind, AmmoDefinition> Ammo => AmmoByKind.Value;
 
     public static string IdFor(WeaponKind kind)
     {
@@ -27,7 +27,7 @@ public static class WeaponCatalog
         return $"ammo.{kind.ToString().ToLowerInvariant()}";
     }
 
-    public static WeaponKind? LegacyKindForWeapon(string id)
+    public static WeaponKind? KindForWeaponId(string id)
     {
         return Weapons
             .Where(pair => pair.Value.Id.Equals(id, StringComparison.Ordinal))
@@ -35,7 +35,7 @@ public static class WeaponCatalog
             .FirstOrDefault();
     }
 
-    public static AmmoKind? LegacyKindForAmmo(string id)
+    public static AmmoKind? KindForAmmoId(string id)
     {
         return Ammo
             .Where(pair => pair.Value.Id.Equals(id, StringComparison.Ordinal))
@@ -81,20 +81,20 @@ public static class WeaponCatalog
             .ToDictionary(definition => definition.Id, StringComparer.Ordinal);
     }
 
-    private static IReadOnlyDictionary<WeaponKind, WeaponDefinition> BuildLegacyWeapons()
+    private static IReadOnlyDictionary<WeaponKind, WeaponDefinition> BuildWeaponsByKind()
     {
         return WeaponDefinitions
             .Values
-            .Where(definition => definition.LegacyKind is not null)
-            .ToDictionary(definition => definition.LegacyKind!.Value);
+            .Where(definition => definition.KindAlias is not null)
+            .ToDictionary(definition => definition.KindAlias!.Value);
     }
 
-    private static IReadOnlyDictionary<AmmoKind, AmmoDefinition> BuildLegacyAmmo()
+    private static IReadOnlyDictionary<AmmoKind, AmmoDefinition> BuildAmmoByKind()
     {
         return AmmoDefinitions
             .Values
-            .Where(definition => definition.LegacyKind is not null)
-            .ToDictionary(definition => definition.LegacyKind!.Value);
+            .Where(definition => definition.KindAlias is not null)
+            .ToDictionary(definition => definition.KindAlias!.Value);
     }
 
     private static IEnumerable<TDesign> DiscoverDesigns<TDesign>(IReadOnlyList<Assembly> assemblies)

@@ -55,7 +55,7 @@ static class ProjectileImpactReviewGate
         RequireText(hashOrdering, "Add(hash, mount.ReloadRemaining)", "Deterministic state hash must include weapon reload time.", result);
 
         var combatEffects = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.cs");
-        RequireText(combatEffects, "List<BeamEffect> _beamEffects", "CombatEffectsLayer must own live beam presentation effects outside legacy GameState.Beams.", result);
+        RequireText(combatEffects, "List<BeamEffect> _beamEffects", "CombatEffectsLayer must own live beam presentation effects.", result);
         RequireText(combatEffects, "public void AddBeam(", "CombatEffectsLayer must expose a presentation-only beam effect bridge.", result);
         RequireText(combatEffects, "+ _beamEffects.Count", "ActiveEffectCount must include live beam presentation effects.", result);
 
@@ -64,7 +64,7 @@ static class ProjectileImpactReviewGate
 
         var combatDraw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
         RequireText(combatDraw, "foreach (var beam in _beamEffects)", "CombatEffectsLayer must draw live presentation beam effects.", result);
-        RequireText(combatDraw, "private void DrawBeam(", "Legacy and live beam paths must share the same draw helper.", result);
+        RequireText(combatDraw, "private void DrawBeam(", "Retired and live beam paths must share the same draw helper.", result);
         RequireText(combatDraw, "projectile.GroundPosition", "Ballistic projectiles must expose a ground position for their shadow.", result);
 
         var battleRootEvents = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Events.cs");

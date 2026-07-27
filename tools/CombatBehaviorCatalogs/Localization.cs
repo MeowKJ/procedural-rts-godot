@@ -15,7 +15,7 @@ static partial class Program
 
         if (factionProductionPresentations.Length != productionPresentationFactions.Length * Enum.GetValues<ProductionKind>().Length)
         {
-            throw new InvalidOperationException("every playable faction legacy production kind should resolve to UnitSpec production presentation metadata");
+            throw new InvalidOperationException("every playable faction retired production kind should resolve to UnitSpec production presentation metadata");
         }
 
         var playableUnitSpecPresentations = UnitDesignCatalog.Designs.Values

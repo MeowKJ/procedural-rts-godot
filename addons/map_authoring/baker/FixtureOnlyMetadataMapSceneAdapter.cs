@@ -56,7 +56,7 @@ static class FixtureOnlyMetadataMapSceneAdapter
     {
         return new MapBuildingSeedSpec(
             value.RequiredString("building_kind"), OwnerId(value), Faction(value), point,
-            value.Single("facing"), value.OptionalSingle("hp"), value.Single("build_progress", 1), value.OptionalInt32("legacy_id"));
+            value.Single("facing"), value.OptionalSingle("hp"), value.Single("build_progress", 1), value.OptionalInt32("runtime_id"));
     }
 
     private static OwnerId OwnerId(FixtureMapMetadata value) => new(value.RequiredInt32("owner_id"));

@@ -141,7 +141,7 @@ public static class UnitSpecEntityBridge
         for (var index = 0; index < unitSpec.Weapons.Count; index++)
         {
             var mount = unitSpec.Weapons[index];
-            states[index] = new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind);
+            states[index] = new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.WeaponKindAlias);
         }
 
         return states;

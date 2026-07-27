@@ -5,7 +5,6 @@ static class EnemyAttackWaveAiReviewGate
         RequirePartialSplit(root, result);
         RequireUnitSelectionBuffers(root, result);
         RequireTargetScanLoops(root, result);
-        RequireLegacyAttackWaveScans(root, result);
     }
 
     private static void RequirePartialSplit(string root, GateResult result)
@@ -98,27 +97,6 @@ static class EnemyAttackWaveAiReviewGate
         ForbidText(geometry, ".Select(", "Enemy center calculations must not allocate LINQ projection chains.", result);
         ForbidText(geometry, ".ToList()", "Enemy center calculations must not materialize temporary lists.", result);
         ForbidText(geometry, ".Aggregate(", "Enemy center calculations must not allocate aggregate delegates.", result);
-    }
-
-    private static void RequireLegacyAttackWaveScans(string root, GateResult result)
-    {
-        var legacy = ReviewGateSource.Read(root, "scripts", "core", "ai", "EnemyAttackWaveAi.cs"); var scans = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.TargetScans.cs");
-        RequireText(legacy, "List<UnitModel> _waveUnits", "Legacy EnemyAttackWaveAi must reuse wave-unit storage.", result);
-        RequireText(legacy, "CollectAvailableCombatUnits(state, _profile.MaximumWaveUnits, _waveUnits)", "Legacy EnemyAttackWaveAi must fill a caller-owned wave-unit buffer.", result);
-        RequireText(legacy, "state.CollectAvailableAttackWaveUnits(Owner.Enemy, result)", "Legacy EnemyAttackWaveAi must use the GameState wave-unit query bridge.", result); RequireText(legacy, "state.TryFindAttackWaveTarget(", "Legacy EnemyAttackWaveAi target search must use the GameState query bridge.", result);
-        RequireText(legacy, "state.CommandAttackUnits(_waveUnits, targetKind, targetId)", "Legacy EnemyAttackWaveAi must submit attacks through GameState command bridge.", result);
-        RequireText(legacy, "result.Sort(CompareWaveUnits)", "Legacy EnemyAttackWaveAi must sort wave candidates in reusable storage.", result);
-        RequireText(scans, "BuildingModel? buildingTarget = null;", "Legacy attack-wave GameState query bridge must scan nearest building targets explicitly.", result); RequireText(scans, "UnitModel? unitTarget = null;", "Legacy attack-wave GameState query bridge must scan nearest unit targets explicitly.", result); RequireText(scans, "sum += unit.Position;", "Legacy attack-wave GameState query bridge must calculate center explicitly.", result);
-        ForbidText(legacy, ".Where(", "Legacy EnemyAttackWaveAi must not allocate LINQ filter chains.", result);
-        ForbidText(legacy, ".OrderBy(", "Legacy EnemyAttackWaveAi must not allocate ordered LINQ chains.", result);
-        ForbidText(legacy, ".ThenBy(", "Legacy EnemyAttackWaveAi must not allocate secondary ordered LINQ chains.", result);
-        ForbidText(legacy, ".Select(", "Legacy EnemyAttackWaveAi must not allocate projection chains.", result);
-        ForbidText(legacy, ".ToList()", "Legacy EnemyAttackWaveAi must not materialize temporary lists.", result);
-        ForbidText(legacy, ".FirstOrDefault(", "Legacy EnemyAttackWaveAi must not allocate LINQ first queries.", result);
-        ForbidText(legacy, ".Aggregate(", "Legacy EnemyAttackWaveAi must not allocate aggregate delegates.", result);
-        ForbidText(legacy, "IEnumerable<UnitModel>", "Legacy EnemyAttackWaveAi selection helpers must not return allocating enumerables.", result);
-        ForbidText(legacy, "state.Units", "Legacy EnemyAttackWaveAi must not scan GameState units directly.", result); ForbidText(legacy, "state.Buildings", "Legacy EnemyAttackWaveAi must not scan GameState buildings directly.", result);
-        foreach (var stateWrite in new[] { "AttackTargetId =", "AttackTargetKind =", "AttackTargetIsManual =", "AttackTargetAllowsPursuit =", "MoveTarget =", "PlayerIntentTarget =", "CommandVisualTarget =", "CommandPulse =" }) ForbidText(legacy, stateWrite, "Legacy EnemyAttackWaveAi must not write command or attack state directly.", result);
     }
 
     private static void RequireFileUnderLineBudget(string root, GateResult result, string relativeFile)

@@ -37,11 +37,6 @@ static partial class Program
                 $"schema v1 cardinal Build {quarterTurns} should preserve the desired point and map to canonical facing {expectedFacings[quarterTurns]}");
         }
 
-        var legacy = PlayerBuildGatewayCheckpoints(PlayerCommandPayload.ForSpec(BuildingDesignIds.PowerPlant) with
-        {
-            HasTargetPoint = true,
-            TargetPoint = point,
-        });
         var versionOneZero = PlayerBuildGatewayCheckpoints(
             PlayerCommandPayload.ForBuild(BuildingDesignIds.PowerPlant, point.X, point.Y, quarterTurns: 0));
         var versionOneQuarterTurnA = PlayerBuildGatewayCheckpoints(
@@ -49,8 +44,6 @@ static partial class Program
         var versionOneQuarterTurnB = PlayerBuildGatewayCheckpoints(
             PlayerCommandPayload.ForBuild(BuildingDesignIds.PowerPlant, point.X, point.Y, quarterTurns: 1));
 
-        Assert(legacy.SequenceEqual(versionOneZero),
-            "legacy/default Build and schema v1 quarter-turn 0 should retain identical deterministic checkpoints");
         Assert(versionOneQuarterTurnA.SequenceEqual(versionOneQuarterTurnB),
             "identical schema v1 quarter-turn command streams should produce identical deterministic checkpoints");
         Assert(versionOneZero[^1] != versionOneQuarterTurnA[^1],

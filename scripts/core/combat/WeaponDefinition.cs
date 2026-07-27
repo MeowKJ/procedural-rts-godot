@@ -16,14 +16,14 @@ public sealed record WeaponDefinition
     public bool CanInterceptProjectiles { get; init; }
     public float Warmup { get; init; }
     public float Reload { get; init; }
-    public WeaponKind? LegacyKind { get; init; }
-    public AmmoKind? LegacyAmmoKind { get; init; }
+    public WeaponKind? KindAlias { get; init; }
+    public AmmoKind? AmmoKindAlias { get; init; }
 
-    public WeaponKind Kind => LegacyKind
-        ?? throw new InvalidOperationException($"Weapon '{Id}' has no legacy WeaponKind enum alias.");
+    public WeaponKind Kind => KindAlias
+        ?? throw new InvalidOperationException($"Weapon '{Id}' has no WeaponKind alias.");
 
-    public AmmoKind AmmoKind => LegacyAmmoKind
-        ?? throw new InvalidOperationException($"Weapon '{Id}' has no legacy AmmoKind enum alias.");
+    public AmmoKind AmmoKind => AmmoKindAlias
+        ?? throw new InvalidOperationException($"Weapon '{Id}' has no AmmoKind alias.");
 
     public WeaponDefinition(
         WeaponKind Kind,
@@ -75,8 +75,8 @@ public sealed record WeaponDefinition
         bool CanInterceptProjectiles = false,
         float Warmup = 0,
         float Reload = 0,
-        WeaponKind? LegacyKind = null,
-        AmmoKind? LegacyAmmoKind = null)
+        WeaponKind? KindAlias = null,
+        AmmoKind? AmmoKindAlias = null)
     {
         this.Id = Id;
         this.Label = Label;
@@ -92,7 +92,7 @@ public sealed record WeaponDefinition
         this.CanInterceptProjectiles = CanInterceptProjectiles;
         this.Warmup = Warmup;
         this.Reload = Reload;
-        this.LegacyKind = LegacyKind;
-        this.LegacyAmmoKind = LegacyAmmoKind;
+        this.KindAlias = KindAlias;
+        this.AmmoKindAlias = AmmoKindAlias;
     }
 }

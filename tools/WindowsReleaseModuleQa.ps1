@@ -19,13 +19,13 @@ function Assert-TemplateVersion {
 Assert-TemplateVersion "4.7.stable.mono.official.5b4e0cb0f" "4.7.stable.mono"
 Assert-TemplateVersion "4.7.stable.mono" "4.7.stable.mono"
 
-$smokeArguments = @(Get-WindowsReleaseCleanExtractArguments -SamplePath "C:\clean\authored-map-preview.mapspec.json" -SampleHash "65ddc348ea79a76832237f30b7287436fd23f615cd04ccc3e2db524603b206e7")
+$smokeArguments = @(Get-WindowsReleaseCleanExtractArguments -SamplePath "C:\clean\authored-map-preview.mapspec.json" -SampleHash "7eaf7930ab1171f240876df8c6bf30b023c29e9f5e623485ae4434023acbafe4")
 $expectedSmokeArguments = @(
     "--headless",
     "--quit-after", "3",
     "--",
     "--authored-map-preview", "C:\clean\authored-map-preview.mapspec.json",
-    "--authored-map-sha256", "65ddc348ea79a76832237f30b7287436fd23f615cd04ccc3e2db524603b206e7"
+    "--authored-map-sha256", "7eaf7930ab1171f240876df8c6bf30b023c29e9f5e623485ae4434023acbafe4"
 )
 if ($smokeArguments.Count -ne $expectedSmokeArguments.Count) {
     throw "Clean-extract smoke argument count changed."

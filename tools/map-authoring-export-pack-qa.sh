@@ -50,4 +50,4 @@ if grep -E '(^|[[:space:]])(ERROR:|SCRIPT ERROR:)' "$log" >/dev/null; then
     grep -E '(^|[[:space:]])(ERROR:|SCRIPT ERROR:)' "$log" >&2
     exit 1
 fi
-grep -F "Authored map export PCK probe PASSED: 1876 bytes sha256 $expected_hash." "$log"
+grep -F "Authored map export PCK probe PASSED: 1880 bytes sha256 $expected_hash." "$log"

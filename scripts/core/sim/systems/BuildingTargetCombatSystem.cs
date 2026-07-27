@@ -3,9 +3,8 @@ using Godot;
 namespace ProceduralRts.Core;
 
 /// <summary>
-/// Transitional EntityWorld combat for mobile units whose current target is a
-/// building/turret entity. Unit-vs-unit combat remains on the legacy path during
-/// M1, so this system deliberately ignores non-structure targets.
+/// EntityWorld combat for mobile units whose current target is a building or turret.
+/// This system deliberately ignores non-structure targets.
 /// </summary>
 public sealed class BuildingTargetCombatSystem : ISimSystem
 {

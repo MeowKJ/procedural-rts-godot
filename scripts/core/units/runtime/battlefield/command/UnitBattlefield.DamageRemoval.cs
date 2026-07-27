@@ -64,8 +64,8 @@ public sealed partial class UnitBattlefield
         foreach (var entity in _entityWorld.OrderedEntities)
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                || !_removedBuildingIdBuffer.Add(identity.LegacyBuildingId)
-                || BuildingSnapshot(identity.LegacyBuildingId) is not { Hp: <= 0 } snapshot)
+                || !_removedBuildingIdBuffer.Add(identity.BuildingId)
+                || BuildingSnapshot(identity.BuildingId) is not { Hp: <= 0 } snapshot)
             {
                 continue;
             }

@@ -78,11 +78,7 @@ static partial class Program
             1,
             12,
             PlayerCommandKind.Build,
-            PlayerCommandPayload.ForSpec("building.powerplant") with
-            {
-                HasTargetPoint = true,
-                TargetPoint = new PlayerCommandPoint(64, 96),
-            });
+            PlayerCommandPayload.ForBuild("building.powerplant", 64, 96, quarterTurns: 0));
         AssertAccepted(gateway.Submit(submission, new[] { build }, sink), "gateway should accept build payloads with spec and point");
 
         AssertBuildFacingPayloadVariants(submission);
@@ -169,7 +165,7 @@ static partial class Program
         Assert(cardinalSink.Accepted.Count == 4,
             "all four schema v1 cardinal Build payloads should reach the gateway sink");
 
-        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(0, 1), "legacy v0 nonzero turn");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(0, 0), "retired schema v0");
         AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, -1), "schema v1 negative turn");
         AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, 4), "schema v1 turn above three");
         AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(2, 0), "unknown schema version");

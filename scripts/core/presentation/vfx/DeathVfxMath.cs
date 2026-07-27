@@ -6,7 +6,7 @@ public static class DeathVfxMath
 {
     public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoDefinition ammo, float overkillDamage)
     {
-        return StyleFor(weightClass, movementDomain, ammo.LegacyKind, overkillDamage, ammo.DamageElementId);
+        return StyleFor(weightClass, movementDomain, ammo.KindAlias, overkillDamage, ammo.DamageElementId);
     }
 
     public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoKind? ammoKind, float overkillDamage)

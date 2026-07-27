@@ -111,16 +111,16 @@ public sealed partial class UnitBattlefield
             }
 
             var distanceSquared = entity.Transform.Position.DistanceSquaredTo(worldPoint);
-            var radius = BuildingTargetRadiusCore(identity.LegacyBuildingId, identity.Kind) + pickPadding;
+            var radius = BuildingTargetRadiusCore(identity.BuildingId, identity.Kind) + pickPadding;
             if (distanceSquared > radius * radius)
             {
                 continue;
             }
 
             if (distanceSquared < bestDistanceSquared
-                || (distanceSquared == bestDistanceSquared && (bestId is null || identity.LegacyBuildingId < bestId.Value)))
+                || (distanceSquared == bestDistanceSquared && (bestId is null || identity.BuildingId < bestId.Value)))
             {
-                bestId = identity.LegacyBuildingId;
+                bestId = identity.BuildingId;
                 bestDistanceSquared = distanceSquared;
             }
         }

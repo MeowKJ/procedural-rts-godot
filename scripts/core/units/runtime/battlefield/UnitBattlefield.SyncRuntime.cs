@@ -79,7 +79,7 @@ public sealed partial class UnitBattlefield
             unit.AttackCooldownRemaining = weapon.Mounts.Count == 0 ? 0 : weapon.Mounts[0].CooldownRemaining;
             unit.AttackTargetKind = weapon.AttackTargetKind;
             unit.AttackTargetIsManual = weapon.AttackTargetIsManual;
-            unit.AttackTargetId = LegacyTargetId(weapon.AttackTarget, weapon.AttackTargetKind);
+            unit.AttackTargetId = TargetIdForEntity(weapon.AttackTarget, weapon.AttackTargetKind);
         }
 
         if (entity.Components.TryGet<StanceComponentState>(out var stance))
@@ -97,8 +97,8 @@ public sealed partial class UnitBattlefield
         if (entity.Components.TryGet<HarvesterComponentState>(out var harvester))
         {
             unit.HarvesterMode = harvester.Mode;
-            unit.HarvestFieldId = LegacyResourceFieldId(harvester.FieldId);
-            unit.HarvestRefineryId = LegacyBuildingTargetId(harvester.RefineryId);
+            unit.HarvestFieldId = ResourceFieldIdForEntity(harvester.FieldId);
+            unit.HarvestRefineryId = BuildingIdForEntity(harvester.RefineryId);
             unit.HarvestPulse = Mathf.Clamp(harvester.HarvestPulse, 0, 1);
             unit.HarvesterRetreating = harvester.Retreating;
         }

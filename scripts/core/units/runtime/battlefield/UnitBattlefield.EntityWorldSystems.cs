@@ -74,7 +74,7 @@ public sealed partial class UnitBattlefield
     {
         return _entityWorld.TryGet(entityId, out var entity)
             && entity.Components.TryGet<ProjectileComponentState>(out var projectile)
-                ? WeaponCatalog.LegacyKindForAmmo(projectile.AmmoId)
+                ? WeaponCatalog.KindForAmmoId(projectile.AmmoId)
                 : null;
     }
 

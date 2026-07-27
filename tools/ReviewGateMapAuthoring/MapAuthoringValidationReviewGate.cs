@@ -16,8 +16,8 @@ static class MapAuthoringValidationReviewGate
         var diagnostic = ReviewGateSource.Read(root, "scripts", "core", "map", "MapValidationDiagnostic.cs");
         foreach (var code in new[]
         {
-            "map.catalog.unknown", "map.id.empty", "map.id.duplicate", "map.id.legacy_invalid",
-            "map.id.legacy_duplicate", "map.owner.start_count", "map.owner.unsupported", "map.owner.reference",
+            "map.catalog.unknown", "map.id.empty", "map.id.duplicate", "map.id.runtime_invalid",
+            "map.id.runtime_duplicate", "map.owner.start_count", "map.owner.unsupported", "map.owner.reference",
             "map.world.invalid_size", "map.geometry.invalid_rect", "map.geometry.invalid_circle",
             "map.geometry.invalid_cost", "map.geometry.unrepresentable_transform", "map.bounds.outside",
             "map.grid.unsnapped", "map.rotation.non_cardinal", "map.building.overlap",

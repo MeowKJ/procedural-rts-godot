@@ -3,7 +3,7 @@ namespace ProceduralRts.Core;
 public readonly struct UnitMountFacingSource
 {
     private readonly IReadOnlyList<WeaponMountRuntimeState>? _runtimeMounts;
-    private readonly IReadOnlyList<WeaponMountSpec>? _legacyMountSpecs;
+    private readonly IReadOnlyList<WeaponMountSpec>? _mountSpecs;
     private readonly string? _singleMountId;
     private readonly float _bodyFacing;
     private readonly float _turretFacing;
@@ -13,7 +13,7 @@ public readonly struct UnitMountFacingSource
     private UnitMountFacingSource(
         SourceKind kind,
         IReadOnlyList<WeaponMountRuntimeState>? runtimeMounts,
-        IReadOnlyList<WeaponMountSpec>? legacyMountSpecs,
+        IReadOnlyList<WeaponMountSpec>? mountSpecs,
         string? singleMountId,
         float bodyFacing,
         float turretFacing,
@@ -21,7 +21,7 @@ public readonly struct UnitMountFacingSource
     {
         _kind = kind;
         _runtimeMounts = runtimeMounts;
-        _legacyMountSpecs = legacyMountSpecs;
+        _mountSpecs = mountSpecs;
         _singleMountId = singleMountId;
         _bodyFacing = bodyFacing;
         _turretFacing = turretFacing;
@@ -33,9 +33,9 @@ public readonly struct UnitMountFacingSource
         return new UnitMountFacingSource(SourceKind.RuntimeMounts, mounts, null, null, 0, 0, 0);
     }
 
-    public static UnitMountFacingSource FromLegacyUnit(UnitSpec spec, float bodyFacing, float turretFacing)
+    public static UnitMountFacingSource FromUnitSpec(UnitSpec spec, float bodyFacing, float turretFacing)
     {
-        return new UnitMountFacingSource(SourceKind.LegacyUnit, null, spec.Weapons, null, bodyFacing, turretFacing, 0);
+        return new UnitMountFacingSource(SourceKind.UnitSpec, null, spec.Weapons, null, bodyFacing, turretFacing, 0);
     }
 
     public static UnitMountFacingSource Single(string mountId, float facing)
@@ -49,8 +49,8 @@ public readonly struct UnitMountFacingSource
         {
             case SourceKind.RuntimeMounts:
                 return TryGetRuntimeFacing(mountId, out facing);
-            case SourceKind.LegacyUnit:
-                return TryGetLegacyFacing(mountId, out facing);
+            case SourceKind.UnitSpec:
+                return TryGetSpecFacing(mountId, out facing);
             case SourceKind.Single when string.Equals(_singleMountId, mountId, StringComparison.Ordinal):
                 facing = _singleFacing;
                 return true;
@@ -78,11 +78,11 @@ public readonly struct UnitMountFacingSource
         return false;
     }
 
-    private bool TryGetLegacyFacing(string mountId, out float facing)
+    private bool TryGetSpecFacing(string mountId, out float facing)
     {
-        if (_legacyMountSpecs is not null)
+        if (_mountSpecs is not null)
         {
-            foreach (var mount in _legacyMountSpecs)
+            foreach (var mount in _mountSpecs)
             {
                 if (string.Equals(mount.MountId, mountId, StringComparison.Ordinal))
                 {
@@ -100,7 +100,7 @@ public readonly struct UnitMountFacingSource
     {
         None,
         RuntimeMounts,
-        LegacyUnit,
+        UnitSpec,
         Single,
     }
 }

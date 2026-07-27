@@ -15,7 +15,7 @@ static class CoreReviewChecks
         var reviewsPath = Path.Combine(root, "docs", "reviews");
         if (!Directory.Exists(reviewsPath))
         {
-            result.Error($"Legacy review record '{requiredRecord}' was requested, but docs/reviews is missing.");
+            result.Error($"Retired review record '{requiredRecord}' was requested, but docs/reviews is missing.");
             return;
         }
 
@@ -27,7 +27,7 @@ static class CoreReviewChecks
             .ToArray();
         if (records.Length == 0)
         {
-            result.Error($"Required legacy review record '{requiredRecord}' was not found in docs/reviews/*.md.");
+            result.Error($"Required retired review record '{requiredRecord}' was not found in docs/reviews/*.md.");
             return;
         }
 
@@ -95,7 +95,7 @@ static class CoreReviewChecks
         if (!text.Contains("Issue / PR update:", StringComparison.OrdinalIgnoreCase)
             && !text.Contains("TODO update:", StringComparison.OrdinalIgnoreCase))
         {
-            result.Error($"{relative} is missing required review field 'Issue / PR update:'; older records may use their legacy progress field.");
+            result.Error($"{relative} is missing required review field 'Issue / PR update:'; older records may use their retired progress field.");
         }
 
         if (Regex.IsMatch(text, @"Status:\s*(pass\s*/|pass\s+/\s+pass-with-warnings\s+/\s+fail)", RegexOptions.IgnoreCase))

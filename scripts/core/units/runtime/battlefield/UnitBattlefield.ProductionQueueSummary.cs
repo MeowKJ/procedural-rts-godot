@@ -62,7 +62,7 @@ public sealed partial class UnitBattlefield
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
                 || identity.PlayerSlotId != playerSlotId
-                || BuildingProductionQueue(identity.LegacyBuildingId).Count == 0)
+                || BuildingProductionQueue(identity.BuildingId).Count == 0)
             {
                 continue;
             }
@@ -151,15 +151,15 @@ public sealed partial class UnitBattlefield
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
                 || identity.PlayerSlotId != playerSlotId
-                || !_productionQueueSummarySeenIds.Add(identity.LegacyBuildingId))
+                || !_productionQueueSummarySeenIds.Add(identity.BuildingId))
             {
                 continue;
             }
 
-            var queue = BuildingProductionQueue(identity.LegacyBuildingId);
+            var queue = BuildingProductionQueue(identity.BuildingId);
             for (var index = 0; index < queue.Count; index++)
             {
-                result.Add(new ProductionQueueSummaryEntry(identity.LegacyBuildingId, queue[index]));
+                result.Add(new ProductionQueueSummaryEntry(identity.BuildingId, queue[index]));
             }
         }
     }

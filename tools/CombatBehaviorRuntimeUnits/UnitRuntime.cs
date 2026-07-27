@@ -44,7 +44,7 @@ static partial class Program
             || driftBeforeProjectionSync.MaxPositionDrift < 19f
             || driftBeforeProjectionSync.MaxFacingDrift < 0.4f)
         {
-            throw new InvalidOperationException("UnitBattlefield projection drift QA should compare legacy UnitInstance state against EntityWorld mirrors before the flag flip");
+            throw new InvalidOperationException("UnitBattlefield projection drift QA should compare retired UnitInstance state against EntityWorld mirrors before the flag flip");
         }
 
         var resyncedGuardProjection = newUnitBattlefield.UnitProjection(playerOneGuard.Id);
@@ -76,7 +76,7 @@ static partial class Program
             || !selectedEntity.Components.TryGet<SelectableComponentState>(out var bufferedSelection)
             || !bufferedSelection.Selected)
         {
-            throw new InvalidOperationException("new unit battlefield should route single-click selection through EntityCommandBuffer without consulting UnitKind or old UnitModel state");
+            throw new InvalidOperationException("unit battlefield should route single-click selection through EntityCommandBuffer");
         }
 
         var selectedProjection = newUnitBattlefield.UnitProjection(playerOneGuard.Id);
@@ -163,7 +163,7 @@ static partial class Program
         if (selectedBeforeMove.Any(unit => unit.FormationSlot is null || unit.CommandVisualTarget != new Vector2(440, 300) || unit.CommandPulse <= 0)
             || selectedBeforeMove[0].Position.DistanceTo(firstBeforeMove) < 8)
         {
-            throw new InvalidOperationException("new unit battlefield should assign compact formation move slots and advance selected UnitInstance movement without old GameState paths");
+            throw new InvalidOperationException("unit battlefield should assign compact formation move slots and advance selected UnitInstance movement");
         }
 
         var movedProjection = newUnitBattlefield.UnitProjection(selectedBeforeMove[0].Id);
@@ -245,7 +245,7 @@ static partial class Program
 
         if (newCombatAttacker.AttackTargetId != newCombatTarget.Id || newCombatTarget.Hp >= newCombatTarget.Spec.Stats.MaxHp)
         {
-            throw new InvalidOperationException("new unit battlefield should support manual UnitInstance attacks and apply UnitSpec weapon damage without old UnitModel combat");
+            throw new InvalidOperationException("unit battlefield should support manual UnitInstance attacks and apply UnitSpec weapon damage");
         }
 
         var explicitAttackBattlefield = new UnitBattlefield();

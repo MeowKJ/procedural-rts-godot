@@ -14,7 +14,7 @@ public enum BuildingDamageReadabilityLevel
 /// <summary>
 /// A building-specific view snapshot assembled only from EntityWorld components.
 /// It keeps generic entity projection small while moving building UI state away
-/// from the legacy building runtime one field at a time.
+/// from parallel mutable presentation state one field at a time.
 /// </summary>
 public readonly record struct BuildingPresentationProjection(
     EntityProjection Entity,

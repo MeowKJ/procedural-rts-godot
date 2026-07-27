@@ -43,7 +43,7 @@ static class TypedMapAuthoringReviewGate
             var source = ReviewGateSource.Read(root, "addons", "map_authoring", "nodes", file);
             RequireText(source, "[Tool]", $"{file} must remain editor-aware.", result);
             RequireText(source, ": Node2D", $"{file} must remain a typed Node2D script.", result);
-            ForbidText(source, "metadata/map_kind", "Typed nodes must not use legacy metadata fallback.", result);
+            ForbidText(source, "metadata/map_kind", "Typed nodes must not use metadata fallback.", result);
             ForbidText(source, "GlobalClass", "Typed nodes must have one plugin registration authority.", result);
         }
         foreach (var file in SemanticIdNodeFiles)
@@ -98,8 +98,8 @@ static class TypedMapAuthoringReviewGate
         RequireText(baker, "IMapSpecSceneProjector projector", "Formal baker must accept typed projection without editor coupling.", result);
         var projector = ReviewGateSource.Read(root, "addons", "map_authoring", "projection", "TypedMapSceneProjector.cs");
         RequireText(projector, "MapSceneProjection.SceneOrder", "Typed projection must preserve shared scene preorder.", result);
-        RequireText(projector, "must not use metadata/map_kind fallback", "Typed projection must reject legacy metadata fallback.", result);
-        RequireText(projector, "RejectLegacyMetadata(mapRoot)", "Typed projection must reject metadata on its root before traversal.", result);
+        RequireText(projector, "must not use metadata/map_kind fallback", "Typed projection must reject metadata fallback.", result);
+        RequireText(projector, "RejectUnsupportedMetadata(mapRoot)", "Typed projection must reject metadata on its root before traversal.", result);
         RequireText(projector, "MapRoot", "Typed projection must require typed MapRoot.", result);
         var inspector = ReviewGateSource.Read(root, "addons", "map_authoring", "editor", "MapAuthoringInspectorPlugin.cs");
         RequireText(inspector, "MapCatalogOptionProperty", "Inspector must persist stable catalog strings.", result);
@@ -129,7 +129,7 @@ static class TypedMapAuthoringReviewGate
         RequireText(entityProjection, "TypedMapTransformValidation.Entity", "Entity projection must reject unsupported effective scale/skew/reflection.", result);
         RequireText(entityProjection, "RequirePersisted(node.Rotation)", "Building projection must reject modulo-equivalent persisted rotations before transform normalization.", result);
         RequireText(entityProjection, "RequireRootLocal(transform.Rotation)", "Building projection must validate final root-local cardinal rotation.", result);
-        RequireText(entityProjection, "node.HasLegacyId ? node.LegacyId : null", "Building legacy id must use explicit presence semantics.", result);
+        RequireText(entityProjection, "node.HasRuntimeId ? node.RuntimeId : null", "Building runtime id must use explicit presence semantics.", result);
     }
 
     private static void CheckEvidence(string root, GateResult result)

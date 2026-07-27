@@ -60,7 +60,6 @@ static class UnitStanceStripReviewGate
 
         ForbidText(strip, "SetSelectedUnitStance", "UnitStanceStrip must not call the HudLayer stance setter.", result);
         ForbidText(strip, "UnitBattlefield", "UnitStanceStrip must not read runtime authority.", result);
-        ForbidText(strip, "GameState", "UnitStanceStrip must not read legacy authority.", result);
         ForbidText(strip, "SubmitLiveLocalPlayerCommand", "UnitStanceStrip must not submit player commands directly.", result);
         ForbidText(hudControls, "SetSelectedUnitStance(presentation.Stance",
             "The retired HudLayer stance button must not restore optimistic highlighting.", result);
@@ -95,9 +94,9 @@ static class UnitStanceStripReviewGate
         RequireText(stanceHandler, "RefreshSelectionInfo();",
             "Accepted runtime stance commands must re-project selection from authority.", result);
         ForbidText(stanceHandler, "_state.SelectedUnitCount()",
-            "BattleRoot stance intent must not read legacy GameState selection.", result);
+            "BattleRoot stance intent must not read an external selection authority.", result);
         ForbidText(stanceHandler, "_state.SetSelectedStance(stance)",
-            "BattleRoot stance intent must not mutate legacy GameState units.", result);
+            "BattleRoot stance intent must not mutate an external unit container.", result);
         var zeroCheck = stanceHandler.IndexOf("if (selectedCount == 0)", StringComparison.Ordinal);
         var submit = stanceHandler.IndexOf("SubmitLiveLocalPlayerCommand", StringComparison.Ordinal);
         if (zeroCheck < 0 || submit <= zeroCheck)

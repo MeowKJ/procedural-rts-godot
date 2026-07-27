@@ -46,8 +46,8 @@ when needed, one concrete `AmmoDesign` under `scripts/core/combat/ammo/`.
 Give each design a stable string `Id`, and have the weapon reference the ammo by
 string `AmmoId`. `WeaponCatalog` discovers both by reflection, validates
 weapon-to-ammo links, and keeps deterministic order for replay stability.
-Existing `WeaponKind` / `AmmoKind` enum values are legacy aliases for old content;
-do not add enum values for brand-new combat content.
+Existing `WeaponKind` / `AmmoKind` enum values are optional aliases for built-in
+content; do not add enum values for brand-new combat content.
 
 Rebuild, it appears - no system code touched.
 
