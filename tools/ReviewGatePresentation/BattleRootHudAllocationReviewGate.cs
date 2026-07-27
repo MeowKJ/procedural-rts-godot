@@ -13,7 +13,6 @@ static class BattleRootHudAllocationReviewGate
         var commandGatewayFeedback = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandGatewayFeedback.cs");
         var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
 
-        RequireText(battleRoot, "List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer", "BattleRoot vision source bridge must reuse storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitBuffer", "BattleRoot minimap units must use reusable storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitSecondaryBuffer", "BattleRoot minimap units must be double-buffered for redraw safety.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapBuilding> _minimapBuildingBuffer", "BattleRoot minimap buildings must use reusable storage.", result);
@@ -22,8 +21,6 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<HudLayer.MinimapAlertPing> _minimapAlertPingSecondaryBuffer", "BattleRoot minimap alert pings must be double-buffered for redraw safety.", result);
         RequireText(battleRoot, "List<HudLayer.AlertLine> _alertLineBuffer", "BattleRoot alert HUD sync must reuse alert line storage.", result);
         RequireText(battleRoot, "List<UnitInstance> _selectedUnitInstanceBuffer", "BattleRoot runtime selection HUD sync must reuse selected unit storage.", result);
-        RequireText(battleRoot, "List<UnitModel> _selectedLegacyUnitBuffer", "BattleRoot legacy selection HUD sync must reuse selected unit storage.", result);
-        RequireText(battleRoot, "List<BuildingModel> _selectedLegacyBuildingBuffer", "BattleRoot legacy selection HUD sync must reuse selected building storage.", result);
         RequireText(battleRoot, "List<int> _selectedProductionBuildingIdBuffer", "BattleRoot selected producer command-card sync must reuse selected building id storage.", result);
         RequireText(battleRoot, "SimEventSink _presentationEvents", "BattleRoot command acknowledgement feedback must use a SimEvent sink before drawing rings.", result);
         RequireText(battleRoot, "CommandAcknowledged = QueueCommandAcknowledgementEvent", "BattleRoot command acknowledgement callbacks must enqueue SimEvents instead of drawing rings directly.", result);
@@ -38,12 +35,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
         RequireText(battleRoot, "List<int> _debugPlayerAttackerIds", "Active battle perf setup must reuse player attacker id storage.", result);
         RequireText(battleRoot, "List<int> _debugEnemyAttackerIds", "Active battle perf setup must reuse enemy attacker id storage.", result);
-        RequireText(process, "_unitBattlefieldVisionSourceBuffer.Clear();", "UnitBattlefieldVisionSources must clear and reuse the vision-source buffer.", result);
-        RequireText(process, "foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))", "UnitBattlefieldVisionSources must copy vision sources explicitly.", result);
-        RequireText(process, "_unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));", "UnitBattlefieldVisionSources must fill the reusable vision-source buffer.", result);
         RequireText(process, "LiveUnitBattlefieldUnitCount()", "PerfHudCounts must use explicit runtime unit counting.", result);
-        RequireText(process, "LiveLegacyUnitCount()", "PerfHudCounts must use explicit legacy unit counting.", result);
-        RequireText(process, "LiveLegacyBuildingCount()", "PerfHudCounts must use explicit legacy building counting.", result);
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudSync.cs");
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
@@ -271,17 +263,10 @@ static class BattleRootHudAllocationReviewGate
         RequireText(hudSync, "spec.TryGetAbility(AbilityKind.ShieldField, out var shieldField)", "Runtime selected-unit details must surface ShieldField units from authored AbilitySpec data.", result);
         RequireText(hudSync, "GameText.Format(\n                \"ui.detail.shieldField\"", "Runtime selected-unit details must render localized ShieldField radius and absorb text.", result);
         RequireText(hudSync, "ShieldFieldAbsorbLabel(shieldField.Value)", "Runtime selected-unit details must derive ShieldField absorb presentation from ability values.", result);
-        RequireText(hudSync, "CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer)", "Legacy selection HUD sync must fill the reusable selected-unit buffer.", result);
-        RequireText(hudSync, "CollectSelectedLegacyBuildings(_selectedLegacyBuildingBuffer)", "Legacy selection HUD sync must fill the reusable selected-building buffer.", result);
         RequireText(hudSync, "foreach (var unit in units)", "Runtime selection HUD group stats must use explicit loops.", result);
         RequireText(hudSync, "foreach (var building in buildings)", "Runtime building selection HUD group stats must use explicit loops.", result);
-        RequireText(hudSync, "foreach (var unit in selectedUnits)", "Legacy selection HUD unit stats must use explicit loops.", result);
-        RequireText(hudSync, "foreach (var building in selectedBuildings)", "Legacy selection HUD building stats must use explicit loops.", result);
         RequireText(battleRoot, "for (var index = 1; index < selectedUnits.Count; index++)", "SelectedUniformStance must scan selected units without LINQ All.", result);
-        RequireText(alerts, "HasSelectedLegacyBuildings()", "Command preview must use the explicit legacy building selection scan.", result);
-        RequireText(alerts, "HasLegacyPlayerPowerPlant()", "Power alert must use the explicit legacy power-building scan.", result);
-        RequireText(alerts, "IdleLegacyHarvesterCount()", "Idle harvester alert must use an explicit legacy harvester count scan.", result);
-        RequireText(alerts, "RuntimeIdleHarvesterCount(out firstIdleHarvesterWorldPosition)", "Runtime idle harvester alerts must count runtime harvesters and capture their first world position.", result);
+        RequireText(alerts, "_unitBattlefield.IdleHarvesterCount(PlayerSlotId.One, out var firstIdleHarvesterWorldPosition)", "Runtime idle harvester alerts must count runtime harvesters and capture their first world position.", result);
         RequireText(alerts, "AddAlert(\n            AlertKind.Harvester", "Idle harvester alerts must keep using the standard bounded alert insertion path.", result);
         RequireText(alerts, "firstIdleHarvesterWorldPosition);", "Idle harvester alerts must carry a world position for minimap pings and Space jump.", result);
         RequireText(alerts, "AddAlert(AlertKind.Power, powerStable ? GameText.T(\"ui.alert.powerStable\") : GameText.T(\"ui.alert.powerOffline\"), PowerAlertWorldPosition())", "Power alerts must carry a stable world position for minimap pings and Space jump.", result);
@@ -291,12 +276,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "ContainsLocalizedNeedCreditsPrefix(status, \"ui.needCredits\")", "Insufficient-credit detection must cover build placement credit failures.", result);
         RequireText(alerts, "ContainsLocalizedNeedCreditsPrefix(status, \"production.needCredits\")", "Insufficient-credit detection must cover production credit failures.", result);
         RequireText(alerts, "private Vector2? PowerAlertWorldPosition()", "BattleRoot alerts must expose a power-alert position helper.", result);
-        RequireText(alerts, "private Vector2? RuntimePowerAlertWorldPosition()", "Runtime power alerts must compute a live player building position.", result);
-        RequireText(alerts, "private Vector2? LegacyPowerAlertWorldPosition()", "Legacy power alerts must compute a live player building position.", result);
+        RequireText(alerts, "_unitBattlefield.PowerStatus(PlayerSlotId.One).IsStable", "Power alerts must read live runtime power status.", result);
         RequireText(alerts, "building.Kind == BuildingDesignIds.PowerPlant", "Power alert position must prefer a live player PowerPlant.", result);
-        RequireText(alerts, "private bool HasSelectedLegacyBuildings()", "BattleRoot alerts must expose the legacy selected-building scan helper.", result);
-        RequireText(alerts, "private bool HasLegacyPlayerPowerPlant()", "BattleRoot alerts must expose the legacy power scan helper.", result);
-        RequireText(alerts, "private int IdleLegacyHarvesterCount()", "BattleRoot alerts must expose the legacy idle harvester count scan helper.", result);
         RequireText(unitBattlefieldCommands, "public int IdleHarvesterCount(PlayerSlotId playerSlotId, out Vector2? firstWorldPosition)", "UnitBattlefield must expose an allocation-free idle harvester alert snapshot.", result);
         RequireText(unitBattlefieldCommands, "firstWorldPosition ??= unit.Position;", "Runtime idle harvester snapshots must capture the first alert jump position.", result);
         RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds)", "Active battle perf setup must fill player attacker ids explicitly.", result);
@@ -319,7 +300,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(minimap, "result.Add(new HudLayer.MinimapAlertPing", "BattleRoot minimap alert pings must copy HUD presentation data explicitly.", result);
         RequireText(hudState, "IReadOnlyList<MinimapAlertPing>? alertPings = null", "HudLayer minimap state must accept active alert pings as optional presentation data.", result);
         RequireText(hudState, "_minimapSurface.AlertPings = alertPings ?? []", "HudLayer minimap state must keep alert ping assignment allocation-free.", result);
-        RequireText(minimap, "foreach (var unit in _state.Units)", "BattleRoot minimap units must use an explicit scan.", result);
+        RequireText(minimap, "foreach (var unit in _unitBattlefield.MinimapPips(PlayerSlotId.One))", "BattleRoot minimap units must read runtime minimap projections.", result);
         RequireText(minimap, "foreach (var building in projections)", "BattleRoot runtime minimap buildings must copy projections explicitly.", result);
         RequireText(minimap, "foreach (var resource in pips)", "BattleRoot minimap resources must copy pips explicitly.", result);
         RequireText(hudState, "public readonly record struct MinimapAlertPing", "HudLayer must expose a compact minimap alert ping presentation record.", result);
@@ -336,7 +317,6 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "TryUseAlertCooldown($\"production-complete:{designId}\", ProductionAlertCooldown)", "Production-complete alerts must be throttled per produced design.", result);
         RequireText(alerts, "AddAlert(AlertKind.Production, GameText.Format(\"ui.production.deployed\", label), worldPosition)", "Production-complete alerts must keep using the positioned production alert path.", result);
         RequireText(battleRoot, "AddProductionCompleteAlert(item.DesignId, spec.Label, building.Position)", "Runtime production completion must carry the producer position into the alert stack.", result);
-        RequireText(battleRoot, "AddProductionCompleteAlert(completed.DesignId, spec.Label, building.Position)", "Legacy production completion must keep the same positioned alert path.", result);
         RequireText(hudState, "List<ProductionOptionState> _commandCardStates", "HudLayer command-card refresh must reuse visible state storage.", result);
         RequireText(hudState, "HashSet<string> _commandCardActiveIds", "HudLayer command-card refresh must reuse active id storage.", result);
         RequireText(hudState, "List<string> _commandCardStaleIds", "HudLayer command-card refresh must reuse stale id storage.", result);

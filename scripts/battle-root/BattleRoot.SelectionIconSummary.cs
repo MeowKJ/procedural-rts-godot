@@ -11,22 +11,6 @@ public partial class BattleRoot
     private readonly List<HudLayer.SelectionIconItem> _selectionIconSummarySecondaryBuffer = [];
     private bool _useSecondarySelectionIconSummaryBuffer;
 
-    private IReadOnlyList<HudLayer.SelectionIconItem> SelectionIconSummary(
-        IReadOnlyList<UnitModel> units,
-        IReadOnlyList<BuildingModel> buildings)
-    {
-        var result = NextSelectionIconSummaryBuffer();
-        _selectionIconSummaryEntries.Clear();
-        foreach (var unit in units)
-        {
-            AddLegacyUnitIconSummaryEntry(unit);
-        }
-
-        WriteSelectionIconSummary(result);
-        AppendLegacyBuildingIconSummary(buildings, result);
-        return result;
-    }
-
     private IReadOnlyList<HudLayer.SelectionIconItem> UnitBattlefieldBuildingIconSummary(IReadOnlyList<BuildingSelectionProjection> buildings)
     {
         var result = NextSelectionIconSummaryBuffer();
@@ -107,64 +91,6 @@ public partial class BattleRoot
             1,
             building.Accent,
             null));
-    }
-
-    private void AddLegacyUnitIconSummaryEntry(UnitModel unit)
-    {
-        var index = IndexOfSelectionIconSummaryEntry(0, unit.DesignId);
-        if (index >= 0)
-        {
-            var entry = _selectionIconSummaryEntries[index];
-            entry.Count++;
-            if (entry.FactionId != unit.FactionId)
-            {
-                entry.FactionId = null;
-            }
-
-            _selectionIconSummaryEntries[index] = entry;
-            return;
-        }
-
-        var style = UnitSpecReadPathFor(unit);
-        _selectionIconSummaryEntries.Add(new SelectionIconSummaryEntry(
-            0,
-            unit.DesignId,
-            unit.FactionId,
-            style.Presentation.Icon,
-            style.Presentation.ShortCode,
-            1,
-            style.EntityAccent,
-            style.Spec.Id));
-    }
-
-    private void AppendLegacyBuildingIconSummary(
-        IReadOnlyList<BuildingModel> buildings,
-        List<HudLayer.SelectionIconItem> result)
-    {
-        if (buildings.Count == 0)
-        {
-            return;
-        }
-
-        var sample = buildings[0];
-        FactionId? factionId = sample.FactionId;
-        for (var i = 1; i < buildings.Count; i++)
-        {
-            if (buildings[i].FactionId != factionId)
-            {
-                factionId = null;
-                break;
-            }
-        }
-
-        var spec = BuildSpecCatalog.For(sample.Kind);
-        var entityAccent = _state.VisualAccent(sample.Owner, sample.FactionId, spec.Accent);
-        result.Add(new HudLayer.SelectionIconItem(
-            factionId,
-            spec.Icon,
-            spec.ShortCode,
-            buildings.Count,
-            entityAccent));
     }
 
     private int IndexOfSelectionIconSummaryEntry(int sortOrdinal, string sortKey)

@@ -56,8 +56,6 @@ public partial class BattleRoot : Node2D
     private readonly SimEventSink _presentationEvents = new();
     private readonly List<SimEvent> _simEventDrainBuffer = [];
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
-    private readonly List<UnitModel> _selectedLegacyUnitBuffer = [];
-    private readonly List<BuildingModel> _selectedLegacyBuildingBuffer = [];
     private readonly List<HudLayer.AbilityCardState> _selectedAbilityCardBuffer = [];
     private readonly List<int> _selectedProductionBuildingIdBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
@@ -97,12 +95,10 @@ public partial class BattleRoot : Node2D
     private SandboxDeveloperContext _sandboxContext = SandboxDeveloperContext.Default;
     private int _sandboxStressRunIndex;
     private bool _powerStable = true;
-    private bool _syncingResourceInventories;
     private bool _debugActiveBattlePerfScenarioConfigured;
     private int _debugPlayerCommandedUnitCount;
     private int _debugEnemyCommandedUnitCount;
     private GameOutcome _displayedOutcome = GameOutcome.InProgress;
-    private static bool UseUnitDesignRuntime => true;
     public GameState State => _state;
     public PresentationMetrics PresentationMetrics => _presentationMetrics;
     public int DebugSimClockTick => _unitBattlefield.SimulationTick;

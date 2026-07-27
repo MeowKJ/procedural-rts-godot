@@ -6,7 +6,7 @@ public partial class BattleRoot
 {
     private void OnSellOrCancelRequested()
     {
-        if (UseUnitDesignRuntime && _unitBattlefield.HasSelectedBuildings(PlayerSlotId.One))
+        if (_unitBattlefield.HasSelectedBuildings(PlayerSlotId.One))
         {
             var soldCount = _unitBattlefield.SellSelectedBuildings(PlayerSlotId.One, out var status);
             _hud.SetStatus(status);

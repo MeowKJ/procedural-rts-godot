@@ -15,7 +15,8 @@ public sealed partial class UnitBattlefield
                 unit.Spec.Faction,
                 Relations.Relation(viewer, unit.PlayerSlotId),
                 unit.Selected,
-                unit.AlertPulse));
+                unit.AlertPulse,
+                IsVisibleTo(viewer, unit)));
         }
 
         return result;

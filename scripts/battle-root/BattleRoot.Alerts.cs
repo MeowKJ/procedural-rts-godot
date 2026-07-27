@@ -37,12 +37,10 @@ public partial class BattleRoot
 
     private void RefreshCommandPreview()
     {
-        var hasSelectedBuildings = UseUnitDesignRuntime
-            ? _unitBattlefield.HasSelectedBuildings(PlayerSlotId.One)
-            : HasSelectedLegacyBuildings();
+        var hasSelectedBuildings = _unitBattlefield.HasSelectedBuildings(PlayerSlotId.One);
         _hud.SetCommandPreview(_buildPlacement.IsActive ? _buildPlacement.PreviewState : _selection.PreviewState);
         _hud.SetHudContext(
-            _state.SelectedCount() > 0 || _unitBattlefield.SelectedCount(PlayerSlotId.One) > 0,
+            _unitBattlefield.SelectedCount(PlayerSlotId.One) > 0,
             hasSelectedBuildings,
             _buildPlacement.IsActive);
     }
@@ -139,17 +137,7 @@ public partial class BattleRoot
 
     private void UpdateIdleHarvesterAlert()
     {
-        Vector2? firstIdleHarvesterWorldPosition;
-        int idleHarvesters;
-        if (UseUnitDesignRuntime)
-        {
-            idleHarvesters = RuntimeIdleHarvesterCount(out firstIdleHarvesterWorldPosition);
-        }
-        else
-        {
-            idleHarvesters = IdleLegacyHarvesterCount();
-            firstIdleHarvesterWorldPosition = FirstIdleLegacyHarvesterPosition();
-        }
+        var idleHarvesters = _unitBattlefield.IdleHarvesterCount(PlayerSlotId.One, out var firstIdleHarvesterWorldPosition);
 
         if (idleHarvesters == 0 || _elapsed - _idleHarvesterAlertAt < IdleHarvesterAlertCooldown)
         {
@@ -163,51 +151,9 @@ public partial class BattleRoot
             firstIdleHarvesterWorldPosition);
     }
 
-    private int RuntimeIdleHarvesterCount(out Vector2? firstWorldPosition)
-    {
-        return _unitBattlefield.IdleHarvesterCount(PlayerSlotId.One, out firstWorldPosition);
-    }
-
-    private int IdleLegacyHarvesterCount()
-    {
-        var count = 0;
-        foreach (var unit in _state.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player
-                && IsHarvestWorker(unit)
-                && unit.Hp > 0
-                && unit.HarvesterMode == HarvesterMode.Idle
-                && unit.MoveTarget is null)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private Vector2? FirstIdleLegacyHarvesterPosition()
-    {
-        foreach (var unit in _state.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player
-                && IsHarvestWorker(unit)
-                && unit.Hp > 0
-                && unit.HarvesterMode == HarvesterMode.Idle
-                && unit.MoveTarget is null)
-            {
-                return unit.Position;
-            }
-        }
-
-        return null;
-    }
-
     private void UpdatePowerAlert(bool force)
     {
-        var powerStable = UseUnitDesignRuntime
-            ? _unitBattlefield.PowerStatus(PlayerSlotId.One).IsStable
-            : HasLegacyPlayerPowerPlant();
+        var powerStable = _unitBattlefield.PowerStatus(PlayerSlotId.One).IsStable;
         if (!force && powerStable == _powerStable)
         {
             return;
@@ -222,13 +168,6 @@ public partial class BattleRoot
     }
 
     private Vector2? PowerAlertWorldPosition()
-    {
-        return UseUnitDesignRuntime
-            ? RuntimePowerAlertWorldPosition()
-            : LegacyPowerAlertWorldPosition();
-    }
-
-    private Vector2? RuntimePowerAlertWorldPosition()
     {
         var center = Vector2.Zero;
         var liveCount = 0;
@@ -249,57 +188,6 @@ public partial class BattleRoot
         }
 
         return liveCount == 0 ? null : center / liveCount;
-    }
-
-    private Vector2? LegacyPowerAlertWorldPosition()
-    {
-        var center = Vector2.Zero;
-        var liveCount = 0;
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Owner != ProceduralRts.Core.Owner.Player || building.Hp <= 0)
-            {
-                continue;
-            }
-
-            if (building.Kind == BuildingDesignIds.PowerPlant)
-            {
-                return building.Position;
-            }
-
-            center += building.Position;
-            liveCount++;
-        }
-
-        return liveCount == 0 ? null : center / liveCount;
-    }
-
-    private bool HasSelectedLegacyBuildings()
-    {
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasLegacyPlayerPowerPlant()
-    {
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Owner == ProceduralRts.Core.Owner.Player
-                && building.Hp > 0
-                && building.Kind == BuildingDesignIds.PowerPlant)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static string CompactAlertText(string text)
