@@ -98,9 +98,6 @@ jobs:
                   projectItems(first: 100) {
                     nodes {
                       project { id }
-                      status: fieldValueByName(name: "Status") {
-                        ... on ProjectV2ItemFieldSingleSelectValue { name }
-                      }
                       priority: fieldValueByName(name: "Priority") {
                         ... on ProjectV2ItemFieldSingleSelectValue { name }
                       }
@@ -148,7 +145,6 @@ jobs:
                 body: issue.body,
                 labels: issue.labels.nodes.map(label => label.name).sort(),
                 projectItemCount: projectItems.length,
-                status: projectItem?.status?.name ?? null,
                 priority: projectItem?.priority?.name ?? null,
                 workflow: projectItem?.workflow?.name ?? null,
                 size: projectItem?.size?.name ?? null,

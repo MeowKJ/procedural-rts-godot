@@ -99,7 +99,7 @@ static partial class Program
             || themedState.VisualTheme.TransitionProgress <= 0
             || observedThemes.Count < 3)
         {
-            throw new InvalidOperationException("game state should expose scriptable visual theme transition hooks for mission events");
+            throw new InvalidOperationException("world presentation should expose scriptable visual theme transition hooks for mission events");
         }
 
         if (themedState.ResourceAtmosphere != ResourceAtmosphere.Day)

@@ -22,7 +22,6 @@ public static class ProjectReadyReport
 
     private static readonly IReadOnlyDictionary<string, string> WarningLabels = new Dictionary<string, string>
     {
-        [ProjectReadyEvaluator.StatusWorkflowConflict] = "兼容状态与工作阶段冲突",
         [ProjectReadyEvaluator.ReadyLabelWorkflowConflict] = "ready 标签与工作阶段冲突",
         [ProjectReadyEvaluator.SizeLabelProjectConflict] = "规模标签与 Project 字段冲突",
     };
@@ -84,7 +83,7 @@ public static class ProjectReadyReport
         lines.Add(string.Empty);
         lines.Add(NextAction(output, actionableReview, actionableInProgress, blocked));
         lines.Add(string.Empty);
-        lines.Add("机器判定只读取同一 artifact 中的 `ai-ready.json`；本中文报告、`status:ready`、`size:*` 和兼容 `Status` 字段均不参与领取判定。`status:paused` 仍是规范暂停信号。");
+        lines.Add("机器判定只读取同一 artifact 中的 `ai-ready.json`；本中文报告、`status:ready` 和 `size:*` 标签均不参与领取判定。`status:paused` 仍是规范暂停信号。");
         return string.Join(Environment.NewLine, lines) + Environment.NewLine;
     }
 
