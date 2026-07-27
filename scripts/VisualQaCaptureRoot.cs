@@ -394,7 +394,7 @@ public partial class VisualQaCaptureRoot : Node
 
     private void SetBattleTheme(WorldVisualTheme theme, string driver)
     {
-        var battle = RequiredNode<BattleRoot>("BattleRoot");
+        var battle = RequiredNode<BattleRoot>("Battle");
         battle.DebugSetVisualTheme(theme, driver, transitionProgress: 1);
     }
 
@@ -404,7 +404,7 @@ public partial class VisualQaCaptureRoot : Node
         float transitionProgress,
         string driver)
     {
-        var battle = RequiredNode<BattleRoot>("BattleRoot");
+        var battle = RequiredNode<BattleRoot>("Battle");
         battle.DebugSetVisualTheme(current, $"{driver}-start", transitionProgress: 1);
         battle.DebugSetVisualTheme(target, driver, transitionProgress);
     }
