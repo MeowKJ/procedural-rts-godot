@@ -38,6 +38,9 @@ static class BattleRootHudAllocationReviewGate
         RequireText(battleRoot, "List<int> _debugPlayerAttackerIds", "Active battle perf setup must reuse player attacker id storage.", result);
         RequireText(battleRoot, "List<int> _debugEnemyAttackerIds", "Active battle perf setup must reuse enemy attacker id storage.", result);
         RequireText(process, "LiveUnitBattlefieldUnitCount()", "PerfHudCounts must use explicit runtime unit counting.", result);
+        RequireText(process, "_unitBattlefieldVisionSourceBuffer.Clear();", "UnitBattlefieldVisionSources must clear and reuse the vision-source buffer.", result);
+        RequireText(process, "foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))", "UnitBattlefieldVisionSources must copy vision sources explicitly.", result);
+        RequireText(process, "_unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));", "UnitBattlefieldVisionSources must fill the reusable vision-source buffer.", result);
         RequireText(process, "VisibleUnitViewCount()", "PerfHudCounts must use explicit visible unit view counting.", result);
         var hudSync = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudSync.cs");
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));

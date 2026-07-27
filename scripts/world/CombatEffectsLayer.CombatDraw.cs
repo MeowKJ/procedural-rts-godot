@@ -7,7 +7,7 @@ public partial class CombatEffectsLayer : Node2D
 {
     private void DrawThreatAlerts()
     {
-        foreach (var unit in State.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.AlertPulse <= 0)
             {
@@ -16,8 +16,8 @@ public partial class CombatEffectsLayer : Node2D
 
             var style = UnitEffectStyleFor(unit);
             var shareRadius = unit.Stance == UnitStance.PassiveRetaliate
-                ? GameState.PassiveAllyCallRadius
-                : GameState.AllyThreatShareRadius;
+                ? PassiveAllyCallRadius
+                : AllyThreatShareRadius;
             if (!IsVisible(unit.Position, shareRadius))
             {
                 continue;
@@ -36,11 +36,6 @@ public partial class CombatEffectsLayer : Node2D
 
     private void DrawBeams()
     {
-        foreach (var beam in State.Beams)
-        {
-            DrawBeam(beam.Start, beam.End, beam.Age, beam.Duration, beam.Width, beam.Accent);
-        }
-
         foreach (var beam in _beamEffects)
         {
             DrawBeam(beam.Start, beam.End, beam.Age, beam.Duration, beam.Width, beam.Accent);
@@ -88,22 +83,6 @@ public partial class CombatEffectsLayer : Node2D
 
     private void DrawProjectiles()
     {
-        foreach (var projectile in State.Projectiles)
-        {
-            var style = ProjectileVfxMath.StyleFor(projectile.AmmoKind);
-            DrawProjectile(
-                projectile.Position,
-                projectile.Velocity,
-                style,
-                projectile.Accent,
-                projectile.AmmoKind == AmmoKind.SeekerRocket);
-        }
-
-        if (UnitBattlefield is null)
-        {
-            return;
-        }
-
         UnitBattlefield.ProjectileProjections(_projectileProjections);
         foreach (var projectile in _projectileProjections)
         {

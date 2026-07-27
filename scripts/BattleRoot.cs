@@ -70,6 +70,7 @@ public partial class BattleRoot : Node2D
     private readonly Dictionary<int, ResourceFieldView> _resourceViews = [];
     private readonly List<AlertEntry> _alerts = [];
     private readonly Dictionary<string, float> _alertCooldowns = [];
+    private readonly List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer = [];
     private GridLayer _grid = null!;
     private Node2D _buildingRoot = null!;
     private CameraController _camera = null!;

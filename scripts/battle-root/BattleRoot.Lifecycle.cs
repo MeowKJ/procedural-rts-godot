@@ -45,7 +45,12 @@ public partial class BattleRoot
             _resourceViews[field.Id] = view;
         }
 
-        _footprints = new FootprintLayer { Name = "Footprints", State = _state };
+        _footprints = new FootprintLayer
+        {
+            Name = "Footprints",
+            UnitBattlefield = _unitBattlefield,
+            IsVisibleToPlayer = position => _state.IsVisibleToPlayer(position),
+        };
         AddChild(_footprints);
 
         _buildingRoot = new Node2D { Name = "Buildings" };
@@ -106,7 +111,13 @@ public partial class BattleRoot
         _fogOfWar = new FogOfWarLayer { Name = "FogOfWar", State = _state, Quality = _state.FogQuality };
         AddChild(_fogOfWar);
 
-        _combatEffects = new CombatEffectsLayer { Name = "CombatEffects", State = _state, UnitBattlefield = _unitBattlefield };
+        _combatEffects = new CombatEffectsLayer
+        {
+            Name = "CombatEffects",
+            UnitBattlefield = _unitBattlefield,
+            IsVisibleToPlayer = _state.IsVisibleToPlayer,
+            IsExploredByPlayer = _state.IsExploredByPlayer,
+        };
         AddChild(_combatEffects);
 
         _commandAcknowledgements = new CommandAcknowledgementLayer { Name = "CommandAcknowledgements" };

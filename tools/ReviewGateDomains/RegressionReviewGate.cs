@@ -106,7 +106,7 @@ static class RegressionReviewGate
         ForbidText(effects, "ProjectileProjections().Count", "CombatEffectsLayer.ActiveEffectCount must not allocate projectile projections just to count them.", result);
         var draw = ReviewGateSource.Read(root, "scripts", "world", "CombatEffectsLayer.CombatDraw.cs");
         RequireText(draw, "ProjectileProjections(_projectileProjections)", "CombatEffectsLayer.DrawProjectiles must fill the reusable projectile projection buffer.", result);
-        RequireText(draw, "ProjectileVfxMath.StyleFor(projectile.AmmoKind)", "Legacy projectiles must use the shared projectile readability style.", result);
+        ForbidText(draw, "State.Projectiles", "CombatEffectsLayer must not draw retired GameState projectiles.", result);
         RequireText(draw, "projectile.Style", "ECS projectiles must carry the shared projectile readability style.", result);
         RequireText(draw, "IsSegmentVisible(tail, position, style.CullingPadding + arcHeight)", "Projectile culling must include the tracer segment and ballistic arc height.", result);
         RequireText(draw, "IsProjectileVisibleToPlayer(visibilityTail, visibilityHead)", "Projectiles drawn above fog must remain gated by ground-plane player visibility.", result);

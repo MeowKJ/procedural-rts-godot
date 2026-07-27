@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using CoreOwner = ProceduralRts.Core.Owner;
 
 namespace ProceduralRts.World;
 
@@ -23,7 +24,7 @@ public partial class FootprintLayer
     private void EmitMarks(float dt)
     {
         _liveUnitIds.Clear();
-        foreach (var unit in State.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.Hp <= 0)
             {
@@ -76,7 +77,7 @@ public partial class FootprintLayer
         }
     }
 
-    private void ResetTrailState(UnitModel unit)
+    private void ResetTrailState(UnitInstance unit)
     {
         _trailStates[unit.Id] = new TrailState(
             unit.Position,
@@ -84,14 +85,14 @@ public partial class FootprintLayer
             _trailStates.TryGetValue(unit.Id, out var oldState) && oldState.Alternate);
     }
 
-    private bool ShouldEmit(UnitModel unit, FootprintSpecStyle specStyle)
+    private bool ShouldEmit(UnitInstance unit, FootprintSpecStyle specStyle)
     {
         if (specStyle.MovementDomain == MovementDomain.Air)
         {
             return unit.Velocity.Length() >= MinimumSpeed * 1.6f;
         }
 
-        if (!State.IsVisibleToPlayer(unit))
+        if (!IsVisibleToPlayer(unit.Position))
         {
             return false;
         }
@@ -99,14 +100,14 @@ public partial class FootprintLayer
         return unit.Velocity.Length() >= MinimumSpeed && specStyle.Footprint.MarkKind != FootprintMarkKind.Contrail;
     }
 
-    private void AddMark(UnitModel unit, FootprintSpecStyle specStyle, Vector2 direction, bool alternate)
+    private void AddMark(UnitInstance unit, FootprintSpecStyle specStyle, Vector2 direction, bool alternate)
     {
         var side = new Vector2(-direction.Y, direction.X);
         var style = specStyle.Footprint;
         var basePosition = unit.Position - direction * specStyle.Radius * 0.55f;
         var mark = new FootprintMark(
             style.MarkKind,
-            unit.Owner,
+            unit.PlayerSlotId == PlayerSlotId.One ? CoreOwner.Player : CoreOwner.Enemy,
             basePosition,
             direction,
             side,

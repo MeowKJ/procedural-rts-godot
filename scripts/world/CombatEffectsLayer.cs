@@ -22,9 +22,12 @@ public partial class CombatEffectsLayer : Node2D
     private const int LargeEffectArcSegments = 48;
     private const int MediumEffectArcSegments = 36;
     private const int SmallEffectArcSegments = 24;
+    private const float AllyThreatShareRadius = 330;
+    private const float PassiveAllyCallRadius = 115;
 
-    public required GameState State { get; init; }
-    public UnitBattlefield? UnitBattlefield { get; init; }
+    public required UnitBattlefield UnitBattlefield { get; init; }
+    public required Func<Vector2, bool> IsVisibleToPlayer { get; init; }
+    public required Func<Vector2, bool> IsExploredByPlayer { get; init; }
     public Rect2? CullingWorldRect { get; set; }
     public int CommandMarkerCount { get; set; }
 
@@ -41,9 +44,7 @@ public partial class CombatEffectsLayer : Node2D
         + _impactFlashes.Count
         + _muzzleFlashes.Count
         + _beamEffects.Count
-        + State.Projectiles.Count
-        + State.Beams.Count
-        + (UnitBattlefield?.ProjectileProjectionCount() ?? 0);
+        + UnitBattlefield.ProjectileProjectionCount();
 
     public void AddUnitDeath(UnitDeathInfo death, Color accent)
     {

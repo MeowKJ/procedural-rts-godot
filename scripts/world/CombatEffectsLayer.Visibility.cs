@@ -25,23 +25,23 @@ public partial class CombatEffectsLayer : Node2D
 
     private bool IsProjectileVisibleToPlayer(Vector2 tail, Vector2 head)
     {
-        return State.IsVisibleToPlayer(head)
-            || State.IsVisibleToPlayer(tail)
-            || State.IsVisibleToPlayer((tail + head) * 0.5f);
+        return IsVisibleToPlayer(head)
+            || IsVisibleToPlayer(tail)
+            || IsVisibleToPlayer((tail + head) * 0.5f);
     }
 
     private CombatReadabilityStyle ReadabilityFor(Vector2 position)
     {
-        var visible = State.IsVisibleToPlayer(position);
-        var explored = visible || State.IsExploredByPlayer(position);
+        var visible = IsVisibleToPlayer(position);
+        var explored = visible || IsExploredByPlayer(position);
         return CombatReadabilityMath.StyleFor(visible, explored, ActiveEffectCount, CommandMarkerCount);
     }
 
     private CombatReadabilityStyle ReadabilityForSegment(Vector2 start, Vector2 end)
     {
         var midpoint = (start + end) * 0.5f;
-        var visible = State.IsVisibleToPlayer(start) || State.IsVisibleToPlayer(end) || State.IsVisibleToPlayer(midpoint);
-        var explored = visible || State.IsExploredByPlayer(start) || State.IsExploredByPlayer(end) || State.IsExploredByPlayer(midpoint);
+        var visible = IsVisibleToPlayer(start) || IsVisibleToPlayer(end) || IsVisibleToPlayer(midpoint);
+        var explored = visible || IsExploredByPlayer(start) || IsExploredByPlayer(end) || IsExploredByPlayer(midpoint);
         return CombatReadabilityMath.StyleFor(visible, explored, ActiveEffectCount, CommandMarkerCount);
     }
 

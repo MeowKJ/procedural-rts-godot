@@ -6,20 +6,20 @@ namespace ProceduralRts.World;
 
 public partial class FootprintLayer
 {
-    private bool TryResolveFootprintSpecStyle(UnitModel unit, out FootprintSpecStyle specStyle)
+    private bool TryResolveFootprintSpecStyle(UnitInstance unit, out FootprintSpecStyle specStyle)
     {
         var spec = unit.Spec;
-        var descriptor = unit.RuntimeDescriptor;
+        var descriptor = UnitDesignDefinitionCatalog.RuntimeDescriptors[spec.Id];
         if (descriptor.DesignId != spec.Id)
         {
             specStyle = default;
             return false;
         }
 
-        var ownerAccent = State.VisualAccent(unit.Owner, unit.FactionId, descriptor.Accent);
+        var ownerAccent = UnitFactionAccent(unit.Spec.Faction, unit.PlayerSlotId, descriptor.Accent);
         if (HasOwnerArtAccent(spec.Art))
         {
-            ownerAccent = ownerAccent.Lerp(SoftOldCityPalette.PlayerColor(PlayerSlotForOwner(unit.Owner)), 0.22f);
+            ownerAccent = ownerAccent.Lerp(SoftOldCityPalette.PlayerColor(unit.PlayerSlotId), 0.22f);
         }
 
         var resourceWorker = IsResourceWorker(spec);
@@ -129,8 +129,16 @@ public partial class FootprintLayer
         return new Color(baseColor.Lerp(accent, amount), baseColor.A);
     }
 
-    private static PlayerSlotId PlayerSlotForOwner(CoreOwner owner)
+    private static Color UnitFactionAccent(UnitFactionId faction, PlayerSlotId playerSlotId, Color fallback)
     {
-        return owner == CoreOwner.Player ? PlayerSlotId.One : PlayerSlotId.Two;
+        var factionAccent = faction switch
+        {
+            UnitFactionId.Dog => new Color("#64c7c7"),
+            UnitFactionId.Cat => new Color("#c98293"),
+            UnitFactionId.Corruption => new Color("#9d4259"),
+            _ => fallback,
+        };
+        var playerAccent = SoftOldCityPalette.PlayerColor(playerSlotId);
+        return factionAccent.Lerp(playerAccent, 0.36f);
     }
 }

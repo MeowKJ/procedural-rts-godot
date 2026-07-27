@@ -14,6 +14,7 @@ public partial class BattleRoot
         _elapsed += (float)delta;
         var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _state.Options.LaunchMode, _sandboxTimeScale);
         _simStepStopwatch.Restart();
+        _state.UpdateWorldOnly(gameplayDelta, UnitBattlefieldVisionSources());
         _unitBattlefield.AdvanceSimulation(gameplayDelta);
         _simStepStopwatch.Stop();
         DrainPresentationEvents();
@@ -197,6 +198,17 @@ public partial class BattleRoot
             building.RallyPulse = Mathf.Max(building.RallyPulse, presentation?.RallyPulse ?? 0);
             building.Selected = _unitBattlefield.BuildingProjection(target.Id)?.Selected == true;
         }
+    }
+
+    private IReadOnlyList<(Vector2 Position, float SightRange)> UnitBattlefieldVisionSources()
+    {
+        _unitBattlefieldVisionSourceBuffer.Clear();
+        foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))
+        {
+            _unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));
+        }
+
+        return _unitBattlefieldVisionSourceBuffer;
     }
 
     public override void _UnhandledInput(InputEvent @event)
