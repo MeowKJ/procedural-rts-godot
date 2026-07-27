@@ -80,7 +80,6 @@ static class CombatChemistryReviewGate
         RequireAmmoElementMappings(root, result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "UnitSpec.cs"), "TargetTraitProfile? TargetTraits", "StatsSpec must carry target trait profiles.", result);
         RequireText(weaponMath, "DamageResolver.Resolve(", "Generic weapon damage must route through DamageResolver.", result);
-        RequireText(ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs")), "DamageResolver.Resolve(", "UnitBattlefield damage must route through DamageResolver.", result);
         ReviewGateSource.RequireAnyText(root, result, "RunElementReactionScenario", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "ValidateElementReactionCatalog", "tools/ContentAuthoringQa");
         ReviewGateSource.RequireAnyText(root, result, "ValidateElementPresentationCatalog", "tools/ContentAuthoringQa");

@@ -4,14 +4,13 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void SyncAllCreditsFromEntityWorld(IReadOnlyDictionary<PlayerSlotId, int> creditsBefore)
+    private void NotifyCreditChanges(IReadOnlyDictionary<PlayerSlotId, int> creditsBefore)
     {
         CollectResourceCreditOwnerIds(_resourceCreditOwnerIds);
         foreach (var ownerValue in _resourceCreditOwnerIds)
         {
             var owner = new OwnerId(ownerValue);
             var playerSlotId = owner.ToPlayerSlot();
-            SyncCreditsFromEntityWorld(playerSlotId);
             var inventory = ResourceInventory(playerSlotId);
             if (!creditsBefore.TryGetValue(playerSlotId, out var before) || before != inventory.Credits)
             {
@@ -46,41 +45,6 @@ public sealed partial class UnitBattlefield
         result.Add(ownerValue);
     }
 
-    private EntityId AttackTargetEntityId(UnitInstance unit)
-    {
-        if (unit.AttackTargetId is not { } targetId)
-        {
-            return EntityId.None;
-        }
-
-        if (unit.AttackTargetKind == CombatTargetKind.Building)
-        {
-            return _buildingTargetEntityIds.TryGetValue(targetId, out var buildingEntityId)
-                ? buildingEntityId
-                : EntityId.None;
-        }
-
-        return UnitById(targetId)?.EntityId ?? EntityId.None;
-    }
-
-    private static IReadOnlyList<WeaponMountRuntimeState> WeaponMountsForEntity(UnitInstance unit)
-    {
-        var count = unit.WeaponMounts.Count;
-        if (count == 0)
-        {
-            return [];
-        }
-
-        var copy = new WeaponMountRuntimeState[count];
-        for (var index = 0; index < count; index++)
-        {
-            var mount = unit.WeaponMounts[index];
-            copy[index] = mount with { CooldownRemaining = unit.AttackCooldownRemaining };
-        }
-
-        return copy;
-    }
-
     private static void SyncBodyFixedMountFacings(UnitInstance unit)
     {
         for (var index = 0; index < unit.WeaponMounts.Count && index < unit.Spec.Weapons.Count; index++)
@@ -88,62 +52,9 @@ public sealed partial class UnitBattlefield
             var spec = unit.Spec.Weapons[index];
             if (spec.FacingMode != WeaponMountFacingMode.Independent)
             {
-                unit.WeaponMounts[index] = unit.WeaponMounts[index] with { Facing = unit.Facing };
+                unit.MutableWeaponMounts[index] = unit.WeaponMounts[index] with { Facing = unit.Facing };
             }
         }
-    }
-
-    private void ResolveSoftCollisions(float dt)
-    {
-        for (var a = 0; a < Units.Count; a++)
-        {
-            var first = Units[a];
-            if (!first.Spec.Collision.BlocksMovement)
-            {
-                continue;
-            }
-
-            for (var b = a + 1; b < Units.Count; b++)
-            {
-                var second = Units[b];
-                if (!second.Spec.Collision.BlocksMovement)
-                {
-                    continue;
-                }
-
-                ResolvePair(first, second, dt);
-            }
-        }
-    }
-
-    private static void ResolvePair(UnitInstance first, UnitInstance second, float dt)
-    {
-        var delta = second.Position - first.Position;
-        var distance = delta.Length();
-        var minDistance = first.Spec.Collision.Radius + second.Spec.Collision.Radius;
-        if (distance >= minDistance || minDistance <= 0)
-        {
-            return;
-        }
-
-        var normal = distance <= 0.001f ? Vector2.Right : delta / distance;
-        var overlap = minDistance - distance;
-        var firstWeight = ResolveWeight(first);
-        var secondWeight = ResolveWeight(second);
-        var totalWeight = firstWeight + secondWeight;
-        var firstShare = totalWeight <= 0 ? 0.5f : secondWeight / totalWeight;
-        var secondShare = totalWeight <= 0 ? 0.5f : firstWeight / totalWeight;
-        var settle = Mathf.Clamp(dt * 16f, 0.15f, 0.9f);
-
-        first.Position -= normal * overlap * firstShare * settle;
-        second.Position += normal * overlap * secondShare * settle;
-    }
-
-    private static float ResolveWeight(UnitInstance unit)
-    {
-        var movingBias = unit.IsMoving ? 1.25f : 0.42f;
-        var priorityBias = 1f / MathF.Max(1f, unit.Spec.Collision.PushPriority);
-        return movingBias * priorityBias / MathF.Max(unit.Spec.Collision.Mass, 0.1f);
     }
 
     private UnitInstance? UnitById(int id)
@@ -177,51 +88,21 @@ public sealed partial class UnitBattlefield
         return weapon.TargetProfile.CanTarget(targetSpec);
     }
 
-    private static float WeaponTargetPriority(WeaponDefinition weapon, UnitSpec target)
+    private void ClearEntityAttackTarget(UnitInstance unit)
     {
-        if (!CanWeaponTarget(weapon, target))
+        if (!_entityWorld.TryGet(unit.EntityId, out var entity)
+            || !entity.Components.TryGet<WeaponUserComponentState>(out var weapon))
         {
-            return 0;
+            return;
         }
 
-        return PriorityFor(weapon.TargetProfile.WeightPriority, target.Stats.WeightClass)
-            * PriorityFor(weapon.TargetProfile.DomainPriority, target.Movement.Domain)
-            * PriorityFor(weapon.TargetProfile.ArmorPriority, target.Stats.ArmorTag);
-    }
-
-    private static float EffectiveDamageAgainst(AmmoDefinition ammo, UnitSpec target)
-    {
-        return DamageResolver.Resolve(
-            ammo,
-            target.Stats.WeightClass,
-            target.Movement.Domain,
-            target.Stats.ArmorTag,
-            targetElementDefense: target.Stats.ElementDefense,
-            targetTraits: TargetTraitProfile.FromRoleTags(target.RoleTags, target.Stats.TargetTraits));
-    }
-
-    private static float EffectiveDamageAgainst(AmmoDefinition ammo, BuildSpec targetSpec)
-    {
-        return DamageResolver.Resolve(
-            ammo,
-            UnitWeightClass.Heavy,
-            MovementDomain.Land,
-            targetSpec.ArmorTag,
-            targetElementDefense: targetSpec.ElementDefense,
-            targetTraits: targetSpec.TargetTraits);
-    }
-
-    private static float PriorityFor<T>(IReadOnlyDictionary<T, float> values, T key)
-        where T : notnull
-    {
-        return values.TryGetValue(key, out var value) ? value : 1;
-    }
-
-    private static void ClearAttackTarget(UnitInstance unit)
-    {
-        unit.AttackTargetId = null;
-        unit.AttackTargetKind = CombatTargetKind.Unit;
-        unit.AttackTargetIsManual = false;
+        entity.Components.Set(weapon with
+        {
+            AttackTarget = EntityId.None,
+            AttackTargetKind = CombatTargetKind.Unit,
+            AttackTargetIsManual = false,
+        });
+        RefreshUnitProjection(unit, entity);
     }
 
     private void ClearBuildingAttackTargetCore(int buildingId)
@@ -239,25 +120,6 @@ public sealed partial class UnitBattlefield
             AttackTargetKind = CombatTargetKind.Unit,
             AttackTargetIsManual = false,
         });
-    }
-
-    private static void AimWeaponMounts(UnitInstance unit, float targetAngle, float dt)
-    {
-        for (var index = 0; index < unit.WeaponMounts.Count; index++)
-        {
-            var runtime = unit.WeaponMounts[index];
-            var spec = unit.Spec.Weapons[index];
-            var facing = spec.FacingMode == WeaponMountFacingMode.Independent
-                ? RotateToward(runtime.Facing, targetAngle, MathF.Max(spec.TurnRate, unit.Spec.Movement.TurnRate) * dt)
-                : unit.Facing;
-            unit.WeaponMounts[index] = runtime with { Facing = facing };
-        }
-    }
-
-    private static bool WeaponCanFireAt(float weaponFacing, float targetAngle, WeaponDefinition weapon)
-    {
-        var delta = MathF.Abs(Mathf.AngleDifference(weaponFacing, targetAngle));
-        return delta <= MathF.Max(weapon.FireArcRadians, 0.08f) * 0.5f;
     }
 
     private static bool UnitOverlapsSelectionRect(Rect2 worldRect, UnitInstance unit)
@@ -312,9 +174,4 @@ public sealed partial class UnitBattlefield
         return nearestEconomy <= nearestNonEconomy + SelectionEconomyIntentCenterMargin;
     }
 
-    private static float RotateToward(float current, float target, float maxDelta)
-    {
-        var delta = Mathf.AngleDifference(current, target);
-        return current + Mathf.Clamp(delta, -maxDelta, maxDelta);
-    }
 }

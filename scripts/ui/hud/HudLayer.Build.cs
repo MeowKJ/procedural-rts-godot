@@ -254,14 +254,6 @@ public partial class HudLayer : CanvasLayer
         AddUpgradeCategoryTab(_rightProductionPanel, IconGlyph.Scan, GameText.T("ui.upgrade.category.vision"), new Vector2(45, 44), UpgradeProjectAccentKind.Vision);
         AddUpgradeCategoryTab(_rightProductionPanel, IconGlyph.Repair, GameText.T("ui.upgrade.category.support"), new Vector2(80, 44), UpgradeProjectAccentKind.Support);
 
-        _catalogSurfaceLabel = MakeSizedLabel(GameText.T("ui.catalog.trainSurface"), new Vector2(14, 76), new Vector2(92, 14), FontTiny, InkMuted);
-        _catalogSurfaceLabel.Visible = false;
-        _rightProductionPanel.AddChild(_catalogSurfaceLabel);
-        _catalogOverviewValue = MakeSizedLabel("", new Vector2(112, 76), new Vector2(172, 14), FontTiny, InkMuted);
-        _catalogOverviewValue.Name = "CatalogOverview";
-        _catalogOverviewValue.Visible = false;
-        _catalogOverviewValue.HorizontalAlignment = HorizontalAlignment.Right;
-        _rightProductionPanel.AddChild(_catalogOverviewValue);
         _productionValue = MakeSizedLabel(GameText.T("ui.status.ready"), new Vector2(14, 74), new Vector2(270, 20), FontTiny, Ink);
         _productionValue.Name = "CatalogInspector";
         _rightProductionPanel.AddChild(_productionValue);

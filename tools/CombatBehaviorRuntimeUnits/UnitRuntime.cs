@@ -8,8 +8,6 @@ static partial class Program
         var playerOneGuard = newUnitBattlefield.Spawn<DogGuardTank>(PlayerSlotId.One, new Vector2(120, 160), 0.25f);
         var playerTwoGuard = newUnitBattlefield.Spawn<DogGuardTank>(PlayerSlotId.Two, new Vector2(260, 160), 0.25f);
         var sandboxRosterSpawn = newUnitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(120, 240), new Vector2(44, 0));
-        playerOneGuard.Selected = true;
-        playerTwoGuard.AlertPulse = 0.75f;
         if (playerOneGuard.Id == playerTwoGuard.Id
             || !playerOneGuard.EntityId.IsValid
             || !playerTwoGuard.EntityId.IsValid
@@ -33,30 +31,10 @@ static partial class Program
             || playerOneGuardProjection.Value.Position != playerOneGuard.Position
             || MathF.Abs(playerOneGuardProjection.Value.Hp - playerOneGuard.Hp) > 0.001f)
         {
-            throw new InvalidOperationException("UnitBattlefield should mirror UnitInstance spawns into EntityWorld and expose projection snapshots for views");
+            throw new InvalidOperationException("UnitBattlefield should spawn units in EntityWorld and expose projection snapshots for views");
         }
 
-        playerOneGuard.Position += new Vector2(17, -9);
-        playerOneGuard.Facing += 0.42f;
-        var driftBeforeProjectionSync = newUnitBattlefield.UnitProjectionDrift();
-        if (driftBeforeProjectionSync.UnitCount < 2
-            || driftBeforeProjectionSync.MissingMirrors != 0
-            || driftBeforeProjectionSync.MaxPositionDrift < 19f
-            || driftBeforeProjectionSync.MaxFacingDrift < 0.4f)
-        {
-            throw new InvalidOperationException("UnitBattlefield projection drift QA should compare retired UnitInstance state against EntityWorld mirrors before the flag flip");
-        }
-
-        var resyncedGuardProjection = newUnitBattlefield.UnitProjection(playerOneGuard.Id);
-        var driftAfterProjectionSync = newUnitBattlefield.UnitProjectionDrift();
-        if (resyncedGuardProjection is null
-            || driftAfterProjectionSync.MissingMirrors != 0
-            || driftAfterProjectionSync.MaxPositionDrift > 0.01f
-            || driftAfterProjectionSync.MaxFacingDrift > 0.01f)
-        {
-            throw new InvalidOperationException("UnitBattlefield projection drift QA should fall back to zero after projection sync");
-        }
-
+        newUnitBattlefield.SelectUnitsByIds(PlayerSlotId.One, [playerOneGuard.Id]);
         var newSelectionSummary = newUnitBattlefield.SelectionSummary();
         if (newSelectionSummary.Count == 0
             || newSelectionSummary.All(item => item.DesignId != "dog.guard_tank")
@@ -69,7 +47,7 @@ static partial class Program
         var pickedNewUnitCount = newUnitBattlefield.SelectSingleAt(PlayerSlotId.One, playerOneGuard.Position, additive: false, pickPadding: 4);
         var selectedEntity = newUnitBattlefield.UnitEntityByInstanceId(playerOneGuard.Id);
         if (pickedNewUnitCount != 1
-            || newUnitBattlefield.AppliedInputCommandCount != 2
+            || newUnitBattlefield.AppliedInputCommandCount != 3
             || !playerOneGuard.Selected
             || playerTwoGuard.Selected
             || selectedEntity is null
@@ -108,7 +86,11 @@ static partial class Program
         var armyHotkeyIdleHarvesterB = selectionHotkeyBattlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(220, 100));
         var armyHotkeyBusyHarvester = selectionHotkeyBattlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(260, 100));
         var armyHotkeyEnemy = selectionHotkeyBattlefield.Spawn("cat.tank", PlayerSlotId.Two, new Vector2(320, 100));
-        armyHotkeyBusyHarvester.HarvesterMode = HarvesterMode.Gathering;
+        var busyHarvesterEntity = selectionHotkeyBattlefield.UnitEntityByInstanceId(armyHotkeyBusyHarvester.Id)
+            ?? throw new InvalidOperationException("busy harvester entity should exist");
+        var busyHarvesterState = busyHarvesterEntity.Components.Require<HarvesterComponentState>();
+        busyHarvesterEntity.Components.Set(busyHarvesterState with { Mode = HarvesterMode.Gathering });
+        selectionHotkeyBattlefield.Update(0);
         var selectArmyCommandsBefore = selectionHotkeyBattlefield.AppliedInputCommandCount;
         var selectedArmyCount = selectionHotkeyBattlefield.SelectArmy(PlayerSlotId.One);
         if (selectedArmyCount != 2
@@ -269,7 +251,10 @@ static partial class Program
         var unitInstanceDeathTarget = unitInstanceDeathBattlefield.Spawn("cat.basic", PlayerSlotId.Two, new Vector2(425, 360), Mathf.Pi);
         var unitInstanceDeathEvents = new List<UnitInstanceDeathInfo>();
         unitInstanceDeathBattlefield.UnitsRemoved += deaths => unitInstanceDeathEvents.AddRange(deaths);
-        unitInstanceDeathTarget.Hp = 2;
+        var deathTargetEntity = unitInstanceDeathBattlefield.UnitEntityByInstanceId(unitInstanceDeathTarget.Id)
+            ?? throw new InvalidOperationException("death target entity should exist");
+        deathTargetEntity.Components.Set(deathTargetEntity.Components.Require<HealthComponentState>() with { Hp = 2 });
+        unitInstanceDeathBattlefield.Update(0);
         unitInstanceDeathBattlefield.SelectUnitsByIds(PlayerSlotId.One, [unitInstanceDeathAttacker.Id]);
         unitInstanceDeathBattlefield.CommandAttackSelected(PlayerSlotId.One, unitInstanceDeathTarget);
         for (var step = 0; step < 90; step++)
@@ -335,7 +320,7 @@ static partial class Program
             || unitBattlefieldOutcomeEvents[0] != GameOutcome.Victory
             || buildingTargetBattlefield.Outcome != GameOutcome.Victory)
         {
-            throw new InvalidOperationException($"new unit battlefield should route building target damage through EntityWorld health, emit self-contained building combat/death alert data, remove destroyed building mirrors, and resolve HQ victory; damageEvents={buildingDamageEvents}, snapshotExists={destroyedBuildingSnapshot is not null}, snapshotHp={destroyedBuildingSnapshot?.Hp}, entityExists={destroyedBuildingEntityId is not null}, attackerTarget={buildingTargetAttacker.AttackTargetId}, attackEvents={buildingAttackEventTargets.Count}, deathEvents={buildingDeathEvents.Count}, outcomeEvents={unitBattlefieldOutcomeEvents.Count}, outcome={buildingTargetBattlefield.Outcome}");
+            throw new InvalidOperationException($"unit battlefield should route building target damage through EntityWorld health, emit self-contained combat/death alert data, remove destroyed buildings, and resolve HQ victory; damageEvents={buildingDamageEvents}, snapshotExists={destroyedBuildingSnapshot is not null}, snapshotHp={destroyedBuildingSnapshot?.Hp}, entityExists={destroyedBuildingEntityId is not null}, attackerTarget={buildingTargetAttacker.AttackTargetId}, attackEvents={buildingAttackEventTargets.Count}, deathEvents={buildingDeathEvents.Count}, outcomeEvents={unitBattlefieldOutcomeEvents.Count}, outcome={buildingTargetBattlefield.Outcome}");
         }
 
         AssertUnitBattlefieldProjectilePresentation();

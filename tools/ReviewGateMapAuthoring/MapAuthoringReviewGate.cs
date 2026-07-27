@@ -90,7 +90,6 @@ static class MapAuthoringReviewGate
         var battleRoot = ReviewGateSource.Read(root, "scripts", "BattleRoot.cs");
         RequireText(battleRoot, "var world = MapLoader.Load(_runtimeMapSpec);", "BattleRoot startup must load its runtime map once through MapLoader.", result);
         RequireText(battleRoot, "UnitBattlefield.AdoptLoadedMap(world, _runtimeMapSpec)", "UnitBattlefield must adopt the exact MapLoader world instead of respawning entities.", result);
-        RequireText(battleRoot, "public bool DebugEntityWorldShadowEnabled => false;", "Authored BattleRoot must have no separate EntityWorld shadow.", result);
         var skirmishSetup = ReviewGateSource.Read(root, "scripts", "core", "match", "SkirmishOptions.cs");
         RequireText(skirmishSetup, "MapLoader.Prepare(map);", "Authored match staging must reject invalid maps before publishing pending state.", result);
         var authoredSkirmishFlow = ReviewGateSource.Read(root, "scripts", "qa", "SkirmishFlowQaRunner.AuthoredMap.cs");

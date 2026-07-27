@@ -22,7 +22,6 @@ public sealed partial class UnitBattlefield
         KeepUnitsWithRefinery(_unitCommandBuffer, field.Position);
         if (_unitCommandBuffer.Count > 0)
         {
-            SyncResourceFieldEntity(field);
             CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
             SubmitAndApplyInputCommand(new HarvestEntityCommand(
                 OwnerId.FromPlayerSlot(playerSlotId),
@@ -59,7 +58,6 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        SyncResourceFieldEntity(field);
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new HarvestEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
@@ -128,7 +126,6 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        SyncUnitEntity(target);
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new RepairEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
@@ -158,7 +155,6 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        SyncBuildingTargetEntity(buildingId);
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new RepairEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),

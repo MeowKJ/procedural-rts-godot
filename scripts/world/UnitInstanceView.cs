@@ -16,7 +16,6 @@ public partial class UnitInstanceView : Node2D
     public required PlayerRelationTable Relations { get; init; }
     public Func<UnitPresentationProjection?>? PresentationProvider { get; init; }
     public Func<WorldVisualThemeState>? VisualThemeProvider { get; init; }
-    public bool DrawBodyArt { get; init; } = true;
     private UnitPresentationProjection? _presentation;
 
     public override void _Process(double delta)
@@ -66,21 +65,6 @@ public partial class UnitInstanceView : Node2D
             DrawArc(Vector2.Zero, radius + 9 + pulse * 2, 0, Mathf.Tau, OverlayArcSegments, new Color(SoftOldCityPalette.Ink, 0.82f), 2.0f, CrispOverlayStroke);
             DrawArc(Vector2.Zero, radius + 10 + pulse * 2, 0, Mathf.Tau, OverlayArcSegments, new Color(relationAccent, 0.54f), 1.2f, CrispOverlayStroke);
             DrawArc(Vector2.Zero, radius + 18 + presentation.CommandPulse * 10, 0, Mathf.Tau, OverlayArcSegments, new Color(relationAccent, 0.36f), 1.0f, CrispOverlayStroke);
-        }
-
-        if (DrawBodyArt)
-        {
-            var palette = EntityRenderPalette.SoftOldCity(SoftOldCityPalette.PlayerColor(owner));
-            var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());
-            UnitVisualRenderer.DrawUnitArtRecipe(
-                this,
-                Unit.Spec.Art,
-                palette,
-                Vector2.Zero,
-                1,
-                presentation.Entity.Facing,
-                UnitMountFacingSource.FromRuntimeMounts(presentation.Mounts),
-                environmentTone);
         }
 
         DrawStatusGlyph(radius, presentation.Cargo);

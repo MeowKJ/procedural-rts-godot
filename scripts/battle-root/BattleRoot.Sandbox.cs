@@ -117,7 +117,6 @@ public partial class BattleRoot
             request.OwnerId.ToPlayerSlot(),
             ClampSandboxWorldPoint(request.Transform.Position, 32),
             request.Transform.Facing);
-        SetUnitInstanceFacing(unit, request.Transform.Facing);
         AddUnitInstanceView(unit);
     }
 

@@ -64,8 +64,6 @@ static class RightCommandDeckQa
         RequireText(hudLayer, "new Vector2(44, 44)", "Bottom command actions and mode buttons must keep 44px hit targets.");
         RequireText(hudLayer, "new Vector2(52, 44)", "The right rail command toggle and provider lanes must keep at least 44px hit targets.");
         RequireText(hudLayer, "private static readonly Color UnexploredSurface = new(\"#26313B\")", "The minimap must use a deep-gray unexplored surface instead of a pure-black hole.");
-        RequireText(hudLayer, "_catalogSurfaceLabel.Visible = false", "The retired surface label must not overlap the fixed inspector row.");
-        RequireText(hudLayer, "_catalogOverviewValue.Visible = false", "The retired overview label must not overlap the fixed inspector row.");
         RequireText(hudLayer, "Text = \"\";", "Command cards must suppress inherited multiline button text and draw compact metrics explicitly.");
         RequireText(hudLayer, "RefreshProductionProviderLaneSummary()", "Train provider lane selection/state changes must refresh the provider detail summary.");
         RequireText(hudLayer, "NonProviderLaneRailHintText()", "Non-provider catalog pages must render explicit rail hints instead of blank provider-lane state.");

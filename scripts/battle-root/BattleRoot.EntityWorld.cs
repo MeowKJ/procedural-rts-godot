@@ -37,16 +37,11 @@ public partial class BattleRoot
         if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
         {
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(820, 1180), new Vector2(58, 0));
-            _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0));
+            _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0), Mathf.Pi);
         }
 
         foreach (var unit in _unitBattlefield.Units)
         {
-            if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
-            {
-                SetUnitInstanceFacing(unit, unit.PlayerSlotId == PlayerSlotId.One ? 0 : Mathf.Pi);
-            }
-
             AddUnitInstanceView(unit);
         }
     }
@@ -55,8 +50,7 @@ public partial class BattleRoot
     {
         foreach (var spawn in UnitDesignRuntimeLoadouts.StartingUnits(faction))
         {
-            var unit = _unitBattlefield.Spawn(spawn.DesignId, playerSlotId, origin + spawn.Offset.Rotated(facing), facing + spawn.FacingOffset);
-            SetUnitInstanceFacing(unit, facing + spawn.FacingOffset);
+            _unitBattlefield.Spawn(spawn.DesignId, playerSlotId, origin + spawn.Offset.Rotated(facing), facing + spawn.FacingOffset);
         }
     }
 
@@ -84,7 +78,6 @@ public partial class BattleRoot
                 playerSlotId,
                 center + offset,
                 facing);
-            SetUnitInstanceFacing(unit, facing);
             AddUnitInstanceView(unit);
             units.Add(unit);
         }
@@ -95,15 +88,6 @@ public partial class BattleRoot
     private static IReadOnlyList<string> ActiveBattlePerfDesignsFor(UnitFactionId faction)
     {
         return faction == UnitFactionId.Cat ? CatActiveBattlePerfDesigns : DogActiveBattlePerfDesigns;
-    }
-
-    private static void SetUnitInstanceFacing(UnitInstance unit, float facing)
-    {
-        unit.Facing = facing;
-        for (var index = 0; index < unit.WeaponMounts.Count; index++)
-        {
-            unit.WeaponMounts[index] = unit.WeaponMounts[index] with { Facing = facing };
-        }
     }
 
     private void AddUnitInstanceView(UnitInstance unit)
@@ -121,7 +105,6 @@ public partial class BattleRoot
             Relations = _unitBattlefield.Relations,
             PresentationProvider = () => _unitBattlefield.UnitPresentationProjection(unit.Id),
             VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
-            DrawBodyArt = false,
         };
         _unitInstanceRoot.AddChild(view);
         _unitInstanceViews[unit.Id] = view;

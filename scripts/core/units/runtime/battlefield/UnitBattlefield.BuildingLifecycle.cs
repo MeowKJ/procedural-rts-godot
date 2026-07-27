@@ -21,7 +21,7 @@ public sealed partial class UnitBattlefield
         var target = identity is null
             ? new BuildingEntitySeed(id, kind, playerSlotId, faction, position, facing, hp)
             : new BuildingEntitySeed(id, identity.Kind, identity.PlayerSlotId, identity.Faction, position, facing, hp);
-        SyncBuildingTargetEntity(target.Id, rallyPoint, powered, buildProgress, hp, target);
+        CreateBuildingEntity(target.Id, rallyPoint, powered, buildProgress, hp, target);
         return RequiredBuildingSnapshot(target.Id);
     }
 
@@ -67,16 +67,12 @@ public sealed partial class UnitBattlefield
         }
 
         SyncOwnerRelations();
-        SyncBuildingTargetEntities();
         _entityWorld.WorldWidth = WorldSize.X;
         _entityWorld.WorldHeight = WorldSize.Y;
-        _entityWorld.ResourceInventory(owner).Credits = inventory.Credits;
-
         var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
         if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
         {
             status = "placement.missingProducer";
-            SyncCreditsFromEntityWorld(playerSlotId);
             return false;
         }
 
@@ -94,7 +90,6 @@ public sealed partial class UnitBattlefield
         if (rejection is not null)
         {
             status = rejection.Reason;
-            SyncCreditsFromEntityWorld(playerSlotId);
             return false;
         }
 
@@ -102,7 +97,6 @@ public sealed partial class UnitBattlefield
         if (entity is null)
         {
             status = "placement.rejected";
-            SyncCreditsFromEntityWorld(playerSlotId);
             return false;
         }
 
@@ -113,7 +107,6 @@ public sealed partial class UnitBattlefield
 
         var adoptedId = AdoptConstructedBuildingId(entity, kind, playerSlotId, faction);
         building = RequiredBuildingSnapshot(adoptedId);
-        SyncCreditsFromEntityWorld(playerSlotId);
         ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
         status = GameText.Format("build.placed", spec.Label);
         return true;
@@ -133,7 +126,7 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            ClearAttackTarget(unit);
+            ClearEntityAttackTarget(unit);
         }
     }
 

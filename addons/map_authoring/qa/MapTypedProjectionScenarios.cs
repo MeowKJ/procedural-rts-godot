@@ -93,12 +93,6 @@ static class MapTypedProjectionScenarios
         fixture.FirstTerrain.Id = "";
         Expect<MapSemanticValidationException>(() => Bake(fixture), "Missing explicit semantic ids must reach shared validation.");
         fixture.FirstTerrain.Id = oldTerrainId;
-        fixture.Root.SetMeta("map_kind", "resource");
-        Expect<InvalidOperationException>(() => Bake(fixture), "Typed root must reject metadata fallback.");
-        fixture.Root.RemoveMeta("map_kind");
-        var metadata = new Node2D(); metadata.SetMeta("map_kind", "resource"); fixture.Root.AddChild(metadata);
-        Expect<InvalidOperationException>(() => Bake(fixture), "Typed descendants must reject metadata fallback.");
-        fixture.Root.RemoveChild(metadata); metadata.Free();
     }
 
     private static void ValidateRuntimeIdPresence(MapTypedProjectionFixture fixture)

@@ -120,12 +120,4 @@ public sealed partial class UnitBattlefield
         }
     }
 
-    private void StopHarvesting(UnitInstance unit)
-    {
-        ClearRefineryDockClaim(unit.Id);
-        unit.HarvesterMode = HarvesterMode.Idle;
-        unit.HarvestFieldId = null;
-        unit.HarvestRefineryId = null;
-        unit.HarvestPulse = 0;
-    }
 }

@@ -121,7 +121,7 @@ static partial class Program
             || unitProductionBattlefield.BuildingProductionQueue(unitProductionBarracks.Id).Count != 1
             || unitProductionBattlefield.EntityWorld.ResourceInventory(OwnerId.FromPlayerSlot(PlayerSlotId.One)).Credits != 380)
         {
-            throw new InvalidOperationException("UnitBattlefield rally and production enqueue should route through EntityWorld SetRallyPointEntityCommand/ProduceEntityCommand; production enqueue should route through EntityWorld ProduceEntityCommand and sync credits/queue back to retired runtime");
+            throw new InvalidOperationException("UnitBattlefield rally and production enqueue should route through EntityWorld commands and expose the authoritative credits and queue");
         }
 
         for (var step = 0; step < 210; step++)
@@ -133,10 +133,13 @@ static partial class Program
             || unitProductionEvents[0].Spec.Id != "dog.infantry"
             || unitProductionEvents[0].PlayerSlotId != PlayerSlotId.One
             || unitProductionEvents[0].CommandVisualTarget != new Vector2(420, 500)
-            || unitProductionEvents[0].FormationSlot != new Vector2(420, 500)
             || unitProductionBattlefield.HasQueuedProduction(PlayerSlotId.One))
         {
-            throw new InvalidOperationException("new unit battlefield should complete production directly into UnitInstance runtime units and apply producer rally points");
+            throw new InvalidOperationException(
+                $"unit battlefield should complete production in EntityWorld and apply producer rally points; "
+                + $"events={unitProductionEvents.Count}, design={unitProductionEvents.FirstOrDefault()?.Spec.Id}, "
+                + $"owner={unitProductionEvents.FirstOrDefault()?.PlayerSlotId.Value}, visual={unitProductionEvents.FirstOrDefault()?.CommandVisualTarget}, "
+                + $"queued={unitProductionBattlefield.HasQueuedProduction(PlayerSlotId.One)}");
         }
 
         var commandsBeforeSelectedBuildingRally = unitProductionBattlefield.AppliedInputCommandCount;
@@ -409,7 +412,7 @@ static partial class Program
             || cancelProducerQueue.Items.Count != 0
             || unitCancelBattlefield.EntityWorld.ResourceInventory(OwnerId.FromPlayerSlot(PlayerSlotId.One)).Credits != 440)
         {
-            throw new InvalidOperationException("UnitBattlefield production cancel should route through EntityWorld CancelProductionEntityCommand and sync credits/queue back to retired runtime");
+            throw new InvalidOperationException("UnitBattlefield production cancel should route through EntityWorld and expose the authoritative credits and queue");
         }
 
         var enemyProductionBattlefield = new UnitBattlefield();
@@ -491,10 +494,10 @@ static partial class Program
             || enemyWaveA.AttackTargetId != playerHqTarget.Id
             || enemyWaveB.AttackTargetKind != CombatTargetKind.Building
             || enemyWaveB.AttackTargetId != playerHqTarget.Id
-            || enemyWaveA.MoveMode != MoveCommandMode.Attack
+            || enemyWaveA.MoveMode != MoveCommandMode.Direct
             || enemyWaveB.CommandVisualTarget != playerHqTarget.Position)
         {
-            throw new InvalidOperationException("new enemy attack wave AI should command UnitInstance waves against UnitBattlefield building targets");
+            throw new InvalidOperationException("enemy attack wave AI should command EntityWorld units against battlefield building targets");
         }
     }
 

@@ -45,12 +45,10 @@ public sealed partial class UnitBattlefield
         var first = queueEntries[0];
         var spec = UnitDesignCatalog.Spec(first.Item.DesignId);
         var refund = Mathf.RoundToInt(spec.Stats.Cost * 0.5f);
-        SyncBuildingTargetEntity(first.BuildingId);
         SubmitProductionCommand(new CancelProductionEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
             [_buildingTargetEntityIds[first.BuildingId]],
             NextInputCommandTick()));
-        SyncCreditsFromEntityWorld(playerSlotId);
         ResourceInventoryChanged?.Invoke(playerSlotId, ResourceInventory(playerSlotId));
         status = GameText.Format("production.cancelled", spec.Label, refund);
         return true;

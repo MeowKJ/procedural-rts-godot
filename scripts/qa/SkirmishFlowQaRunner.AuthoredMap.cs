@@ -45,10 +45,9 @@ public partial class SkirmishFlowQaRunner
         }
 
         if (!battle.DebugUsesSingleAuthoredEntityWorld
-            || battle.DebugEntityWorldShadowEnabled
             || battle.DebugSimClockTick != 0)
         {
-            throw new InvalidOperationException("authored battle must use one MapLoader world without configuring or stepping a shadow world");
+            throw new InvalidOperationException("authored battle must use the MapLoader EntityWorld as its runtime authority");
         }
     }
 

@@ -38,8 +38,8 @@ public sealed partial class UnitBattlefield
             Cargo = entity.Components.TryGet<ResourceCargoComponentState>(out var cargo) ? cargo.Cargo : 0,
         };
 
-        FillAdoptedWeaponMounts(unit.WeaponMounts, entity, spec);
-        Units.Add(unit);
+        FillAdoptedWeaponMounts(unit.MutableWeaponMounts, entity, spec);
+        _units.Add(unit);
         return unit;
     }
 

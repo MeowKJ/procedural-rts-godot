@@ -232,7 +232,7 @@ static partial class Program
 
         if (WeaponCanTarget(WeaponCatalog.WeaponDefinitions[WeaponIds.VectorCannon], aircraftDescriptor))
         {
-            throw new InvalidOperationException("tank cannon target profile should not allow aircraft engagement in weapon V1");
+            throw new InvalidOperationException("tank cannon target profile should not allow aircraft engagement");
         }
 
         if (EffectiveDamageAgainst(AmmoIds.NeedleDart, hqSpec)

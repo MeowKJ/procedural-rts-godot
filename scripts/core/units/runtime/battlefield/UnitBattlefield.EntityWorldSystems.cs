@@ -4,9 +4,10 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void StepCombatSystem(SimContext context, ISimSystem combatSystem)
+    private void UpdateCombatFromEntityWorld(float dt)
     {
-        combatSystem.Step(context);
+        SyncOwnerRelations();
+        _combatSystem.Step(new SimContext(_entityWorld, _inputCommandTick, dt, []));
     }
 
     private void UpdateProjectilesFromEntityWorld(float dt)
@@ -29,8 +30,8 @@ public sealed partial class UnitBattlefield
         }
 
         ApplyUnitCombatEvents(_simEventDrainBuffer);
-        ApplyBuildingTargetCombatEvents(_simEventDrainBuffer);
-        ApplyTurretCombatEvents(_simEventDrainBuffer);
+        ApplyBuildingDamageEvents(_simEventDrainBuffer);
+        ApplyUnitDamageEventsFromBuildings(_simEventDrainBuffer);
         _simEventDrainBuffer.Clear();
     }
 
@@ -44,25 +45,17 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            if (_entityWorld.TryGet(target.EntityId, out var targetEntity)
-                && targetEntity.Components.TryGet<HealthComponentState>(out var health))
+            if (!_entityWorld.TryGet(target.EntityId, out var targetEntity)
+                || !targetEntity.Components.Has<HealthComponentState>())
             {
-                target.Hp = health.Hp;
-            }
-            else
-            {
-                target.Hp -= damaged.Damage;
+                continue;
             }
 
             var attacker = UnitByEntityId(damaged.Attacker);
             var ammoId = attacker is not null
                 ? PrimaryWeapon(attacker).AmmoId
                 : AmmoIdForProjectileEntity(damaged.Attacker);
-            target.LastDamageAmount = damaged.Damage;
-            target.LastDamageAmmoId = ammoId;
-            target.DeathOverkillDamage = MathF.Max(0, -target.Hp);
-            target.HitPulse = 1;
-            target.AlertPulse = 1;
+            ApplyUnitDamageProjection(target, targetEntity, damaged.Damage, ammoId);
             if (attacker is not null)
             {
                 UnitAttacked?.Invoke(target, attacker);
@@ -86,8 +79,6 @@ public sealed partial class UnitBattlefield
         }
 
         SyncOwnerRelations();
-        SyncBuildingTargetEntities();
-        SyncUnitEntities();
         _constructionSystem.Step(new SimContext(
             _entityWorld,
             NextInputCommandTick(),
@@ -104,12 +95,11 @@ public sealed partial class UnitBattlefield
         }
 
         SyncOwnerRelations();
-        SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
         _abilitySystem.Step(context);
         _entityWorld.FlushQueuedSpawns();
         _entityWorld.FlushQueuedRemovals();
-        SyncUnitRuntimeStateFromEntities();
+        RefreshUnitProjections();
     }
 
     private bool HasAbilityRuntimeWork()

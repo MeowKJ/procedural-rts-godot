@@ -8,9 +8,6 @@ public sealed partial class UnitBattlefield
     private const float SelectionEconomyIntentCenterMargin = 20f;
     private const float CommandPulseDecay = 2.4f;
     private const float AlertPulseDecay = 1.2f;
-    private const float DefaultAccelerationMultiplier = 4.8f;
-    private const float AutoAcquireRangeMultiplier = 0.92f;
-    private const float ManualAttackRangeMultiplier = 0.82f;
     private const int HarvesterCargoCapacity = 700;
 
     private int _nextUnitId = 1;
@@ -18,11 +15,10 @@ public sealed partial class UnitBattlefield
     private readonly EntityCommandBuffer _inputCommands = new();
     private readonly CommandSystem _inputCommandSystem = new();
     private readonly AbilitySystem _abilitySystem = new();
+    private readonly CombatSystem _combatSystem = new();
     private readonly ResourceSystem _resourceSystem = new();
     private readonly ProductionSystem _productionSystem = new();
     private readonly ConstructionSystem _constructionSystem = new();
-    private readonly BuildingTargetCombatSystem _buildingTargetCombatSystem = new();
-    private readonly TurretCombatSystem _turretCombatSystem = new();
     private readonly ProjectileSystem _projectileSystem = new();
     private readonly PathfindingSystem _pathfindingSystem = new();
     private readonly MovementSystem _movementSystem = new();
@@ -99,15 +95,16 @@ public sealed partial class UnitBattlefield
     private readonly Dictionary<string, int> _constructionProviderLaneKindCounts = [];
     private readonly HashSet<string> _constructionProviderKinds = [];
     private readonly List<int> _selectedProductionProducerIdBuffer = [];
+    private readonly List<UnitInstance> _units = [];
+    private readonly List<ResourceFieldModel> _resourceFields = [];
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
     private bool _useSecondaryBuildingMinimapProjectionBuffer;
     private bool _useSecondaryResourcePipBuffer;
     private bool _useSecondaryUnitMinimapPipBuffer;
 
-    public List<UnitInstance> Units { get; } = [];
-    public List<ResourceFieldModel> ResourceFields { get; } = [];
-    public Dictionary<PlayerSlotId, ResourceInventory> ResourceInventories { get; } = [];
+    public IReadOnlyList<UnitInstance> Units => _units;
+    public IReadOnlyList<ResourceFieldModel> ResourceFields => _resourceFields;
     public PlayerRelationTable Relations { get; } = new();
     public EntityWorld EntityWorld => _entityWorld;
     public int SimulationTick => _simulationClock.CurrentTick;
@@ -153,32 +150,16 @@ public sealed partial class UnitBattlefield
     public UnitInstance Spawn(UnitSpec spec, PlayerSlotId playerSlotId, Vector2 position, float facing = 0)
     {
         var entity = _entityWorld.SpawnUnit(spec, OwnerId.FromPlayerSlot(playerSlotId), position, facing);
-        var instance = new UnitInstance
-        {
-            Id = _nextUnitId++,
-            EntityId = entity.Id,
-            Spec = spec,
-            PlayerSlotId = playerSlotId,
-            Position = position,
-            Facing = facing,
-            Velocity = Vector2.Zero,
-            Hp = spec.Stats.MaxHp,
-            Stance = spec.Weapons.Count > 0 ? UnitStance.Aggressive : UnitStance.Ignore,
-        };
-
-        FillDefaultWeaponMounts(instance.WeaponMounts, spec, facing);
-        Units.Add(instance);
-        SyncUnitEntity(instance);
-        return instance;
+        return AdoptUnitEntity(entity);
     }
 
-    public IReadOnlyList<UnitInstance> SpawnRoster(UnitRosterProfile roster, PlayerSlotId playerSlotId, Vector2 start, Vector2 spacing)
+    public IReadOnlyList<UnitInstance> SpawnRoster(UnitRosterProfile roster, PlayerSlotId playerSlotId, Vector2 start, Vector2 spacing, float facing = 0)
     {
         var designs = UnitDesignCatalog.ForRoster(roster);
         var units = new List<UnitInstance>(designs.Count);
         for (var index = 0; index < designs.Count; index++)
         {
-            units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index));
+            units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index, facing));
         }
 
         return units;
@@ -207,17 +188,7 @@ public sealed partial class UnitBattlefield
 
     private void StepSimulation(float dt)
     {
-        foreach (var unit in Units)
-        {
-            unit.CommandPulse = Mathf.Max(0, unit.CommandPulse - dt * CommandPulseDecay);
-            unit.AlertPulse = Mathf.Max(0, unit.AlertPulse - dt * AlertPulseDecay);
-            unit.HitPulse = Mathf.Max(0, unit.HitPulse - dt * 3.6f);
-            unit.HarvestPulse = Mathf.Max(0, unit.HarvestPulse - dt * 2.8f);
-            unit.AttackCooldownRemaining = Mathf.Max(0, unit.AttackCooldownRemaining - dt);
-            AcquireAutoTarget(unit);
-            UpdateCombat(unit, dt);
-            ResumeAttackMoveIntentIfNeeded(unit);
-        }
+        DecayUnitPresentationPulses(dt);
 
         CollectBuildingTargetIds(_buildingTargetIdBuffer);
         foreach (var buildingId in _buildingTargetIdBuffer)
@@ -227,8 +198,8 @@ public sealed partial class UnitBattlefield
 
         UpdateConstructionFromEntityWorld(dt);
         UpdateAbilitiesFromEntityWorld(dt);
-        UpdateBuildingTargetCombatFromEntityWorld(dt);
-        UpdateBuildingCombatFromEntityWorld(dt);
+        RebuildVisibilityIndex();
+        UpdateCombatFromEntityWorld(dt);
         UpdateProjectilesFromEntityWorld(dt);
         UpdateResourceHarvestersFromEntityWorld(dt);
         UpdateProductionQueues(dt);
@@ -236,7 +207,7 @@ public sealed partial class UnitBattlefield
         RemoveDeadBuildingTargetsFromEntities();
         RemoveDeadUnits();
         _entityWorld.FlushQueuedRemovals();
-        SyncBuildingTargetEntities();
+        RefreshUnitProjections();
     }
 
 }

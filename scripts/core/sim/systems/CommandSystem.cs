@@ -97,6 +97,29 @@ public sealed partial class CommandSystem : ISimSystem
 
                 // Produce / Build are wired in as their systems come online.
             }
+
+            MarkCommandPulse(context.World, sequenced.Command);
+        }
+    }
+
+    private static void MarkCommandPulse(EntityWorld world, EntityCommand command)
+    {
+        if (command is SetSelectionEntityCommand)
+        {
+            return;
+        }
+
+        foreach (var entityId in command.Subjects)
+        {
+            if (!world.TryGet(entityId, out var entity))
+            {
+                continue;
+            }
+
+            var pulse = entity.Components.TryGet<PresentationPulseComponentState>(out var current)
+                ? current
+                : new PresentationPulseComponentState();
+            entity.Components.Set(pulse with { CommandPulse = 1 });
         }
     }
 

@@ -363,7 +363,7 @@ static partial class Program
             || dogGuardRuntimeDefinition.ProductionLaneIndex != dogGuardDesign.Production?.LaneIndex
             || dogGuardRuntimeDefinition.ProductionLaneKey != dogGuardDesign.Production?.LaneKey)
         {
-            throw new InvalidOperationException("UnitDesign definition catalog should project UnitSpec runtime stats directly without retired runtime projections");
+            throw new InvalidOperationException("UnitDesign definition catalog should project UnitSpec runtime stats directly");
         }
 
         var dogGuardEntitySpec = dogGuardDesign.ToEntitySpec();

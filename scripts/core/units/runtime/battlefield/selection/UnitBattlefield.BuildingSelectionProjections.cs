@@ -24,7 +24,6 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<BuildingHitPulseProjection> BuildingHitPulseProjections()
     {
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         _buildingHitPulseProjectionBuffer.Clear();
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
@@ -63,7 +62,6 @@ public sealed partial class UnitBattlefield
         PlayerSlotId viewer,
         Func<Rect2, bool>? isExplored = null)
     {
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         var result = NextBuildingMinimapProjectionBuffer();
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
@@ -123,7 +121,6 @@ public sealed partial class UnitBattlefield
 
     public UnitBattlefieldPowerStatusProjection PowerStatus(PlayerSlotId playerSlotId)
     {
-        SyncBuildingTargetEntities();
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var provided = 0;
         var used = 0;

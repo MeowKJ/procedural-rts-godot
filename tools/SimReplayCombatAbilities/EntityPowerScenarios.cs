@@ -83,7 +83,8 @@ static partial class Program
         EntityWorld BuildM5TurretEntityWorld()
         {
             var world = new EntityWorld(seed: 6464);
-            world.AddSystem(new TurretCombatSystem());
+            world.AddSystem(new VisionSystem());
+            world.AddSystem(new CombatSystem());
             world.AddSystem(new ProjectileSystem());
             world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
 
@@ -137,17 +138,15 @@ static partial class Program
 
         var turretSpec = world.StableSpecs.Single(spec => spec.Id == "building.groundturret");
         var fakeBuilding = world.OrderedEntities.Single(entity => entity.Id.Value == 2);
-        var fakeWeapon = fakeBuilding.Components.Require<WeaponUserComponentState>();
         var targetHp = world.OrderedEntities.Single(entity => entity.Id.Value == 3)
             .Components.Require<HealthComponentState>().Hp;
 
         Assert(turretSpec.Kind == EntityKind.Turret, "BuildSpec-spawned ground turret should register as EntityKind.Turret");
-        Assert(turretShots > 0, "EntityKind.Turret fixed defense should fire through TurretCombatSystem");
-        Assert(fakeBuildingShots == 0, $"ordinary EntityKind.Building should not fire through TurretCombatSystem even with weapon state, got {fakeBuildingShots}");
-        Assert(!fakeWeapon.AttackTarget.IsValid, "ordinary EntityKind.Building weapon state should remain untouched by TurretCombatSystem");
+        Assert(turretShots > 0, "EntityKind.Turret fixed defense should fire through CombatSystem");
+        Assert(fakeBuildingShots > 0, "Any armed entity should fire through the single CombatSystem");
         Assert(targetHp < 500, $"turret entity should damage hostile target, got hp {targetHp}");
 
-        Console.WriteLine($"OK [m5-turret-entities]: turret shots {turretShots}, ordinary building shots {fakeBuildingShots}, target hp {targetHp}.");
+        Console.WriteLine($"OK [m5-armed-entities]: turret shots {turretShots}, armed building shots {fakeBuildingShots}, target hp {targetHp}.");
     }
 
     static void AssertPowerConsequences()

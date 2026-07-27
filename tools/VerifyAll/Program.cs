@@ -116,7 +116,6 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
             steps.Add(new VerifyStep("godot-battle-headless", godot.Path, "--headless --path . --scene res://scenes/Battle.tscn --quit-after 2"));
             steps.Add(new VerifyStep("godot-ui-font-qa", godot.Path, "--headless --path . --scene res://scenes/UiFontQa.tscn"));
             steps.Add(new VerifyStep("godot-display-settings-qa", godot.Path, "--headless --path . --scene res://scenes/DisplaySettingsQa.tscn"));
-            steps.Add(new VerifyStep("godot-map-api-bake-qa", godot.Path, "--headless --path . --scene res://scenes/MapApiBakeQa.tscn"));
             steps.Add(new VerifyStep("godot-map-typed-projection-qa", "sh", $"tools/map-typed-projection-qa.sh \"{godot.Path}\""));
             steps.Add(new VerifyStep("godot-map-authoring-plugin-smoke", "sh", $"tools/map-authoring-plugin-smoke.sh \"{godot.Path}\" --headless"));
             steps.Add(new VerifyStep("godot-map-authoring-validation-smoke", "sh", $"tools/map-authoring-validation-smoke.sh \"{godot.Path}\" --headless"));

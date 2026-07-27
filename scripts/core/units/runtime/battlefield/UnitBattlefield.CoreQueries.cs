@@ -27,7 +27,6 @@ public sealed partial class UnitBattlefield
             return null;
         }
 
-        SyncUnitEntity(unit);
         return EntityProjector.ProjectOne(_entityWorld, entity);
     }
 
@@ -41,13 +40,12 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<EntityProjection> UnitProjections()
     {
-        SyncUnitEntities();
         _unitProjectionBuffer.Clear();
         foreach (var unit in Units)
         {
             if (!_entityWorld.TryGet(unit.EntityId, out var entity))
             {
-                throw new InvalidOperationException($"Unit {unit.Id} is missing EntityWorld mirror {unit.EntityId}.");
+                throw new InvalidOperationException($"Unit projection {unit.Id} is missing EntityWorld entity {unit.EntityId}.");
             }
 
             _unitProjectionBuffer.Add(EntityProjector.ProjectOne(_entityWorld, entity));
@@ -57,37 +55,9 @@ public sealed partial class UnitBattlefield
         return _unitProjectionBuffer;
     }
 
-    public UnitProjectionDriftReport UnitProjectionDrift()
-    {
-        var maxPositionDrift = 0f;
-        var maxFacingDrift = 0f;
-        var missingMirrors = 0;
-
-        foreach (var unit in Units)
-        {
-            if (!_entityWorld.TryGet(unit.EntityId, out var entity))
-            {
-                missingMirrors++;
-                continue;
-            }
-
-            var projection = EntityProjector.ProjectOne(_entityWorld, entity);
-            maxPositionDrift = MathF.Max(maxPositionDrift, unit.Position.DistanceTo(projection.Position));
-            maxFacingDrift = MathF.Max(maxFacingDrift, MathF.Abs(Mathf.AngleDifference(unit.Facing, projection.Facing)));
-        }
-
-        return new UnitProjectionDriftReport(Units.Count, missingMirrors, maxPositionDrift, maxFacingDrift);
-    }
-
     public ResourceInventory ResourceInventory(PlayerSlotId playerSlotId)
     {
-        if (!ResourceInventories.TryGetValue(playerSlotId, out var inventory))
-        {
-            inventory = new ResourceInventory { Credits = 0 };
-            ResourceInventories[playerSlotId] = inventory;
-        }
-
-        return inventory;
+        return _entityWorld.ResourceInventory(OwnerId.FromPlayerSlot(playerSlotId));
     }
 
     public int Credits(PlayerSlotId playerSlotId)
@@ -191,15 +161,14 @@ public sealed partial class UnitBattlefield
     {
         var inventory = ResourceInventory(playerSlotId);
         inventory.Credits = Mathf.Max(0, credits);
-        _entityWorld.ResourceInventory(OwnerId.FromPlayerSlot(playerSlotId)).Credits = inventory.Credits;
         ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
     }
 
     public void SetResourceFields(IEnumerable<ResourceFieldModel> fields)
     {
-        ResourceFields.Clear();
-        ResourceFields.AddRange(fields);
-        SyncResourceFieldEntities();
+        _resourceFields.Clear();
+        _resourceFields.AddRange(fields);
+        CreateResourceFieldEntities();
     }
 
     public ResourceFieldModel? PickResourceField(Vector2 worldPoint, float pickPadding = 8)

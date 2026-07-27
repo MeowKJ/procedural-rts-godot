@@ -8,7 +8,10 @@ static partial class Program
         battlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
         var subject = battlefield.Spawn<DogGuardTank>(PlayerSlotId.One, new Vector2(420, 820), 0);
         var hostile = battlefield.Spawn<CatBasic>(PlayerSlotId.Two, new Vector2(690, 820), Mathf.Pi);
-        hostile.Hp = 18;
+        var hostileEntity = battlefield.UnitEntityByInstanceId(hostile.Id)
+            ?? throw new InvalidOperationException("movement-feel hostile entity should exist");
+        hostileEntity.Components.Set(hostileEntity.Components.Require<HealthComponentState>() with { Hp = 18 });
+        battlefield.Update(0);
         var subjects = new[] { subject };
 
         var selected = battlefield.SelectUnitsByIds(PlayerSlotId.One, new[] { subject.Id }).Count;

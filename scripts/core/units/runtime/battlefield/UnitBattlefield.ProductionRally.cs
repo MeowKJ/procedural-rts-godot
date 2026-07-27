@@ -11,7 +11,6 @@ public sealed partial class UnitBattlefield
 
     public bool SetRallyPoint(int buildingId, ResourceFieldModel field, out string status)
     {
-        SyncResourceFieldEntity(field);
         return SetRallyPoint(buildingId, field.Position, _resourceFieldEntityIds[field.Id], out status);
     }
 
@@ -98,7 +97,6 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        SyncResourceFieldEntity(field);
         var clamped = ClampInsideWorld(field.Position, 80);
         var targetEntity = _resourceFieldEntityIds[field.Id];
         foreach (var producerId in _selectedBuildingRallyProducerIds)
@@ -170,7 +168,7 @@ public sealed partial class UnitBattlefield
 
         if (spec.Production is null
             || !ProducerSupportsSpec(producerBuildingId, playerSlotId, spec)
-            || !SyncBuildingTargetEntity(producerBuildingId))
+            || BuildingEntityByTargetId(producerBuildingId) is null)
         {
             status = GameText.Format(
                 "production.needProducer",
@@ -243,7 +241,7 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        if (!SyncBuildingTargetEntity(producerId.Value))
+        if (BuildingEntityByTargetId(producerId.Value) is null)
         {
             status = GameText.Format("production.needProducer", BuildSpecCatalog.For(spec.Production.ProducerKind).Label, spec.Label);
             return false;
@@ -255,7 +253,6 @@ public sealed partial class UnitBattlefield
             [_buildingTargetEntityIds[producerId.Value]],
             NextInputCommandTick(),
             spec.Id));
-        SyncCreditsFromEntityWorld(playerSlotId);
         var queueAfter = BuildingProductionQueue(producerId.Value);
         if (queueAfter.Count <= queueBefore)
         {

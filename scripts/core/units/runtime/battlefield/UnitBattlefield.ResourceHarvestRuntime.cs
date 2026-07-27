@@ -33,59 +33,13 @@ public sealed partial class UnitBattlefield
         }
 
         CollectResourceCreditsBefore(_resourceCreditsBefore);
-        SyncResourceFieldEntities();
-        SyncBuildingTargetEntities();
-        SyncUnitEntities();
         _resourceSystem.Step(new SimContext(_entityWorld, _inputCommandTick, dt, []));
-        SyncResourceFieldsFromEntities();
-        SyncDockStateFromEntities();
-        SyncHarvestersFromEntities();
-        SyncAllCreditsFromEntityWorld(_resourceCreditsBefore);
+        RefreshResourceFieldProjections();
+        UpdateDockDeliveryPulses();
+        NotifyCreditChanges(_resourceCreditsBefore);
     }
 
-    private void SyncHarvestersFromEntities()
-    {
-        foreach (var unit in Units)
-        {
-            if (IsHarvester(unit) && _entityWorld.TryGet(unit.EntityId, out var entity))
-            {
-                ApplyEntityResourceStateToUnit(unit, entity);
-            }
-        }
-    }
-
-    private void ApplyEntityResourceStateToUnit(UnitInstance unit, EntityInstance entity)
-    {
-        if (entity.Components.TryGet<MovementComponentState>(out var movement))
-        {
-            unit.Velocity = movement.Velocity;
-            unit.MoveTarget = movement.MoveTarget;
-            unit.FormationSlot = movement.FormationSlot;
-        }
-
-        if (entity.Components.TryGet<CommandableComponentState>(out var commandable))
-        {
-            unit.PlayerIntentTarget = commandable.PlayerIntentTarget;
-            unit.CommandVisualTarget = commandable.CommandVisualTarget;
-            unit.MoveMode = commandable.MoveMode;
-        }
-
-        if (entity.Components.TryGet<HarvesterComponentState>(out var harvester))
-        {
-            unit.HarvesterMode = harvester.Mode;
-            unit.HarvestFieldId = ResourceFieldIdForEntity(harvester.FieldId);
-            unit.HarvestRefineryId = BuildingIdForEntity(harvester.RefineryId);
-            unit.HarvestPulse = Mathf.Clamp(harvester.HarvestPulse, 0, 1);
-            unit.HarvesterRetreating = harvester.Retreating;
-        }
-
-        if (entity.Components.TryGet<ResourceCargoComponentState>(out var cargo))
-        {
-            unit.Cargo = cargo.Cargo;
-        }
-    }
-
-    private void SyncDockStateFromEntities()
+    private void UpdateDockDeliveryPulses()
     {
         CollectBuildingTargetIds(_buildingTargetIdBuffer);
         foreach (var refineryId in _buildingTargetIdBuffer)

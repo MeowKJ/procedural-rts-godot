@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private bool SyncBuildingTargetEntity(
+    private bool CreateBuildingEntity(
         int buildingId,
         Vector2? seedRallyPoint = null,
         bool? seedPowered = null,
@@ -134,15 +134,6 @@ public sealed partial class UnitBattlefield
         }
 
         entity.Components.Set(new ProductionQueueComponentState([]));
-    }
-
-    private void SyncBuildingTargetEntities()
-    {
-        CollectBuildingTargetIds(_buildingTargetIdBuffer);
-        foreach (var buildingId in _buildingTargetIdBuffer)
-        {
-            SyncBuildingTargetEntity(buildingId);
-        }
     }
 
 }

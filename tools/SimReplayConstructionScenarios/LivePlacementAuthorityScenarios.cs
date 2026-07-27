@@ -234,7 +234,7 @@ static partial class Program
         Assert(validEnvelope?.Command is StartConstructionEntityCommand validBuild
             && validBuild.Position == new Vector2(validPoint.X, validPoint.Y)
             && validBuild.Facing == MathF.PI * 0.5f,
-            "schema v1 Build gateway envelope should retain the original point and map quarter-turn 1 to canonical pi/2");
+            "Build gateway envelope should retain the original point and map quarter-turn 1 to canonical pi/2");
         var validRejections = battlefield.EntityWorld.Events.Drain()
             .OfType<ConstructionRejectedEvent>()
             .ToArray();
