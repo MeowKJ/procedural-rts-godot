@@ -102,16 +102,6 @@ public partial class BattleRoot
         };
     }
 
-    private static string ProductionDetail(BuildingModel building)
-    {
-        var item = building.ProductionQueue[0];
-        var spec = UnitDesignCatalog.Spec(item.DesignId);
-        var production = spec.Production
-            ?? throw new InvalidOperationException($"UnitDesign '{item.DesignId}' must include ProductionSpec.");
-        var progress = Mathf.RoundToInt(Mathf.Clamp(item.Progress / production.Duration, 0, 1) * 100);
-        return GameText.Format("ui.production.detail", spec.Label.ToUpperInvariant(), progress, building.ProductionQueue.Count);
-    }
-
     private static string ProductionDetail(IReadOnlyList<UnitProductionQueueItem> queue)
     {
         var item = queue[0];
