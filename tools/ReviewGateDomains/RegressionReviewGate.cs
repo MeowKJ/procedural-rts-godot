@@ -120,7 +120,7 @@ static class RegressionReviewGate
         RequireText(projectileStyle, "MinimumCoreWidth = 1.8f", "Ordinary projectile cores must keep a readable minimum width.", result);
         RequireText(projectileStyle, "MinimumHeadRadius = 3.4f", "Ordinary projectile heads must keep a readable minimum radius.", result);
         RequireText(projectileStyle, "MinimumCoreAlpha = 0.82f", "Projectile cores must remain bright enough under theme/fog overlays.", result);
-        RequireText(projectileStyle, "AmmoKind.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
+        RequireText(projectileStyle, "AmmoIds.SeekerRocket", "Projectile style policy must explicitly cover seeker rockets.", result);
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         RequireText(battleRoot, "AddChild(_fogOfWar);\n\n        _combatEffects", "CombatEffectsLayer must be added after fog so visible projectiles render above the fog overlay.", result);
 

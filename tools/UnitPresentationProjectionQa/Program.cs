@@ -19,7 +19,7 @@ var entity = world.Spawn(
         new PresentationPulseComponentState(CommandPulse: 0.8f, AlertPulse: 0.6f, HitPulse: 0.4f),
         new HarvesterComponentState(HarvesterMode.MovingToField, default, default, HarvestPulse: 0.7f),
         new ResourceCargoComponentState(320, 700),
-        new WeaponUserComponentState([new WeaponMountRuntimeState("main", WeaponKind.VectorCannon, 1.2f, 0.3f)]),
+        new WeaponUserComponentState([new WeaponMountRuntimeState("main", WeaponIds.VectorCannon, 1.2f, 0.3f)]),
     ]);
 
 var first = UnitPresentationProjector.ProjectOne(world, entity);

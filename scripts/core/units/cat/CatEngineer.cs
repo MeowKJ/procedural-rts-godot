@@ -18,7 +18,7 @@ public sealed class CatEngineer : UnitDesign
     public override CollisionSpec Collision => new(12, 0.68f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(15, 0), 0.58f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(15, 0), 0.58f, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.RepairField, Radius: 122, Value: 14)];

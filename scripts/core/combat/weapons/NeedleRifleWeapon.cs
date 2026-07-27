@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class NeedleRifleWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.NeedleRifle;
+    public override string Id => WeaponIds.NeedleRifle;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Needle Rifle",
-            AmmoKind.NeedleDart,
+            AmmoIds.NeedleDart,
             WeaponMountKind.FixedForward,
             190,
             0.55f,

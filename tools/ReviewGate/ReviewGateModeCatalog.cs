@@ -17,7 +17,6 @@ static class ReviewGateModeCatalog
         "sandbox",
         "mapauthoring",
         "regression",
-        "m1migrationparentcomplete",
     ];
 
     public static bool IsKnown(string mode, string root)

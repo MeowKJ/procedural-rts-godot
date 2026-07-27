@@ -732,7 +732,7 @@ StateHash
 
 验收：不破坏现有游戏，现有 UnitSpec 可映射到 EntitySpec。
 
-### Phase 2: Unit Bridge
+### Phase 2: Unit Entity Conversion
 
 ```text
 UnitDesign -> UnitSpec -> EntitySpec
@@ -742,7 +742,7 @@ UnitBattlefield -> EntityWorld facade
 
 验收：狗狗/猫猫单位仍能在沙盒和普通战斗中生成、移动、攻击、采矿。
 
-### Phase 3: Building Bridge
+### Phase 3: Building Entity Conversion
 
 ```text
 BuildingDefinition + BuildDefinition -> Building/Construction EntitySpec

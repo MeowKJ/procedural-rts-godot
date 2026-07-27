@@ -75,62 +75,11 @@ public sealed record ProjectileComponentState(
     float Age,
     float FlightDuration,
     float LifetimeRemaining,
-    bool Interceptable = false,
-    WeaponKind? WeaponKindAlias = null,
-    AmmoKind? AmmoKindAlias = null) : EntityComponentState
+    bool Interceptable = false) : EntityComponentState
 {
-    public ProjectileComponentState(
-        EntityId Source,
-        EntityId Target,
-        WeaponKind WeaponKind,
-        AmmoKind AmmoKind,
-        ProjectileBehavior Behavior,
-        HitRule HitRule,
-        Vector2 Origin,
-        Vector2 AimPoint,
-        float Damage,
-        Vector2 Velocity,
-        float Speed,
-        float TrackingStrength,
-        float HitRadius,
-        float Age,
-        float FlightDuration,
-        float LifetimeRemaining,
-        bool Interceptable = false)
-        : this(
-            Source,
-            Target,
-            WeaponCatalog.IdFor(WeaponKind),
-            WeaponCatalog.IdFor(AmmoKind),
-            Behavior,
-            HitRule,
-            Origin,
-            AimPoint,
-            Damage,
-            Velocity,
-            Speed,
-            TrackingStrength,
-            HitRadius,
-            Age,
-            FlightDuration,
-            LifetimeRemaining,
-            Interceptable,
-            WeaponKind,
-            AmmoKind)
-    {
-    }
-
     public float FlightProgress => FlightDuration <= 0
         ? 1
         : Mathf.Clamp(Age / FlightDuration, 0, 1);
-
-    public WeaponKind WeaponKind => WeaponKindAlias
-        ?? WeaponCatalog.KindForWeaponId(WeaponId)
-        ?? throw new InvalidOperationException($"Projectile has no WeaponKind alias for '{WeaponId}'.");
-
-    public AmmoKind AmmoKind => AmmoKindAlias
-        ?? WeaponCatalog.KindForAmmoId(AmmoId)
-        ?? throw new InvalidOperationException($"Projectile has no AmmoKind alias for '{AmmoId}'.");
 }
 
 public sealed record VeterancyComponentState(

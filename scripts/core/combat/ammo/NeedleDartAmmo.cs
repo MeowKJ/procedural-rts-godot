@@ -4,12 +4,12 @@ namespace ProceduralRts.Core;
 
 public sealed class NeedleDartAmmo : AmmoDesign
 {
-    public override AmmoKind Kind => AmmoKind.NeedleDart;
+    public override string Id => AmmoIds.NeedleDart;
 
     public override AmmoDefinition ToDefinition()
     {
         return new AmmoDefinition(
-            Kind,
+            Id,
             "Needle Dart",
             ProjectileBehavior.Direct,
             HitRule.Guaranteed,

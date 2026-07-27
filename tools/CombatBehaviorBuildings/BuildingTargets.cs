@@ -2,20 +2,20 @@ static partial class Program
 {
     private static void AssertBuildSpecBuildingRuntime()
     {
-        var bridgeHqBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Headquarters);
-        var hqEntitySpec = bridgeHqBuildSpec.ToEntitySpec();
-        var bridgeBarracksBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
-        var barracksEntitySpec = bridgeBarracksBuildSpec.ToEntitySpec();
-        var bridgeAirfieldBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Airfield);
-        if (hqEntitySpec.Id != bridgeHqBuildSpec.EntitySpecId
-            || barracksEntitySpec.Id != bridgeBarracksBuildSpec.EntitySpecId
-            || hqEntitySpec.Display.NameKey != bridgeHqBuildSpec.NameKey
-            || hqEntitySpec.Display.RoleKey != bridgeHqBuildSpec.RoleKey
-            || hqEntitySpec.Display.ShortCode != bridgeHqBuildSpec.ShortCode
-            || hqEntitySpec.Display.Icon != bridgeHqBuildSpec.Icon
-            || bridgeHqBuildSpec.RoleGlyph != IconGlyph.StanceHold
-            || bridgeAirfieldBuildSpec.ShortCode != "AIR"
-            || bridgeAirfieldBuildSpec.RoleGlyph != bridgeAirfieldBuildSpec.Icon)
+        var hqBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Headquarters);
+        var hqEntitySpec = hqBuildSpec.ToEntitySpec();
+        var barracksBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Barracks);
+        var barracksEntitySpec = barracksBuildSpec.ToEntitySpec();
+        var airfieldBuildSpec = BuildSpecCatalog.For(BuildingDesignIds.Airfield);
+        if (hqEntitySpec.Id != hqBuildSpec.EntitySpecId
+            || barracksEntitySpec.Id != barracksBuildSpec.EntitySpecId
+            || hqEntitySpec.Display.NameKey != hqBuildSpec.NameKey
+            || hqEntitySpec.Display.RoleKey != hqBuildSpec.RoleKey
+            || hqEntitySpec.Display.ShortCode != hqBuildSpec.ShortCode
+            || hqEntitySpec.Display.Icon != hqBuildSpec.Icon
+            || hqBuildSpec.RoleGlyph != IconGlyph.StanceHold
+            || airfieldBuildSpec.ShortCode != "AIR"
+            || airfieldBuildSpec.RoleGlyph != airfieldBuildSpec.Icon)
         {
             throw new InvalidOperationException("BuildSpec building presentation fields should supply display metadata for EntityWorld projections");
         }
@@ -49,7 +49,6 @@ static partial class Program
                 new UnitProductionQueueItem
                 {
                     Id = 77,
-                    Kind = ProductionKind.InfantrySquad,
                     DesignId = "dog.infantry",
                     Faction = UnitFactionId.Dog,
                     Progress = 3.25f,
@@ -65,7 +64,7 @@ static partial class Program
         if (buildSpecRuntimeTargetSpec.MaxHp != buildSpecRuntimeSpec.MaxHp
             || buildSpecRuntimeTargetSpec.Footprint != buildSpecRuntimeSpec.Footprint
             || buildSpecRuntimeTargetSpec.ArmorTag != buildSpecRuntimeSpec.ArmorTag
-            || buildSpecRuntimeTargetSpec.WeaponKind != buildSpecRuntimeSpec.WeaponKind
+            || buildSpecRuntimeTargetSpec.WeaponId != buildSpecRuntimeSpec.WeaponId
             || buildSpecRuntimeEntity is null
             || buildSpecRuntimeProjection is null
             || buildSpecRuntimeViewProjection is null

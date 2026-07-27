@@ -289,7 +289,6 @@ public sealed partial class ProductionSystem : ISimSystem
         items.Add(new UnitProductionQueueItem
         {
             Id = world.AllocateProductionItemId(),
-            Kind = ProductionKindDesignBridge.ProductionKindFor(unitSpec),
             DesignId = unitSpec.Id,
             Faction = unitSpec.Faction,
             Progress = 0,

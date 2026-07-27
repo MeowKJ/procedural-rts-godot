@@ -184,7 +184,7 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(hudLayer, "DrawLabel(position", "Command preview must remain graphical and must not draw text next to the pointer.", result);
         ForbidText(hudLayer, "pointerNearRail", "The command deck must not open merely because the pointer approaches the right edge.", result);
         RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.", result);
-        RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Retired production card requests must pass the same Shift batch count path.", result);
+        ForbidText(hudLayer, "ProductionRequested?.Invoke(button", "HUD production cards must submit concrete UnitDesign ids only.", result);
         RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.", result);
         RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.", result);
         RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.", result);
@@ -340,7 +340,7 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(minimap, ".ToList()", "BattleRoot minimap sync must not allocate materialized lists.", result);
         ForbidText(minimap, ".Select(", "BattleRoot minimap sync must not allocate LINQ projection chains.", result);
         ForbidText(minimap, ".Where(", "BattleRoot minimap sync must not allocate LINQ filter chains.", result);
-        ForbidText(process, ".Select(source => (source.Position, source.SightRange))", "BattleRoot vision source bridge must not allocate LINQ projection iterators.", result);
+        ForbidText(process, ".Select(source => (source.Position, source.SightRange))", "BattleRoot vision source routing must not allocate LINQ projection iterators.", result);
         ForbidText(process, "_unitBattlefield.Units.Count(unit => unit.Hp > 0)", "PerfHudCounts must not allocate runtime live-unit count iterators.", result);
         ForbidText(process, "_state.Units.Count(unit => unit.Hp > 0)", "PerfHudCounts must not allocate retired live-unit count iterators.", result);
         ForbidText(process, "_state.Buildings.Count(building => building.Hp > 0)", "PerfHudCounts must not allocate retired live-building count iterators.", result);

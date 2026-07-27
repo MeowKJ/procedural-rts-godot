@@ -287,7 +287,7 @@ public partial class BattleRoot
     private void SetUnitInstanceSelectionInfo(UnitInstance unit)
     {
         var spec = unit.Spec;
-        var weapon = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind];
+        var weapon = WeaponCatalog.WeaponDefinitions[spec.PrimaryWeapon.WeaponId];
         var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(spec.Stats.MaxHp)}";
         var role = GameText.T(spec.RoleKey);
         var detail = UnitInstanceDetail(unit, weapon);

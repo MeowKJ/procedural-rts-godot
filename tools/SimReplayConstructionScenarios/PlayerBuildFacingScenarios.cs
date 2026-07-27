@@ -7,12 +7,8 @@ static partial class Program
         var point = new PlayerCommandPoint(559.75f, 320.25f);
         AssertDirectBuildSinkRejectsFacingWithoutMutation(
             point,
-            new PlayerCommandBuildFacing(1, 4),
-            "schema v1 quarter-turn 4");
-        AssertDirectBuildSinkRejectsFacingWithoutMutation(
-            point,
-            new PlayerCommandBuildFacing(2, 0),
-            "unknown schema version");
+            new PlayerCommandBuildFacing(4),
+            "quarter-turn 4");
 
         var expectedFacings = new[] { 0f, MathF.PI * 0.5f, MathF.PI, MathF.PI * 1.5f };
         for (var quarterTurns = 0; quarterTurns < expectedFacings.Length; quarterTurns++)
@@ -30,24 +26,24 @@ static partial class Program
                     quarterTurns));
             var enqueued = battlefield.TryEnqueue(command, out var envelope, out var error, out var message);
             Assert(enqueued && error == CommandGatewayValidationError.None,
-                $"schema v1 cardinal Build {quarterTurns} should enqueue; got {error}: {message}");
+                $"cardinal Build {quarterTurns} should enqueue; got {error}: {message}");
             Assert(envelope?.Command is StartConstructionEntityCommand build
                 && build.Position == new Vector2(point.X, point.Y)
                 && build.Facing == expectedFacings[quarterTurns],
-                $"schema v1 cardinal Build {quarterTurns} should preserve the desired point and map to canonical facing {expectedFacings[quarterTurns]}");
+                $"cardinal Build {quarterTurns} should preserve the desired point and map to canonical facing {expectedFacings[quarterTurns]}");
         }
 
-        var versionOneZero = PlayerBuildGatewayCheckpoints(
+        var zeroTurns = PlayerBuildGatewayCheckpoints(
             PlayerCommandPayload.ForBuild(BuildingDesignIds.PowerPlant, point.X, point.Y, quarterTurns: 0));
-        var versionOneQuarterTurnA = PlayerBuildGatewayCheckpoints(
+        var quarterTurnA = PlayerBuildGatewayCheckpoints(
             PlayerCommandPayload.ForBuild(BuildingDesignIds.PowerPlant, point.X, point.Y, quarterTurns: 1));
-        var versionOneQuarterTurnB = PlayerBuildGatewayCheckpoints(
+        var quarterTurnB = PlayerBuildGatewayCheckpoints(
             PlayerCommandPayload.ForBuild(BuildingDesignIds.PowerPlant, point.X, point.Y, quarterTurns: 1));
 
-        Assert(versionOneQuarterTurnA.SequenceEqual(versionOneQuarterTurnB),
-            "identical schema v1 quarter-turn command streams should produce identical deterministic checkpoints");
-        Assert(versionOneZero[^1] != versionOneQuarterTurnA[^1],
-            "schema v1 0-degree and 90-degree Build outcomes should produce different final state hashes");
+        Assert(quarterTurnA.SequenceEqual(quarterTurnB),
+            "identical quarter-turn command streams should produce identical deterministic checkpoints");
+        Assert(zeroTurns[^1] != quarterTurnA[^1],
+            "0-degree and 90-degree Build outcomes should produce different final state hashes");
     }
 
     private static void AssertDirectBuildSinkRejectsFacingWithoutMutation(

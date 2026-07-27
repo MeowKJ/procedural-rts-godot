@@ -33,7 +33,7 @@ public partial class MapAuthoringPluginSmokeDriver : Node
         {
             Require(MapAuthoringRegistrationState.Active, "Plugin should be active before lifecycle smoke.");
             Require(MapAuthoringRegistrationState.ActiveInspectorCount == 1, "Plugin should register exactly one Inspector.");
-            ValidateAliasRejectionIsSideEffectFree();
+            ValidateTypeNameRejectionIsSideEffectFree();
             RequireTypes();
             var visualEditorChecked = DisplayServer.GetName() != "headless";
             await ValidateAcceptanceScene(visualEditorChecked);
@@ -61,7 +61,7 @@ public partial class MapAuthoringPluginSmokeDriver : Node
             if (visualEditorChecked) await MapAuthoringCreateDialogSmoke.Run(NextFrame);
             Require(MapAuthoringRegistrationState.EnterCount == enterBefore + 1, "Re-enable should execute one registration.");
 
-            var createNodeEvidence = visualEditorChecked ? ", Inspector edits persisted and Create Node resolved all aliases before and after re-enable" : "";
+            var createNodeEvidence = visualEditorChecked ? ", Inspector edits persisted and Create Node resolved all custom types before and after re-enable" : "";
             GD.Print($"Map Authoring plugin lifecycle smoke PASSED: enabled, disabled, and re-enabled with ten unique custom types and one Inspector{createNodeEvidence}.");
             IsRunning = false;
             QueueFree();
@@ -141,25 +141,25 @@ public partial class MapAuthoringPluginSmokeDriver : Node
         foreach (var descriptor in MapAuthoringTypeRegistry.Types)
         {
             Require(!ClassDB.ClassExists(descriptor.Name),
-                $"Custom type alias {descriptor.Name} must not collide with a native Godot class.");
+                $"Custom type name {descriptor.Name} must not collide with a native Godot class.");
             var script = GD.Load<Script>(descriptor.ScriptPath)
                 ?? throw new InvalidOperationException($"Custom type script must load: {descriptor.ScriptPath}.");
             var scriptName = Path.GetFileNameWithoutExtension(descriptor.ScriptPath);
             if (descriptor.Name == "ResourceField")
             {
-                Require(scriptName == "Resource", "ResourceField alias must map to the typed Resource.cs script.");
+                Require(scriptName == "Resource", "ResourceField custom type must map to the typed Resource.cs script.");
             }
             else
             {
                 Require(scriptName == descriptor.Name,
-                    $"Custom type alias {descriptor.Name} must match its C# script class/file name.");
+                    $"Custom type name {descriptor.Name} must match its C# script class/file name.");
             }
             Require(script.GetInstanceBaseType() == MapAuthoringTypeRegistry.BaseType,
                 $"Custom type {descriptor.Name} must inherit {MapAuthoringTypeRegistry.BaseType}.");
         }
     }
 
-    private static void ValidateAliasRejectionIsSideEffectFree()
+    private static void ValidateTypeNameRejectionIsSideEffectFree()
     {
         var activeBefore = MapAuthoringRegistrationState.Active;
         var typesBefore = MapAuthoringRegistrationState.ActiveTypeNames.ToArray();
@@ -169,22 +169,22 @@ public partial class MapAuthoringPluginSmokeDriver : Node
         InvalidOperationException? rejection = null;
         try
         {
-            MapAuthoringTypeRegistry.ValidateAliases(
+            MapAuthoringTypeRegistry.ValidateTypeNames(
                 [new MapAuthoringTypeDescriptor("Resource", "res://invalid/Resource.cs")],
-                alias => alias == "Resource");
+                typeName => typeName == "Resource");
         }
         catch (InvalidOperationException exception)
         {
             rejection = exception;
         }
 
-        Require(rejection?.Message == "Custom type alias 'Resource' collides with native Godot class 'Resource'.",
-            "Native alias collision must fail with a deterministic diagnostic.");
+        Require(rejection?.Message == "Custom type name 'Resource' collides with native Godot class 'Resource'.",
+            "Native type-name collision must fail with a deterministic diagnostic.");
         Require(MapAuthoringRegistrationState.Active == activeBefore
             && MapAuthoringRegistrationState.ActiveTypeNames.SequenceEqual(typesBefore)
             && MapAuthoringRegistrationState.ActiveInspectorCount == inspectorBefore
             && MapAuthoringRegistrationState.EnterCount == enterBefore
             && MapAuthoringRegistrationState.ExitCount == exitBefore,
-            "Rejected alias validation must not mutate registration state.");
+            "Rejected type-name validation must not mutate registration state.");
     }
 }

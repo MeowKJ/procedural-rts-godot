@@ -2,22 +2,6 @@ static partial class Program
 {
     private static void AssertPresentationDescriptorsAndLocalization()
     {
-        var productionPresentationFactions = new[] { UnitFactionId.Dog, UnitFactionId.Cat };
-        var factionProductionPresentations = productionPresentationFactions
-            .SelectMany(faction => Enum.GetValues<ProductionKind>().Select(kind =>
-            {
-                var designId = UnitDesignRuntimeLoadouts.ProductionDesignId(faction, kind)
-                    ?? throw new InvalidOperationException($"{faction} {kind} should resolve to a UnitSpec production design id");
-                var spec = UnitDesignCatalog.Spec(designId);
-                return (Faction: faction, Kind: kind, Spec: spec, Presentation: UnitPresentationCatalog.For(faction, kind));
-            }))
-            .ToArray();
-
-        if (factionProductionPresentations.Length != productionPresentationFactions.Length * Enum.GetValues<ProductionKind>().Length)
-        {
-            throw new InvalidOperationException("every playable faction retired production kind should resolve to UnitSpec production presentation metadata");
-        }
-
         var playableUnitSpecPresentations = UnitDesignCatalog.Designs.Values
             .Select(design => design.ToSpec())
             .Where(spec => spec.Faction is UnitFactionId.Dog or UnitFactionId.Cat)
@@ -47,26 +31,11 @@ static partial class Program
             }
         }
 
-        foreach (var (faction, kind, spec, descriptor) in factionProductionPresentations)
-        {
-            if (descriptor.Icon == IconGlyph.None
-                || !GameText.HasTranslation(descriptor.TooltipKey, GameLanguage.English)
-                || !GameText.HasTranslation(descriptor.TooltipKey, GameLanguage.ChineseSimplified)
-                || descriptor.OutputDesignId != spec.Id
-                || descriptor.ShortCode != spec.ShortCode
-                || descriptor.Icon != spec.Icon
-                || descriptor.Category != spec.Production!.Category
-                || descriptor.RoleGlyph == IconGlyph.None)
-            {
-                throw new InvalidOperationException($"{faction} {kind} production presentation descriptor should resolve UnitSpec output metadata");
-            }
-        }
-
         var designProductionPresentations = UnitDesignCatalog.Designs.Values
             .Select(design => design.ToSpec())
             .Where(spec => spec.Faction is UnitFactionId.Dog or UnitFactionId.Cat && spec.Production is not null)
             .OrderBy(spec => spec.Id)
-            .Select(spec => (Spec: spec, Presentation: UnitPresentationCatalog.ForProductionSpec(ProductionKindDesignBridge.ProductionKindFor(spec), spec)))
+            .Select(spec => (Spec: spec, Presentation: UnitPresentationCatalog.ForProductionSpec(spec)))
             .ToArray();
 
         foreach (var (spec, descriptor) in designProductionPresentations)
@@ -76,14 +45,15 @@ static partial class Program
                 || descriptor.Icon != spec.Icon
                 || descriptor.Accent != SoftOldCityPalette.FactionColor(spec.Faction)
                 || descriptor.RoleGlyph == IconGlyph.None
-                || descriptor.Category != spec.Production!.Category)
+                || descriptor.Category != spec.Production!.Category
+                || !GameText.HasTranslation(descriptor.TooltipKey, GameLanguage.English)
+                || !GameText.HasTranslation(descriptor.TooltipKey, GameLanguage.ChineseSimplified))
             {
                 throw new InvalidOperationException($"UnitSpec production presentation should project authored output metadata for {spec.Id}");
             }
         }
 
         var requiredGlyphs = playableUnitSpecPresentations.Select(entry => entry.Presentation.Icon)
-            .Concat(factionProductionPresentations.Select(entry => entry.Presentation.Icon))
             .Concat(designProductionPresentations.Select(entry => entry.Presentation.Icon))
             .Concat([IconGlyph.Building, IconGlyph.Group, IconGlyph.Move, IconGlyph.AttackMove, IconGlyph.IgnoreMove, IconGlyph.Cancel, IconGlyph.Credits])
             .Where(glyph => glyph != IconGlyph.None)

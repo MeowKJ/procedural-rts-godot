@@ -258,7 +258,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
     RightCommandDeckQa.AssertSource(root, hudLayer);
     RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.");
-    RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Retired production card requests must pass the same Shift batch count path.");
+    ForbidText(hudLayer, "ProductionRequested?.Invoke(button", "HUD production cards must submit concrete UnitDesign ids only.");
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");
     RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.");
     RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.");

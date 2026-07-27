@@ -156,7 +156,6 @@ public partial class VisualQaCaptureRoot : Node
             hud.SetCommandCardState(
             [
                 new ProductionOptionState(
-                    ProductionKind.InfantrySquad,
                     ProductionCategory.Infantry,
                     BuildingDesignIds.Barracks,
                     "cat.basic",
@@ -219,7 +218,6 @@ public partial class VisualQaCaptureRoot : Node
                 .Where(spec => spec.Production?.Category == ProductionCategory.Infantry)
                 .Take(9)
                 .Select((spec, index) => new ProductionOptionState(
-                    ProductionKind.InfantrySquad,
                     ProductionCategory.Infantry,
                     spec.Production!.ProducerKind,
                     spec.Id,

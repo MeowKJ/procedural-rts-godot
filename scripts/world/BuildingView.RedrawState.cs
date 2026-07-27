@@ -38,7 +38,7 @@ public partial class BuildingView : Node2D
         var bodyFacing = projection.Facing;
         var turretRelativeFacing = Mathf.AngleDifference(bodyFacing, buildingProjection.TurretFacing);
         var theme = VisualThemeProvider?.Invoke();
-        CaptureProductionSignature(out var queueCount, out var firstProductionKind, out var firstProductionProgress);
+        CaptureProductionSignature(out var queueCount, out var firstProductionDesignId, out var firstProductionProgress);
 
         return new BuildingRedrawSignature(
             kind,
@@ -58,7 +58,7 @@ public partial class BuildingView : Node2D
             (int)damageSeverity,
             Quantize(missingHealthFraction, 1000),
             queueCount,
-            firstProductionKind,
+            firstProductionDesignId,
             Quantize(firstProductionProgress, 1000),
             hasRallyPoint,
             Quantize(rallyPulse, 1000),
@@ -72,18 +72,18 @@ public partial class BuildingView : Node2D
             explored);
     }
 
-    private void CaptureProductionSignature(out int queueCount, out int firstKind, out float firstProgress)
+    private void CaptureProductionSignature(out int queueCount, out string firstDesignId, out float firstProgress)
     {
         var projectedQueue = _buildingProjection!.Value.ProductionQueue;
         queueCount = projectedQueue.Count;
         if (queueCount == 0)
         {
-            firstKind = -1;
+            firstDesignId = "";
             firstProgress = 0;
             return;
         }
 
-        firstKind = (int)projectedQueue[0].Kind;
+        firstDesignId = projectedQueue[0].DesignId;
         firstProgress = projectedQueue[0].Progress;
     }
 
@@ -110,7 +110,7 @@ public partial class BuildingView : Node2D
         int DamageSeverity,
         int MissingHealthFraction,
         int ProductionQueueCount,
-        int FirstProductionKind,
+        string FirstProductionDesignId,
         int FirstProductionProgress,
         bool HasRallyPoint,
         int RallyPulse,

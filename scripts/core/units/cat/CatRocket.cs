@@ -18,7 +18,7 @@ public sealed class CatRocket : UnitDesign
     public override CollisionSpec Collision => new(13, 0.72f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.RocketPod, Vector2.Zero, new Vector2(18, 0), 0.82f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.RocketPod, Vector2.Zero, new Vector2(18, 0), 0.82f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Barracks, ProductionCategory.Infantry, 6.4f, 0, "production.lane.infantry", IconGlyph.AttackMove);

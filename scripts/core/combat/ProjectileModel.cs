@@ -9,7 +9,7 @@ public sealed class ProjectileModel
     public required int SourceId { get; init; }
     public required int TargetId { get; init; }
     public required CombatTargetKind TargetKind { get; init; }
-    public required AmmoKind AmmoKind { get; init; }
+    public required string AmmoId { get; init; }
     public required ProjectileBehavior Behavior { get; init; }
     public required HitRule HitRule { get; init; }
     public required Vector2 Position { get; set; }

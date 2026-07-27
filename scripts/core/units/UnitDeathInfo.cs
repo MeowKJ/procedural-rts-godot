@@ -11,5 +11,5 @@ public readonly record struct UnitDeathInfo(
     float Radius,
     UnitWeightClass WeightClass,
     MovementDomain MovementDomain,
-    AmmoKind? KillingAmmoKind,
+    string? KillingAmmoId,
     float OverkillDamage);

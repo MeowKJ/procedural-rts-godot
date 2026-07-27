@@ -15,10 +15,10 @@ internal static class CounterReadabilityAssertions
         var powerPlant = BuildSpecCatalog.For(BuildingDesignIds.PowerPlant);
         var antiAirTurret = BuildSpecCatalog.For(BuildingDesignIds.AntiAirTurret);
 
-        var vectorCannon = WeaponCatalog.Weapons[WeaponKind.VectorCannon];
-        var rocketPod = WeaponCatalog.Weapons[WeaponKind.RocketPod];
-        var skySpear = WeaponCatalog.Weapons[WeaponKind.SkySpear];
-        var needleRifle = WeaponCatalog.Weapons[WeaponKind.NeedleRifle];
+        var vectorCannon = WeaponCatalog.WeaponDefinitions[WeaponIds.VectorCannon];
+        var rocketPod = WeaponCatalog.WeaponDefinitions[WeaponIds.RocketPod];
+        var skySpear = WeaponCatalog.WeaponDefinitions[WeaponIds.SkySpear];
+        var needleRifle = WeaponCatalog.WeaponDefinitions[WeaponIds.NeedleRifle];
 
         Require(catBasic.Stats.WeightClass == UnitWeightClass.Light, "cat.basic must be UnitWeightClass.Light.", failures);
         Require(catBasic.Stats.ArmorTag == ArmorTag.Infantry, "cat.basic must use ArmorTag.Infantry.", failures);
@@ -34,7 +34,7 @@ internal static class CounterReadabilityAssertions
 
         Require(dogTank.Stats.ArmorTag == ArmorTag.Vehicle, "dog.guard_tank must use ArmorTag.Vehicle.", failures);
         Require(dogTank.Movement.Domain == MovementDomain.Land, "dog.guard_tank must stay on MovementDomain.Land.", failures);
-        Require(dogTank.Weapons.Any(mount => mount.WeaponKind == WeaponKind.VectorCannon), "dog.guard_tank must mount VectorCannon.", failures);
+        Require(dogTank.Weapons.Any(mount => mount.WeaponId == WeaponIds.VectorCannon), "dog.guard_tank must mount VectorCannon.", failures);
         Require(CanWeaponTargetUnit(vectorCannon, catTank), "VectorCannon should target vehicle armor.", failures);
         Require(CanWeaponTargetBuilding(vectorCannon, powerPlant), "VectorCannon should target structures.", failures);
         Require(!CanWeaponTargetUnit(vectorCannon, catAircraft), "VectorCannon must not target aircraft.", failures);
@@ -44,7 +44,7 @@ internal static class CounterReadabilityAssertions
             "VectorCannon target priority should read as structure pressure.", failures);
 
         Require(dogRocket.RoleTags.Contains(UnitRoleTag.AntiAir), "dog.rocket should advertise AntiAir.", failures);
-        Require(dogRocket.Weapons.Any(mount => mount.WeaponKind == WeaponKind.RocketPod), "dog.rocket must mount RocketPod.", failures);
+        Require(dogRocket.Weapons.Any(mount => mount.WeaponId == WeaponIds.RocketPod), "dog.rocket must mount RocketPod.", failures);
         Require(CanWeaponTargetUnit(rocketPod, catTank), "RocketPod should target vehicles.", failures);
         Require(CanWeaponTargetUnit(rocketPod, catAircraft), "RocketPod should target aircraft.", failures);
         Require(PriorityFor(rocketPod.TargetProfile.ArmorPriority, ArmorTag.Vehicle) > PriorityFor(rocketPod.TargetProfile.ArmorPriority, ArmorTag.Infantry),
@@ -54,7 +54,7 @@ internal static class CounterReadabilityAssertions
         Require(catAircraft.Stats.ArmorTag == ArmorTag.Aircraft, "cat.scout_aircraft must use ArmorTag.Aircraft.", failures);
         Require(CanWeaponTargetUnit(needleRifle, dogTank), "aircraft NeedleRifle should target ground vehicles.", failures);
 
-        Require(antiAirTurret.WeaponKind == WeaponKind.SkySpear, "AntiAirTurret must mount SkySpear.", failures);
+        Require(antiAirTurret.WeaponId == WeaponIds.SkySpear, "AntiAirTurret must mount SkySpear.", failures);
         Require(antiAirTurret.ToEntitySpec().Kind == EntityKind.Turret, "armed fixed defenses must enter EntityWorld as EntityKind.Turret.", failures);
         Require(CanWeaponTargetUnit(skySpear, catAircraft), "SkySpear should target aircraft.", failures);
         Require(!CanWeaponTargetUnit(skySpear, dogTank), "SkySpear should not target ground tanks.", failures);
@@ -96,7 +96,7 @@ internal static class CounterReadabilityAssertions
 
     private static void CheckCombatChemistryProfiles(List<string> failures)
     {
-        var ammo = WeaponCatalog.Ammo[AmmoKind.NeedleDart];
+        var ammo = WeaponCatalog.AmmoDefinitions[AmmoIds.NeedleDart];
         var shieldedVehicle = TargetTraitProfile.FromRoleTags(new HashSet<UnitRoleTag>
         {
             UnitRoleTag.Vehicle,
@@ -154,9 +154,9 @@ internal static class CounterReadabilityAssertions
             }
         }
 
-        var kineticAmmo = WeaponCatalog.Ammo[AmmoKind.NeedleDart];
-        var explosiveAmmo = WeaponCatalog.Ammo[AmmoKind.SeekerRocket];
-        var energyAmmo = WeaponCatalog.Ammo[AmmoKind.IonBeam];
+        var kineticAmmo = WeaponCatalog.AmmoDefinitions[AmmoIds.NeedleDart];
+        var explosiveAmmo = WeaponCatalog.AmmoDefinitions[AmmoIds.SeekerRocket];
+        var energyAmmo = WeaponCatalog.AmmoDefinitions[AmmoIds.IonBeam];
         var kineticProjectileStyle = ProjectileVfxMath.StyleFor(kineticAmmo);
         var kineticElementStyle = ElementPresentationCatalog.For(DamageElementIds.Kinetic).Projectile;
         var explosiveProjectileStyle = ProjectileVfxMath.StyleFor(explosiveAmmo);

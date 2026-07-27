@@ -6,7 +6,7 @@
 
 - `EntityFrameworkArchitecture.md`：实体框架的长期目标和边界，单位、建筑、炮塔、资源、目标等都应收敛到同一套实体语言。
 - `RTS99Design.md`：99 分 RTS 目标设计，包含命令、移动、战斗、建造、生产、AI、UI 和沙盒方向。
-- `FileStructureGovernance.md`：文件拆分、目录治理、文件大小红线、Bridge/Legacy 删除条件和 ReviewGate 应强制的结构纪律。
+- `FileStructureGovernance.md`：文件拆分、目录治理、文件大小红线、最终职责命名和 ReviewGate 应强制的结构纪律。
 
 ## 专项设计
 
@@ -16,7 +16,6 @@
 
 ## 历史和证据
 
-- `reviews/`：历史审查证据库，不是日常导航入口；新切片证据进入 GitHub issue/PR/CI。
 
 ## 维护规则
 

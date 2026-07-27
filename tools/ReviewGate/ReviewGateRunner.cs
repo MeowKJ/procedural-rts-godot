@@ -8,7 +8,6 @@
             : args[0].Trim().ToLowerInvariant();
         var failOnWarnings = args.Any(arg => arg.Equals("--fail-on-warnings", StringComparison.OrdinalIgnoreCase));
         var maxWarnings = CoreArgumentParsing.ParseMaxWarnings(args);
-        var requiredRecord = CoreArgumentParsing.ParseRequiredRecord(args);
 
         var result = new GateResult();
         if (!ReviewGateRegistry.IsKnownMode(mode, root))
@@ -18,7 +17,7 @@
             return 1;
         }
 
-        ReviewGateRegistry.Run(mode, new ReviewGateContext(root, result, requiredRecord));
+        ReviewGateRegistry.Run(mode, new ReviewGateContext(root, result));
         result.Print();
 
         if (maxWarnings is not null && result.Warnings.Count > maxWarnings)
@@ -30,4 +29,3 @@
         return result.Errors.Count > 0 || (failOnWarnings && result.Warnings.Count > 0) ? 1 : 0;
     }
 }
-

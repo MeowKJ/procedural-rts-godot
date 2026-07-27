@@ -113,17 +113,17 @@ static class UnitBattlefieldAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<int> _productionActiveProducerIds", "Production sync must reuse active producer storage.", result);
         RequireText(battlefield, "HashSet<int> _productionKnownEntityIds", "Production sync must reuse known entity id storage.", result);
-        RequireText(battlefield, "List<UnitBattlefieldProductionQueueSnapshot> _productionQueuedBefore", "Production sync must reuse queued-before snapshots.", result);
+        RequireText(battlefield, "List<ProductionCompletionCandidate> _productionCompletionCandidates", "Production sync must reuse completion candidate storage.", result);
         RequireText(battlefield, "List<EntityInstance> _productionNewUnitEntities", "Production sync must reuse new unit entity storage.", result);
 
         var production = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionSync.cs");
         RequireText(production, "CollectActiveProducerIds(_productionActiveProducerIds)", "Production sync must fill the reusable active producer buffer.", result);
         RequireText(production, "CollectKnownProductionEntityIds(_productionKnownEntityIds)", "Production sync must fill the reusable known entity set.", result);
-        RequireText(production, "CollectQueuedProductionSnapshots(_productionActiveProducerIds, _productionQueuedBefore)", "Production sync must fill queued snapshots explicitly.", result);
+        RequireText(production, "CollectProductionCompletionCandidates(_productionActiveProducerIds, _productionCompletionCandidates)", "Production sync must fill completion candidates explicitly.", result);
         RequireText(production, "CollectNewProductionUnitEntities(_productionKnownEntityIds, _productionNewUnitEntities)", "Production sync must fill new-unit storage explicitly.", result);
         ForbidText(production, ".ToList()", "Production sync must not allocate materialized LINQ lists.", result);
         ForbidText(production, ".ToHashSet()", "Production sync must not allocate known-entity sets.", result);
-        ForbidText(production, "new\n            {", "Production sync must not use anonymous queued-before snapshots.", result);
+        ForbidText(production, "new\n            {", "Production sync must not use anonymous completion candidates.", result);
         ForbidText(production, ".OrderBy(entry => entry.Snapshot.Position", "Production completion matching must not allocate ordered LINQ snapshots.", result);
     }
 
@@ -131,14 +131,14 @@ static class UnitBattlefieldAllocationReviewGate
     {
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(battlefield, "List<int> _constructionSubjectBuildingIds", "Construction command bridge must reuse subject building-id storage.", result);
-        RequireText(battlefield, "List<EntityId> _constructionSubjectEntityBuffer", "Construction command bridge must reuse subject entity-id storage.", result);
+        RequireText(battlefield, "List<int> _constructionSubjectBuildingIds", "Construction command routing must reuse subject building-id storage.", result);
+        RequireText(battlefield, "List<EntityId> _constructionSubjectEntityBuffer", "Construction command routing must reuse subject entity-id storage.", result);
 
-        var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
-        RequireText(commandBridge, "CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer)", "Construction commands must fill reusable subject buffers.", result);
-        RequireText(commandBridge, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
-        ForbidText(commandBridge, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject bridge must not allocate snapshot LINQ chains.", result);
-        ForbidText(commandBridge, ".OrderBy(building => building.Id)\n            .Select(building =>", "Construction subject bridge must not allocate ordered subject LINQ chains.", result);
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
+        RequireText(commandRouting, "CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer)", "Construction commands must fill reusable subject buffers.", result);
+        RequireText(commandRouting, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
+        ForbidText(commandRouting, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject routing must not allocate snapshot LINQ chains.", result);
+        ForbidText(commandRouting, ".OrderBy(building => building.Id)\n            .Select(building =>", "Construction subject routing must not allocate ordered subject LINQ chains.", result);
     }
 
     private static void RequireSelectedBuildingRallyBuffers(string root, GateResult result)

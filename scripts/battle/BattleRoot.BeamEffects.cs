@@ -8,12 +8,12 @@ public partial class BattleRoot
     private void AddBeamIfNeeded(
         Vector2 start,
         Vector2 end,
-        AmmoKind? ammoKind,
+        string? ammoId,
         UnitFactionId sourceFaction,
         PlayerSlotId sourcePlayerSlot)
     {
-        if (ammoKind is not { } kind
-            || !WeaponCatalog.Ammo.TryGetValue(kind, out var ammo)
+        if (ammoId is not { } kind
+            || !WeaponCatalog.AmmoDefinitions.TryGetValue(kind, out var ammo)
             || ammo.Behavior != ProjectileBehavior.Beam)
         {
             return;
@@ -29,19 +29,19 @@ public partial class BattleRoot
                 0.44f));
     }
 
-    private static AmmoKind? AmmoKindForPrimaryWeapon(UnitInstance attacker)
+    private static string? AmmoIdForPrimaryWeapon(UnitInstance attacker)
     {
         if (attacker.Spec.Weapons.Count == 0)
         {
             return null;
         }
 
-        return WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind].AmmoKind;
+        return WeaponCatalog.WeaponDefinitions[attacker.Spec.PrimaryWeapon.WeaponId].AmmoId;
     }
 
-    private static string? DamageElementIdForAmmoKind(AmmoKind? ammoKind)
+    private static string? DamageElementIdForAmmoId(string? ammoId)
     {
-        return ElementPresentationCatalog.DamageElementIdFor(ammoKind);
+        return ElementPresentationCatalog.DamageElementIdFor(ammoId);
     }
 
     private static float DamageForPrimaryWeapon(UnitInstance attacker, BuildSpec targetSpec)
@@ -51,8 +51,8 @@ public partial class BattleRoot
             return 0;
         }
 
-        var weapon = WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind];
-        var ammo = WeaponCatalog.Ammo[weapon.AmmoKind];
+        var weapon = WeaponCatalog.WeaponDefinitions[attacker.Spec.PrimaryWeapon.WeaponId];
+        var ammo = WeaponCatalog.AmmoDefinitions[weapon.AmmoId];
         return DamageResolver.Resolve(
             ammo,
             UnitWeightClass.Heavy,

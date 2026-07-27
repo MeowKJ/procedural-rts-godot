@@ -137,7 +137,7 @@ public sealed partial class UnitBattlefield
                 unit.Spec.Collision.Radius,
                 unit.Spec.Stats.WeightClass,
                 unit.Spec.Movement.Domain,
-                unit.LastDamageAmmoKind,
+                unit.LastDamageAmmoId,
                 unit.DeathOverkillDamage));
             _removedUnitIdBuffer.Add(unit.Id);
         }

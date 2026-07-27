@@ -7,29 +7,29 @@ static class UnitSpecAbilityAllocationReviewGate
         RequireText(unitSpec, "public bool TryGetAbility(AbilityKind kind, out AbilitySpec ability)", "UnitSpec ability lookup must expose an explicit no-LINQ scan.", result);
         var battleRootSelection = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Selection.cs");
         var selectionController = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Utilities.cs");
-        var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
         var syncRuntime = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SyncRuntime.cs");
-        var entityBridge = ReviewGateSource.Read(root, "scripts", "core", "entities", "UnitSpecEntityBridge.cs");
+        var entityFactory = ReviewGateSource.Read(root, "scripts", "core", "entities", "UnitEntityFactory.cs");
         var runtimeSources = battleRootSelection
             + selectionController
-            + commandBridge
+            + commandRouting
             + syncRuntime
-            + entityBridge;
+            + entityFactory;
 
         RequireText(runtimeSources, "spec.HasAbility(AbilityKind.Harvest)", "Runtime and controller harvester checks must use UnitSpec.HasAbility.", result);
-        RequireText(commandBridge, "unit.Spec.HasAbility(AbilityKind.RepairField)", "UnitBattlefield repair checks must use UnitSpec.HasAbility.", result);
-        RequireText(entityBridge, "unitSpec.TryGetAbility(AbilityKind.Build, out var build)", "Entity bridge build-radius lookup must use UnitSpec.TryGetAbility.", result);
-        RequireText(entityBridge, "ActiveAbilityCount(unitSpec)", "Entity bridge active ability runtime state must avoid LINQ ability projections.", result);
-        RequireText(entityBridge, "CreateWeaponMountStates(unitSpec, facing)", "Entity bridge weapon mount snapshots must use an explicit array-copy helper.", result);
-        RequireText(entityBridge, "CreateTags(unitSpec)", "Entity bridge tag snapshots must use an explicit HashSet fill helper.", result);
-        RequireText(entityBridge, "foreach (var tag in unitSpec.RoleTags)", "Entity bridge tag snapshots must scan role tags explicitly.", result);
+        RequireText(commandRouting, "unit.Spec.HasAbility(AbilityKind.RepairField)", "UnitBattlefield repair checks must use UnitSpec.HasAbility.", result);
+        RequireText(entityFactory, "unitSpec.TryGetAbility(AbilityKind.Build, out var build)", "Entity routing build-radius lookup must use UnitSpec.TryGetAbility.", result);
+        RequireText(entityFactory, "ActiveAbilityCount(unitSpec)", "Entity routing active ability runtime state must avoid LINQ ability projections.", result);
+        RequireText(entityFactory, "CreateWeaponMountStates(unitSpec, facing)", "Entity routing weapon mount snapshots must use an explicit array-copy helper.", result);
+        RequireText(entityFactory, "CreateTags(unitSpec)", "Entity routing tag snapshots must use an explicit HashSet fill helper.", result);
+        RequireText(entityFactory, "foreach (var tag in unitSpec.RoleTags)", "Entity routing tag snapshots must scan role tags explicitly.", result);
 
         ForbidText(runtimeSources, "Abilities.Any(", "Runtime/controller UnitSpec ability-kind checks must not allocate LINQ Any predicates.", result);
-        ForbidText(entityBridge, "Abilities.FirstOrDefault(", "Entity bridge build ability lookup must not allocate LINQ FirstOrDefault predicates.", result);
-        ForbidText(entityBridge, ".Where(ability => ability.Kind is not AbilityKind.Harvest and not AbilityKind.Build)", "Entity bridge active ability projection must not allocate LINQ filters.", result);
-        ForbidText(entityBridge, ".Select(mount => new WeaponMountRuntimeState", "Entity bridge weapon mount snapshots must not allocate LINQ projection iterators.", result);
-        ForbidText(entityBridge, ".Select(tag => tag.ToString())", "Entity bridge tag snapshots must not allocate LINQ projection iterators.", result);
-        ForbidText(entityBridge, ".Append(unitSpec.Archetype.ToString())", "Entity bridge tag snapshots must not allocate LINQ append iterators.", result);
-        ForbidText(entityBridge, ".ToHashSet()", "Entity bridge tag snapshots must not materialize LINQ hash sets.", result);
+        ForbidText(entityFactory, "Abilities.FirstOrDefault(", "Entity routing build ability lookup must not allocate LINQ FirstOrDefault predicates.", result);
+        ForbidText(entityFactory, ".Where(ability => ability.Kind is not AbilityKind.Harvest and not AbilityKind.Build)", "Entity routing active ability projection must not allocate LINQ filters.", result);
+        ForbidText(entityFactory, ".Select(mount => new WeaponMountRuntimeState", "Entity routing weapon mount snapshots must not allocate LINQ projection iterators.", result);
+        ForbidText(entityFactory, ".Select(tag => tag.ToString())", "Entity routing tag snapshots must not allocate LINQ projection iterators.", result);
+        ForbidText(entityFactory, ".Append(unitSpec.Archetype.ToString())", "Entity routing tag snapshots must not allocate LINQ append iterators.", result);
+        ForbidText(entityFactory, ".ToHashSet()", "Entity routing tag snapshots must not materialize LINQ hash sets.", result);
     }
 }

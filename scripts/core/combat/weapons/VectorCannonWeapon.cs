@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class VectorCannonWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.VectorCannon;
+    public override string Id => WeaponIds.VectorCannon;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Vector Cannon",
-            AmmoKind.BallisticCannon,
+            AmmoIds.BallisticCannon,
             WeaponMountKind.MobileTurret,
             310,
             1.05f,

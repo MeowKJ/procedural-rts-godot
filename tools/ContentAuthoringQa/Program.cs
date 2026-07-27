@@ -66,8 +66,8 @@ static void ValidateWeaponAndAmmoCatalogs(List<string> failures)
 {
     Require(WeaponCatalog.WeaponDefinitions.Count == ConcreteTypes<WeaponDesign>().Count, "WeaponCatalog must discover every concrete WeaponDesign.", failures);
     Require(WeaponCatalog.AmmoDefinitions.Count == ConcreteTypes<AmmoDesign>().Count, "WeaponCatalog must discover every concrete AmmoDesign.", failures);
-    Require(Enum.GetValues<WeaponKind>().All(WeaponCatalog.Weapons.ContainsKey), "Every WeaponKind must have a discovered WeaponDesign.", failures);
-    Require(Enum.GetValues<AmmoKind>().All(WeaponCatalog.Ammo.ContainsKey), "Every AmmoKind must have a discovered AmmoDesign.", failures);
+    Require(WeaponIds.All.All(WeaponCatalog.WeaponDefinitions.ContainsKey), "Every built-in weapon id must have a discovered WeaponDesign.", failures);
+    Require(AmmoIds.All.All(WeaponCatalog.AmmoDefinitions.ContainsKey), "Every built-in ammo id must have a discovered AmmoDesign.", failures);
 
     foreach (var weapon in WeaponCatalog.WeaponDefinitions.Values)
     {
@@ -93,11 +93,11 @@ static void ValidateAmmoElementMapping(List<string> failures)
 {
     var expected = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [WeaponCatalog.IdFor(AmmoKind.NeedleDart)] = DamageElementIds.Kinetic,
-        [WeaponCatalog.IdFor(AmmoKind.BallisticCannon)] = DamageElementIds.Explosive,
-        [WeaponCatalog.IdFor(AmmoKind.SeekerRocket)] = DamageElementIds.Explosive,
-        [WeaponCatalog.IdFor(AmmoKind.IonBeam)] = DamageElementIds.Energy,
-        [WeaponCatalog.IdFor(AmmoKind.ElectromagneticLance)] = DamageElementIds.Energy,
+        [AmmoIds.NeedleDart] = DamageElementIds.Kinetic,
+        [AmmoIds.BallisticCannon] = DamageElementIds.Explosive,
+        [AmmoIds.SeekerRocket] = DamageElementIds.Explosive,
+        [AmmoIds.IonBeam] = DamageElementIds.Energy,
+        [AmmoIds.ElectromagneticLance] = DamageElementIds.Energy,
     };
 
     foreach (var pair in expected)
@@ -231,7 +231,7 @@ static void ValidateBuildingCatalog(List<string> failures)
     foreach (var spec in BuildSpecCatalog.Definitions.Values)
     {
         var entitySpec = spec.ToEntitySpec();
-        var expectedKind = spec.WeaponKind is null ? EntityKind.Building : EntityKind.Turret;
+        var expectedKind = spec.WeaponId is null ? EntityKind.Building : EntityKind.Turret;
         Require(entitySpec.Id == spec.EntitySpecId && entitySpec.Kind == expectedKind, $"{spec.Kind} must project to the expected EntityKind.", failures);
         Require(entitySpec.Display.NameKey == spec.NameKey, $"{spec.Kind} must carry its BuildSpec NameKey into EntitySpec display.", failures);
         Require(entitySpec.Display.RoleKey == spec.RoleKey, $"{spec.Kind} must carry its BuildSpec RoleKey into EntitySpec display.", failures);
@@ -248,10 +248,10 @@ static void ValidateBuildingCatalog(List<string> failures)
             Require(BuildSpecCatalog.Definitions.ContainsKey(required), $"{spec.Kind} requires missing building {required}.", failures);
         }
 
-        if (spec.WeaponKind is { } weaponKind)
+        if (spec.WeaponId is { } weaponId)
         {
-            Require(WeaponCatalog.Weapons.ContainsKey(weaponKind), $"{spec.Kind} references missing weapon {weaponKind}.", failures);
-            Require(entitySpec.Kind == EntityKind.Turret, $"{spec.Kind} with weapon {weaponKind} must project as a turret EntitySpec.", failures);
+            Require(WeaponCatalog.WeaponDefinitions.ContainsKey(weaponId), $"{spec.Kind} references missing weapon {weaponId}.", failures);
+            Require(entitySpec.Kind == EntityKind.Turret, $"{spec.Kind} with weapon {weaponId} must project as a turret EntitySpec.", failures);
             Require(entitySpec.Weapons.Count > 0, $"{spec.Kind} turret EntitySpec must expose weapon mount data.", failures);
             Require(entitySpec.UnitArt is null, $"{spec.Kind} turret-backed building must not require a UnitArt recipe.", failures);
         }
@@ -313,8 +313,8 @@ static void ValidateThrowawayAuthoringPath(List<string> failures)
 
     var unitSpec = toolUnits["qa.throwaway.probe_unit"].ToSpec();
     var buildSpec = toolBuildings["qa.throwaway.probe_building"];
-    Require(unitSpec.ToEntitySpec().Kind == EntityKind.Unit, "Throwaway UnitDesign must project through the generic UnitSpec bridge.", failures);
-    Require(buildSpec.ToEntitySpec().Kind == EntityKind.Building, "Throwaway BuildingDesign must project through the generic BuildSpec bridge.", failures);
+    Require(unitSpec.ToEntitySpec().Kind == EntityKind.Unit, "Throwaway UnitDesign must project through the generic UnitSpec routing.", failures);
+    Require(buildSpec.ToEntitySpec().Kind == EntityKind.Building, "Throwaway BuildingDesign must project through the generic BuildSpec routing.", failures);
     Require(unitSpec.PrimaryWeapon.WeaponId == ThrowawayProbeWeaponDesign.WeaponId, "Throwaway UnitDesign must mount the tool-local string weapon id.", failures);
 
     var combatWorld = new EntityWorld(seed: 606) { WorldWidth = 800, WorldHeight = 500 };

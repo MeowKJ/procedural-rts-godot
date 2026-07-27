@@ -18,7 +18,7 @@ public sealed class DogShieldTank : UnitDesign
     public override CollisionSpec Collision => new(27, 1.55f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Omni("main", WeaponKind.ElectromagneticEmitter, Vector2.Zero, true),
+        WeaponMountSpec.Omni("main", WeaponIds.ElectromagneticEmitter, Vector2.Zero, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.ShieldField, Radius: 150, Value: 0.55f)];

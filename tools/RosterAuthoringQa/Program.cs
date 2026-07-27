@@ -245,9 +245,9 @@ static void ValidateSpec(UnitFactionId faction, UnitSpec spec, List<string> fail
 
     foreach (var mount in spec.Weapons)
     {
-        if (!WeaponCatalog.Weapons.ContainsKey(mount.WeaponKind))
+        if (!WeaponCatalog.WeaponDefinitions.ContainsKey(mount.WeaponId))
         {
-            failures.Add($"{spec.Id} weapon mount '{mount.MountId}' references missing weapon {mount.WeaponKind}.");
+            failures.Add($"{spec.Id} weapon mount '{mount.MountId}' references missing weapon {mount.WeaponId}.");
         }
     }
 
@@ -273,7 +273,7 @@ static void ValidateGlobalCounterHooks(IReadOnlyList<UnitSpec> specs, List<strin
 static bool CanAnyWeaponTargetAir(UnitSpec spec)
 {
     return spec.Weapons
-        .Select(mount => WeaponCatalog.Weapons.TryGetValue(mount.WeaponKind, out var weapon) ? weapon : null)
+        .Select(mount => WeaponCatalog.WeaponDefinitions.TryGetValue(mount.WeaponId, out var weapon) ? weapon : null)
         .Any(weapon => weapon is not null
             && weapon.TargetProfile.AllowedDomains.Contains(MovementDomain.Air)
             && weapon.TargetProfile.AllowedArmorTags.Contains(ArmorTag.Aircraft));

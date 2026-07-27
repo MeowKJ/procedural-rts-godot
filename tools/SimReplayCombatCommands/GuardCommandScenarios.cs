@@ -27,7 +27,7 @@ static partial class Program
                 Collision = new CollisionSpec(Radius: 11, Mass: 1, PushPriority: 1),
                 Weapons =
                 [
-                    WeaponMountSpec.Independent("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(12, 0), MathF.Tau, 8, fireWhileMoving: true),
+                    WeaponMountSpec.Independent("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(12, 0), MathF.Tau, 8, fireWhileMoving: true),
                 ],
                 Abilities =
                 [
@@ -60,7 +60,7 @@ static partial class Program
                 Weapons = armed
                     ?
                     [
-                        WeaponMountSpec.Independent("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(12, 0), MathF.Tau, 8, fireWhileMoving: true),
+                        WeaponMountSpec.Independent("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(12, 0), MathF.Tau, 8, fireWhileMoving: true),
                     ]
                     : [],
             };
@@ -97,7 +97,7 @@ static partial class Program
                 new VisionComponentState(260),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }),
             });
             world.Spawn(GuardUnitSpec("replay.guard_area_unit", "Area Guard"), owner, EntityTransform.At(new Vector2(240, 650)), GuardComponents(new Vector2(240, 650)));
@@ -144,7 +144,7 @@ static partial class Program
                 new ResourceCargoComponentState(Cargo: 0, Capacity: 40),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }),
             ];
         }

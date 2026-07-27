@@ -17,7 +17,7 @@ static partial class Program
                 e.Components.Set(new StanceComponentState(UnitStance.Aggressive));
                 e.Components.Set(new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }));
             }
 
@@ -63,7 +63,7 @@ static partial class Program
         }
 
         var attackers = EntityProjector.Project(ga).Where(p => p.Kind == EntityKind.Unit && p.Owner.Value == 1).ToList();
-        var rifleRange = WeaponCatalog.Weapons[WeaponKind.NeedleRifle].Range;
+        var rifleRange = WeaponCatalog.WeaponDefinitions[WeaponIds.NeedleRifle].Range;
         var tooClose = attackers.Count(p => p.Position.DistanceTo(GroupTarget) < 48f);
         var inBand = attackers.Count(p => p.Position.DistanceTo(GroupTarget) <= rifleRange + 64f);
 

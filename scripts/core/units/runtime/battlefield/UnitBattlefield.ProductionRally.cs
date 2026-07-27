@@ -146,65 +146,6 @@ public sealed partial class UnitBattlefield
         return true;
     }
 
-    public bool EnqueueProduction(ProductionKind productionKind, PlayerSlotId playerSlotId, out string status)
-    {
-        return CommandEnqueueProduction(productionKind, playerSlotId, out status);
-    }
-
-    public bool CommandEnqueueProduction(ProductionKind productionKind, PlayerSlotId playerSlotId, out string status)
-    {
-        CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds);
-        var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
-        var designId = producerId is null ? FirstDesignIdFor(productionKind, playerSlotId) : ProductionDesignIdCore(producerId.Value, productionKind);
-        var spec = designId is null ? null : UnitDesignCatalog.Spec(designId);
-        if (producerId is null || spec is null)
-        {
-            status = GameText.Format("production.needProducer", ProducerLabelFor(spec), ProductionLabel(productionKind, spec));
-            return false;
-        }
-
-        var cost = spec.Stats.Cost;
-        var inventory = ResourceInventory(playerSlotId);
-        if (inventory.Credits < cost)
-        {
-            status = GameText.Format("production.needCredits", cost, spec.Label, inventory.Credits);
-            return false;
-        }
-
-        if (!SyncBuildingTargetEntity(producerId.Value))
-        {
-            status = GameText.Format("production.needProducer", ProducerLabelFor(spec), ProductionLabel(productionKind, spec));
-            return false;
-        }
-
-        var queueBefore = BuildingProductionQueue(producerId.Value).Count;
-        SubmitProductionCommand(new ProduceEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            [_buildingTargetEntityIds[producerId.Value]],
-            NextInputCommandTick(),
-            spec.Id));
-        SyncCreditsFromEntityWorld(playerSlotId);
-        var queueAfter = BuildingProductionQueue(producerId.Value);
-        if (queueAfter.Count <= queueBefore)
-        {
-            status = GameText.Format("production.needCredits", cost, spec.Label, Credits(playerSlotId));
-            return false;
-        }
-
-        var producerSnapshot = BuildingSnapshot(producerId.Value);
-        if (producerSnapshot is null)
-        {
-            status = GameText.Format("production.needProducer", ProducerLabelFor(spec), ProductionLabel(productionKind, spec));
-            return false;
-        }
-
-        var item = queueAfter[^1];
-        ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
-        ProductionQueued?.Invoke(producerSnapshot.Value, item);
-        status = GameText.Format("production.queued", spec.Label, BuildSpecCatalog.For(producerSnapshot.Value.Kind).Label, cost, Credits(playerSlotId));
-        return true;
-    }
-
     public bool EnqueueProductionDesign(string designId, PlayerSlotId playerSlotId, out string status)
     {
         return CommandEnqueueProductionDesign(designId, playerSlotId, out status);

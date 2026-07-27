@@ -15,25 +15,25 @@ public static class ProjectileVfxMath
 
     public static ProjectileVfxStyle StyleFor(AmmoDefinition ammo)
     {
-        return StyleFor(ammo.KindAlias, ammo.DamageElementId) with
+        return StyleFor(ammo.Id, ammo.DamageElementId) with
         {
             MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammo.Behavior),
         };
     }
 
-    public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind)
+    public static ProjectileVfxStyle StyleFor(string? ammoId)
     {
-        return StyleFor(ammoKind, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+        return StyleFor(ammoId, ElementPresentationCatalog.DamageElementIdFor(ammoId));
     }
 
-    public static ProjectileVfxStyle StyleFor(AmmoKind? ammoKind, string? damageElementId)
+    public static ProjectileVfxStyle StyleFor(string? ammoId, string? damageElementId)
     {
         var style = ElementPresentationCatalog.TryFor(damageElementId, out var element)
             ? element.Projectile
-            : StyleForKind(ammoKind);
+            : StyleForKind(ammoId);
         return style with
         {
-            MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammoKind),
+            MinimumVisibleSeconds = MinimumVisibleSecondsFor(ammoId),
         };
     }
 
@@ -48,22 +48,22 @@ public static class ProjectileVfxMath
         };
     }
 
-    private static float MinimumVisibleSecondsFor(AmmoKind? ammoKind)
+    private static float MinimumVisibleSecondsFor(string? ammoId)
     {
-        return ammoKind switch
+        return ammoId switch
         {
-            AmmoKind.BallisticCannon => 0.16f,
-            AmmoKind.SeekerRocket => 0.12f,
-            AmmoKind.NeedleDart => MinimumVisibleSeconds,
+            AmmoIds.BallisticCannon => 0.16f,
+            AmmoIds.SeekerRocket => 0.12f,
+            AmmoIds.NeedleDart => MinimumVisibleSeconds,
             _ => MinimumVisibleSeconds,
         };
     }
 
-    private static ProjectileVfxStyle StyleForKind(AmmoKind? ammoKind)
+    private static ProjectileVfxStyle StyleForKind(string? ammoId)
     {
-        return ammoKind switch
+        return ammoId switch
         {
-            AmmoKind.NeedleDart => new ProjectileVfxStyle(
+            AmmoIds.NeedleDart => new ProjectileVfxStyle(
                 28f,
                 MinimumTrailWidth,
                 MinimumCoreWidth,
@@ -74,7 +74,7 @@ public static class ProjectileVfxMath
                 CullingPadding,
                 new Color("#d8fff7", 0.22f),
                 MinimumVisibleSeconds),
-            AmmoKind.SeekerRocket => new ProjectileVfxStyle(
+            AmmoIds.SeekerRocket => new ProjectileVfxStyle(
                 34f,
                 7.6f,
                 2.6f,

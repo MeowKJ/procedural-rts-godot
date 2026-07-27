@@ -88,9 +88,9 @@ static class CombatChemistryReviewGate
         ReviewGateSource.RequireAnyText(root, result, "Counter rule probe", "tools/BalanceReport");
         ReviewGateSource.RequireAnyText(root, result, "Element defense probe", "tools/BalanceReport");
         ReviewGateSource.RequireAnyText(root, result, "CheckElementPresentationStyles", "tools/CounterReadabilityQa");
-        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Projectile VFX must prefer element style while preserving AmmoKind fallback.", result);
-        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ImpactVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Impact VFX must prefer element style while preserving AmmoKind fallback.", result);
-        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "DeathVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Death VFX must prefer element style while preserving AmmoKind fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ProjectileVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Projectile VFX must prefer element style while preserving string fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "ImpactVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Impact VFX must prefer element style while preserving string fallback.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "presentation", "vfx", "DeathVfxMath.cs"), "ElementPresentationCatalog.DamageElementIdFor", "Death VFX must prefer element style while preserving string fallback.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "sim", "ProjectilePresentationProjection.cs"), "ProjectileVfxMath.StyleFor(ammo)", "ECS projectile projections must use ammo element presentation style.", result);
         ReviewGateSource.ForbidTextInSources(root, result, "DamageResolver", "scripts/core/presentation/ui", "scripts/core/presentation/vfx");
         ReviewGateSource.ForbidTextInSources(root, result, "ElementReactionResolver", "scripts/core/presentation/ui", "scripts/core/presentation/vfx");

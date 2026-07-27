@@ -61,7 +61,7 @@ public static class MapLoader
                     runtimeId,
                     building.Kind,
                     building.OwnerId.ToPlayerSlot(),
-                    ProductionKindDesignBridge.UnitFactionFor(building.Faction),
+                    FactionCatalog.UnitFactionFor(building.Faction),
                     building.Position.ToVector2(),
                     building.Facing,
                     building.Hp ?? buildSpec.MaxHp),

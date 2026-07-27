@@ -5,7 +5,8 @@ namespace ProceduralRts.Controllers;
 
 public partial class ProductionController : Node
 {
-    public Action<ProductionKind, int>? ProductionRequested { get; init; }
+    public required UnitFactionId LocalFaction { get; init; }
+    public Action<string, int>? ProductionDesignRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
     public Action<string>? StatusChanged { get; init; }
     public Action<string>? ProductionStatusChanged { get; init; }
@@ -24,20 +25,21 @@ public partial class ProductionController : Node
             return;
         }
 
-        ProductionKind? productionKind = key.Keycode switch
+        ProductionCategory? category = key.Keycode switch
         {
-            Key.Q => ProductionKind.InfantrySquad,
-            Key.E => ProductionKind.LightTank,
-            Key.T => ProductionKind.Harvester,
+            Key.Q => ProductionCategory.Infantry,
+            Key.E => ProductionCategory.Vehicle,
+            Key.T => ProductionCategory.Economy,
             _ => null,
         };
 
-        if (productionKind is null)
+        if (category is null
+            || UnitDesignFactionRosterCatalog.PreferredProductionDesignId(LocalFaction, category.Value) is not { } designId)
         {
             return;
         }
 
-        ProductionRequested?.Invoke(productionKind.Value, key.ShiftPressed ? BattleRoot.ShiftProductionBatchCount : 1);
+        ProductionDesignRequested?.Invoke(designId, key.ShiftPressed ? BattleRoot.ShiftProductionBatchCount : 1);
         GetViewport().SetInputAsHandled();
     }
 }

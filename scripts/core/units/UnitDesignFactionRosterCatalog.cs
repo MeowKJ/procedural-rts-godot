@@ -78,14 +78,15 @@ public static class UnitDesignFactionRosterCatalog
         return best?.Id;
     }
 
-    public static string? ProductionDesignId(UnitFactionId faction, ProductionKind productionKind)
+    public static string? PreferredProductionDesignId(UnitFactionId faction, ProductionCategory category)
     {
-        var archetype = PreferredArchetype(productionKind);
+        var archetype = PreferredArchetype(category);
         UnitSpec? best = null;
         foreach (var designId in For(faction).PlayableDesignIds)
         {
             var spec = UnitDesignCatalog.Spec(designId);
-            if (spec.Archetype == archetype
+            if (spec.Production?.Category == category
+                && (archetype is null || spec.Archetype == archetype)
                 && spec.Production is not null
                 && IsBetterProductionOption(spec, best, 0, 0))
             {
@@ -138,17 +139,6 @@ public static class UnitDesignFactionRosterCatalog
             ProductionCategory.Vehicle => UnitArchetype.GuardTank,
             ProductionCategory.Economy => UnitArchetype.Harvester,
             _ => null,
-        };
-    }
-
-    private static UnitArchetype PreferredArchetype(ProductionKind productionKind)
-    {
-        return productionKind switch
-        {
-            ProductionKind.InfantrySquad => UnitArchetype.Infantry,
-            ProductionKind.LightTank => UnitArchetype.GuardTank,
-            ProductionKind.Harvester => UnitArchetype.Harvester,
-            _ => throw new ArgumentOutOfRangeException(nameof(productionKind), productionKind, null),
         };
     }
 

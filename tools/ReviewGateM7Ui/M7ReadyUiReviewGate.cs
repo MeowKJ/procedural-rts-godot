@@ -18,7 +18,7 @@ static class M7ReadyUiReviewGate
         RequireText(theme, "PanelBorderStrong: new Color(SoftOldCityPalette.NightRadar", "NightRadar must use its radar border accent.", result);
         RequireText(theme, "Text: new Color(SoftOldCityPalette.NightRadarSoft", "NightRadar must use its soft radar text.", result);
         RequireText(theme, "WorldVisualTheme.NightRadar => NightRadar", "NightRadar must map to its dedicated HUD palette.", result);
-        ForbidText(theme, "WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk", "NightRadar must not alias DuskDefense.", result);
+        ForbidText(theme, "WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk", "NightRadar must not reuse DuskDefense styling.", result);
 
         RequireText(abilityCards, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states, int sourceUnitCount)", "Ability cards must accept selected source counts.", result);
         RequireText(abilityCards, "AbilityCatalogSourceContextText", "Ability catalog must expose selected source context.", result);

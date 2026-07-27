@@ -7,7 +7,6 @@ public partial class HudLayer : CanvasLayer
 {
     private const int ShiftProductionBatchCount = 5;
 
-    public Action<ProductionKind, int>? ProductionRequested { get; init; }
     public Action<string, Func<int?>, int>? ProductionDesignRequested { get; init; }
     public Action<string, int>? ProductionRepeatRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }

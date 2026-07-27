@@ -18,7 +18,7 @@ public sealed class CatCrescentArtillery : UnitDesign
     public override CollisionSpec Collision => new(25, 1.7f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.RocketPod, Vector2.Zero, new Vector2(31, 0), 0.36f, 5.8f, false),
+        WeaponMountSpec.Independent("main", WeaponIds.RocketPod, Vector2.Zero, new Vector2(31, 0), 0.36f, 5.8f, false),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Deploy, Radius: 0.55f, Value: 1.45f)];

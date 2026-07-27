@@ -17,7 +17,7 @@ static class ReviewGateDomainRunner
                 FileSizeGate.Check(context.Root, context.Result);
                 return;
             case "review":
-                CheckReviewTemplate(context.Root, context.Result, context.RequiredRecord);
+                CheckReviewTemplate(context.Root, context.Result);
                 return;
         }
 
@@ -28,7 +28,7 @@ static class ReviewGateDomainRunner
     {
         CheckBacklogProtocol(context.Root, context.Result);
         FileSizeGate.Check(context.Root, context.Result);
-        CheckReviewTemplate(context.Root, context.Result, context.RequiredRecord);
+        CheckReviewTemplate(context.Root, context.Result);
         ArchitectureReviewGate.Check(context.Root, context.Result);
         ContentAuthoringReviewGate.Check(context.Root, context.Result);
         PresentationReviewGate.Check(context.Root, context.Result);

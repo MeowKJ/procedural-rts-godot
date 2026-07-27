@@ -4,12 +4,12 @@ namespace ProceduralRts.Core;
 
 public sealed class ElectromagneticLanceAmmo : AmmoDesign
 {
-    public override AmmoKind Kind => AmmoKind.ElectromagneticLance;
+    public override string Id => AmmoIds.ElectromagneticLance;
 
     public override AmmoDefinition ToDefinition()
     {
         return new AmmoDefinition(
-            Kind,
+            Id,
             "Electromagnetic Lance",
             ProjectileBehavior.Beam,
             HitRule.Guaranteed,

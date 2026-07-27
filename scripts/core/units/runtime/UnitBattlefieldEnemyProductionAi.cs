@@ -18,7 +18,6 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
     private readonly List<UnitInstance> _idleHarvesterBuffer = [];
     private readonly List<int> _idleHarvesterIds = [];
     private float _decisionTimer;
-    private bool _preferTank = true;
     private int _mixCursor;
 
     public int SuccessfulOrders { get; private set; }
@@ -73,18 +72,6 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             return;
         }
 
-        var nextKind = ChooseNextProduction(battlefield, enemyPlayerSlotId);
-        if (nextKind is null)
-        {
-            LastStatus = "Enemy production waiting for producer or credits";
-            return;
-        }
-
-        if (battlefield.CommandEnqueueProduction(nextKind.Value, enemyPlayerSlotId, out var status))
-        {
-            SuccessfulOrders++;
-        }
-
-        LastStatus = status;
+        LastStatus = "Enemy production waiting for producer or credits";
     }
 }

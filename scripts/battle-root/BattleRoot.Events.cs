@@ -45,7 +45,7 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            target.LastDamageAmmoKind,
+            target.LastDamageAmmoId,
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
@@ -56,8 +56,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind,
-            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
+            target.LastDamageAmmoId,
+            DamageElementIdForAmmoId(target.LastDamageAmmoId));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -74,7 +74,7 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            target.LastDamageAmmoKind,
+            target.LastDamageAmmoId,
             attacker.Faction,
             attacker.PlayerSlotId);
 
@@ -85,8 +85,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind,
-            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
+            target.LastDamageAmmoId,
+            DamageElementIdForAmmoId(target.LastDamageAmmoId));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -104,11 +104,11 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            AmmoKindForPrimaryWeapon(attacker),
+            AmmoIdForPrimaryWeapon(attacker),
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
-        var ammoKind = AmmoKindForPrimaryWeapon(attacker);
+        var ammoId = AmmoIdForPrimaryWeapon(attacker);
         var damage = DamageForPrimaryWeapon(attacker, spec);
         var impactStyle = _combatEffects.AddImpactFlash(
             target.Position,
@@ -117,8 +117,8 @@ public partial class BattleRoot
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             damage,
-            ammoKind,
-            DamageElementIdForAmmoKind(ammoKind));
+            ammoId,
+            DamageElementIdForAmmoId(ammoId));
         RequestImpactShake(target.Position, impactStyle);
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"building-attack:{target.Id}", CombatAlertCooldown))
         {
@@ -135,7 +135,7 @@ public partial class BattleRoot
             && WeaponCatalog.AmmoDefinitions.TryGetValue(weapon.AmmoId, out var ammo)
             ? ammo.Accent
             : new Color("#f6c55c");
-        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponKindAlias);
+        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponId);
     }
 
     private void OnProjectileImpacted(ProjectileImpactEvent impact)
@@ -155,7 +155,7 @@ public partial class BattleRoot
             ammo.Behavior == ProjectileBehavior.Ballistic ? UnitWeightClass.Heavy : UnitWeightClass.Light,
             MovementDomain.Land,
             ammo.BaseDamage,
-            ammo.KindAlias,
+            ammo.Id,
             ammo.DamageElementId);
         if (ammo.Behavior == ProjectileBehavior.Ballistic || ammo.SplashRadius > 0)
         {
@@ -179,33 +179,9 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnProductionRequested(ProductionKind productionKind, int requestCount = 1)
+    private void OnProductionHotkeyRequested(string designId, int requestCount = 1)
     {
-        var status = "";
-        var queued = 0;
-        var attempts = Math.Max(1, requestCount);
-        for (var attempt = 0; attempt < attempts; attempt++)
-        {
-            if (!_unitBattlefield.TryCreateProductionPayload(productionKind, PlayerSlotId.One, out var payload, out status))
-            {
-                break;
-            }
-
-            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
-            status = GatewayStatus(result, status);
-            if (result.AcceptedCount == 0)
-            {
-                break;
-            }
-
-            queued++;
-        }
-
-        status = ProductionBatchStatus(queued, attempts, status);
-        _hud.SetStatus(status);
-        _hud.SetProductionStatus(status);
-        AddStatusAlert(status);
-        RefreshCommandCard();
+        OnProductionDesignRequested(designId, () => null, requestCount);
     }
 
     private void OnProductionDesignRequested(string designId, Func<int?> providerIdSelector, int requestCount = 1)

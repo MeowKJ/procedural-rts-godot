@@ -18,7 +18,7 @@ public sealed class DogSiegeArtillery : UnitDesign
     public override CollisionSpec Collision => new(25, 1.8f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.VectorCannon, Vector2.Zero, new Vector2(32, 0), 0.34f, 5.5f, false),
+        WeaponMountSpec.Independent("main", WeaponIds.VectorCannon, Vector2.Zero, new Vector2(32, 0), 0.34f, 5.5f, false),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Deploy, Radius: 0.8f, Value: 1.55f)];

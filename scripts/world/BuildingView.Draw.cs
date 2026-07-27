@@ -148,11 +148,10 @@ public partial class BuildingView : Node2D
             return;
         }
 
-        var productionKind = projectedQueue[0].Kind;
         var designId = projectedQueue[0].DesignId;
         var itemProgress = projectedQueue[0].Progress;
         var production = UnitDesignCatalog.Spec(designId).Production
-            ?? throw new InvalidOperationException($"UnitDesign '{designId}' must include ProductionSpec for {productionKind}.");
+            ?? throw new InvalidOperationException($"UnitDesign '{designId}' must include ProductionSpec.");
         var width = footprint.X * 0.72f;
         var y = -footprint.Y / 2f - 12;
         var progress = Mathf.Clamp(itemProgress / production.Duration, 0, 1);

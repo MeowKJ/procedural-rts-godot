@@ -26,10 +26,10 @@ static partial class Program
 
             Assert(entitySpec.Kind == EntityKind.Turret, "armed fixed defenses should enter EntityWorld as EntityKind.Turret");
             Assert(entitySpec.Weapons.Count == 1, "turret guns should be WeaponMountSpec entries on the turret entity");
-            Assert(entitySpec.Weapons[0].WeaponKind == spec.WeaponKind, "turret WeaponMountSpec should preserve the BuildSpec weapon kind");
+            Assert(entitySpec.Weapons[0].WeaponId == spec.WeaponId, "turret WeaponMountSpec should preserve the BuildSpec weapon kind");
             Assert(entitySpec.Tags.Contains("Turret") && entitySpec.Tags.Contains("Weapon"), "turret entity specs should carry turret/weapon tags");
             Assert(weapon is not null && weapon.Mounts.Count == 1, "armed fixed defense components should include one WeaponUser mount");
-            Assert(weapon!.Mounts[0].WeaponKind == spec.WeaponKind, "turret runtime weapon mount should preserve the BuildSpec weapon kind");
+            Assert(weapon!.Mounts[0].WeaponId == spec.WeaponId, "turret runtime weapon mount should preserve the BuildSpec weapon kind");
         }
 
         foreach (var (kind, index) in new[]
@@ -46,7 +46,7 @@ static partial class Program
             var components = BuildingSeed(kind, index + 200, Vector2.Zero)
                 .ToEntityComponents(spec);
 
-            Assert(spec.WeaponKind is null, $"ordinary producer/resource building {kind} should not author a BuildSpec weapon");
+            Assert(spec.WeaponId is null, $"ordinary producer/resource building {kind} should not author a BuildSpec weapon");
             Assert(entitySpec.Kind == EntityKind.Building, $"ordinary producer/resource building {kind} should remain EntityKind.Building");
             Assert(entitySpec.Weapons.Count == 0, $"ordinary producer/resource building {kind} should not gain WeaponMountSpec entries");
             Assert(!entitySpec.Tags.Contains("Turret") && !entitySpec.Tags.Contains("Weapon"), $"ordinary producer/resource building {kind} should not gain turret tags");
@@ -75,7 +75,7 @@ static partial class Program
                 Stats = new StatsSpec(UnitWeightClass.Heavy, ArmorTag.Structure, MaxHp: 500, SightRange: 500, Cost: 100, TechTier: 1),
                 Weapons =
                 [
-                    WeaponMountSpec.Omni("main", WeaponKind.VectorCannon, Vector2.Zero, fireWhileMoving: false),
+                    WeaponMountSpec.Omni("main", WeaponIds.VectorCannon, Vector2.Zero, fireWhileMoving: false),
                 ],
             };
         }
@@ -100,7 +100,7 @@ static partial class Program
                 new PowerComponentState(Provided: 0, Used: 0, Powered: true),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.VectorCannon, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.VectorCannon, 0, 0),
                 }),
             });
 
@@ -174,7 +174,7 @@ static partial class Program
                 Stats = new StatsSpec(UnitWeightClass.Heavy, ArmorTag.Structure, MaxHp: 300, SightRange: 500, Cost: 160, TechTier: 1),
                 Weapons =
                 [
-                    WeaponMountSpec.Omni("main", WeaponKind.IonEmitter, Vector2.Zero, fireWhileMoving: false),
+                    WeaponMountSpec.Omni("main", WeaponIds.IonEmitter, Vector2.Zero, fireWhileMoving: false),
                 ],
             };
         }
@@ -226,7 +226,7 @@ static partial class Program
                 new VisionComponentState(500),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.IonEmitter, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.IonEmitter, 0, 0),
                 }),
             });
             world.Spawn(ProducerSpec("replay.powered_barracks"), new OwnerId(1), EntityTransform.At(new Vector2(100, 120)), new EntityComponentState[]
@@ -240,7 +240,6 @@ static partial class Program
                     new UnitProductionQueueItem
                     {
                         Id = 1,
-                        Kind = ProductionKind.InfantrySquad,
                         DesignId = "dog.infantry",
                         Faction = UnitFactionId.Dog,
                         Progress = 0,

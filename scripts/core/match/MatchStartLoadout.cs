@@ -96,7 +96,7 @@ public static class MatchStartLoadouts
             })
             .ToArray();
 
-        var units = UnitDesignRuntimeLoadouts.StartingUnits(ProductionKindDesignBridge.UnitFactionFor(faction))
+        var units = UnitDesignRuntimeLoadouts.StartingUnits(FactionCatalog.UnitFactionFor(faction))
             .Select((spawn, index) =>
             {
                 var slot = unitSlots[Math.Min(index, unitSlots.Count - 1)];

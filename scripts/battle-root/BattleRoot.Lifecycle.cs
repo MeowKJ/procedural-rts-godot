@@ -163,7 +163,8 @@ public partial class BattleRoot
         var production = new ProductionController
         {
             Name = "Production",
-            ProductionRequested = OnProductionRequested,
+            LocalFaction = ToUnitFaction(_matchConfig.PlayerFaction),
+            ProductionDesignRequested = OnProductionHotkeyRequested,
             CancelProductionRequested = OnCancelProductionRequested,
             StatusChanged = OnStatusChanged,
             ProductionStatusChanged = OnProductionStatusChanged,
@@ -192,7 +193,6 @@ public partial class BattleRoot
         _hud = new HudLayer
         {
             Name = "Hud",
-            ProductionRequested = OnProductionRequested,
             ProductionDesignRequested = OnProductionDesignRequested,
             ProductionRepeatRequested = OnProductionRepeatRequested,
             CancelProductionRequested = OnCancelProductionRequested,

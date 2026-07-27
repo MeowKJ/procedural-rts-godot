@@ -18,7 +18,7 @@ public sealed class GroundTurretBuilding : BuildingDesign
             new PlacementGridFootprint(3, 3),
             430,
             ArmorTag.Structure,
-            WeaponKind.VectorCannon,
+            WeaponIds.VectorCannon,
             new Color("#ffb35c"),
             BuildCategory.Defense,
             IconGlyph.Turret,

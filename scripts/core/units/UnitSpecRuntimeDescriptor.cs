@@ -10,7 +10,7 @@ public sealed record UnitSpecRuntimeDescriptor(
     UnitWeightClass WeightClass,
     MovementDomain MovementDomain,
     ArmorTag ArmorTag,
-    WeaponKind WeaponKind,
+    string WeaponId,
     float MaxHp,
     float Radius,
     float Speed,

@@ -64,7 +64,7 @@ public sealed partial class UnitBattlefield
         for (var index = 0; index < spec.Weapons.Count; index++)
         {
             var mount = spec.Weapons[index];
-            result.Add(new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.WeaponKindAlias));
+            result.Add(new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0));
         }
     }
 }

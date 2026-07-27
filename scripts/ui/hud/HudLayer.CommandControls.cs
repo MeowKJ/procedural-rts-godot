@@ -96,7 +96,6 @@ public partial class HudLayer : CanvasLayer
     private partial class CommandButton : Button
     {
         public required string OptionId { get; init; }
-        public ProductionKind Kind { get; set; }
         public required string Hotkey { get; set; }
         public required string ShortLabel { get; set; }
         public required IconGlyph Glyph { get; set; }
@@ -336,9 +335,7 @@ public partial class HudLayer : CanvasLayer
 
         private static string TrainInspectorText(ProductionOptionState state, string producerLabel, string disabledReason)
         {
-            var label = !string.IsNullOrWhiteSpace(state.UnitDesignId)
-                ? UnitDesignCatalog.Spec(state.UnitDesignId).Label
-                : UnitPresentationCatalog.Production[state.Kind].ShortCode;
+            var label = UnitDesignCatalog.Spec(state.UnitDesignId).Label;
             var status = string.IsNullOrWhiteSpace(disabledReason) ? GameText.T("ui.catalog.inspectReady") : disabledReason;
             return GameText.Format(
                 "ui.catalog.inspectTrain",

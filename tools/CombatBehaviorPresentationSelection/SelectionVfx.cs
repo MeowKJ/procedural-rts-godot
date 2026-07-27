@@ -13,19 +13,19 @@ static partial class Program
             throw new InvalidOperationException("combat range rebalance should make default unit ranges explicit and longer");
         }
 
-        if (!Enum.GetValues<AmmoKind>().All(kind => WeaponCatalog.Ammo.ContainsKey(kind)))
+        if (!AmmoIds.All.All(WeaponCatalog.AmmoDefinitions.ContainsKey))
         {
             throw new InvalidOperationException("all default ammo types should have data definitions");
         }
 
-        if (WeaponCatalog.Weapons.Values.Any(definition => definition.Hooks == SpecialAttackHook.None))
+        if (WeaponCatalog.WeaponDefinitions.Values.Any(definition => definition.Hooks == SpecialAttackHook.None))
         {
             throw new InvalidOperationException("weapon definitions should expose special attack hook extension points");
         }
 
-        var lightDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Light, MovementDomain.Land, AmmoKind.NeedleDart, 0);
-        var heavyRocketDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, AmmoKind.SeekerRocket, 90);
-        var empDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Land, AmmoKind.ElectromagneticLance, 12);
+        var lightDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Light, MovementDomain.Land, AmmoIds.NeedleDart, 0);
+        var heavyRocketDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, AmmoIds.SeekerRocket, 90);
+        var empDeathStyle = DeathVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Land, AmmoIds.ElectromagneticLance, 12);
         if (heavyRocketDeathStyle.FragmentCount <= lightDeathStyle.FragmentCount
             || heavyRocketDeathStyle.SmokeCount <= lightDeathStyle.SmokeCount
             || heavyRocketDeathStyle.BurstScale <= lightDeathStyle.BurstScale
@@ -41,9 +41,9 @@ static partial class Program
             throw new InvalidOperationException("death VFX should expose EMP/ion dissolve hooks separately from ember debris");
         }
 
-        var lightNeedleImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Light, MovementDomain.Land, AmmoKind.NeedleDart, 12);
-        var heavyRocketImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, AmmoKind.SeekerRocket, 90);
-        var airIonImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Air, AmmoKind.IonBeam, 34);
+        var lightNeedleImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Light, MovementDomain.Land, AmmoIds.NeedleDart, 12);
+        var heavyRocketImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Heavy, MovementDomain.Land, AmmoIds.SeekerRocket, 90);
+        var airIonImpactStyle = ImpactVfxMath.StyleFor(UnitWeightClass.Medium, MovementDomain.Air, AmmoIds.IonBeam, 34);
         if (heavyRocketImpactStyle.Expansion <= lightNeedleImpactStyle.Expansion
             || heavyRocketImpactStyle.LineWidth <= lightNeedleImpactStyle.LineWidth
             || heavyRocketImpactStyle.SparkCount <= lightNeedleImpactStyle.SparkCount
@@ -84,34 +84,34 @@ static partial class Program
             throw new InvalidOperationException("combat readability should keep transient juice below command markers and strongly suppressed by fog/load");
         }
 
-        if (!WeaponCatalog.Weapons.Values.Any(definition => definition.MountKind == WeaponMountKind.StaticTurret)
-            || !WeaponCatalog.Weapons.Values.Any(definition => definition.MountKind == WeaponMountKind.MobileTurret)
-            || !WeaponCatalog.Weapons.Values.Any(definition => definition.MountKind == WeaponMountKind.FixedForward))
+        if (!WeaponCatalog.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.StaticTurret)
+            || !WeaponCatalog.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.MobileTurret)
+            || !WeaponCatalog.WeaponDefinitions.Values.Any(definition => definition.MountKind == WeaponMountKind.FixedForward))
         {
             throw new InvalidOperationException("weapon definitions should cover static, mobile turret, and fixed-forward mounts");
         }
 
-        if (BuildSpecCatalog.For(BuildingDesignIds.Headquarters).WeaponKind is null)
+        if (BuildSpecCatalog.For(BuildingDesignIds.Headquarters).WeaponId is null)
         {
             throw new InvalidOperationException("headquarters should expose a static defensive weapon source");
         }
 
-        if (WeaponCatalog.Ammo[AmmoKind.SeekerRocket].Behavior != ProjectileBehavior.Tracking)
+        if (WeaponCatalog.AmmoDefinitions[AmmoIds.SeekerRocket].Behavior != ProjectileBehavior.Tracking)
         {
             throw new InvalidOperationException("seeker rocket should be represented as tracking ammunition");
         }
 
-        if (WeaponCatalog.Ammo[AmmoKind.NeedleDart].HitRule != HitRule.Guaranteed
-            || WeaponCatalog.Ammo[AmmoKind.BallisticCannon].HitRule != HitRule.BallisticDeviation
-            || WeaponCatalog.Ammo[AmmoKind.ElectromagneticLance].HitRule != HitRule.Guaranteed
-            || WeaponCatalog.Ammo[AmmoKind.IonBeam].HitRule != HitRule.Guaranteed
-            || WeaponCatalog.Ammo[AmmoKind.SeekerRocket].HitRule != HitRule.Guaranteed)
+        if (WeaponCatalog.AmmoDefinitions[AmmoIds.NeedleDart].HitRule != HitRule.Guaranteed
+            || WeaponCatalog.AmmoDefinitions[AmmoIds.BallisticCannon].HitRule != HitRule.BallisticDeviation
+            || WeaponCatalog.AmmoDefinitions[AmmoIds.ElectromagneticLance].HitRule != HitRule.Guaranteed
+            || WeaponCatalog.AmmoDefinitions[AmmoIds.IonBeam].HitRule != HitRule.Guaranteed
+            || WeaponCatalog.AmmoDefinitions[AmmoIds.SeekerRocket].HitRule != HitRule.Guaranteed)
         {
             throw new InvalidOperationException("default ammunition should expose deterministic hit rule data");
         }
 
-        if (WeaponCatalog.Ammo.Values.Any(ammo => ammo.Behavior == ProjectileBehavior.Beam && (ammo.Speed != 0 || ammo.BeamDuration <= 0))
-            || WeaponCatalog.Ammo.Values.Any(ammo => ammo.Behavior != ProjectileBehavior.Beam && ammo.Speed <= 0))
+        if (WeaponCatalog.AmmoDefinitions.Values.Any(ammo => ammo.Behavior == ProjectileBehavior.Beam && (ammo.Speed != 0 || ammo.BeamDuration <= 0))
+            || WeaponCatalog.AmmoDefinitions.Values.Any(ammo => ammo.Behavior != ProjectileBehavior.Beam && ammo.Speed <= 0))
         {
             throw new InvalidOperationException("ammo behavior data should distinguish beams from moving projectiles");
         }
@@ -126,14 +126,14 @@ static partial class Program
             throw new InvalidOperationException("terrain passability should define stable allowed layers and blocker behavior per movement domain");
         }
 
-        if (EffectiveDamageAgainst(AmmoKind.ElectromagneticLance, harvesterDescriptor)
-            <= EffectiveDamageAgainst(AmmoKind.ElectromagneticLance, infantryDescriptor))
+        if (EffectiveDamageAgainst(AmmoIds.ElectromagneticLance, harvesterDescriptor)
+            <= EffectiveDamageAgainst(AmmoIds.ElectromagneticLance, infantryDescriptor))
         {
             throw new InvalidOperationException("electromagnetic lance should favor heavy armored targets over light targets");
         }
 
-        if (EffectiveDamageAgainst(AmmoKind.IonBeam, infantryDescriptor)
-            <= EffectiveDamageAgainst(AmmoKind.IonBeam, tankDescriptor))
+        if (EffectiveDamageAgainst(AmmoIds.IonBeam, infantryDescriptor)
+            <= EffectiveDamageAgainst(AmmoIds.IonBeam, tankDescriptor))
         {
             throw new InvalidOperationException("ion beam should favor light targets over medium armored targets");
         }
@@ -201,27 +201,27 @@ static partial class Program
             throw new InvalidOperationException("fog mask stats should update many vision sources without snapshot allocation or full-map reveal");
         }
 
-        foreach (var ammo in WeaponCatalog.Ammo.Values)
+        foreach (var ammo in WeaponCatalog.AmmoDefinitions.Values)
         {
             if (!Enum.GetValues<UnitWeightClass>().All(weight => ammo.DamageProfile.WeightMultipliers.ContainsKey(weight)))
             {
-                throw new InvalidOperationException($"{ammo.Kind} should define weight-class damage multipliers");
+                throw new InvalidOperationException($"{ammo.Id} should define weight-class damage multipliers");
             }
 
             if (!Enum.GetValues<ArmorTag>().All(tag => ammo.DamageProfile.ArmorMultipliers.ContainsKey(tag)))
             {
-                throw new InvalidOperationException($"{ammo.Kind} should define armor-tag damage multipliers");
+                throw new InvalidOperationException($"{ammo.Id} should define armor-tag damage multipliers");
             }
         }
 
-        if (WeaponCatalog.Ammo[AmmoKind.SeekerRocket].DamageProfile.Multiplier(UnitWeightClass.Medium, MovementDomain.Air, ArmorTag.Aircraft)
-            <= WeaponCatalog.Ammo[AmmoKind.SeekerRocket].DamageProfile.Multiplier(UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle))
+        if (WeaponCatalog.AmmoDefinitions[AmmoIds.SeekerRocket].DamageProfile.Multiplier(UnitWeightClass.Medium, MovementDomain.Air, ArmorTag.Aircraft)
+            <= WeaponCatalog.AmmoDefinitions[AmmoIds.SeekerRocket].DamageProfile.Multiplier(UnitWeightClass.Medium, MovementDomain.Land, ArmorTag.Vehicle))
         {
             throw new InvalidOperationException("seeker rockets should have a domain/tag bonus against aircraft");
         }
 
         var hqSpec = BuildSpecCatalog.For(BuildingDesignIds.Headquarters);
-        var lightRepeaterWeapon = WeaponCatalog.Weapons[WeaponKind.LightRepeater];
+        var lightRepeaterWeapon = WeaponCatalog.WeaponDefinitions[WeaponIds.LightRepeater];
         if (!WeaponCanTarget(lightRepeaterWeapon, aircraftDescriptor)
             || WeaponTargetPriority(lightRepeaterWeapon, infantryDescriptor) <= WeaponTargetPriority(lightRepeaterWeapon, aircraftDescriptor)
             || WeaponTargetPriority(lightRepeaterWeapon, aircraftDescriptor) <= WeaponTargetPriority(lightRepeaterWeapon, tankDescriptor)
@@ -230,13 +230,13 @@ static partial class Program
             throw new InvalidOperationException("light repeater target profile should prefer light ground units, allow weak aircraft engagement, and de-prioritize vehicles/structures");
         }
 
-        if (WeaponCanTarget(WeaponCatalog.Weapons[WeaponKind.VectorCannon], aircraftDescriptor))
+        if (WeaponCanTarget(WeaponCatalog.WeaponDefinitions[WeaponIds.VectorCannon], aircraftDescriptor))
         {
             throw new InvalidOperationException("tank cannon target profile should not allow aircraft engagement in weapon V1");
         }
 
-        if (EffectiveDamageAgainst(AmmoKind.NeedleDart, hqSpec)
-            >= EffectiveDamageAgainst(AmmoKind.NeedleDart, infantryDescriptor))
+        if (EffectiveDamageAgainst(AmmoIds.NeedleDart, hqSpec)
+            >= EffectiveDamageAgainst(AmmoIds.NeedleDart, infantryDescriptor))
         {
             throw new InvalidOperationException("needle dart should be weaker against structure armor than infantry armor");
         }

@@ -47,9 +47,9 @@ public partial class MapAuthoringPlugin : EditorPlugin
             return;
         }
 
-        MapAuthoringTypeRegistry.ValidateAliases(
+        MapAuthoringTypeRegistry.ValidateTypeNames(
             MapAuthoringTypeRegistry.Types,
-            alias => ClassDB.ClassExists(alias));
+            typeName => ClassDB.ClassExists(typeName));
         MapAuthoringRegistrationState.Begin();
         try
         {

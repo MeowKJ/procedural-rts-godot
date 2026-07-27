@@ -102,7 +102,7 @@ static partial class Program
 
         var commandsBeforeProductionQueue = unitProductionBattlefield.AppliedInputCommandCount;
         if (!unitProductionBattlefield.SetRallyPoint(unitProductionBarracks.Id, new Vector2(420, 500), out _)
-            || !unitProductionBattlefield.EnqueueProduction(ProductionKind.InfantrySquad, PlayerSlotId.One, out _)
+            || !unitProductionBattlefield.EnqueueProductionDesign("dog.infantry", PlayerSlotId.One, out _)
             || unitProductionBattlefield.Credits(PlayerSlotId.One) != 380
             || !unitProductionBattlefield.HasQueuedProduction(PlayerSlotId.One))
         {
@@ -238,11 +238,11 @@ static partial class Program
             || !producerEntity.Components.TryGet<ProductionQueueComponentState>(out var producerQueueAfterCompletion)
             || producerQueueAfterCompletion.Items.Count != 0)
         {
-            throw new InvalidOperationException("UnitBattlefield production completion should adopt EntityWorld-spawned units and sync producer queues back to retired runtime");
+            throw new InvalidOperationException("UnitBattlefield production completion should adopt EntityWorld-spawned units and keep producer queues synchronized");
         }
 
         unitProductionBattlefield.SetCredits(PlayerSlotId.One, 500);
-        if (unitProductionBattlefield.EnqueueProduction(ProductionKind.Harvester, PlayerSlotId.One, out var unsupportedProductionStatus)
+        if (unitProductionBattlefield.EnqueueProductionDesign("dog.harvester", PlayerSlotId.One, out var unsupportedProductionStatus)
             || unsupportedProductionStatus.Length == 0)
         {
             throw new InvalidOperationException("new unit battlefield should reject production when no matching UnitDesign producer building is available");
@@ -394,7 +394,7 @@ static partial class Program
             new Vector2(240, 560),
             0,
             BuildSpecCatalog.For(BuildingDesignIds.Barracks).MaxHp);
-        if (!unitCancelBattlefield.EnqueueProduction(ProductionKind.InfantrySquad, PlayerSlotId.One, out _)
+        if (!unitCancelBattlefield.EnqueueProductionDesign("dog.infantry", PlayerSlotId.One, out _)
             || !unitCancelBattlefield.CancelFirstProduction(PlayerSlotId.One, out _)
             || unitCancelBattlefield.BuildingProductionQueue(cancelBarracks.Id).Count != 0
             || unitCancelBattlefield.Credits(PlayerSlotId.One) != 440)

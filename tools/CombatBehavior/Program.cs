@@ -98,10 +98,10 @@ static partial class Program
             .ToArray();
     }
 
-    static float EffectiveDamageAgainst(AmmoKind ammoKind, UnitSpecRuntimeDescriptor target)
+    static float EffectiveDamageAgainst(string ammoId, UnitSpecRuntimeDescriptor target)
     {
         return DamageResolver.Resolve(
-            WeaponCatalog.Ammo[ammoKind],
+            WeaponCatalog.AmmoDefinitions[ammoId],
             target.WeightClass,
             target.MovementDomain,
             target.ArmorTag,
@@ -109,10 +109,10 @@ static partial class Program
             targetTraits: target.TargetTraits);
     }
 
-    static float EffectiveDamageAgainst(AmmoKind ammoKind, BuildSpec target)
+    static float EffectiveDamageAgainst(string ammoId, BuildSpec target)
     {
         return DamageResolver.Resolve(
-            WeaponCatalog.Ammo[ammoKind],
+            WeaponCatalog.AmmoDefinitions[ammoId],
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             target.ArmorTag,

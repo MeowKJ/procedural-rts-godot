@@ -62,7 +62,7 @@ static partial class Program
             || newSelectionSummary.All(item => item.DesignId != "dog.guard_tank")
             || newSelectionSummary.Any(item => item.PlayerSlotId != PlayerSlotId.One))
         {
-            throw new InvalidOperationException("new unit battlefield should provide selection summaries from UnitSpec data without UnitKind presentation catalogs");
+            throw new InvalidOperationException("new unit battlefield should provide selection summaries directly from UnitSpec data");
         }
 
         newUnitBattlefield.ClearSelection(PlayerSlotId.One);
@@ -280,7 +280,7 @@ static partial class Program
         if (unitInstanceDeathBattlefield.Units.Any(unit => unit.Id == unitInstanceDeathTarget.Id)
             || unitInstanceDeathEvents.Count != 1
             || unitInstanceDeathEvents[0].DesignId != "cat.basic"
-            || unitInstanceDeathEvents[0].KillingAmmoKind is null
+            || unitInstanceDeathEvents[0].KillingAmmoId is null
             || unitInstanceDeathAttacker.AttackTargetId is not null
             || unitInstanceDeathBattlefield.UnitEntityByInstanceId(unitInstanceDeathTarget.Id) is not null
             || unitInstanceDeathBattlefield.UnitProjection(unitInstanceDeathTarget.Id) is not null)

@@ -18,7 +18,7 @@ public sealed class CatRepairVehicle : UnitDesign
     public override CollisionSpec Collision => new(20, 1.2f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Omni("main", WeaponKind.ElectromagneticEmitter, Vector2.Zero, true),
+        WeaponMountSpec.Omni("main", WeaponIds.ElectromagneticEmitter, Vector2.Zero, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.RepairField, Radius: 150, Value: 18)];

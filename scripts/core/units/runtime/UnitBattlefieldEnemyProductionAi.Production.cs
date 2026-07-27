@@ -11,7 +11,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         }
 
         var enemyHarvesters = battlefield.LiveEconomyUnitCount(enemyPlayerSlotId);
-        var queuedHarvesters = QueuedKindCount(battlefield, enemyPlayerSlotId, ProductionKind.Harvester);
+        var queuedHarvesters = QueuedCategoryCount(battlefield, enemyPlayerSlotId, ProductionCategory.Economy);
         if (enemyHarvesters + queuedHarvesters < _profile.DesiredHarvesters)
         {
             var economy = FirstQueueableOption(battlefield, enemyPlayerSlotId, ProductionCategory.Economy);
@@ -36,45 +36,4 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
 
         return FirstFallbackCombatOption(battlefield, enemyPlayerSlotId)?.UnitDesignId;
     }
-
-    private ProductionKind? ChooseNextProduction(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
-    {
-        var enemyHarvesters = battlefield.LiveEconomyUnitCount(enemyPlayerSlotId);
-        var queuedHarvesters = QueuedKindCount(battlefield, enemyPlayerSlotId, ProductionKind.Harvester);
-
-        if (enemyHarvesters + queuedHarvesters < _profile.DesiredHarvesters
-            && CanQueue(battlefield, enemyPlayerSlotId, ProductionKind.Harvester))
-        {
-            return ProductionKind.Harvester;
-        }
-
-        var combatPreference = _preferTank
-            ? TankFirstCombatPreference
-            : InfantryFirstCombatPreference;
-        _preferTank = !_preferTank;
-
-        foreach (var kind in combatPreference)
-        {
-            if (CanQueue(battlefield, enemyPlayerSlotId, kind))
-            {
-                return kind;
-            }
-        }
-
-        return CanQueue(battlefield, enemyPlayerSlotId, ProductionKind.Harvester)
-            ? ProductionKind.Harvester
-            : null;
-    }
-
-    private static readonly ProductionKind[] TankFirstCombatPreference =
-    [
-        ProductionKind.LightTank,
-        ProductionKind.InfantrySquad,
-    ];
-
-    private static readonly ProductionKind[] InfantryFirstCombatPreference =
-    [
-        ProductionKind.InfantrySquad,
-        ProductionKind.LightTank,
-    ];
 }

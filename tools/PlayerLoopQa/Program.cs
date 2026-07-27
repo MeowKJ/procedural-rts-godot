@@ -389,7 +389,7 @@ static void AssertCommandGatewayLivePlayerLoop()
     Require(localResult.AcceptedCount == 1 && battlefield.AppliedInputCommandCount > beforeAccepted,
         "local buffered controller should submit live commands through CommandGateway into the battlefield sink");
     Require(localUnit.MoveTarget is not null && localUnit.MoveMode == MoveCommandMode.Ignore,
-        "accepted live move should preserve command mode and mutate the unit through the command bridge");
+        "accepted live move should preserve command mode and mutate the unit through the command routing");
 
     var beforeRejected = battlefield.AppliedInputCommandCount;
     controller.Enqueue(move);

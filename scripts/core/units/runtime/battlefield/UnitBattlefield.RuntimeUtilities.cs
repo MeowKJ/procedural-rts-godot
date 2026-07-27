@@ -153,7 +153,7 @@ public sealed partial class UnitBattlefield
 
     private static WeaponDefinition PrimaryWeapon(UnitInstance unit)
     {
-        return WeaponCatalog.Weapons[unit.Spec.PrimaryWeapon.WeaponKind];
+        return WeaponCatalog.WeaponDefinitions[unit.Spec.PrimaryWeapon.WeaponId];
     }
 
     private static bool CanUnitTarget(UnitInstance unit, UnitInstance target)

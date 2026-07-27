@@ -18,7 +18,7 @@ public sealed class CatSniper : UnitDesign
     public override CollisionSpec Collision => new(12, 0.62f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.IonEmitter, Vector2.Zero, new Vector2(18, 0), 0.38f, false),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.IonEmitter, Vector2.Zero, new Vector2(18, 0), 0.38f, false),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Barracks, ProductionCategory.Infantry, 7.2f, 1, "production.lane.infantry", IconGlyph.AttackMove);

@@ -18,7 +18,7 @@ public sealed class DogGuardTank : UnitDesign
     public override CollisionSpec Collision => new(23, 1.25f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.42f, 8, true),
+        WeaponMountSpec.Independent("main", WeaponIds.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.42f, 8, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 8.5f, 0, "production.lane.vehicle", IconGlyph.Tank);

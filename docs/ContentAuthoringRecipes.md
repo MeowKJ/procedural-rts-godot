@@ -32,8 +32,8 @@ Rebuild, it appears - no system code touched.
 
 ## Add A Turret
 
-Create a `BuildingDesign` whose `BuildSpec.WeaponKind` is not null. The generic
-`BuildSpec.ToEntitySpec()` bridge projects it as `EntityKind.Turret` and adds a
+Create a `BuildingDesign` whose `BuildSpec.WeaponId` is not null. The generic
+`BuildSpec.ToEntitySpec()` projection marks it as `EntityKind.Turret` and adds a
 weapon mount; construction, power, targeting, health, selection, and sandbox
 authoring read the same spec.
 
@@ -46,8 +46,8 @@ when needed, one concrete `AmmoDesign` under `scripts/core/combat/ammo/`.
 Give each design a stable string `Id`, and have the weapon reference the ammo by
 string `AmmoId`. `WeaponCatalog` discovers both by reflection, validates
 weapon-to-ammo links, and keeps deterministic order for replay stability.
-Existing `WeaponKind` / `AmmoKind` enum values are optional aliases for built-in
-content; do not add enum values for brand-new combat content.
+Use `WeaponIds` / `AmmoIds` for built-in content and stable string ids for new
+content. Combat content identity has no enum-based secondary path.
 
 Rebuild, it appears - no system code touched.
 

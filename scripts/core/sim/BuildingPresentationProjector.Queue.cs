@@ -23,7 +23,6 @@ public static partial class BuildingPresentationProjector
         return new UnitProductionQueueItem
         {
             Id = item.Id,
-            Kind = item.Kind,
             DesignId = item.DesignId,
             Faction = item.Faction,
             Progress = item.Progress,

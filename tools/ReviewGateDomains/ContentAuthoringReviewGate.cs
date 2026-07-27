@@ -20,11 +20,6 @@ static class ContentAuthoringReviewGate
         ReviewGateSource.RequireTextInFile(root, result, "OrderBy(design => design.Id", "scripts", "core", "units", "UnitDesignCatalog.cs");
         RequireText(rosterCatalog, "foreach (var designId in For(faction).PlayableDesignIds)", "Production design lookup must scan playable ids without LINQ materialization.", result);
         ForbidText(rosterCatalog, "PlayableSpecs(faction)", "Production design lookup must not allocate playable spec iterators.", result);
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "UnitCatalog.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "UnitKind.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "UnitKindDesignBridge.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "build", "BuildingKind.cs");
-        ReviewGateSource.ForbidTextInSources(root, result, "UnitDefinition", "scripts", "tools/CombatBehavior", "tools/FogOfWarQa");
     }
 
     private static void RequireBuildSpecAuthoring(string root, GateResult result)
@@ -40,8 +35,8 @@ static class ContentAuthoringReviewGate
         ReviewGateSource.RequireTextInFile(root, result, "IReadOnlyDictionary<string, WeaponDefinition>", "scripts", "core", "combat", "WeaponCatalog.cs");
         ReviewGateSource.RequireTextInFile(root, result, "IReadOnlyDictionary<string, AmmoDefinition>", "scripts", "core", "combat", "WeaponCatalog.cs");
         ReviewGateSource.RequireTextInFile(root, result, "DiscoverWeaponsFrom(params Assembly[] assemblies)", "scripts", "core", "combat", "WeaponCatalog.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "public virtual string Id", "scripts", "core", "combat", "WeaponDesign.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "public virtual string Id", "scripts", "core", "combat", "AmmoDesign.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "public abstract string Id", "scripts", "core", "combat", "WeaponDesign.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "public abstract string Id", "scripts", "core", "combat", "AmmoDesign.cs");
         ReviewGateSource.RequireTextInFile(root, result, "DiscoverDesigns<WeaponDesign>", "scripts", "core", "combat", "WeaponCatalog.cs");
         ReviewGateSource.RequireTextInFile(root, result, "DiscoverDesigns<AmmoDesign>", "scripts", "core", "combat", "WeaponCatalog.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "ContentAuthoringQa", "Program.cs");

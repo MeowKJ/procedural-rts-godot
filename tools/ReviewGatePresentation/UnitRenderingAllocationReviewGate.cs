@@ -36,7 +36,7 @@ static class UnitRenderingAllocationReviewGate
         RequireText(dynamicIcon, "UnitMountFacingSource.Single(\"main\", turretFacing)", "DynamicUnitIcon must not allocate a mount-facing dictionary.", result);
         RequireText(unitBattlefield, "event Action<WeaponFiredEvent>? WeaponFired", "UnitBattlefield must expose WeaponFiredEvent data for presentation-only muzzle flashes.", result);
         RequireText(battleRoot, "_unitBattlefield.WeaponFired += OnWeaponFired", "BattleRoot must subscribe to runtime WeaponFiredEvent presentation data.", result);
-        RequireText(battleRoot, "_combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponKindAlias)", "BattleRoot must route WeaponFiredEvent data to muzzle flash VFX.", result);
+        RequireText(battleRoot, "_combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponId)", "BattleRoot must route WeaponFiredEvent data to muzzle flash VFX.", result);
         RequireText(battleRoot, "new UnitBodyBatchLayer", "BattleRoot must mount the runtime unit body batch layer.", result);
         RequireText(battleRoot, "PresentationProvider = id => _unitBattlefield.UnitPresentationProjection(id)", "Runtime unit batch must request immutable presentation projections.", result);
         RequireText(battleRoot, "PresentationProvider = () => _unitBattlefield.UnitPresentationProjection(unit.Id)", "Runtime unit overlays must request immutable presentation projections.", result);

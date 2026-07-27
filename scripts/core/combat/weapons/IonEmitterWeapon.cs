@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class IonEmitterWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.IonEmitter;
+    public override string Id => WeaponIds.IonEmitter;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Ion Emitter",
-            AmmoKind.IonBeam,
+            AmmoIds.IonBeam,
             WeaponMountKind.StaticTurret,
             260,
             0.9f,

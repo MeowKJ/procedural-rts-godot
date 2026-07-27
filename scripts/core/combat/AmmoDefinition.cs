@@ -22,52 +22,6 @@ public sealed record AmmoDefinition
     public string DamageElementId { get; init; }
     public CounterRuleProfile CounterRules { get; init; }
     public SpecialAttackHook Hooks { get; init; }
-    public AmmoKind? KindAlias { get; init; }
-
-    public AmmoKind Kind => KindAlias
-        ?? throw new InvalidOperationException($"Ammo '{Id}' has no AmmoKind alias.");
-
-    public AmmoDefinition(
-        AmmoKind Kind,
-        string Label,
-        ProjectileBehavior Behavior,
-        HitRule HitRule,
-        float Speed,
-        float BaseDamage,
-        float BeamDuration,
-        float BeamWidth,
-        float AccuracyRadiusMultiplier,
-        float TrackingStrength,
-        Color Accent,
-        DamageProfile DamageProfile,
-        SpecialAttackHook Hooks,
-        float SplashRadius = 0,
-        float SplashMinDamageRatio = 0,
-        bool Interceptable = false,
-        string? DamageElementId = null,
-        CounterRuleProfile? CounterRules = null)
-        : this(
-            WeaponCatalog.IdFor(Kind),
-            Label,
-            Behavior,
-            HitRule,
-            Speed,
-            BaseDamage,
-            BeamDuration,
-            BeamWidth,
-            AccuracyRadiusMultiplier,
-            TrackingStrength,
-            Accent,
-            DamageProfile,
-            Hooks,
-            SplashRadius,
-            SplashMinDamageRatio,
-            Interceptable,
-            Kind,
-            DamageElementId,
-            CounterRules)
-    {
-    }
 
     public AmmoDefinition(
         string Id,
@@ -86,7 +40,6 @@ public sealed record AmmoDefinition
         float SplashRadius = 0,
         float SplashMinDamageRatio = 0,
         bool Interceptable = false,
-        AmmoKind? KindAlias = null,
         string? DamageElementId = null,
         CounterRuleProfile? CounterRules = null)
     {
@@ -111,6 +64,5 @@ public sealed record AmmoDefinition
         _ = DamageElementCatalog.For(this.DamageElementId);
         this.CounterRules = CounterRules ?? CounterRuleProfile.Neutral;
         this.Hooks = Hooks;
-        this.KindAlias = KindAlias;
     }
 }

@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void StepCombatBridge(SimContext context, ISimSystem combatSystem)
+    private void StepCombatSystem(SimContext context, ISimSystem combatSystem)
     {
         combatSystem.Step(context);
     }
@@ -55,11 +55,11 @@ public sealed partial class UnitBattlefield
             }
 
             var attacker = UnitByEntityId(damaged.Attacker);
-            var ammoKind = attacker is not null
-                ? PrimaryWeapon(attacker).AmmoKind
-                : AmmoKindForProjectileEntity(damaged.Attacker);
+            var ammoId = attacker is not null
+                ? PrimaryWeapon(attacker).AmmoId
+                : AmmoIdForProjectileEntity(damaged.Attacker);
             target.LastDamageAmount = damaged.Damage;
-            target.LastDamageAmmoKind = ammoKind;
+            target.LastDamageAmmoId = ammoId;
             target.DeathOverkillDamage = MathF.Max(0, -target.Hp);
             target.HitPulse = 1;
             target.AlertPulse = 1;
@@ -70,11 +70,11 @@ public sealed partial class UnitBattlefield
         }
     }
 
-    private AmmoKind? AmmoKindForProjectileEntity(EntityId entityId)
+    private string? AmmoIdForProjectileEntity(EntityId entityId)
     {
         return _entityWorld.TryGet(entityId, out var entity)
             && entity.Components.TryGet<ProjectileComponentState>(out var projectile)
-                ? WeaponCatalog.KindForAmmoId(projectile.AmmoId)
+                ? projectile.AmmoId
                 : null;
     }
 
@@ -160,27 +160,6 @@ public sealed partial class UnitBattlefield
         return false;
     }
 
-    private void CollectCandidateProducerIds(ProductionKind productionKind, PlayerSlotId playerSlotId, List<int> result)
-    {
-        result.Clear();
-        CollectBuildingTargetIds(_buildingTargetIdBuffer);
-        foreach (var buildingId in _buildingTargetIdBuffer)
-        {
-            if (BuildingSnapshot(buildingId) is not { } building
-                || building.PlayerSlotId != playerSlotId
-                || building.Hp <= 0
-                || !BuildingPowered(building.Id)
-                || BuildingBuildProgress(building.Id) < 1
-                || ProductionDesignIdCore(building.Id, productionKind) is not { } designId
-                || UnitDesignCatalog.Spec(designId).Production?.ProducerKind != building.Kind)
-            {
-                continue;
-            }
-
-            result.Add(building.Id);
-        }
-    }
-
     private void CollectCandidateProducerIds(UnitSpec spec, PlayerSlotId playerSlotId, List<int> result)
     {
         result.Clear();
@@ -206,19 +185,6 @@ public sealed partial class UnitBattlefield
 
             result.Add(building.Id);
         }
-    }
-
-    private string? ProductionDesignIdCore(int buildingId, ProductionKind productionKind)
-    {
-        var identity = BuildingIdentity(buildingId);
-        return identity is null
-            ? null
-            : UnitDesignRuntimeLoadouts.ProductionDesignId(identity.Faction, productionKind);
-    }
-
-    private string? FirstDesignIdFor(ProductionKind productionKind, PlayerSlotId playerSlotId)
-    {
-        return UnitDesignRuntimeLoadouts.ProductionDesignId(FactionForSlot(playerSlotId), productionKind);
     }
 
     private bool HasAnyProductionForCore(int buildingId)
@@ -254,11 +220,6 @@ public sealed partial class UnitBattlefield
         };
     }
 
-    private static ProductionKind ProductionKindFor(UnitSpec spec)
-    {
-        return ProductionKindDesignBridge.ProductionKindFor(spec);
-    }
-
     private float BuildingTargetRadiusCore(int buildingId)
     {
         var identity = BuildingIdentity(buildingId);
@@ -282,18 +243,6 @@ public sealed partial class UnitBattlefield
     {
         var footprint = BuildSpecCatalog.For(kind).Footprint;
         return Mathf.Max(footprint.X, footprint.Y) * 0.5f;
-    }
-
-    private static string ProductionLabel(ProductionKind productionKind, UnitSpec? spec)
-    {
-        if (spec is null)
-        {
-            return productionKind.ToString();
-        }
-
-        return UnitDesignDefinitionCatalog.RuntimeDescriptors.TryGetValue(spec.Id, out var descriptor)
-            ? descriptor.Label
-            : spec.Label;
     }
 
     private static string ProducerLabelFor(UnitSpec? spec)

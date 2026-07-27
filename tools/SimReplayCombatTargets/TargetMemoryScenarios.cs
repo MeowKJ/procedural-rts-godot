@@ -15,19 +15,19 @@ static partial class Program
             world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
 
             var spec = CombatSpec();
-            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 0)), LastKnownAttacker(WeaponKind.ElectromagneticEmitter, sightRange: 135));
+            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 0)), LastKnownAttacker(WeaponIds.ElectromagneticEmitter, sightRange: 135));
             world.Spawn(spec, new OwnerId(2), EntityTransform.At(new Vector2(80, 0)), LastKnownRunner(new Vector2(360, 0)));
 
-            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 300)), LastKnownAttacker(WeaponKind.NeedleRifle, sightRange: 135));
+            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 300)), LastKnownAttacker(WeaponIds.NeedleRifle, sightRange: 135));
             world.Spawn(spec, new OwnerId(2), EntityTransform.At(new Vector2(80, 300)), LastKnownRunner(new Vector2(360, 300)));
 
-            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 600)), LastKnownAttacker(WeaponKind.RocketPod, sightRange: 135));
+            world.Spawn(spec, new OwnerId(1), EntityTransform.At(new Vector2(0, 600)), LastKnownAttacker(WeaponIds.RocketPod, sightRange: 135));
             world.Spawn(spec, new OwnerId(2), EntityTransform.At(new Vector2(80, 600)), LastKnownRunner(new Vector2(360, 600)));
 
             return world;
         }
 
-        static EntityComponentState[] LastKnownAttacker(WeaponKind weaponKind, float sightRange)
+        static EntityComponentState[] LastKnownAttacker(string weaponId, float sightRange)
         {
             return
             [
@@ -39,7 +39,7 @@ static partial class Program
                 new AutonomyComponentState(AcquireRange: 500, LeashRange: 500),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", weaponKind, 0, 0),
+                    new WeaponMountRuntimeState("main", weaponId, 0, 0),
                 }),
             ];
         }

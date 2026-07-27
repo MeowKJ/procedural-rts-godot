@@ -12,6 +12,6 @@ public readonly record struct CombatSourceModel(
     float WeaponFacing,
     float Radius,
     float TurnRate,
-    WeaponKind WeaponKind,
+    string WeaponId,
     Color Accent
 );

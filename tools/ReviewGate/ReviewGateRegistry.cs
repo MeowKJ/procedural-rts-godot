@@ -1,4 +1,4 @@
-sealed record ReviewGateContext(string Root, GateResult Result, string? RequiredRecord);
+sealed record ReviewGateContext(string Root, GateResult Result);
 
 static class ReviewGateRegistry
 {

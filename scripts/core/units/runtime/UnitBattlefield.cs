@@ -83,12 +83,11 @@ public sealed partial class UnitBattlefield
     private readonly List<int> _productionActiveProducerIds = [];
     private readonly HashSet<int> _productionBuildingIdSeen = [];
     private readonly HashSet<int> _productionKnownEntityIds = [];
-    private readonly List<UnitBattlefieldProductionQueueSnapshot> _productionQueuedBefore = [];
+    private readonly List<ProductionCompletionCandidate> _productionCompletionCandidates = [];
     private readonly List<EntityInstance> _productionNewUnitEntities = [];
     private readonly HashSet<int> _productionQueueSummarySeenIds = [];
     private readonly List<ProductionQueueSummaryEntry> _productionQueueSummaryBuffer = [];
     private readonly List<UnitSpec> _productionDesignSpecBuffer = [];
-    private readonly List<ProductionOptionState> _productionKindOptionStateBuffer = [];
     private readonly List<ProductionOptionState> _designProductionOptionStateBuffer = [];
     private readonly List<BuildOptionSnapshot> _buildOptionSnapshotBuffer = [];
     private readonly HashSet<string> _readyBuildingKinds = [];

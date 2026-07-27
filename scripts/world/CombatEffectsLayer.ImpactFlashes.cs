@@ -111,14 +111,14 @@ public partial class CombatEffectsLayer : Node2D
             float radius,
             Color accent,
             float damage,
-            AmmoKind? ammoKind,
+            string? ammoId,
             ImpactVfxStyle style)
         {
             Position = position;
             Radius = Mathf.Max(8, radius);
             Accent = accent;
             Age = 0;
-            Seed = Mathf.RoundToInt(position.X * 7 + position.Y * 11 + damage * 3 + (ammoKind is null ? 0 : (int)ammoKind.Value * 101));
+            Seed = Mathf.RoundToInt(position.X * 7 + position.Y * 11 + damage * 3 + EffectIdSeed(ammoId) * 101);
             Style = style;
         }
 

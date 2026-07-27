@@ -237,7 +237,7 @@ static void CheckAiFriendlyGitHubSurface(string root, List<string> failures)
     Require(pullRequestTemplate.Contains("## 验证 / Verification", StringComparison.Ordinal), "pull request template must show Chinese verification guidance", failures);
 
     Require(verifyAllStatus.Contains("<!-- verify-all-meta schema=1 run=", StringComparison.Ordinal), "VerifyAll status must keep stable hidden metadata", failures);
-    Require(verifyAllStatus.Contains("metadataRunMatch || retiredRunMatch", StringComparison.Ordinal), "VerifyAll status must parse translated metadata with retired fallback", failures);
+    Require(!verifyAllStatus.Contains("**Run:**", StringComparison.Ordinal), "VerifyAll status must read run identity only from hidden metadata", failures);
     Require(verifyAllStatus.Contains("**完整验证：**", StringComparison.Ordinal), "VerifyAll status must show Chinese human progress", failures);
     Require(verifyAllStatus.StartsWith("name: VerifyAll PR Status", StringComparison.Ordinal), "VerifyAll status must keep its stable workflow identifier", failures);
     Require(verifyAllStatus.Contains("run-name: VerifyAll PR 中文状态", StringComparison.Ordinal), "VerifyAll runs must have a Chinese display name", failures);

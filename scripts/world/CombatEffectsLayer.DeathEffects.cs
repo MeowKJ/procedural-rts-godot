@@ -168,7 +168,7 @@ public partial class CombatEffectsLayer : Node2D
                 death.Radius,
                 death.WeightClass,
                 death.MovementDomain,
-                death.KillingAmmoKind,
+                death.KillingAmmoId,
                 death.OverkillDamage,
                 accent);
         }
@@ -181,7 +181,7 @@ public partial class CombatEffectsLayer : Node2D
                 death.Radius,
                 death.WeightClass,
                 death.MovementDomain,
-                death.KillingAmmoKind,
+                death.KillingAmmoId,
                 death.OverkillDamage,
                 accent);
         }
@@ -192,15 +192,15 @@ public partial class CombatEffectsLayer : Node2D
             float radius,
             UnitWeightClass weightClass,
             MovementDomain movementDomain,
-            AmmoKind? killingAmmoKind,
+            string? killingAmmoId,
             float overkillDamage,
             Color accent)
         {
             Position = position;
             Radius = radius;
             Accent = accent;
-            Seed = id * 17 + (killingAmmoKind is null ? 0 : (int)killingAmmoKind.Value * 101);
-            Style = DeathVfxMath.StyleFor(weightClass, movementDomain, killingAmmoKind, overkillDamage);
+            Seed = id * 17 + EffectIdSeed(killingAmmoId) * 101;
+            Style = DeathVfxMath.StyleFor(weightClass, movementDomain, killingAmmoId, overkillDamage);
             Age = 0;
         }
 

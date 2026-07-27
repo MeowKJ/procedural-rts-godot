@@ -10,22 +10,22 @@ public static class ImpactVfxMath
         AmmoDefinition ammo,
         float damage)
     {
-        return StyleFor(weightClass, movementDomain, ammo.KindAlias, damage, ammo.DamageElementId);
+        return StyleFor(weightClass, movementDomain, ammo.Id, damage, ammo.DamageElementId);
     }
 
     public static ImpactVfxStyle StyleFor(
         UnitWeightClass weightClass,
         MovementDomain movementDomain,
-        AmmoKind? ammoKind,
+        string? ammoId,
         float damage)
     {
-        return StyleFor(weightClass, movementDomain, ammoKind, damage, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+        return StyleFor(weightClass, movementDomain, ammoId, damage, ElementPresentationCatalog.DamageElementIdFor(ammoId));
     }
 
     public static ImpactVfxStyle StyleFor(
         UnitWeightClass weightClass,
         MovementDomain movementDomain,
-        AmmoKind? ammoKind,
+        string? ammoId,
         float damage,
         string? damageElementId)
     {
@@ -41,42 +41,42 @@ public static class ImpactVfxMath
             MovementDomain.Naval => 1.1f,
             _ => 1f,
         };
-        var ammoScale = ammoKind switch
+        var ammoScale = ammoId switch
         {
-            AmmoKind.SeekerRocket or AmmoKind.BallisticCannon => 1.28f,
-            AmmoKind.ElectromagneticLance or AmmoKind.IonBeam => 1.12f,
-            AmmoKind.NeedleDart => 0.82f,
+            AmmoIds.SeekerRocket or AmmoIds.BallisticCannon => 1.28f,
+            AmmoIds.ElectromagneticLance or AmmoIds.IonBeam => 1.12f,
+            AmmoIds.NeedleDart => 0.82f,
             _ => 1f,
         };
         var damageScale = Mathf.Clamp(damage / 75f, 0, 0.7f);
-        var sparkCount = ammoKind switch
+        var sparkCount = ammoId switch
         {
-            AmmoKind.NeedleDart => 3,
-            AmmoKind.SeekerRocket or AmmoKind.BallisticCannon => 7,
-            AmmoKind.ElectromagneticLance or AmmoKind.IonBeam => 6,
+            AmmoIds.NeedleDart => 3,
+            AmmoIds.SeekerRocket or AmmoIds.BallisticCannon => 7,
+            AmmoIds.ElectromagneticLance or AmmoIds.IonBeam => 6,
             _ => 5,
         };
-        var shakeBase = ammoKind switch
+        var shakeBase = ammoId switch
         {
-            AmmoKind.SeekerRocket => 2.8f,
-            AmmoKind.BallisticCannon => 2.4f,
+            AmmoIds.SeekerRocket => 2.8f,
+            AmmoIds.BallisticCannon => 2.4f,
             _ => 0,
         };
-        var damageCanShake = shakeBase > 0 || ammoKind is null;
-        var shakeDamage = damageCanShake && ammoKind != AmmoKind.NeedleDart ? Mathf.Clamp((damage - 55f) / 55f, 0, 1) * 2.2f : 0;
+        var damageCanShake = shakeBase > 0 || ammoId is null;
+        var shakeDamage = damageCanShake && ammoId != AmmoIds.NeedleDart ? Mathf.Clamp((damage - 55f) / 55f, 0, 1) * 2.2f : 0;
         var shakeWeight = weightClass == UnitWeightClass.Heavy && shakeBase > 0 ? 1.1f : 0;
         var shakeDomain = movementDomain == MovementDomain.Air ? 0.72f : 1f;
         var shakeAmplitude = Mathf.Clamp((shakeBase + shakeDamage + shakeWeight) * shakeDomain, 0, 6.5f);
         var shakeRadius = shakeAmplitude <= 0 ? 0 : Mathf.Clamp(420f + damage * 2.4f + shakeAmplitude * 42f, 420, 860);
         var secondary = ElementPresentationCatalog.TryFor(damageElementId, out var element)
             ? element.ImpactColor
-            : ammoKind switch
+            : ammoId switch
         {
-            AmmoKind.ElectromagneticLance => new Color("#8fffe1", 0.92f),
-            AmmoKind.IonBeam => new Color("#d8f7ff", 0.94f),
-            AmmoKind.SeekerRocket => new Color("#ffb35c", 0.9f),
-            AmmoKind.BallisticCannon => new Color("#f6c55c", 0.88f),
-            AmmoKind.NeedleDart => new Color("#ffffff", 0.82f),
+            AmmoIds.ElectromagneticLance => new Color("#8fffe1", 0.92f),
+            AmmoIds.IonBeam => new Color("#d8f7ff", 0.94f),
+            AmmoIds.SeekerRocket => new Color("#ffb35c", 0.9f),
+            AmmoIds.BallisticCannon => new Color("#f6c55c", 0.88f),
+            AmmoIds.NeedleDart => new Color("#ffffff", 0.82f),
             _ => new Color("#d8f7ff", 0.86f),
         };
 
@@ -88,7 +88,7 @@ public static class ImpactVfxMath
             SecondaryColor: secondary,
             ShakeAmplitude: shakeAmplitude,
             ShakeRadius: shakeRadius,
-            EmitsEmbers: element?.EmitsEmbers == true || ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || damage > 55,
-            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
+            EmitsEmbers: element?.EmitsEmbers == true || ammoId is AmmoIds.BallisticCannon or AmmoIds.SeekerRocket || damage > 55,
+            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoId is AmmoIds.ElectromagneticLance or AmmoIds.IonBeam);
     }
 }

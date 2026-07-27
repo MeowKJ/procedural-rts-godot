@@ -71,11 +71,11 @@ public sealed partial class ConstructionSystem
         yield return new RallyPointComponentState();
         yield return new PresentationPulseComponentState();
 
-        if (spec.WeaponKind is { } weaponKind)
+        if (spec.WeaponId is { } weaponId)
         {
             yield return new WeaponUserComponentState(
             [
-                new WeaponMountRuntimeState("main", weaponKind, facing, 0),
+                new WeaponMountRuntimeState("main", weaponId, facing, 0),
             ]);
         }
 

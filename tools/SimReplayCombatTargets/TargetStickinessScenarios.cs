@@ -27,7 +27,7 @@ static partial class Program
                 new StanceComponentState(UnitStance.Hold),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }),
             });
             world.Spawn(spec, new OwnerId(2), EntityTransform.At(new Vector2(120, 0)), new EntityComponentState[]

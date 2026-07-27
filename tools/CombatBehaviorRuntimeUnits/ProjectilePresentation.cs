@@ -16,10 +16,10 @@ static partial class Program
         projectilePresentationBattlefield.CommandAttackSelected(PlayerSlotId.One, projectileTarget.Id);
         projectilePresentationBattlefield.Update(1 / 30.0);
         var projectileProjections = projectilePresentationBattlefield.ProjectileProjections();
-        var ordinaryProjectileStyle = ProjectileVfxMath.StyleFor(AmmoKind.NeedleDart);
-        var seekerProjectileStyle = ProjectileVfxMath.StyleFor(AmmoKind.SeekerRocket);
+        var ordinaryProjectileStyle = ProjectileVfxMath.StyleFor(AmmoIds.NeedleDart);
+        var seekerProjectileStyle = ProjectileVfxMath.StyleFor(AmmoIds.SeekerRocket);
         if (projectileProjections.Count == 0
-            || projectileProjections.All(projectile => projectile.AmmoKindAlias != AmmoKind.SeekerRocket)
+            || projectileProjections.All(projectile => projectile.AmmoId != AmmoIds.SeekerRocket)
             || projectileProjections.Any(projectile => projectile.Velocity.LengthSquared() <= 0.01f)
             || projectileProjections.Any(projectile => projectile.TrailWidth <= projectile.CoreWidth)
             || projectileProjections.Any(projectile => projectile.HeadRadius <= 0)
@@ -27,7 +27,7 @@ static partial class Program
             || ordinaryProjectileStyle.HeadRadius < ProjectileVfxMath.MinimumHeadRadius
             || ordinaryProjectileStyle.TrailAlpha < ProjectileVfxMath.MinimumTrailAlpha
             || ordinaryProjectileStyle.MinimumVisibleSeconds < ProjectileVfxMath.MinimumVisibleSeconds
-            || projectileProjections.Any(projectile => projectile.AmmoKindAlias == AmmoKind.SeekerRocket && projectile.Style != seekerProjectileStyle))
+            || projectileProjections.Any(projectile => projectile.AmmoId == AmmoIds.SeekerRocket && projectile.Style != seekerProjectileStyle))
         {
             throw new InvalidOperationException("UnitBattlefield should expose render-ready, readable EntityWorld projectile projections for CombatEffectsLayer");
         }
@@ -41,7 +41,7 @@ static partial class Program
         tankProjectileBattlefield.CommandAttackSelected(PlayerSlotId.One, tankProjectileTarget);
         tankProjectileBattlefield.Update(1 / 30.0);
 
-        var tankShot = tankShotEvents.FirstOrDefault(fired => fired.WeaponKindAlias == WeaponKind.VectorCannon);
+        var tankShot = tankShotEvents.FirstOrDefault(fired => fired.WeaponId == WeaponIds.VectorCannon);
         var tankCenter = tankProjectileAttacker.Position;
         var muzzleDistance = tankShot?.Muzzle.DistanceTo(tankCenter) ?? 0;
         var mountSpec = tankProjectileAttacker.Spec.Weapons[0];
@@ -52,11 +52,11 @@ static partial class Program
         var initialBallistic = tankProjectileBattlefield.EntityWorld.OrderedEntities
             .SingleOrDefault(entity => entity.Components.TryGet<ProjectileComponentState>(out var state)
                 && state.Source == tankProjectileAttacker.EntityId
-                && state.AmmoId == WeaponCatalog.IdFor(AmmoKind.BallisticCannon));
+                && state.AmmoId == AmmoIds.BallisticCannon);
         var initialBallisticState = initialBallistic?.Components.Require<ProjectileComponentState>();
         tankProjectileBattlefield.Update(1 / 30.0);
         var ballisticProjection = tankProjectileBattlefield.ProjectileProjections()
-            .SingleOrDefault(projectile => projectile.AmmoKindAlias == AmmoKind.BallisticCannon);
+            .SingleOrDefault(projectile => projectile.AmmoId == AmmoIds.BallisticCannon);
         var simulationProjectileCount = tankProjectileBattlefield.EntityWorld.OrderedEntities
             .Count(entity => entity.Components.Has<ProjectileComponentState>());
         if (tankShot is null
@@ -66,7 +66,7 @@ static partial class Program
             || initialBallisticState.Origin.DistanceTo(expectedMuzzle) > 0.5f
             || initialBallisticState.Behavior != ProjectileBehavior.Ballistic
             || initialBallisticState.FlightDuration < initialBallisticState.Age
-            || ballisticProjection.AmmoKindAlias != AmmoKind.BallisticCannon
+            || ballisticProjection.AmmoId != AmmoIds.BallisticCannon
             || ballisticProjection.Behavior != ProjectileBehavior.Ballistic
             || ballisticProjection.HitRule != HitRule.BallisticDeviation
             || ballisticProjection.ArcHeight <= 0
@@ -76,7 +76,7 @@ static partial class Program
             throw new InvalidOperationException(
                 $"rotating-turret tanks should expose a visible ballistic projectile arc from the independent mount muzzle without an instant duplicate trail; "
                 + $"shot={tankShot is not null}, muzzle={muzzleDistance:0.0}/{tankShot?.Muzzle.DistanceTo(expectedMuzzle):0.0}, initial={initialBallisticState is not null}, "
-                + $"behavior={initialBallisticState?.Behavior}, projection={ballisticProjection.AmmoKindAlias}/{ballisticProjection.Behavior}/{ballisticProjection.HitRule}, "
+                + $"behavior={initialBallisticState?.Behavior}, projection={ballisticProjection.AmmoId}/{ballisticProjection.Behavior}/{ballisticProjection.HitRule}, "
                 + $"arc={ballisticProjection.ArcHeight:0.0}, shadow={ballisticProjection.HasGroundShadow}, counts={tankProjectileBattlefield.ProjectileProjectionCount()}/{simulationProjectileCount}");
         }
     }

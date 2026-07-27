@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class LightRepeaterWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.LightRepeater;
+    public override string Id => WeaponIds.LightRepeater;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Light Repeater",
-            AmmoKind.NeedleDart,
+            AmmoIds.NeedleDart,
             WeaponMountKind.MobileTurret,
             235,
             0.42f,

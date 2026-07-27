@@ -18,7 +18,7 @@ public sealed class GenericLightTank : UnitDesign
     public override CollisionSpec Collision => new(21, 1.05f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.42f, 8, true),
+        WeaponMountSpec.Independent("main", WeaponIds.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.42f, 8, true),
     ];
 
     public override UnitArtRecipe Art => DogUnitArt.Vehicle("art.generic.light_tank", IconGlyph.Tank);

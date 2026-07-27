@@ -35,7 +35,7 @@ static partial class Program
                 new AutonomyComponentState(AcquireRange: 500, LeashRange: 500),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }),
             ];
         }
@@ -56,7 +56,7 @@ static partial class Program
                 new VisionComponentState(500),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, facing, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, facing, 0),
                 }, attackTarget, CombatTargetKind.Unit, AttackTargetIsManual: false),
             ];
         }
