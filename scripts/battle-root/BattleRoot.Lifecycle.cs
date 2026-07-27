@@ -58,7 +58,7 @@ public partial class BattleRoot
 
         foreach (var building in _state.Buildings)
         {
-            var view = CreateBuildingView(building);
+            var view = CreateBuildingView(building.Id);
             _buildingRoot.AddChild(view);
             _buildingViews[building.Id] = view;
             UpsertBuildingTarget(building);
@@ -66,7 +66,7 @@ public partial class BattleRoot
 
         _state.BuildingAdded += building =>
         {
-            var view = CreateBuildingView(building);
+            var view = CreateBuildingView(building.Id);
             _buildingRoot.AddChild(view);
             _buildingViews[building.Id] = view;
             UpsertBuildingTarget(building);
@@ -260,16 +260,12 @@ public partial class BattleRoot
         ApplySandboxLaunchState();
     }
 
-    private BuildingView CreateBuildingView(BuildingModel building)
+    private BuildingView CreateBuildingView(int buildingId)
     {
         return new BuildingView
         {
-            Name = $"Building_{building.Id}",
-            State = _state,
-            Building = building,
-            ProjectionProvider = () => _unitBattlefield.BuildingProjection(building.Id),
-            BuildingProjectionProvider = () => _unitBattlefield.BuildingPresentationProjection(building.Id),
-            ViewProjectionProvider = () => _unitBattlefield.BuildingViewProjection(building.Id),
+            Name = $"Building_{buildingId}",
+            ViewProjectionProvider = () => _unitBattlefield.BuildingViewProjection(buildingId),
             ExploredProvider = rect => _state.FogOfWar.AnyExplored(rect),
             VisualThemeProvider = () => _state.VisualTheme,
             ViewerFaction = _state.MatchConfig.PlayerFaction,

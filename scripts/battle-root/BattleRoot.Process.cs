@@ -182,7 +182,7 @@ public partial class BattleRoot
             var building = _state.UpsertRuntimeBuilding(target, presentation);
             if (!_buildingViews.ContainsKey(building.Id))
             {
-                var view = CreateBuildingView(building);
+                var view = CreateBuildingView(building.Id);
                 _buildingRoot.AddChild(view);
                 _buildingViews[building.Id] = view;
                 if (building.Owner == ProceduralRts.Core.Owner.Player)

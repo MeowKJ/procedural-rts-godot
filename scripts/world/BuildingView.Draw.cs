@@ -117,7 +117,7 @@ public partial class BuildingView : Node2D
             DrawRect(banner, new Color(art.Ink, 0.42f), false, 0.9f);
         }
 
-        var rallyPoint = _buildingProjection?.RallyPoint ?? Building.RallyPoint;
+        var rallyPoint = _buildingProjection!.Value.RallyPoint;
         if (rallyPoint is null)
         {
             return;
@@ -132,7 +132,7 @@ public partial class BuildingView : Node2D
     {
         var width = footprint.X * 0.72f;
         var y = -footprint.Y / 2f - 22;
-        var hp = _projection?.Hp ?? Building.Hp;
+        var hp = _projection!.Value.Hp;
         var maxHp = maxHpFallback;
         var health = maxHp <= 0 ? 0 : Mathf.Clamp(hp / maxHp, 0, 1);
         DrawRect(new Rect2(-width / 2, y, width, 5.5f), new Color(SoftOldCityPalette.Ink, 0.58f));
@@ -141,22 +141,16 @@ public partial class BuildingView : Node2D
 
     private void DrawProduction(Vector2 footprint, Color accent, BuildingArtColors art)
     {
-        var projectedQueue = _buildingProjection?.ProductionQueue;
-        var queueCount = projectedQueue?.Count ?? Building.ProductionQueue.Count;
+        var projectedQueue = _buildingProjection!.Value.ProductionQueue;
+        var queueCount = projectedQueue.Count;
         if (queueCount == 0)
         {
             return;
         }
 
-        var productionKind = projectedQueue is not null
-            ? projectedQueue[0].Kind
-            : Building.ProductionQueue[0].Kind;
-        var designId = projectedQueue is not null
-            ? projectedQueue[0].DesignId
-            : Building.ProductionQueue[0].DesignId;
-        var itemProgress = projectedQueue is not null
-            ? projectedQueue[0].Progress
-            : Building.ProductionQueue[0].Progress;
+        var productionKind = projectedQueue[0].Kind;
+        var designId = projectedQueue[0].DesignId;
+        var itemProgress = projectedQueue[0].Progress;
         var production = UnitDesignCatalog.Spec(designId).Production
             ?? throw new InvalidOperationException($"UnitDesign '{designId}' must include ProductionSpec for {productionKind}.");
         var width = footprint.X * 0.72f;
@@ -169,13 +163,13 @@ public partial class BuildingView : Node2D
 
     private void DrawSelection(Vector2 footprint, Color accent, float pulse)
     {
-        var selected = _projection?.Selected ?? Building.Selected;
+        var selected = _projection!.Value.Selected;
         if (!selected)
         {
             return;
         }
 
-        var rallyPulse = _buildingProjection?.RallyPulse ?? Building.RallyPulse;
+        var rallyPulse = _buildingProjection!.Value.RallyPulse;
         var rect = new Rect2(-footprint / 2f, footprint).Grow(19 + rallyPulse * 6);
         DrawRect(rect, new Color(SoftOldCityPalette.InnerLight, 0.78f), false, 2.2f);
         DrawRect(rect.Grow(8 + pulse * 3), new Color(accent, 0.38f + rallyPulse * 0.22f), false, 1.4f);

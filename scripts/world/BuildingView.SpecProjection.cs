@@ -19,9 +19,7 @@ public partial class BuildingView : Node2D
 
     private static Color OwnerColor(CoreOwner owner)
     {
-        return owner == CoreOwner.Player
-            ? SoftOldCityPalette.PlayerColor(PlayerSlotId.One)
-            : SoftOldCityPalette.PlayerColor(PlayerSlotId.Two);
+        return SoftOldCityPalette.PlayerColor(owner == CoreOwner.Player ? PlayerSlotId.One : PlayerSlotId.Two);
     }
 
     private (Color BodyAccent, Color RelationAccent) ResolvePresentationColors(
@@ -63,13 +61,8 @@ public partial class BuildingView : Node2D
         return owner == OwnerId.FromPlayerSlot(PlayerSlotId.One) || IsExploredMemory(worldRect);
     }
 
-    private bool IsLegacyBuildingExplored(Rect2 worldRect)
-    {
-        return State.IsAlliedWithPlayer(Building) || IsExploredMemory(worldRect);
-    }
-
     private bool IsExploredMemory(Rect2 worldRect)
     {
-        return ExploredProvider?.Invoke(worldRect) ?? State.FogOfWar.AnyExplored(worldRect);
+        return ExploredProvider?.Invoke(worldRect) ?? true;
     }
 }

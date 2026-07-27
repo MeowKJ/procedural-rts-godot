@@ -143,18 +143,7 @@ public partial class BattleRoot
             position,
             request.Transform.Facing,
             spec.MaxHp);
-        var viewModel = new BuildingModel
-        {
-            Id = building.Id,
-            Kind = kind,
-            Owner = LegacyOwnerForPlayerSlot(playerSlot) ?? ProceduralRts.Core.Owner.Enemy,
-            FactionId = ToLegacyFaction(_sandboxContext.Faction),
-            Position = position,
-            Facing = request.Transform.Facing,
-            TurretFacing = request.Transform.Facing,
-            Hp = spec.MaxHp,
-        };
-        var view = CreateBuildingView(viewModel);
+        var view = CreateBuildingView(building.Id);
         AddChild(view);
         _buildingViews[building.Id] = view;
         return true;

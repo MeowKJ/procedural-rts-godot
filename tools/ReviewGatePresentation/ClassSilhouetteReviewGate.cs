@@ -17,7 +17,7 @@ static class ClassSilhouetteReviewGate
         RequireText(buildingDraw, "var banners = new[]", "Buildings must keep corner banner owner-color markers.", result);
         RequireText(buildingDraw, "const float corner = 24", "Building footprints must keep readable corner marks.", result);
         RequireText(buildingGeometry, "DrawTurretPlatform(Rect2 rect, BuildingArtColors art, float pulse, bool antiAir)", "Turrets must use a compact fixed-weapon platform renderer.", result);
-        RequireText(buildingGeometry, "DrawSetTransform(Vector2.Zero, Building.TurretFacing - bodyFacing, Vector2.One)", "Turret mounts must rotate independently from the platform body.", result);
+        RequireText(buildingGeometry, "DrawSetTransform(Vector2.Zero, _buildingProjection!.Value.TurretFacing - bodyFacing, Vector2.One)", "Turret mounts must rotate independently from the platform body.", result);
         RequireText(buildingGeometry, "DrawLine(new Vector2(4, 0), new Vector2(radius + 22, 0)", "Ground turret must keep a prominent barrel silhouette.", result);
     }
 }
