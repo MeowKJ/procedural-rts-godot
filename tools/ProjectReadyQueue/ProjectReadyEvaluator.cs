@@ -17,7 +17,6 @@ public static class ProjectReadyEvaluator
     public const string AcceptanceMissing = "ACCEPTANCE_MISSING";
     public const string VerificationGateMissing = "VERIFICATION_GATE_MISSING";
 
-    public const string StatusWorkflowConflict = "STATUS_WORKFLOW_CONFLICT";
     public const string ReadyLabelWorkflowConflict = "READY_LABEL_WORKFLOW_CONFLICT";
     public const string SizeLabelProjectConflict = "SIZE_LABEL_PROJECT_CONFLICT";
 
@@ -92,7 +91,6 @@ public static class ProjectReadyEvaluator
             issue.Url,
             issue.State,
             issue.Workflow,
-            issue.Status,
             issue.Priority,
             issue.Size,
             issue.Agent,
@@ -108,15 +106,6 @@ public static class ProjectReadyEvaluator
     private static IReadOnlyList<string> WarningsFor(ProjectIssue issue, IReadOnlyList<string> labels)
     {
         var warnings = new List<string>();
-        var statusConflict = issue.Status switch
-        {
-            "Done" => issue.Workflow != "Done",
-            "In Progress" => issue.Workflow is not ("In Progress" or "Review"),
-            "Todo" => issue.Workflow is not ("Backlog" or "Ready"),
-            _ => false,
-        } || issue.Workflow == "Done" && issue.Status != "Done";
-        Add(statusConflict, StatusWorkflowConflict, warnings);
-
         var hasReadyLabel = labels.Contains("status:ready", StringComparer.OrdinalIgnoreCase);
         Add(hasReadyLabel && issue.Workflow != "Ready", ReadyLabelWorkflowConflict, warnings);
 

@@ -55,7 +55,7 @@ static int SelfTest()
         Issue(4, projectItemCount: 0, workflow: null, size: null, agent: null, verificationGate: null),
         Issue(5, projectItemCount: 2),
         Issue(6, workflow: null),
-        Issue(7, workflow: "In Progress", status: "Done", labels: ["status:ready"]),
+        Issue(7, workflow: "In Progress", labels: ["status:ready"]),
         Issue(8, size: null, labels: ["size:S"]),
         Issue(9, size: "L"),
         Issue(10, agent: null),
@@ -72,7 +72,6 @@ static int SelfTest()
 
     var foundReasons = output.Evaluated.SelectMany(item => item.ReasonCodes).ToHashSet(StringComparer.Ordinal);
     Require(ProjectReadyEvaluator.ReasonCodeOrder.All(foundReasons.Contains), "every reason code needs a negative fixture");
-    Require(output.Evaluated.Single(item => item.Number == 7).Warnings.Contains(ProjectReadyEvaluator.StatusWorkflowConflict), "status/workflow warning missing");
     Require(output.Evaluated.Single(item => item.Number == 7).Warnings.Contains(ProjectReadyEvaluator.ReadyLabelWorkflowConflict), "ready label warning missing");
     Require(output.Evaluated.Single(item => item.Number == 8).Warnings.Contains(ProjectReadyEvaluator.SizeLabelProjectConflict), "size label warning missing");
     Require(output.Evaluated.Single(item => item.Number == 14).ReasonCodes.Contains(ProjectReadyEvaluator.OpenBlocker), "out-of-scope open blocker must block");
@@ -83,6 +82,7 @@ static int SelfTest()
     var first = JsonSerializer.Serialize(output, options);
     var second = JsonSerializer.Serialize(ProjectReadyEvaluator.Evaluate(new ProjectStateInput(1, 3, issues)), options);
     Require(first == second, "JSON output must be deterministic");
+    Require(!first.Contains("\"status\":", StringComparison.Ordinal), "evaluation JSON must expose Workflow without a second status field");
     var report = ProjectReadyReport.Render(output);
     Require(report.Contains("可由 AI 领取：2", StringComparison.Ordinal), "Chinese report summary missing");
     foreach (var heading in new[] { "## 可领取", "## 等待审查", "## 受阻或暂停", "## 已完成", "## 下一步" })
@@ -90,34 +90,34 @@ static int SelfTest()
         Require(report.Contains(heading, StringComparison.Ordinal), $"Chinese report section missing: {heading}");
     }
     Require(ProjectReadyEvaluator.ReasonCodeOrder.All(code => !report.Contains(code, StringComparison.Ordinal)), "every reason code needs a Chinese report label");
-    Require(new[] { ProjectReadyEvaluator.StatusWorkflowConflict, ProjectReadyEvaluator.ReadyLabelWorkflowConflict, ProjectReadyEvaluator.SizeLabelProjectConflict }
+    Require(new[] { ProjectReadyEvaluator.ReadyLabelWorkflowConflict, ProjectReadyEvaluator.SizeLabelProjectConflict }
         .All(code => !report.Contains(code, StringComparison.Ordinal)), "every warning code needs a Chinese report label");
     var inProgressOnly = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
         1,
         3,
-        [Issue(18, workflow: "In Progress", status: "In Progress", agent: "Local Codex")]));
+        [Issue(18, workflow: "In Progress", agent: "Local Codex")]));
     Require(ProjectReadyReport.Render(inProgressOnly).Contains("继续推进", StringComparison.Ordinal), "in-progress-only report needs an accurate next action");
     var reviewSelection = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
         1,
         3,
         [
-            Issue(19, workflow: "Review", status: "In Progress", agent: "Local Codex", openBlockers: [999]),
-            Issue(20, workflow: "Review", status: "In Progress", agent: "Local Codex", labels: ["status:paused"]),
-            Issue(21, workflow: "Review", status: "In Progress", agent: "Local Codex"),
+            Issue(19, workflow: "Review", agent: "Local Codex", openBlockers: [999]),
+            Issue(20, workflow: "Review", agent: "Local Codex", labels: ["status:paused"]),
+            Issue(21, workflow: "Review", agent: "Local Codex"),
         ]));
     Require(ProjectReadyReport.Render(reviewSelection).Contains("先完成 [#21", StringComparison.Ordinal), "next action must skip blocked and paused review items");
     var inProgressSelection = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
         1,
         3,
         [
-            Issue(22, workflow: "In Progress", status: "In Progress", agent: "Local Codex", openBlockers: [999]),
-            Issue(23, workflow: "In Progress", status: "In Progress", agent: "Local Codex"),
+            Issue(22, workflow: "In Progress", agent: "Local Codex", openBlockers: [999]),
+            Issue(23, workflow: "In Progress", agent: "Local Codex"),
         ]));
     Require(ProjectReadyReport.Render(inProgressSelection).Contains("继续推进 [#23", StringComparison.Ordinal), "next action must skip blocked in-progress items");
     var blockedOnly = ProjectReadyEvaluator.Evaluate(new ProjectStateInput(
         1,
         3,
-        [Issue(24, workflow: "Review", status: "In Progress", agent: "Local Codex", labels: ["status:paused"])]));
+        [Issue(24, workflow: "Review", agent: "Local Codex", labels: ["status:paused"])]));
     Require(ProjectReadyReport.Render(blockedOnly).Contains("先解除 [#24", StringComparison.Ordinal), "blocked-only report must surface the blocker instead of review work");
 
     Console.WriteLine("ProjectReadyQueue self-test PASSED.");
@@ -128,7 +128,6 @@ static int SelfTest()
         string state = "OPEN",
         int? projectItemCount = 1,
         string? workflow = "Ready",
-        string? status = "Todo",
         string? priority = "P2 Later",
         string? size = "S",
         string? agent = "Unassigned",
@@ -137,7 +136,7 @@ static int SelfTest()
         List<string>? labels = null,
         List<int>? openSubIssues = null,
         List<int>? openBlockers = null) =>
-        new(number, $"Issue {number}", $"https://example.test/issues/{number}", state, projectItemCount, workflow, status, priority, size, agent, verificationGate, body, labels ?? [], openSubIssues ?? [], openBlockers ?? []);
+        new(number, $"Issue {number}", $"https://example.test/issues/{number}", state, projectItemCount, workflow, priority, size, agent, verificationGate, body, labels ?? [], openSubIssues ?? [], openBlockers ?? []);
 }
 
 static JsonSerializerOptions JsonOptions() => new()
