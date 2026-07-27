@@ -19,7 +19,7 @@ public partial class BuildingView : Node2D
         var explored = IsProjectedBuildingExplored(projection.Owner, worldRect);
         var playerSlot = viewProjection.PlayerSlotId.Value;
         var owner = OwnerForPlayerSlot(viewProjection.PlayerSlotId);
-        var faction = LegacyFaction(viewProjection.Faction);
+        var faction = ToFactionId(viewProjection.Faction);
         var viewerFactionKey = ViewerFaction is { } viewerFaction ? (int)viewerFaction : -1;
         var selected = projection.Selected;
         var powered = buildingProjection.Powered;

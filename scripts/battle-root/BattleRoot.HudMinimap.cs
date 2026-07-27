@@ -35,12 +35,12 @@ public partial class BattleRoot
         FillMinimapAlertPings(alertPings);
 
         _hud.SetMinimapState(
-            _state.WorldSize,
+            _worldSize,
             _camera.VisibleWorldRect(),
             units,
             buildings,
             resources,
-            _state.FogOfWar.MaskTexture(),
+            _presentationEnvironment.FogOfWar.MaskTexture(),
             _unitBattlefield.MinimapPips(PlayerSlotId.One),
             alertPings);
     }
@@ -57,7 +57,7 @@ public partial class BattleRoot
             result.Add(new HudLayer.MinimapUnit(
                 unit.Position,
                 OwnerForPlayerSlot(unit.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
-                ToLegacyFaction(unit.Faction),
+                ToFactionId(unit.Faction),
                 unit.Selected,
                 unit.AlertPulse));
         }
@@ -65,14 +65,14 @@ public partial class BattleRoot
 
     private void FillUnitBattlefieldMinimapBuildings(List<HudLayer.MinimapBuilding> result)
     {
-        var projections = _unitBattlefield.BuildingMinimapProjections(PlayerSlotId.One, rect => _state.FogOfWar.AnyExplored(rect));
+        var projections = _unitBattlefield.BuildingMinimapProjections(PlayerSlotId.One, _presentationEnvironment.FogOfWar.AnyExplored);
         foreach (var building in projections)
         {
             result.Add(new HudLayer.MinimapBuilding(
                 building.Position,
                 building.Footprint,
                 OwnerForPlayerSlot(building.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
-                ToLegacyFaction(building.Faction),
+                ToFactionId(building.Faction),
                 building.Selected,
                 building.AlertPulse));
         }
@@ -80,7 +80,7 @@ public partial class BattleRoot
 
     private void FillMinimapResources(List<HudLayer.MinimapResource> result)
     {
-        var pips = _unitBattlefield.ResourcePips(_state.IsExploredByPlayer);
+        var pips = _unitBattlefield.ResourcePips(_presentationEnvironment.IsExplored);
         foreach (var resource in pips)
         {
             result.Add(new HudLayer.MinimapResource(

@@ -13,7 +13,7 @@ public partial class GridLayer : Node2D
     private Rect2? _visibleWorldRect;
 
     public Vector2 WorldSize { get; set; } = new(3600, 2400);
-    public GameState? State { get; init; }
+    public Func<WorldVisualThemeState>? VisualThemeProvider { get; init; }
     public Rect2? VisibleWorldRect
     {
         get => _visibleWorldRect;
@@ -29,22 +29,15 @@ public partial class GridLayer : Node2D
         }
     }
 
-    public override void _Ready()
-    {
-        if (State is not null)
-        {
-            State.VisualThemeChanged += _ => QueueRedraw();
-        }
-    }
-
     public override void _Draw()
     {
-        var palette = State is null
+        var theme = VisualThemeProvider?.Invoke();
+        var palette = theme is null
             ? WorldThemeMath.Palette(WorldVisualTheme.NightRadar)
-            : WorldThemeMath.Palette(State.VisualTheme);
-        var profile = State is null
+            : WorldThemeMath.Palette(theme);
+        var profile = theme is null
             ? WorldThemeMath.Profile(WorldVisualTheme.NightRadar)
-            : WorldThemeMath.Profile(State.VisualTheme);
+            : WorldThemeMath.Profile(theme);
         var visibleRect = VisibleDrawRect();
         DrawRect(visibleRect, palette.Background);
         DrawWorldBoundary(palette, visibleRect);

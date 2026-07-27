@@ -59,7 +59,7 @@ public partial class AuthoredMapPreviewRuntimeSmoke : Node
                     NextPhase();
                     break;
                 case 5 when GetTree().CurrentScene is BattleRoot normal && _phaseFrames > 4:
-                    Require(normal.State.ActiveMapSpec is null && normal.State.MatchConfig == MatchConfig.Default,
+                    Require(normal.DebugMatchConfig.AuthoredMap is null && normal.DebugMatchConfig == MatchConfig.Default,
                         "Normal skirmish after preview must have no stale authored state.");
                     Capture("normal-no-stale.png");
                     WriteLifecycle();
@@ -79,11 +79,11 @@ public partial class AuthoredMapPreviewRuntimeSmoke : Node
 
     private static void ValidateAuthored(BattleRoot battle)
     {
-        var map = battle.State.ActiveMapSpec ?? throw new InvalidOperationException("Authored map missing.");
+        var map = battle.DebugMatchConfig.AuthoredMap ?? throw new InvalidOperationException("Authored map missing.");
         Require(map.Id == "authored-map-preview" && map.WorldSize == new MapSize(3600, 2400),
             "Runtime preview loaded the wrong map identity or bounds.");
-        Require(battle.State.Credits(ProceduralRts.Core.Owner.Player) == 2600
-            && battle.State.Credits(ProceduralRts.Core.Owner.Enemy) == 2800,
+        Require(battle.DebugRuntimeCredits(PlayerSlotId.One) == 2600
+            && battle.DebugRuntimeCredits(PlayerSlotId.Two) == 2800,
             "Runtime preview must preserve asymmetric sample credits.");
         Require(map.Buildings.Count == 4 && map.Units.Count == 2 && map.Resources.Count == 1
             && map.Obstacles.Count == 1 && map.TerrainCells.Count == 1 && map.Triggers.Count == 1

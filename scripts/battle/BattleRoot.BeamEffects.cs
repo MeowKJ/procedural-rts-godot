@@ -13,7 +13,7 @@ public partial class BattleRoot
         PlayerSlotId sourcePlayerSlot)
     {
         if (ammoKind is not { } kind
-            || !GameState.AmmoDefinitions.TryGetValue(kind, out var ammo)
+            || !WeaponCatalog.Ammo.TryGetValue(kind, out var ammo)
             || ammo.Behavior != ProjectileBehavior.Beam)
         {
             return;
@@ -52,6 +52,13 @@ public partial class BattleRoot
         }
 
         var weapon = WeaponCatalog.Weapons[attacker.Spec.PrimaryWeapon.WeaponKind];
-        return GameState.EffectiveDamageAgainst(weapon.AmmoKind, targetSpec);
+        var ammo = WeaponCatalog.Ammo[weapon.AmmoKind];
+        return DamageResolver.Resolve(
+            ammo,
+            UnitWeightClass.Heavy,
+            MovementDomain.Land,
+            targetSpec.ArmorTag,
+            targetElementDefense: targetSpec.ElementDefense,
+            targetTraits: targetSpec.TargetTraits);
     }
 }

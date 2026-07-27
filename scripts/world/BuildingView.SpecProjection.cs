@@ -45,7 +45,7 @@ public partial class BuildingView : Node2D
         return playerSlotId == PlayerSlotId.One ? CoreOwner.Player : CoreOwner.Enemy;
     }
 
-    private static FactionId LegacyFaction(UnitFactionId faction)
+    private static FactionId ToFactionId(UnitFactionId faction)
     {
         return faction switch
         {

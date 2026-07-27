@@ -23,7 +23,7 @@ public partial class BattleRoot
 
     private void RefreshCommandCard()
     {
-        _hud.SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player));
+        _hud.SetBuildCardState(_unitBattlefield.BuildOptionSnapshots(PlayerSlotId.One));
         CollectSelectedProductionBuildingIds();
         _hud.SetCommandCardState(RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer));
         _hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One));

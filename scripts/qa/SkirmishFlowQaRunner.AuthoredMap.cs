@@ -7,12 +7,10 @@ public partial class SkirmishFlowQaRunner
 {
     private static void AssertAuthoredBattle(BattleRoot battle)
     {
-        var map = battle.State.ActiveMapSpec
+        var map = battle.DebugMatchConfig.AuthoredMap
             ?? throw new InvalidOperationException("authored battle did not preserve its MapSpec handoff");
         if (map.Id != "qa.authored-flow"
-            || battle.State.WorldSize != map.WorldSize.ToVector2()
-            || battle.State.Credits(ProceduralRts.Core.Owner.Player) != 1800
-            || battle.State.Credits(ProceduralRts.Core.Owner.Enemy) != 2100
+            || battle.DebugWorldSize != map.WorldSize.ToVector2()
             || battle.DebugRuntimeCredits(PlayerSlotId.One) != 1800
             || battle.DebugRuntimeCredits(PlayerSlotId.Two) != 2100)
         {
@@ -56,10 +54,11 @@ public partial class SkirmishFlowQaRunner
 
     private static void AssertNormalBattleAfterAuthored(BattleRoot battle)
     {
-        if (battle.State.ActiveMapSpec is not null
-            || battle.State.Options != SkirmishOptions.Default
-            || battle.State.MatchConfig != MatchConfig.Default
-            || battle.DebugRuntimeMapEnvironment != MapRuntimeEnvironment.Empty)
+        var generated = SkirmishMapGenerator.GenerateSpec(MatchConfig.Default);
+        if (battle.DebugMatchConfig.AuthoredMap is not null
+            || battle.DebugMatchConfig != MatchConfig.Default
+            || battle.DebugRuntimeMapSpec.Id != generated.Id
+            || battle.DebugRuntimeMapEnvironment.WorldSize != generated.WorldSize)
         {
             throw new InvalidOperationException("normal battle retained stale authored-map state");
         }

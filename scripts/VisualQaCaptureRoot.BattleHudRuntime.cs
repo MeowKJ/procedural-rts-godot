@@ -135,7 +135,7 @@ public partial class VisualQaCaptureRoot
     private void AssertNormalSkirmishSandboxHidden()
     {
         if (_activeScene is not BattleRoot battle
-            || battle.State.Options.LaunchMode != LaunchMode.Skirmish)
+            || battle.DebugMatchConfig.LaunchMode != LaunchMode.Skirmish)
         {
             throw new InvalidOperationException("Battle HUD runtime capture requires a real Skirmish launch.");
         }
@@ -154,14 +154,14 @@ public partial class VisualQaCaptureRoot
             throw new InvalidOperationException("Battle HUD runtime capture config requires BattleRoot.");
         }
 
-        var options = battle.State.Options;
-        if (options.StartingCredits != config.StartingCredits
-            || options.MapSeed != config.MapSeed
-            || options.EnemyDifficulty != config.EnemyDifficulty
-            || options.LaunchMode != config.LaunchMode)
+        var match = battle.DebugMatchConfig;
+        if (match.StartingCredits != config.StartingCredits
+            || match.MapSeed != config.MapSeed
+            || match.EnemyDifficulty != config.EnemyDifficulty
+            || match.LaunchMode != config.LaunchMode)
         {
             throw new InvalidOperationException(
-                $"Battle HUD runtime options differ from capture config: {options}.");
+                $"Battle HUD runtime config differs from capture config: {match}.");
         }
 
         if (GameText.CurrentLanguage != config.Language)
@@ -170,7 +170,7 @@ public partial class VisualQaCaptureRoot
                 $"Battle HUD runtime language {GameText.CurrentLanguage} differs from {config.Language}.");
         }
 
-        var visualTheme = battle.State.VisualTheme;
+        var visualTheme = battle.DebugVisualTheme;
         if (visualTheme.Current != config.Theme
             || visualTheme.Target != config.Theme
             || visualTheme.TransitionProgress < 0.999f)

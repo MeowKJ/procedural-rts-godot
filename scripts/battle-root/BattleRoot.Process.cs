@@ -12,10 +12,10 @@ public partial class BattleRoot
     {
         _processStopwatch.Restart();
         _elapsed += (float)delta;
-        var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _state.Options.LaunchMode, _sandboxTimeScale);
+        var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _matchConfig.LaunchMode, _sandboxTimeScale);
         _simStepStopwatch.Restart();
-        _state.UpdateWorldOnly(gameplayDelta, UnitBattlefieldVisionSources());
         _unitBattlefield.AdvanceSimulation(gameplayDelta);
+        _presentationEnvironment.Update(gameplayDelta, _unitBattlefield, PlayerSlotId.One);
         _simStepStopwatch.Stop();
         DrainPresentationEvents();
         SyncUnitBattlefieldBuildingRuntimeState();
@@ -126,8 +126,8 @@ public partial class BattleRoot
             visibleUnitCount,
             projectileCount,
             effectCount,
-            _state.FogOfWar.MaskTextureUploadCount,
-            _state.LastFogUpdateMs);
+            _presentationEnvironment.FogOfWar.MaskTextureUploadCount,
+            _presentationEnvironment.LastFogUpdateMs);
     }
 
     private int LiveUnitBattlefieldUnitCount()
@@ -176,44 +176,26 @@ public partial class BattleRoot
 
     private void SyncUnitBattlefieldBuildingRuntimeState()
     {
-        foreach (var target in _unitBattlefield.BuildingSnapshots())
+        _buildingSyncSnapshotBuffer.Clear();
+        _buildingSyncSnapshotBuffer.AddRange(_unitBattlefield.BuildingSnapshots());
+        foreach (var target in _buildingSyncSnapshotBuffer)
         {
-            var presentation = _unitBattlefield.BuildingPresentationProjection(target.Id);
-            var building = _state.UpsertRuntimeBuilding(target, presentation);
-            if (!_buildingViews.ContainsKey(building.Id))
+            if (!_buildingViews.ContainsKey(target.Id))
             {
-                var view = CreateBuildingView(building.Id);
+                var view = CreateBuildingView(target.Id);
                 _buildingRoot.AddChild(view);
-                _buildingViews[building.Id] = view;
-                if (building.Owner == ProceduralRts.Core.Owner.Player)
+                _buildingViews[target.Id] = view;
+                if (target.PlayerSlotId == PlayerSlotId.One)
                 {
-                    AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(building.Kind).Label), building.Position);
-                    PlayAudioCue(TacticalAudioCue.BuildComplete, building.Position);
-                    if (building.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
+                    AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(target.Kind).Label), target.Position);
+                    PlayAudioCue(TacticalAudioCue.BuildComplete, target.Position);
+                    if (target.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
                     {
                         UpdatePowerAlert(true);
                     }
                 }
             }
-
-            building.DeliveryPulse = Mathf.Max(building.DeliveryPulse, presentation?.DeliveryPulse ?? 0);
-            building.DockReservedByHarvesterId = _unitBattlefield.BuildingDockReservedByHarvesterId(target.Id);
-            building.DockedHarvesterId = _unitBattlefield.BuildingDockedHarvesterId(target.Id);
-            building.RallyPoint = presentation?.RallyPoint;
-            building.RallyPulse = Mathf.Max(building.RallyPulse, presentation?.RallyPulse ?? 0);
-            building.Selected = _unitBattlefield.BuildingProjection(target.Id)?.Selected == true;
         }
-    }
-
-    private IReadOnlyList<(Vector2 Position, float SightRange)> UnitBattlefieldVisionSources()
-    {
-        _unitBattlefieldVisionSourceBuffer.Clear();
-        foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))
-        {
-            _unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));
-        }
-
-        return _unitBattlefieldVisionSourceBuffer;
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -229,7 +211,7 @@ public partial class BattleRoot
             return;
         }
 
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode != LaunchMode.Sandbox)
         {
             return;
         }

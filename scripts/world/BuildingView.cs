@@ -70,7 +70,7 @@ public partial class BuildingView : Node2D
         }
 
         var owner = OwnerForPlayerSlot(viewProjection.PlayerSlotId);
-        var faction = LegacyFaction(viewProjection.Faction);
+        var faction = ToFactionId(viewProjection.Faction);
         var (bodyAccent, relationAccent) = ResolvePresentationColors(kind, owner, faction);
         var ownerColor = SoftOldCityPalette.PlayerColor(viewProjection.PlayerSlotId);
         var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());

@@ -7,20 +7,16 @@ public partial class SignalNetworkLayer : Node2D
 {
     private const int RadiusArcSegments = 40;
 
-    public required GameState State { get; init; }
-
-    public override void _Ready()
-    {
-        State.VisualThemeChanged += _ => QueueRedraw();
-        State.SignalNetworkChanged += QueueRedraw;
-    }
+    public required IReadOnlyList<SignalNetworkNode> Nodes { get; init; }
+    public required Func<WorldVisualThemeState> VisualThemeProvider { get; init; }
 
     public override void _Draw()
     {
-        var palette = WorldThemeMath.Palette(State.VisualTheme);
-        var profile = WorldThemeMath.Profile(State.VisualTheme);
-        var glow = SignalNetworkMath.ThemeGlowStrength(State.VisualTheme);
-        foreach (var node in State.SignalNodes)
+        var theme = VisualThemeProvider();
+        var palette = WorldThemeMath.Palette(theme);
+        var profile = WorldThemeMath.Profile(theme);
+        var glow = SignalNetworkMath.ThemeGlowStrength(theme);
+        foreach (var node in Nodes)
         {
             DrawNode(node, palette, profile, glow);
         }

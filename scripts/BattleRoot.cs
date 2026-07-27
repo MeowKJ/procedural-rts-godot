@@ -51,13 +51,17 @@ public partial class BattleRoot : Node2D
         "cat.crescent_artillery",
     ];
 
-    private readonly GameState _state;
+    private readonly MatchConfig _matchConfig;
+    private readonly MapSpec _runtimeMapSpec;
+    private readonly Vector2 _worldSize;
+    private readonly WorldPresentationEnvironment _presentationEnvironment;
     private readonly UnitBattlefield _unitBattlefield;
     private readonly SimEventSink _presentationEvents = new();
     private readonly List<SimEvent> _simEventDrainBuffer = [];
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
     private readonly List<HudLayer.AbilityCardState> _selectedAbilityCardBuffer = [];
     private readonly List<int> _selectedProductionBuildingIdBuffer = [];
+    private readonly List<UnitBattlefieldBuildingSnapshot> _buildingSyncSnapshotBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
     private readonly List<int> _sandboxLaunchUnitIdBuffer = [];
     private readonly List<int> _debugPlayerAttackerIds = [];
@@ -70,8 +74,8 @@ public partial class BattleRoot : Node2D
     private readonly Dictionary<int, ResourceFieldView> _resourceViews = [];
     private readonly List<AlertEntry> _alerts = [];
     private readonly Dictionary<string, float> _alertCooldowns = [];
-    private readonly List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer = [];
     private GridLayer _grid = null!;
+    private SignalNetworkLayer _signalNetwork = null!;
     private Node2D _buildingRoot = null!;
     private CameraController _camera = null!;
     private BuildPlacementController _buildPlacement = null!;
@@ -100,23 +104,21 @@ public partial class BattleRoot : Node2D
     private int _debugPlayerCommandedUnitCount;
     private int _debugEnemyCommandedUnitCount;
     private GameOutcome _displayedOutcome = GameOutcome.InProgress;
-    public GameState State => _state;
     public PresentationMetrics PresentationMetrics => _presentationMetrics;
     public int DebugSimClockTick => _unitBattlefield.SimulationTick;
+    public MatchConfig DebugMatchConfig => _matchConfig;
+    public MapSpec DebugRuntimeMapSpec => _runtimeMapSpec;
+    public Vector2 DebugWorldSize => _worldSize;
+    public WorldVisualThemeState DebugVisualTheme => _presentationEnvironment.VisualTheme;
 
     public BattleRoot()
     {
-        var config = SkirmishSetupState.PendingMatchConfig;
-        if (config.AuthoredMap is { } map)
-        {
-            var world = MapLoader.Load(map);
-            _state = GameState.FromLoadedAuthoredMap(config, world);
-            _unitBattlefield = UnitBattlefield.AdoptLoadedMap(world, map);
-            return;
-        }
-
-        _state = new GameState(config);
-        _unitBattlefield = new UnitBattlefield();
+        _matchConfig = SkirmishSetupState.PendingMatchConfig;
+        _runtimeMapSpec = _matchConfig.AuthoredMap ?? RuntimeMapSpecFor(_matchConfig);
+        var world = MapLoader.Load(_runtimeMapSpec);
+        _unitBattlefield = UnitBattlefield.AdoptLoadedMap(world, _runtimeMapSpec);
+        _worldSize = new Vector2(world.WorldWidth, world.WorldHeight);
+        _presentationEnvironment = new WorldPresentationEnvironment(_worldSize);
     }
 
     public void DebugClearPresentationMetrics()
@@ -133,9 +135,9 @@ public partial class BattleRoot : Node2D
     {
         if (!_debugActiveBattlePerfScenarioConfigured)
         {
-            var focus = new Vector2(_state.WorldSize.X * 0.5f, _state.WorldSize.Y * 0.48f);
-            var playerFaction = ToUnitFaction(_state.Options.PlayerFaction);
-            var enemyFaction = ToUnitFaction(_state.Options.AiFaction);
+            var focus = new Vector2(_worldSize.X * 0.5f, _worldSize.Y * 0.48f);
+            var playerFaction = ToUnitFaction(_matchConfig.PlayerFaction);
+            var enemyFaction = ToUnitFaction(_matchConfig.AiFaction);
             var playerWave = DebugSpawnActiveBattlePerfUnits(
                 PlayerSlotId.One,
                 playerFaction,
@@ -235,8 +237,50 @@ public partial class BattleRoot : Node2D
     }
 
     public bool DebugUsesSingleAuthoredEntityWorld =>
-        _state.ActiveMapSpec is not null;
+        _matchConfig.AuthoredMap is not null;
 
     public bool DebugEntityWorldShadowEnabled => false;
+
+    public void DebugRevealFog(Vector2 position, float sightRange)
+    {
+        _presentationEnvironment.FogOfWar.Update(_worldSize, [(position, sightRange)]);
+    }
+
+    public void DebugSetVisualTheme(
+        WorldVisualTheme theme,
+        string driver,
+        float transitionProgress = 1)
+    {
+        _presentationEnvironment.SetVisualTheme(theme, driver, transitionProgress);
+    }
+
+    private static MapSpec RuntimeMapSpecFor(MatchConfig config)
+    {
+        var map = SkirmishMapGenerator.GenerateSpec(config);
+        if (config.LaunchMode != LaunchMode.Sandbox)
+        {
+            return map;
+        }
+
+        return map with
+        {
+            Units = [],
+            Buildings = map.Buildings
+                .Append(new MapBuildingSeedSpec(
+                    BuildingDesignIds.VehicleFactory,
+                    new OwnerId(1),
+                    config.PlayerFaction,
+                    new Vector2(650, 965).ToMapPoint()))
+                .ToArray(),
+            Resources = map.Resources
+                .Append(new MapResourceNodeSpec(
+                    "sandbox.stress.resource",
+                    new Vector2(1040, 1180).ToMapPoint(),
+                    128,
+                    2600,
+                    new MapColor("#8fffe1")))
+                .ToArray(),
+        };
+    }
 
 }

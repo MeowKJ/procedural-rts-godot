@@ -108,12 +108,6 @@ public partial class BattleRoot
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
-        if (_state.BuildingById(target.Id) is { } building)
-        {
-            building.Hp = target.Hp;
-            building.HitPulse = 1;
-        }
-
         var ammoKind = AmmoKindForPrimaryWeapon(attacker);
         var damage = DamageForPrimaryWeapon(attacker, spec);
         var impactStyle = _combatEffects.AddImpactFlash(

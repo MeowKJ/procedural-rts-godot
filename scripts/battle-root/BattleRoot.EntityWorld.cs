@@ -10,9 +10,9 @@ public partial class BattleRoot
 {
     private void ConfigureEntityWorld()
     {
-        SyncEntityWorldResourceAtmosphere(_state.VisualTheme);
-        _unitBattlefield.EntityWorld.WorldWidth = _state.WorldSize.X;
-        _unitBattlefield.EntityWorld.WorldHeight = _state.WorldSize.Y;
+        SyncEntityWorldResourceAtmosphere(_presentationEnvironment.VisualTheme);
+        _unitBattlefield.EntityWorld.WorldWidth = _worldSize.X;
+        _unitBattlefield.EntityWorld.WorldHeight = _worldSize.Y;
         _unitBattlefield.EntityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
 
         // Runtime hostility is owner-based, never faction-based. Mirror the
@@ -25,45 +25,24 @@ public partial class BattleRoot
 
     private void SyncEntityWorldResourceAtmosphere(WorldVisualThemeState _)
     {
-        var atmosphere = _state.ResourceAtmosphere;
+        var atmosphere = _presentationEnvironment.ResourceAtmosphere;
         _unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;
     }
 
     private void ConfigureUnitBattlefield()
     {
-        _unitBattlefield.WorldSize = _state.WorldSize;
-        _unitBattlefield.SetResourceFields(_state.ResourceFields);
-        _unitBattlefield.SetCredits(PlayerSlotId.One, _state.Credits(ProceduralRts.Core.Owner.Player));
-        _unitBattlefield.SetCredits(PlayerSlotId.Two, _state.Credits(ProceduralRts.Core.Owner.Enemy));
+        _unitBattlefield.WorldSize = _worldSize;
         _unitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
 
-        if (_state.MatchConfig.AuthoredMap is not null)
-        {
-            // MapLoader already populated the authoritative EntityWorld and
-            // UnitBattlefield adopted those exact entities before the scene ran.
-        }
-        else if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
         {
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(820, 1180), new Vector2(58, 0));
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0));
         }
-        else
-        {
-            SpawnStartingUnitDesigns(PlayerSlotId.One, ToUnitFaction(_state.Options.PlayerFaction), new Vector2(720, 760), 0);
-            SpawnStartingUnitDesigns(PlayerSlotId.Two, ToUnitFaction(_state.Options.AiFaction), new Vector2(2510, 1370), Mathf.Pi);
-        }
-
-        if (_state.MatchConfig.AuthoredMap is null)
-        {
-            foreach (var building in _state.Buildings)
-            {
-                UpsertBuildingTarget(building);
-            }
-        }
 
         foreach (var unit in _unitBattlefield.Units)
         {
-            if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+            if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
             {
                 SetUnitInstanceFacing(unit, unit.PlayerSlotId == PlayerSlotId.One ? 0 : Mathf.Pi);
             }
@@ -141,26 +120,11 @@ public partial class BattleRoot
             Viewer = PlayerSlotId.One,
             Relations = _unitBattlefield.Relations,
             PresentationProvider = () => _unitBattlefield.UnitPresentationProjection(unit.Id),
-            VisualThemeProvider = () => _state.VisualTheme,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
             DrawBodyArt = false,
         };
         _unitInstanceRoot.AddChild(view);
         _unitInstanceViews[unit.Id] = view;
-    }
-
-    private void UpsertBuildingTarget(BuildingModel building)
-    {
-        _unitBattlefield.UpsertBuildingTarget(
-            building.Id,
-            building.Kind,
-            ToPlayerSlot(building.Owner),
-            ToUnitFaction(building.FactionId),
-            building.Position,
-            building.Facing,
-            building.Hp,
-            building.Powered,
-            building.BuildProgress,
-            building.RallyPoint);
     }
 
     private static UnitFactionId ToUnitFaction(FactionId factionId)
@@ -173,7 +137,7 @@ public partial class BattleRoot
         };
     }
 
-    private static FactionId ToLegacyFaction(UnitFactionId factionId)
+    private static FactionId ToFactionId(UnitFactionId factionId)
     {
         return factionId switch
         {
@@ -182,11 +146,6 @@ public partial class BattleRoot
             UnitFactionId.Corruption => FactionId.Corruption,
             _ => FactionId.Dog,
         };
-    }
-
-    private static PlayerSlotId ToPlayerSlot(ProceduralRts.Core.Owner owner)
-    {
-        return owner == ProceduralRts.Core.Owner.Player ? PlayerSlotId.One : PlayerSlotId.Two;
     }
 
 }

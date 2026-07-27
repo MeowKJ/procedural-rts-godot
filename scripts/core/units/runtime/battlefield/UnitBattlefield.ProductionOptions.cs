@@ -9,7 +9,7 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<ProductionOptionState> ProductionOptionStates(PlayerSlotId playerSlotId)
     {
         var credits = Credits(playerSlotId);
-        _legacyProductionOptionStateBuffer.Clear();
+        _productionKindOptionStateBuffer.Clear();
         foreach (var kind in ProductionOptionKinds)
         {
             var designId = FirstDesignIdFor(kind, playerSlotId);
@@ -24,7 +24,7 @@ public sealed partial class UnitBattlefield
             var disabledReason = hasProducer
                 ? enoughCredits ? "" : "ui.needCredits"
                 : "ui.producerUnavailable";
-            _legacyProductionOptionStateBuffer.Add(new ProductionOptionState(
+            _productionKindOptionStateBuffer.Add(new ProductionOptionState(
                 kind,
                 production?.Category ?? ProductionCategory.Infantry,
                 production?.ProducerKind ?? BuildingDesignIds.Barracks,
@@ -42,8 +42,68 @@ public sealed partial class UnitBattlefield
                 disabledReason));
         }
 
-        _legacyProductionOptionStateBuffer.Sort(CompareLegacyProductionOptionStates);
-        return _legacyProductionOptionStateBuffer;
+        _productionKindOptionStateBuffer.Sort(CompareProductionKindOptionStates);
+        return _productionKindOptionStateBuffer;
+    }
+
+    public IReadOnlyList<BuildOptionSnapshot> BuildOptionSnapshots(PlayerSlotId playerSlotId)
+    {
+        _readyBuildingKinds.Clear();
+        foreach (var building in BuildingSnapshots())
+        {
+            if (building.PlayerSlotId == playerSlotId
+                && building.Hp > 0
+                && BuildingPresentationProjection(building.Id) is { BuildProgress: >= 1 })
+            {
+                _readyBuildingKinds.Add(building.Kind);
+            }
+        }
+
+        var credits = Credits(playerSlotId);
+        _buildOptionSnapshotBuffer.Clear();
+        foreach (var entry in BuildSpecCatalog.Definitions)
+        {
+            var spec = entry.Value;
+            var hasPrerequisites = HasBuildPrerequisites(spec, _readyBuildingKinds);
+            var canAfford = credits >= spec.Cost;
+            _buildOptionSnapshotBuffer.Add(new BuildOptionSnapshot(
+                spec.Kind,
+                spec.Category,
+                spec.Icon,
+                spec.Cost,
+                spec.BuildTime,
+                spec.Footprint,
+                canAfford,
+                hasPrerequisites,
+                hasPrerequisites
+                    ? canAfford ? "" : "ui.needCredits"
+                    : "build.disabled.prerequisites",
+                spec.PowerProvided,
+                spec.PowerUsed,
+                spec.BuildRadius));
+        }
+
+        _buildOptionSnapshotBuffer.Sort(CompareBuildOptionSnapshots);
+        return _buildOptionSnapshotBuffer;
+    }
+
+    private static bool HasBuildPrerequisites(BuildSpec spec, IReadOnlySet<string> readyBuildingKinds)
+    {
+        foreach (var required in spec.RequiredBuildings)
+        {
+            if (!readyBuildingKinds.Contains(required))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static int CompareBuildOptionSnapshots(BuildOptionSnapshot left, BuildOptionSnapshot right)
+    {
+        var categoryOrder = left.Category.CompareTo(right.Category);
+        return categoryOrder != 0 ? categoryOrder : left.Kind.CompareTo(right.Kind);
     }
 
     public IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(PlayerSlotId playerSlotId)
@@ -366,7 +426,7 @@ public sealed partial class UnitBattlefield
         return (queued, progress);
     }
 
-    private static int CompareLegacyProductionOptionStates(ProductionOptionState left, ProductionOptionState right)
+    private static int CompareProductionKindOptionStates(ProductionOptionState left, ProductionOptionState right)
     {
         var categoryOrder = left.Category.CompareTo(right.Category);
         return categoryOrder != 0 ? categoryOrder : left.Kind.CompareTo(right.Kind);
