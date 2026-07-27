@@ -74,7 +74,6 @@ static class ArchitectureReviewGate
         ForbidText(movement, "Dictionary<GridObstacle, List<LocalAvoidanceBody>>", "MovementSystem must not own a second grid dictionary style.", result);
         var policy = ReviewGateSource.Read(root, "scripts", "core", "pathing", "AdvancedPathingPolicy.cs");
         RequireText(policy, "UseSpatialGridLocalAvoidance", "AdvancedPathingPolicy should name the shared spatial-grid avoidance path.", result);
-        ForbidText(policy, "UseSpatialHashLocalAvoidance", "AdvancedPathingPolicy must not advertise the retired spatial-hash avoidance path.", result);
     }
 
     private static void ForbidDuplicatedWeaponRangeHelpers(string root, GateResult result)

@@ -89,7 +89,9 @@ static class UnitPresentationProjectionRuntimeScenarios
         Require(replaced.MoveTarget is { } moveTarget && moveTarget.DistanceSquaredTo(replacementTarget) < 1,
             "replacement command must remove the stale projected move target", failures);
 
-        infantry.Hp = 0;
+        var infantryEntity = battlefield.UnitEntityByInstanceId(infantry.Id)
+            ?? throw new InvalidOperationException("infantry entity should exist");
+        infantryEntity.Components.Set(infantryEntity.Components.Require<HealthComponentState>() with { Hp = 0 });
         battlefield.Update(0);
         Require(battlefield.UnitPresentationProjection(infantry.Id) is null,
             "unit death must remove stale presentation projection state", failures);

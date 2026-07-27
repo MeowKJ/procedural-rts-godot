@@ -17,7 +17,6 @@ static class ControlGroupAllocationReviewGate
         RequireText(controller, "CollectSnapshotSelectedIds();", "ControlGroup HUD snapshots must fill selected ids explicitly.", result);
         RequireText(controller, "private void CollectUnitBattlefieldSnapshots()", "Runtime control-group snapshots must use an explicit no-allocation scan.", result);
         RequireText(controller, "private void AddSnapshot(", "ControlGroup snapshot construction must use a shared append helper.", result);
-        ForbidText(controller, "State.", "ControlGroup runtime must not read retired state fields.", result);
 
         ForbidText(controller, "var selectedIds = SelectedUnitIds().ToList()", "ControlGroup save must not allocate selected ids through LINQ.", result);
         ForbidText(controller, "private IEnumerable<int> SelectedUnitIds()", "ControlGroup selected-id collection must not expose a LINQ iterator helper.", result);

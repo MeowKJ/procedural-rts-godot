@@ -50,8 +50,6 @@ public sealed partial class UnitBattlefield
 
         var inventory = ResourceInventory(playerSlotId);
         inventory.Credits += totalRefund;
-        _entityWorld.ResourceInventory(OwnerId.FromPlayerSlot(playerSlotId)).Credits = inventory.Credits;
-
         foreach (var removedId in _removedBuildingIdBuffer)
         {
             RemoveBuildingEntity(removedId);
@@ -63,7 +61,7 @@ public sealed partial class UnitBattlefield
                 && unit.AttackTargetId is not null
                 && _removedBuildingIdBuffer.Contains(unit.AttackTargetId.Value))
             {
-                ClearAttackTarget(unit);
+                ClearEntityAttackTarget(unit);
             }
         }
 

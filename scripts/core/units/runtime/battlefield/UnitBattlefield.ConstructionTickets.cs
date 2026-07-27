@@ -21,11 +21,8 @@ public sealed partial class UnitBattlefield
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var spec = BuildSpecCatalog.For(kind);
         SyncOwnerRelations();
-        SyncBuildingTargetEntities();
         _entityWorld.WorldWidth = WorldSize.X;
         _entityWorld.WorldHeight = WorldSize.Y;
-        _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
-
         var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
         if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
         {
@@ -88,11 +85,8 @@ public sealed partial class UnitBattlefield
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var spec = BuildSpecCatalog.For(ticket.Kind);
         SyncOwnerRelations();
-        SyncBuildingTargetEntities();
         _entityWorld.WorldWidth = WorldSize.X;
         _entityWorld.WorldHeight = WorldSize.Y;
-        _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
-
         CollectEntityIds(_constructionEntityIdsBefore);
         var command = new StartConstructionEntityCommand(
             owner,
@@ -142,11 +136,8 @@ public sealed partial class UnitBattlefield
 
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         SyncOwnerRelations();
-        SyncBuildingTargetEntities();
         _entityWorld.WorldWidth = WorldSize.X;
         _entityWorld.WorldHeight = WorldSize.Y;
-        _entityWorld.ResourceInventory(owner).Credits = Credits(playerSlotId);
-
         _constructionSubjectEntityBuffer.Clear();
         _constructionSubjectEntityBuffer.Add(ticketId);
         var command = new CancelConstructionEntityCommand(
@@ -301,7 +292,6 @@ public sealed partial class UnitBattlefield
 
     private void NotifyCreditsChanged(PlayerSlotId playerSlotId)
     {
-        SyncCreditsFromEntityWorld(playerSlotId);
         ResourceInventoryChanged?.Invoke(playerSlotId, ResourceInventory(playerSlotId));
     }
 }

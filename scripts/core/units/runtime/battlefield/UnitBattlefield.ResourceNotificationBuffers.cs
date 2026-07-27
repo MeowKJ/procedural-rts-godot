@@ -18,9 +18,9 @@ public sealed partial class UnitBattlefield
     private void CollectResourceCreditsBefore(Dictionary<PlayerSlotId, int> result)
     {
         result.Clear();
-        foreach (var pair in ResourceInventories)
+        foreach (var pair in _entityWorld.ResourceInventories)
         {
-            result[pair.Key] = pair.Value.Credits;
+            result[new OwnerId(pair.Key).ToPlayerSlot()] = pair.Value.Credits;
         }
     }
 }

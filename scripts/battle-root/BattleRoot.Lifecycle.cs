@@ -82,7 +82,7 @@ public partial class BattleRoot
         AddChild(_unitInstanceRoot);
         ConfigureUnitBattlefield();
         ConfigureEntityWorld();
-        SyncUnitBattlefieldBuildingRuntimeState();
+        RefreshBuildingViews();
         _presentationEnvironment.Update(0, _unitBattlefield, PlayerSlotId.One);
 
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;

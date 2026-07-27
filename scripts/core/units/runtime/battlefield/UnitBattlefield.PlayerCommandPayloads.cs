@@ -25,7 +25,6 @@ public sealed partial class UnitBattlefield
 
     public bool TryGetResourceEntityId(ResourceFieldModel field, out EntityId entityId)
     {
-        SyncResourceFieldEntity(field);
         return _resourceFieldEntityIds.TryGetValue(field.Id, out entityId);
     }
 
@@ -55,7 +54,7 @@ public sealed partial class UnitBattlefield
 
         CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds);
         var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
-        if (producerId is null || !SyncBuildingTargetEntity(producerId.Value))
+        if (producerId is null || BuildingEntityByTargetId(producerId.Value) is null)
         {
             status = GameText.Format("production.needProducer", BuildSpecCatalog.For(spec.Production.ProducerKind).Label, spec.Label);
             return false;
@@ -105,7 +104,7 @@ public sealed partial class UnitBattlefield
 
         if (spec.Production is null
             || !ProducerCanQueueSpec(producerBuildingId, playerSlotId, spec)
-            || !SyncBuildingTargetEntity(producerBuildingId))
+            || BuildingEntityByTargetId(producerBuildingId) is null)
         {
             status = GameText.Format(
                 "production.needProducer",

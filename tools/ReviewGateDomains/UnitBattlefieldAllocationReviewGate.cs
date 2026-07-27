@@ -161,7 +161,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<UnitMinimapPip> _unitMinimapPipSecondaryBuffer", "Unit minimap pips must preserve adjacent snapshot comparisons with reusable storage.", result);
         RequireText(battlefield, "List<UnitSelectionSummaryItem> _selectionSummaryBuffer", "SelectionSummary must reuse result storage.", result);
         RequireText(battlefield, "var units = new List<UnitInstance>(designs.Count)", "SpawnRoster must pre-size and fill its result list explicitly.", result);
-        RequireText(battlefield, "units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index))", "SpawnRoster must preserve roster order through an indexed loop.", result);
+        RequireText(battlefield, "units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index, facing))", "SpawnRoster must preserve roster order through an indexed loop.", result);
         var core = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CoreQueries.cs");
         ForbidText(battlefield, ".Select((design, index) => Spawn", "SpawnRoster must not allocate LINQ projection iterators.", result);
         ForbidText(core, ".OrderBy(unit => unit.EntityId.Value)", "UnitProjections must sort reusable storage in place.", result);

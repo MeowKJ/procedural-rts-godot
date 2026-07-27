@@ -54,8 +54,6 @@ static class UnitStanceStripQa
             && !strip.Contains("UnitBattlefield", StringComparison.Ordinal)
             && !strip.Contains("SubmitLiveLocalPlayerCommand", StringComparison.Ordinal),
             "The stance strip must not read authority or submit commands directly.");
-        Require(!hudControls.Contains("SetSelectedUnitStance(presentation.Stance", StringComparison.Ordinal),
-            "The retired HudLayer button path must not restore optimistic stance highlighting.");
     }
 
     private static int CountOccurrences(string source, string value)

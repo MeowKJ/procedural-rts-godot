@@ -56,7 +56,7 @@ static partial class Program
         var initialBallisticState = initialBallistic?.Components.Require<ProjectileComponentState>();
         tankProjectileBattlefield.Update(1 / 30.0);
         var ballisticProjection = tankProjectileBattlefield.ProjectileProjections()
-            .SingleOrDefault(projectile => projectile.AmmoId == AmmoIds.BallisticCannon);
+            .SingleOrDefault(projectile => projectile.Id == initialBallistic?.Id);
         var simulationProjectileCount = tankProjectileBattlefield.EntityWorld.OrderedEntities
             .Count(entity => entity.Components.Has<ProjectileComponentState>());
         if (tankShot is null

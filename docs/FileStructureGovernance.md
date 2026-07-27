@@ -96,8 +96,8 @@ Forbidden vague names:
 
 ## Final Responsibility Names
 
-Source files must describe their final responsibility. Migration-only wrappers,
-secondary identity paths, and duplicate runtime authorities are forbidden.
+Source files must describe their final responsibility. Wrappers that preserve a
+second identity path or duplicate runtime authority are forbidden.
 Conversion code uses `*Factory.cs` or `*Projection.cs`; command dispatch uses
 `*Routing.cs`; simulation behavior uses `*System.cs`.
 

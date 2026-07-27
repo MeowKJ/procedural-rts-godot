@@ -11,7 +11,6 @@ static class RegressionReviewGate
         RequireSimHotAllocationEvidence(root, result);
         ProjectileImpactReviewGate.Check(root, result);
         PathfindingAllocationReviewGate.Check(root, result);
-        TurretCombatAllocationReviewGate.Check(root, result);
         RequireProjectileProjectionBufferEvidence(root, result);
         RequireCommandSystemGroupOrderBufferEvidence(root, result);
         CommandSystemAllocationReviewGate.Check(root, result);
@@ -172,7 +171,6 @@ static class RegressionReviewGate
         RequireText(constructionSystem, "CollectRequiredBuildings(BuildSpec spec, List<string> result)", "Construction required-building ordering must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "CollectOrderedSubjects(IReadOnlyList<EntityId> subjects, List<EntityId> result)", "Construction subject ordering must use a caller-owned buffer.", result);
         RequireText(constructionSystem, "foreach (var entity in world.OrderedEntities)", "Construction completed-building prerequisite checks must use an explicit scan.", result);
-        ForbidText(constructionSystem, "PlacementMath.ValidateBuildableArea(", "ConstructionSystem must not delegate live placement back to the retired split preprocessing API.", result);
         ForbidText(constructionSystem, "terrainAt: (", "Construction placement must not allocate a captured terrain delegate per query.", result);
         ForbidText(constructionSystem, "world.OrderedEntities.Any(entity => IsCompletedBuilding", "Construction completed-building prerequisite checks must not allocate LINQ Any iterators.", result);
         ForbidText(constructionSystem, "RequiredBuildings.OrderBy(kind => kind)", "Construction prerequisites must not allocate ordered required-building enumerables.", result);

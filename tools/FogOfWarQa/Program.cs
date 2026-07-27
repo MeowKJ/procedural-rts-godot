@@ -152,7 +152,10 @@ Advance(state, battlefield, 0.2f);
 Assert(state.IsVisible(enemyMobile.Position), "enemy mobile unit should be visible in live vision");
 Assert(state.FogOfWar.AnyExplored(BuildingRect(enemyStructure)), "enemy static building should be explored while scouted");
 
-playerScout.Position = secondScout;
+var playerScoutEntity = battlefield.UnitEntityByInstanceId(playerScout.Id)
+    ?? throw new InvalidOperationException("player scout entity should exist");
+playerScoutEntity.Transform = EntityTransform.At(secondScout, playerScoutEntity.Transform.Facing);
+battlefield.Update(0);
 Advance(state, battlefield, 0.2f);
 
 Assert(!state.IsVisible(enemyMobile.Position), "enemy mobile unit should be hidden in explored memory outside live vision");

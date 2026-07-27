@@ -49,7 +49,7 @@ public sealed partial class UnitBattlefield
                 && unit.AttackTargetId is not null
                 && _removedBuildingIdBuffer.Contains(unit.AttackTargetId.Value))
             {
-                ClearAttackTarget(unit);
+                ClearEntityAttackTarget(unit);
             }
         }
 
@@ -155,12 +155,12 @@ public sealed partial class UnitBattlefield
             }
         }
 
-        Units.RemoveAll(IsRemovedUnit);
+        _units.RemoveAll(IsRemovedUnit);
         foreach (var unit in Units)
         {
             if (unit.AttackTargetId is not null && _removedUnitIdBuffer.Contains(unit.AttackTargetId.Value))
             {
-                ClearAttackTarget(unit);
+                ClearEntityAttackTarget(unit);
             }
         }
 

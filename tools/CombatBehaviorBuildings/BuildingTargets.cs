@@ -129,19 +129,19 @@ static partial class Program
             || buildSpecRuntimeBattlefield.BuildingProjection(buildSpecRuntimeBarracks.Id)?.Selected != true
             || BuildingEntityForTargetId(buildSpecRuntimeBattlefield, buildSpecRuntimeBarracks.Id)?.Components.Require<SelectableComponentState>().Selected != true)
         {
-            throw new InvalidOperationException("building selection projection should sync retired building selection into EntityWorld SelectableComponentState");
+            throw new InvalidOperationException("building selection writes should update EntityWorld SelectableComponentState");
         }
 
         buildSpecRuntimeEntity!.Components.Remove<BuildingIdentityComponentState>();
         if (buildSpecRuntimeBattlefield.BuildingSnapshots().Any(snapshot => snapshot.Id == buildSpecRuntimeBarracks.Id))
         {
-            throw new InvalidOperationException("BuildingSnapshots should enumerate EntityWorld building identities only and not resurrect seed-only fallback ids");
+            throw new InvalidOperationException("BuildingSnapshots should enumerate live EntityWorld building identities only");
         }
 
         if (buildSpecRuntimeBattlefield.BuildingSnapshot(buildSpecRuntimeBarracks.Id) is not null
             || buildSpecRuntimeBattlefield.BuildingViewProjection(buildSpecRuntimeBarracks.Id) is not null)
         {
-            throw new InvalidOperationException("BuildingSnapshot should require EntityWorld building identity and not synthesize direct seed fallback snapshots");
+            throw new InvalidOperationException("BuildingSnapshot should require a live EntityWorld building identity");
         }
 
         var buildSpecRuntimeResyncedBarracks = buildSpecRuntimeBattlefield.UpsertBuildingTarget(
@@ -202,17 +202,6 @@ static partial class Program
             || buildSpecRuntimeBattlefield.BuildingRallyPoint(buildSpecRuntimeBarracks.Id) != new Vector2(960, 750))
         {
             throw new InvalidOperationException("building direct rally commands should read EntityWorld identity and entity id without requiring temporary seed storage");
-        }
-
-        var syncBuildingTargetEntityMethod = typeof(UnitBattlefield).GetMethod("SyncBuildingTargetEntity", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("UnitBattlefield should sync building targets through a private id-based helper");
-        var seedlessSyncResult = (bool)syncBuildingTargetEntityMethod.Invoke(
-            buildSpecRuntimeBattlefield,
-            [buildSpecRuntimeBarracks.Id, null, null, null, null, null])!;
-        if (!seedlessSyncResult
-            || buildSpecRuntimeBattlefield.BuildingSnapshot(buildSpecRuntimeBarracks.Id) is null)
-        {
-            throw new InvalidOperationException("building target sync should refresh existing EntityWorld buildings without requiring temporary seed storage");
         }
 
         var seedlessUpsertedBarracks = buildSpecRuntimeBattlefield.UpsertBuildingTarget(

@@ -216,7 +216,6 @@ public sealed partial class UnitBattlefield
             return;
         }
 
-        SyncUnitEntity(target);
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
@@ -301,7 +300,6 @@ public sealed partial class UnitBattlefield
             return 0;
         }
 
-        SyncUnitEntity(target);
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),

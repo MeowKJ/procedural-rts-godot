@@ -13,8 +13,6 @@ internal static class CounterReadabilityWorldSetup
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
         world.AddSystem(new CommandSystem());
         world.AddSystem(new VisionSystem());
-        world.AddSystem(new TurretCombatSystem());
-        world.AddSystem(new ProjectileSystem());
         world.AddSystem(new CombatSystem());
         world.AddSystem(new ProjectileSystem());
         world.AddSystem(new MovementSystem());

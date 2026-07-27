@@ -18,7 +18,7 @@ public partial class BattleRoot
         _presentationEnvironment.Update(gameplayDelta, _unitBattlefield, PlayerSlotId.One);
         _simStepStopwatch.Stop();
         DrainPresentationEvents();
-        SyncUnitBattlefieldBuildingRuntimeState();
+        RefreshBuildingViews();
         RefreshSelectionInfo();
         RefreshCommandCard();
         _minimapRefreshTimer -= (float)delta;
@@ -174,11 +174,11 @@ public partial class BattleRoot
         }
     }
 
-    private void SyncUnitBattlefieldBuildingRuntimeState()
+    private void RefreshBuildingViews()
     {
-        _buildingSyncSnapshotBuffer.Clear();
-        _buildingSyncSnapshotBuffer.AddRange(_unitBattlefield.BuildingSnapshots());
-        foreach (var target in _buildingSyncSnapshotBuffer)
+        _buildingViewSnapshotBuffer.Clear();
+        _buildingViewSnapshotBuffer.AddRange(_unitBattlefield.BuildingSnapshots());
+        foreach (var target in _buildingViewSnapshotBuffer)
         {
             if (!_buildingViews.ContainsKey(target.Id))
             {

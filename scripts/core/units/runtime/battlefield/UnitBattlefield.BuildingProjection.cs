@@ -134,7 +134,6 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<BuildingRallyProjection> SelectedBuildingRallyProjections(PlayerSlotId playerSlotId)
     {
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         _buildingRallyProjectionBuffer.Clear();
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
@@ -158,7 +157,6 @@ public sealed partial class UnitBattlefield
 
     public bool HasSelectedBuildings(PlayerSlotId playerSlotId)
     {
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
         {
@@ -174,7 +172,6 @@ public sealed partial class UnitBattlefield
 
     public IReadOnlyList<BuildingSelectionProjection> SelectedBuildingSelectionProjections(PlayerSlotId playerSlotId)
     {
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         _buildingSelectionProjectionBuffer.Clear();
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
@@ -194,7 +191,6 @@ public sealed partial class UnitBattlefield
     private void CollectSelectedBuildingEntityIds(PlayerSlotId playerSlotId, List<EntityId> result)
     {
         result.Clear();
-        SyncBuildingTargetEntities();
         CollectBuildingTargetIds(_buildingProjectionTargetIdBuffer);
         foreach (var buildingId in _buildingProjectionTargetIdBuffer)
         {

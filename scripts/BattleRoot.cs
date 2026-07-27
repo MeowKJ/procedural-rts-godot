@@ -61,7 +61,7 @@ public partial class BattleRoot : Node2D
     private readonly List<UnitInstance> _selectedUnitInstanceBuffer = [];
     private readonly List<HudLayer.AbilityCardState> _selectedAbilityCardBuffer = [];
     private readonly List<int> _selectedProductionBuildingIdBuffer = [];
-    private readonly List<UnitBattlefieldBuildingSnapshot> _buildingSyncSnapshotBuffer = [];
+    private readonly List<UnitBattlefieldBuildingSnapshot> _buildingViewSnapshotBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
     private readonly List<int> _sandboxLaunchUnitIdBuffer = [];
     private readonly List<int> _debugPlayerAttackerIds = [];
@@ -238,8 +238,6 @@ public partial class BattleRoot : Node2D
 
     public bool DebugUsesSingleAuthoredEntityWorld =>
         _matchConfig.AuthoredMap is not null;
-
-    public bool DebugEntityWorldShadowEnabled => false;
 
     public void DebugRevealFog(Vector2 position, float sightRange)
     {

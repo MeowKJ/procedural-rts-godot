@@ -24,10 +24,11 @@ public partial class BattleRoot
                 PlayerSlotId.Two,
                 focus + laneOffset + new Vector2(halfGap, 0),
                 facing: Mathf.Pi);
-            target.WeaponMounts.Clear();
-            target.MoveMode = MoveCommandMode.Ignore;
-            SetUnitInstanceFacing(shooter, 0);
-            SetUnitInstanceFacing(target, Mathf.Pi);
+            var targetEntity = _unitBattlefield.UnitEntityByInstanceId(target.Id)
+                ?? throw new InvalidOperationException("projectile visual target entity should exist");
+            targetEntity.Components.Remove<WeaponUserComponentState>();
+            var targetCommandable = targetEntity.Components.Require<CommandableComponentState>();
+            targetEntity.Components.Set(targetCommandable with { MoveMode = MoveCommandMode.Ignore });
             AddUnitInstanceView(shooter);
             AddUnitInstanceView(target);
             _unitBattlefield.CommandAttackUnits(PlayerSlotId.One, [shooter.Id], target);

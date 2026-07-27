@@ -4,15 +4,15 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private void SyncResourceFieldEntities()
+    private void CreateResourceFieldEntities()
     {
         foreach (var field in ResourceFields)
         {
-            SyncResourceFieldEntity(field);
+            CreateResourceFieldEntity(field);
         }
     }
 
-    private void SyncResourceFieldEntity(ResourceFieldModel field)
+    private void CreateResourceFieldEntity(ResourceFieldModel field)
     {
         var spec = ResourceFieldEntitySpec(field);
         var components = new EntityComponentState[]
@@ -37,7 +37,7 @@ public sealed partial class UnitBattlefield
         _resourceFieldEntityIds[field.Id] = entity.Id;
     }
 
-    private void SyncResourceFieldFromEntity(ResourceFieldModel field)
+    private void RefreshResourceFieldProjection(ResourceFieldModel field)
     {
         if (!_resourceFieldEntityIds.TryGetValue(field.Id, out var entityId)
             || !_entityWorld.TryGet(entityId, out var entity)
@@ -54,11 +54,11 @@ public sealed partial class UnitBattlefield
         field.Amount = node.Amount;
     }
 
-    private void SyncResourceFieldsFromEntities()
+    private void RefreshResourceFieldProjections()
     {
         foreach (var field in ResourceFields)
         {
-            SyncResourceFieldFromEntity(field);
+            RefreshResourceFieldProjection(field);
         }
     }
 

@@ -4,14 +4,12 @@ public sealed partial class UnitBattlefield
 {
     private void UpdateProductionQueues(float dt)
     {
-        SyncBuildingTargetEntities();
         CollectActiveProducerIds(_productionActiveProducerIds);
         if (_productionActiveProducerIds.Count == 0)
         {
             return;
         }
 
-        SyncUnitEntities();
         CollectKnownProductionEntityIds(_productionKnownEntityIds);
         CollectProductionCompletionCandidates(_productionActiveProducerIds, _productionCompletionCandidates);
 
@@ -30,7 +28,11 @@ public sealed partial class UnitBattlefield
             }
 
             var unit = AdoptUnitEntity(entity);
-            unit.CommandPulse = 1;
+            var pulse = entity.Components.TryGet<PresentationPulseComponentState>(out var current)
+                ? current
+                : new PresentationPulseComponentState();
+            entity.Components.Set(pulse with { CommandPulse = 1 });
+            RefreshUnitProjection(unit, entity);
             ProductionCompleted?.Invoke(completed.Snapshot, completed.Item, unit);
         }
     }

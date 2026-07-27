@@ -347,7 +347,7 @@ WarningFixed
 
 `Owner` 层必须在白天、雾、夜晚、腐化、隐身、受损状态下保持可读。
 
-## 已完成的迁移
+## 最终实体架构
 
 实体骨架和固定 tick 管线已经成为 live authority：
 
@@ -375,8 +375,8 @@ scripts/core/entities/EntityWorld.cs
 scripts/core/entities/EntityCommand.cs
 scripts/core/entities/EntityCommandBuffer.cs
 scripts/core/entities/EntityStateHash.cs
-scripts/core/entities/UnitSpecEntityBridge.cs
-scripts/core/entities/BuildingTargetEntityBridge.cs
+scripts/core/entities/UnitEntityFactory.cs
+scripts/core/entities/BuildingEntityFactory.cs
 scripts/core/units/runtime/UnitBattlefield.cs
 scripts/core/units/runtime/battlefield/UnitBattlefield.MapLoading.cs
 scripts/core/presentation/WorldPresentationEnvironment.cs
@@ -384,7 +384,7 @@ scripts/core/presentation/WorldPresentationEnvironment.cs
 
 `tools/SimReplay`、`PlayerLoopQa`、`CombatBehavior`、地图 handoff QA、Fog QA、SelectionStress 和 ReviewGate 覆盖 spec 转换、地图采用、命令缓冲、稳定顺序、state hash、单位/建筑/资源生命周期以及表现边界。
 
-已删除并禁止恢复：并行 runtime authority、旧单位/建筑模型、旧敌方 AI 实现，以及只验证这些路径的测试和 ReviewGate。新代码不得增加 shadow world、双向状态同步或表现层模拟回写。
+运行时只允许 `EntityWorld` 持有可变模拟状态；`UnitBattlefield` 负责命令路由、生命周期通知与单向表现投影。测试和 ReviewGate 必须验证当前架构，不得保留第二身份路径、双向状态同步或表现层模拟回写。
 
 ## 持续验证切片
 
@@ -467,6 +467,6 @@ command = view.Submit(EntityCommand)              // 只写命令
 ### "新增单位 = 新增 spec" 已被证明
 
 `tools/SimReplay` 的 authored 场景直接用真实的 `dog.infantry` 和 `cat.basic`：
-经由 `UnitSpecEntityBridge.SpawnUnit` 把 `UnitDesign -> UnitSpec -> EntitySpec + 组件`，
+经由 `UnitEntityFactory.SpawnUnit` 把 `UnitDesign -> UnitSpec -> EntitySpec + 组件`，
 然后完全由通用 `CombatSystem`/`MovementSystem` 驱动战斗到死亡——**没有任何单位专用代码**。
 两遍重放 state hash 一致。这正是 99 分里"新增单位主要新增 spec"的可执行证据。

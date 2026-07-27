@@ -3,15 +3,8 @@ using Godot;
 namespace ProceduralRts.Core;
 
 /// <summary>
-/// Shared weapon math, extracted from the combat systems (CombatSystem,
-/// TurretCombatSystem, BuildingTargetCombatSystem, CommandSystem) which each had
-/// their own copy of range/damage resolution (M9 - Elegance &amp; Decoupling).
-///
-/// The cores here are intentionally COMPOSABLE, not monolithic: callers had
-/// genuinely different behavior (some apply a Deploy range multiplier, only the
-/// mobile CombatSystem applies seeded damage jitter). Each caller keeps its exact
-/// semantics by opting into the layers it needs, so this is a pure refactor:
-/// SimReplay state hashes must remain byte-identical.
+/// Shared range, target-priority, and damage calculations for CombatSystem,
+/// CommandSystem, movement planning, and weapon presentation.
 /// </summary>
 public static class WeaponMath
 {
@@ -82,9 +75,8 @@ public static class WeaponMath
 
     /// <summary>
     /// Base range scaled by a finished deploy's range multiplier, if present.
-    /// Matches the behavior CombatSystem and BuildingTargetCombatSystem had;
-    /// callers that must ignore deploy (CommandSystem, TurretCombatSystem) call
-    /// <see cref="MaxMountRange"/> directly instead.
+    /// Combat resolution applies deploy range; command formation planning calls
+    /// <see cref="MaxMountRange"/> directly.
     /// </summary>
     public static float EffectiveRange(EntityWorld world, EntityInstance attacker, WeaponUserComponentState weapon)
     {
@@ -193,7 +185,7 @@ public static class WeaponMath
 
     /// <summary>
     /// Deterministic base damage: ammo base damage times the weight/domain/armor
-    /// multiplier. No RNG - matches TurretCombatSystem and BuildingTargetCombatSystem.
+    /// multiplier. Seeded firing variance is applied by CombatSystem.
     /// Returns 0 if the weapon's ammo is unknown.
     /// </summary>
     public static float BaseDamage(EntityWorld world, OwnerId attackerOwner, WeaponDefinition weaponDef, EntityInstance target)

@@ -84,8 +84,6 @@ public sealed partial class UnitBattlefield
 
     private void SubmitAndApplyInputCommand(EntityCommand command)
     {
-        SyncUnitEntities();
-        SyncBuildingTargetEntities();
         _inputCommands.Enqueue(command);
         var due = _inputCommands.DrainUpToTick(command.Tick);
         if (due.Count == 0)
@@ -98,21 +96,18 @@ public sealed partial class UnitBattlefield
         _abilitySystem.Step(context);
         _entityWorld.FlushQueuedSpawns();
         _entityWorld.FlushQueuedRemovals();
-        SyncUnitRuntimeStateFromEntities();
+        RefreshUnitProjections();
         AppliedInputCommandCount += due.Count;
-        ApplyInputCommandResults(due);
     }
 
     private void SubmitProductionCommand(EntityCommand command)
     {
-        _entityWorld.ResourceInventory(command.Issuer).Credits = Credits(command.Issuer.ToPlayerSlot());
         _productionSystem.Step(new SimContext(
             _entityWorld,
             command.Tick,
             0,
             [new SequencedCommandEnvelope(AppliedInputCommandCount + 1, command)]));
         AppliedInputCommandCount++;
-        SyncCreditsFromEntityWorld(command.Issuer.ToPlayerSlot());
     }
 
     private void SubmitConstructionCommand(EntityCommand command)
@@ -126,7 +121,6 @@ public sealed partial class UnitBattlefield
 
         _constructionSystem.Step(new SimContext(_entityWorld, command.Tick, 0, due));
         AppliedInputCommandCount += due.Count;
-        SyncCreditsFromEntityWorld(command.Issuer.ToPlayerSlot());
     }
 
     private void SyncOwnerRelations()
@@ -165,9 +159,9 @@ public sealed partial class UnitBattlefield
             }
         }
 
-        foreach (var slot in ResourceInventories.Keys)
+        foreach (var ownerValue in _entityWorld.ResourceInventories.Keys)
         {
-            AddOwnerRelationSlot(result, slot);
+            AddOwnerRelationSlot(result, new OwnerId(ownerValue).ToPlayerSlot());
         }
 
         AddOwnerRelationSlot(result, PlayerSlotId.One);
@@ -257,7 +251,6 @@ public sealed partial class UnitBattlefield
         buildingIds.Sort(CompareBuildingIds);
         foreach (var buildingId in buildingIds)
         {
-            SyncBuildingTargetEntity(buildingId);
             result.Add(_buildingTargetEntityIds[buildingId]);
         }
     }
@@ -287,7 +280,6 @@ public sealed partial class UnitBattlefield
         }
 
         buildingIds.Add(building.Id);
-        SyncBuildingTargetEntity(building.Id);
         result.Add(_buildingTargetEntityIds[building.Id]);
     }
 
@@ -395,34 +387,6 @@ public sealed partial class UnitBattlefield
         }
 
         return playerSlotId == PlayerSlotId.One ? UnitFactionId.Dog : UnitFactionId.Cat;
-    }
-
-    private void SyncCreditsFromEntityWorld(PlayerSlotId playerSlotId)
-    {
-        ResourceInventory(playerSlotId).Credits = _entityWorld.ResourceInventory(OwnerId.FromPlayerSlot(playerSlotId)).Credits;
-    }
-
-    private void ApplyInputCommandResults(IReadOnlyList<SequencedCommandEnvelope> commands)
-    {
-        foreach (var envelope in commands)
-        {
-            if (envelope.Command is SetSelectionEntityCommand selection)
-            {
-                ApplySelectionCommandStateToUnits(selection);
-                continue;
-            }
-
-            foreach (var entityId in envelope.Command.Subjects)
-            {
-                var unit = UnitByEntityId(entityId);
-                if (unit is null || !_entityWorld.TryGet(entityId, out var entity))
-                {
-                    continue;
-                }
-
-                ApplyEntityCommandStateToUnit(unit, entity, envelope.Command);
-            }
-        }
     }
 
 }

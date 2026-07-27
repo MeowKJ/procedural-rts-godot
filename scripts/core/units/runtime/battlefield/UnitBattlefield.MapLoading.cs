@@ -28,15 +28,6 @@ public sealed partial class UnitBattlefield
 
     private void AdoptLoadedOwners(MapSpec map)
     {
-        foreach (var start in map.OwnerStarts)
-        {
-            var slot = start.OwnerId.ToPlayerSlot();
-            ResourceInventories[slot] = new ResourceInventory
-            {
-                Credits = _entityWorld.ResourceInventory(start.OwnerId).Credits,
-            };
-        }
-
         foreach (var first in map.OwnerStarts)
         {
             foreach (var second in map.OwnerStarts)
@@ -73,7 +64,7 @@ public sealed partial class UnitBattlefield
                 MaxAmount = node.MaxAmount,
                 Accent = source.Accent.ToColor(),
             };
-            ResourceFields.Add(field);
+            _resourceFields.Add(field);
             _resourceFieldEntityIds[field.Id] = entity.Id;
         }
     }
