@@ -5,44 +5,16 @@ namespace ProceduralRts.Controllers;
 
 public partial class SelectionController
 {
-    private void CollectLegacyCommandLineUnits(List<UnitModel> result)
-    {
-        result.Clear();
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player
-                && unit.Selected
-                && (unit.CommandVisualTarget is not null || unit.FormationSlot is not null))
-            {
-                result.Add(unit);
-            }
-        }
-    }
-
     private void CollectRuntimeCommandLineUnits(List<UnitInstance> result)
     {
         result.Clear();
-        foreach (var unit in UnitBattlefield!.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.PlayerSlotId == LocalPlayerSlotId
                 && unit.Selected
                 && (unit.CommandVisualTarget is not null || unit.FormationSlot is not null))
             {
                 result.Add(unit);
-            }
-        }
-    }
-
-    private void CollectLegacyCommandLineBuildings(List<BuildingModel> result)
-    {
-        result.Clear();
-        foreach (var building in State.Buildings)
-        {
-            if (building.Owner == ProceduralRts.Core.Owner.Player
-                && building.Selected
-                && building.RallyPoint is not null)
-            {
-                result.Add(building);
             }
         }
     }

@@ -18,19 +18,9 @@ public partial class SelectionController
         return AttackMatchupLabel(MatchupForRuntimeSelection(target), UnitTargetLabel(target));
     }
 
-    private string LegacyUnitAttackPreviewLabel(UnitModel target)
-    {
-        return AttackMatchupLabel(MatchupForLegacySelection(target.Spec), UnitTargetLabel(target.Spec));
-    }
-
     private string RuntimeBuildingAttackPreviewLabel(BuildingHoverProjection target)
     {
         return AttackMatchupLabel(MatchupForRuntimeSelection(BuildSpecCatalog.For(target.Kind)), GameText.T("preview.target.structure"));
-    }
-
-    private string LegacyBuildingAttackPreviewLabel(BuildingModel target)
-    {
-        return AttackMatchupLabel(MatchupForLegacySelection(BuildSpecCatalog.For(target.Kind)), GameText.T("preview.target.structure"));
     }
 
     private static string AttackMatchupLabel(HoverMatchup matchup, string targetLabel)
@@ -47,15 +37,10 @@ public partial class SelectionController
 
     private HoverMatchup MatchupForRuntimeSelection(UnitSpec target)
     {
-        if (!UseUnitBattlefieldInput())
-        {
-            return HoverMatchup.None;
-        }
-
         var selectedArmed = 0;
         var targeters = 0;
         var bestScore = 0f;
-        foreach (var unit in UnitBattlefield!.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.PlayerSlotId != LocalPlayerSlotId || !unit.Selected || unit.Spec.Weapons.Count == 0)
             {
@@ -78,15 +63,10 @@ public partial class SelectionController
 
     private HoverMatchup MatchupForRuntimeSelection(BuildSpec target)
     {
-        if (!UseUnitBattlefieldInput())
-        {
-            return HoverMatchup.None;
-        }
-
         var selectedArmed = 0;
         var targeters = 0;
         var bestScore = 0f;
-        foreach (var unit in UnitBattlefield!.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.PlayerSlotId != LocalPlayerSlotId || !unit.Selected || unit.Spec.Weapons.Count == 0)
             {
@@ -107,57 +87,6 @@ public partial class SelectionController
         return MatchupFromScore(selectedArmed, targeters, bestScore);
     }
 
-    private HoverMatchup MatchupForLegacySelection(UnitSpec target)
-    {
-        var selectedArmed = 0;
-        var targeters = 0;
-        var bestScore = 0f;
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner != ProceduralRts.Core.Owner.Player || !unit.Selected || unit.Spec.Weapons.Count == 0)
-            {
-                continue;
-            }
-
-            selectedArmed++;
-            var score = BestWeaponScore(unit.Spec, target);
-            if (score <= 0)
-            {
-                continue;
-            }
-
-            targeters++;
-            bestScore = MathF.Max(bestScore, score);
-        }
-
-        return MatchupFromScore(selectedArmed, targeters, bestScore);
-    }
-
-    private HoverMatchup MatchupForLegacySelection(BuildSpec target)
-    {
-        var selectedArmed = 0;
-        var targeters = 0;
-        var bestScore = 0f;
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner != ProceduralRts.Core.Owner.Player || !unit.Selected || unit.Spec.Weapons.Count == 0)
-            {
-                continue;
-            }
-
-            selectedArmed++;
-            var score = BestWeaponScore(unit.Spec, target);
-            if (score <= 0)
-            {
-                continue;
-            }
-
-            targeters++;
-            bestScore = MathF.Max(bestScore, score);
-        }
-
-        return MatchupFromScore(selectedArmed, targeters, bestScore);
-    }
 
     private static HoverMatchup MatchupFromScore(int selectedArmed, int targeters, float bestScore)
     {

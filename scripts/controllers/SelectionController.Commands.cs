@@ -12,13 +12,7 @@ public partial class SelectionController
         var startWorld = _dragStartWorld!.Value;
         var distance = startScreen.DistanceTo(endScreen);
         var worldPoint = ScreenToWorld(endScreen);
-        var count = UseUnitBattlefieldInput()
-            ? FinishUnitBattlefieldSelection(worldPoint, startWorld, distance, additive, doubleClick)
-            : !SelectionGestureMath.IsLeftSelectionDrag(distance)
-                ? doubleClick
-                    ? State.SelectSameUnitsAt(worldPoint, VisibleWorldRect(), additive, PickPaddingWorld())
-                    : State.SelectSingleAt(worldPoint, additive, PickPaddingWorld())
-                : State.SelectRect(RectFromPoints(startWorld, worldPoint), additive);
+        var count = FinishUnitBattlefieldSelection(worldPoint, startWorld, distance, additive, doubleClick);
 
         SelectionChanged?.Invoke(count);
         ClearDrag();
@@ -27,25 +21,23 @@ public partial class SelectionController
     private int FinishUnitBattlefieldSelection(Vector2 worldPoint, Vector2 startWorld, float distance, bool additive, bool doubleClick)
     {
         var isDrag = SelectionGestureMath.IsLeftSelectionDrag(distance);
-        if (!isDrag && UnitBattlefield!.PickUnit(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is null)
+        if (!isDrag && UnitBattlefield.PickUnit(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is null)
         {
-            var count = UnitBattlefield.SelectBuildingTargetAt(LocalPlayerSlotId, worldPoint, additive, PickPaddingWorld());
-            SyncBuildingSelectionFromUnitBattlefieldToState();
-            return count;
+            return UnitBattlefield.SelectBuildingTargetAt(LocalPlayerSlotId, worldPoint, additive, PickPaddingWorld());
         }
 
-        State.ClearSelection();
+        UnitBattlefield.ClearSelection(LocalPlayerSlotId);
         return !SelectionGestureMath.IsLeftSelectionDrag(distance)
             ? doubleClick
-                ? UnitBattlefield!.SelectSameUnitsAt(LocalPlayerSlotId, worldPoint, VisibleWorldRect(), additive, PickPaddingWorld())
-                : UnitBattlefield!.SelectSingleAt(LocalPlayerSlotId, worldPoint, additive, PickPaddingWorld())
-            : UnitBattlefield!.SelectRect(LocalPlayerSlotId, RectFromPoints(startWorld, worldPoint), additive);
+                ? UnitBattlefield.SelectSameUnitsAt(LocalPlayerSlotId, worldPoint, VisibleWorldRect(), additive, PickPaddingWorld())
+                : UnitBattlefield.SelectSingleAt(LocalPlayerSlotId, worldPoint, additive, PickPaddingWorld())
+            : UnitBattlefield.SelectRect(LocalPlayerSlotId, RectFromPoints(startWorld, worldPoint), additive);
     }
 
     private void FinishRightClickCommand(Vector2 screenPoint, MoveCommandMode moveMode)
     {
         var worldPoint = ScreenToWorld(screenPoint);
-        if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
+        if (UnitBattlefield.SelectedCount(LocalPlayerSlotId) > 0)
         {
             _lastGatewayRejection = CommandGatewayValidationError.None;
             if (UnitBattlefield.PickHostileUnit(worldPoint, LocalPlayerSlotId, PickPaddingWorld()) is { } unitInstanceEnemy)
@@ -107,62 +99,14 @@ public partial class SelectionController
             return;
         }
 
-        CollectSelectedLegacyUnits(_legacySelectedUnitCommandBuffer);
-        var hasSelectedUnits = _legacySelectedUnitCommandBuffer.Count > 0;
-        var enemy = State.PickHostileUnit(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld());
-        if (enemy is not null && hasSelectedUnits)
+        else if (PickResourceField(worldPoint) is { } rallyResource
+            && UnitBattlefield.HasSelectedBuildings(LocalPlayerSlotId))
         {
-            State.CommandAttackSelected(enemy);
-            AcknowledgeCommand(CommandAcknowledgementKind.Attack, enemy.Position, CommandAcknowledgementAudioCue.Attack);
-        }
-        else if (State.PickHostileBuilding(worldPoint, ProceduralRts.Core.Owner.Player, PickPaddingWorld()) is { } enemyBuilding && hasSelectedUnits)
-        {
-            State.CommandAttackSelected(enemyBuilding);
-            AcknowledgeCommand(CommandAcknowledgementKind.Attack, enemyBuilding.Position, CommandAcknowledgementAudioCue.Attack);
-        }
-        else if (PickResourceField(worldPoint) is { } resourceField && HasSelectedHarvester())
-        {
-            bool accepted;
-            string status;
-            if (UseUnitBattlefieldInput() && HasSelectedRuntimeHarvester())
-            {
-                accepted = UnitBattlefield!.CommandHarvestSelected(LocalPlayerSlotId, resourceField, out status);
-            }
-            else
-            {
-                accepted = State.CommandHarvestSelected(resourceField, out status);
-            }
-
-            StatusChanged?.Invoke(status);
-            AcknowledgeCommand(
-                accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid,
-                resourceField.Position,
-                accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
+            FinishSelectedBuildingRallyCommand(rallyResource);
         }
         else
         {
-            if (hasSelectedUnits)
-            {
-                State.CommandMoveSelected(worldPoint, moveMode);
-                StatusChanged?.Invoke(CommandRibbonContextResolver.MoveModeLabel(moveMode));
-                AcknowledgeCommand(
-                    CommandAcknowledgementKind.Move,
-                    worldPoint,
-                    moveMode == MoveCommandMode.Attack ? CommandAcknowledgementAudioCue.Attack : CommandAcknowledgementAudioCue.Move);
-            }
-            else
-            {
-                if (UseUnitBattlefieldInput()
-                    && PickResourceField(worldPoint) is { } rallyResource
-                    && UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId))
-                {
-                    FinishSelectedBuildingRallyCommand(rallyResource);
-                }
-                else
-                {
-                    FinishSelectedBuildingRallyCommand(worldPoint);
-                }
-            }
+            FinishSelectedBuildingRallyCommand(worldPoint);
         }
 
         ClearDrag();
@@ -181,7 +125,7 @@ public partial class SelectionController
 
     private bool CommandUnitBattlefieldSelectedBuildingRally(Vector2 worldPoint, out string status)
     {
-        var subjects = UnitBattlefield!.SelectedBuildingEntityIds(LocalPlayerSlotId);
+        var subjects = UnitBattlefield.SelectedBuildingEntityIds(LocalPlayerSlotId);
         var accepted = SubmitRuntimeCommand(PlayerCommandKind.Rally, PlayerCommandPayload.ForPoint(subjects, worldPoint.X, worldPoint.Y));
         status = accepted ? GameText.T("rally.set") : GatewayRejectedStatus(GameText.T("rally.selectProducer"));
         return accepted;
@@ -189,7 +133,7 @@ public partial class SelectionController
 
     private bool CommandUnitBattlefieldSelectedBuildingRally(ResourceFieldModel field, out string status)
     {
-        var subjects = UnitBattlefield!.SelectedBuildingEntityIds(LocalPlayerSlotId);
+        var subjects = UnitBattlefield.SelectedBuildingEntityIds(LocalPlayerSlotId);
         var accepted = UnitBattlefield.TryGetResourceEntityId(field, out var resourceEntity)
             && SubmitRuntimeCommand(
                 PlayerCommandKind.Rally,
@@ -200,7 +144,7 @@ public partial class SelectionController
 
     private bool CommandUnitBattlefieldSelectedBuildingRally(UnitInstance unit, out string status)
     {
-        var subjects = UnitBattlefield!.SelectedBuildingEntityIds(LocalPlayerSlotId);
+        var subjects = UnitBattlefield.SelectedBuildingEntityIds(LocalPlayerSlotId);
         var accepted = SubmitRuntimeCommand(
             PlayerCommandKind.Rally,
             PlayerCommandPayload.ForPoint(subjects, unit.Position.X, unit.Position.Y) with { TargetEntity = unit.EntityId });
@@ -230,9 +174,7 @@ public partial class SelectionController
 
     private void FinishSelectedBuildingRallyCommand(Vector2 worldPoint)
     {
-        var accepted = UseUnitBattlefieldInput()
-            ? CommandUnitBattlefieldSelectedBuildingRally(worldPoint, out var status)
-            : State.CommandSetSelectedBuildingRallyPoint(worldPoint, out status);
+        var accepted = CommandUnitBattlefieldSelectedBuildingRally(worldPoint, out var status);
         StatusChanged?.Invoke(status);
         AcknowledgeCommand(
             accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
@@ -253,12 +195,12 @@ public partial class SelectionController
 
     private IReadOnlyList<EntityId> SelectedRuntimeUnitSubjects()
     {
-        return UnitBattlefield!.SelectedUnitEntityIds(LocalPlayerSlotId);
+        return UnitBattlefield.SelectedUnitEntityIds(LocalPlayerSlotId);
     }
 
     private bool SubmitRuntimeCommand(PlayerCommandKind kind, PlayerCommandPayload payload)
     {
-        var result = UnitBattlefield!.SubmitLiveLocalPlayerCommand(LocalPlayerSlotId, kind, payload);
+        var result = UnitBattlefield.SubmitLiveLocalPlayerCommand(LocalPlayerSlotId, kind, payload);
         _lastGatewayRejection = CommandGatewayFeedback.FirstRejection(result);
         return result.AcceptedCount > 0;
     }

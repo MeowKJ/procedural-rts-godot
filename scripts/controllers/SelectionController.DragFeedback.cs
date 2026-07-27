@@ -41,9 +41,7 @@ public partial class SelectionController
 
     private int CountDragSelectionCandidates(Rect2 worldRect)
     {
-        return UseUnitBattlefieldInput()
-            ? UnitBattlefield!.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)
-            : State.CountSelectionRectCandidates(worldRect);
+        return UnitBattlefield.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect);
     }
 
     private Rect2 DragSelectionFeedbackRect(Rect2 worldRect, string label, float zoom)

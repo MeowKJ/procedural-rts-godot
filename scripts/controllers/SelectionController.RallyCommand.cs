@@ -101,14 +101,12 @@ public partial class SelectionController
     private void FinishArmedRallyCommand(Vector2 screenPoint)
     {
         var worldPoint = ScreenToWorld(screenPoint);
-        if (UseUnitBattlefieldInput()
-            && PickResourceField(worldPoint) is { } rallyResource
+        if (PickResourceField(worldPoint) is { } rallyResource
             && UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId))
         {
             FinishSelectedBuildingRallyCommand(rallyResource);
         }
-        else if (UseUnitBattlefieldInput()
-            && UnitBattlefield!.PickAnyUnit(worldPoint, PickPaddingWorld()) is { } rallyUnit
+        else if (UnitBattlefield!.PickAnyUnit(worldPoint, PickPaddingWorld()) is { } rallyUnit
             && IsFriendlyRuntimeRallyTarget(rallyUnit)
             && UnitBattlefield.HasSelectedBuildings(LocalPlayerSlotId))
         {
@@ -132,7 +130,6 @@ public partial class SelectionController
 
     private bool IsFriendlyRuntimeRallyTarget(UnitInstance unit)
     {
-        return UseUnitBattlefieldInput()
-            && UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, unit.PlayerSlotId) is PlayerRelation.Self or PlayerRelation.Allied;
+        return UnitBattlefield!.Relations.Relation(LocalPlayerSlotId, unit.PlayerSlotId) is PlayerRelation.Self or PlayerRelation.Allied;
     }
 }

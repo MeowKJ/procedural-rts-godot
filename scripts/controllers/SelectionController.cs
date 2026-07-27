@@ -9,9 +9,8 @@ public partial class SelectionController : Node2D
     private const float ActiveRedrawIntervalSeconds = 1f / 60f;
     private const float IdleRedrawIntervalSeconds = 1f / 30f;
 
-    public required GameState State { get; init; }
     public required Camera2D Camera { get; init; }
-    public UnitBattlefield? UnitBattlefield { get; init; }
+    public required UnitBattlefield UnitBattlefield { get; init; }
     public PlayerSlotId LocalPlayerSlotId { get; init; } = PlayerSlotId.One;
     public Action<int>? SelectionChanged { get; init; }
     public Action<string>? StatusChanged { get; init; }
@@ -29,13 +28,8 @@ public partial class SelectionController : Node2D
     private double _dragStartSeconds;
     private bool _dragStartedAsDoubleClick;
     private UnitInstance? _hoveredUnitInstance;
-    private UnitModel? _hoveredUnit;
     private BuildingHoverProjection? _hoveredBuildingProjection;
-    private BuildingModel? _hoveredBuilding;
     private ResourceFieldModel? _hoveredResourceField;
-    private readonly List<UnitModel> _legacySelectedUnitCommandBuffer = [];
-    private readonly List<UnitModel> _legacyCommandLineUnitBuffer = [];
-    private readonly List<BuildingModel> _legacyCommandLineBuildingBuffer = [];
     private readonly List<UnitInstance> _runtimeCommandLineUnitBuffer = [];
     private readonly List<int> _selectionHotkeyUnitIdBuffer = [];
     private readonly Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers = [];
@@ -48,19 +42,11 @@ public partial class SelectionController : Node2D
     {
         var mousePosition = GetViewport().GetMousePosition();
         var worldPosition = ScreenToWorld(mousePosition);
-        _hoveredUnitInstance = UseUnitBattlefieldInput()
-            ? UnitBattlefield!.PickAnyUnit(worldPosition, PickPaddingWorld())
+        _hoveredUnitInstance = UnitBattlefield.PickAnyUnit(worldPosition, PickPaddingWorld());
+        _hoveredBuildingProjection = _hoveredUnitInstance is null
+            ? UnitBattlefield.PickAnyBuildingHoverProjection(worldPosition, LocalPlayerSlotId, PickPaddingWorld())
             : null;
-        _hoveredUnit = _hoveredUnitInstance is null
-            ? State.PickAnyUnit(worldPosition, PickPaddingWorld())
-            : null;
-        _hoveredBuildingProjection = UseUnitBattlefieldInput() && _hoveredUnitInstance is null
-            ? UnitBattlefield!.PickAnyBuildingHoverProjection(worldPosition, LocalPlayerSlotId, PickPaddingWorld())
-            : null;
-        _hoveredBuilding = _hoveredUnit is null && _hoveredBuildingProjection is null
-            ? State.PickAnyBuilding(worldPosition, PickPaddingWorld())
-            : null;
-        _hoveredResourceField = _hoveredUnit is null && _hoveredBuildingProjection is null && _hoveredBuilding is null
+        _hoveredResourceField = _hoveredUnitInstance is null && _hoveredBuildingProjection is null
             ? PickResourceField(worldPosition)
             : null;
         PreviewState = CreatePreviewState(mousePosition, worldPosition);

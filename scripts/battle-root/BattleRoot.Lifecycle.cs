@@ -138,7 +138,6 @@ public partial class BattleRoot
         _selection = new SelectionController
         {
             Name = "Selection",
-            State = _state,
             Camera = _camera,
             UnitBattlefield = _unitBattlefield,
             LocalPlayerSlotId = PlayerSlotId.One,

@@ -12,7 +12,7 @@ public partial class SelectionController
     {
         _rallyCommandArmed = false;
         _repairCommandArmed = false;
-        if (!UseUnitBattlefieldInput() || !SelectionHasAbility(ability))
+        if (!SelectionHasAbility(ability))
         {
             _armedAbility = null;
             StatusChanged?.Invoke(GameText.Format("ui.ability.unavailable", AbilityLabel(ability)));

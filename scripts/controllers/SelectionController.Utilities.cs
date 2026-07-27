@@ -58,76 +58,24 @@ public partial class SelectionController
         return new Rect2(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
-    private bool UseUnitBattlefieldInput()
-    {
-        return UnitBattlefield is not null && UnitBattlefield.Units.Count > 0;
-    }
-
     private ResourceFieldModel? PickResourceField(Vector2 worldPosition)
     {
-        return UseUnitBattlefieldInput()
-            ? UnitBattlefield!.PickResourceField(worldPosition, PickPaddingWorld())
-            : State.PickResourceField(worldPosition, PickPaddingWorld());
+        return UnitBattlefield.PickResourceField(worldPosition, PickPaddingWorld());
     }
 
     private bool HasSelectedHarvester()
     {
-        return UseUnitBattlefieldInput()
-            ? HasSelectedRuntimeHarvester()
-            : HasSelectedLegacyHarvester();
+        return HasSelectedRuntimeHarvester();
     }
 
     private bool HasSelectedBuildingForPreview()
     {
-        if (!UseUnitBattlefieldInput())
-        {
-            return HasSelectedLegacyBuildings();
-        }
-
-        return UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId);
-    }
-
-    private void CollectSelectedLegacyUnits(List<UnitModel> result)
-    {
-        result.Clear();
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
-            {
-                result.Add(unit);
-            }
-        }
-    }
-
-    private bool HasSelectedLegacyUnits()
-    {
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasSelectedLegacyHarvester()
-    {
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected && IsHarvester(unit))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return UnitBattlefield.HasSelectedBuildings(LocalPlayerSlotId);
     }
 
     private bool HasSelectedRuntimeHarvester()
     {
-        foreach (var unit in UnitBattlefield!.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.PlayerSlotId == LocalPlayerSlotId && unit.Selected && IsHarvester(unit))
             {
@@ -138,33 +86,7 @@ public partial class SelectionController
         return false;
     }
 
-    private bool HasSelectedLegacyBuildings()
-    {
-        foreach (var building in State.Buildings)
-        {
-            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void SyncBuildingSelectionFromUnitBattlefieldToState()
-    {
-        foreach (var building in State.Buildings)
-        {
-            building.Selected = UnitBattlefield!.BuildingProjection(building.Id)?.Selected == true;
-        }
-    }
-
     private static bool IsHarvester(UnitInstance unit)
-    {
-        return IsHarvesterSpec(unit.Spec);
-    }
-
-    private static bool IsHarvester(UnitModel unit)
     {
         return IsHarvesterSpec(unit.Spec);
     }
@@ -173,12 +95,6 @@ public partial class SelectionController
     {
         return (spec.RoleTags.Contains(UnitRoleTag.Economy) || spec.RoleTags.Contains(UnitRoleTag.Worker))
             && spec.HasAbility(AbilityKind.Harvest);
-    }
-
-    private (float Radius, Color Accent) UnitSpecFeedbackStyleFor(UnitModel unit)
-    {
-        var descriptor = unit.RuntimeDescriptor;
-        return (descriptor.Radius, State.VisualAccent(unit.Owner, unit.FactionId, descriptor.Accent));
     }
 
     private static Color UnitRelationAccent(PlayerRelation relation)
