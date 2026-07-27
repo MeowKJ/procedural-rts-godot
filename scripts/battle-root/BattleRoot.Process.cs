@@ -15,18 +15,13 @@ public partial class BattleRoot
         _processStopwatch.Restart();
         _elapsed += (float)delta;
         var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _state.Options.LaunchMode, _sandboxTimeScale);
+        _simStepStopwatch.Restart();
         if (UseUnitDesignRuntime)
         {
             _state.UpdateWorldOnly(gameplayDelta, UnitBattlefieldVisionSources());
         }
-        else
-        {
-            _state.Update(gameplayDelta);
-        }
 
-        _unitBattlefield.Update(gameplayDelta);
-        _simStepStopwatch.Restart();
-        StepEntityWorld(gameplayDelta);
+        _unitBattlefield.AdvanceSimulation(gameplayDelta);
         _simStepStopwatch.Stop();
         DrainPresentationEvents();
         SyncUnitBattlefieldBuildingRuntimeState();

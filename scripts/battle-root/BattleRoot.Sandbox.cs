@@ -107,7 +107,7 @@ public partial class BattleRoot
             }
 
             _unitBattlefield.Relations.Set(playerSlot, subject, _sandboxContext.Relation);
-            _entityWorld.Relations.Set(_sandboxContext.OwnerId, OwnerId.FromPlayerSlot(subject), _sandboxContext.Relation);
+            _unitBattlefield.EntityWorld.Relations.Set(_sandboxContext.OwnerId, OwnerId.FromPlayerSlot(subject), _sandboxContext.Relation);
         }
     }
 

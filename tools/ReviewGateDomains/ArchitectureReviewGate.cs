@@ -28,9 +28,9 @@ static class ArchitectureReviewGate
 
     private static void RequireEntityWorldPipeline(string root, GateResult result)
     {
-        ReviewGateSource.RequireTextInFile(root, result, "private readonly EntityWorld _entityWorld", "scripts", "BattleRoot.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "SimSystemPipeline", "scripts", "battle-root", "BattleRoot.EntityWorld.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_entityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "private readonly UnitBattlefield _unitBattlefield", "scripts", "BattleRoot.cs"); ReviewGateSource.RequireTextInFile(root, result, "AdvanceSimulation", "scripts", "battle-root", "BattleRoot.Process.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "SimulationTick", "scripts", "core", "units", "runtime", "UnitBattlefield.cs"); ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
         ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/battle-root/BattleRoot.EntityWorld.cs", "scripts/world", "scripts/core/units/runtime");
     }
 

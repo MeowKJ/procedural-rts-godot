@@ -7,8 +7,7 @@ public partial class ControlGroupController : Node
 {
     private const double RecallCenterDoubleTapSeconds = 0.45;
 
-    public required GameState State { get; init; }
-    public UnitBattlefield? UnitBattlefield { get; init; }
+    public required UnitBattlefield UnitBattlefield { get; init; }
     public PlayerSlotId LocalPlayerSlotId { get; init; } = PlayerSlotId.One;
     public Action<int>? SelectionChanged { get; init; }
     public Action<Vector2>? FocusRequested { get; init; }
@@ -55,7 +54,7 @@ public partial class ControlGroupController : Node
 
     private bool UseUnitBattlefieldGroups()
     {
-        return UnitBattlefield is not null && UnitBattlefield.Units.Count > 0;
+        return true;
     }
 
     private static int? NumberFromKey(Key key)

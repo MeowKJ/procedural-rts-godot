@@ -11,22 +11,13 @@ public partial class BattleRoot
     private void ConfigureEntityWorld()
     {
         SyncEntityWorldResourceAtmosphere(_state.VisualTheme);
-        _entityWorld.WorldWidth = _state.WorldSize.X;
-        _entityWorld.WorldHeight = _state.WorldSize.Y;
-        _entityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
-
-        if (!RunEntityWorldShadow)
-        {
-            return;
-        }
-
-        SimSystemPipeline.ConfigureLiveGameplay(
-            _entityWorld,
-            OwnerId.FromPlayerSlot(PlayerSlotId.One));
+        _unitBattlefield.EntityWorld.WorldWidth = _state.WorldSize.X;
+        _unitBattlefield.EntityWorld.WorldHeight = _state.WorldSize.Y;
+        _unitBattlefield.EntityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
 
         // Runtime hostility is owner-based, never faction-based. Mirror the
-        // skirmish relation (player vs enemy) into the entity world.
-        _entityWorld.Relations.Set(
+        // skirmish relation (player vs enemy) into the single live entity world.
+        _unitBattlefield.EntityWorld.Relations.Set(
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             OwnerId.FromPlayerSlot(PlayerSlotId.Two),
             PlayerRelation.Hostile);
@@ -35,33 +26,7 @@ public partial class BattleRoot
     private void SyncEntityWorldResourceAtmosphere(WorldVisualThemeState _)
     {
         var atmosphere = _state.ResourceAtmosphere;
-        _entityWorld.ResourceAtmosphere = atmosphere;
         _unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;
-    }
-
-    private void StepEntityWorld(double delta)
-    {
-        if (!RunEntityWorldShadow)
-        {
-            return;
-        }
-
-        // Convert variable frame delta into whole fixed ticks and step the
-        // authoritative world once per tick, draining due commands in stable
-        // order. Keeps the new sim path running on a deterministic clock.
-        var ticks = _simClock.Advance(delta);
-        _entityWorld.Metrics.RecordClockBacklogDrop(_simClock.LastDroppedBacklogTicks, _simClock.LastDroppedBacklogSeconds);
-        for (var i = 0; i < ticks; i++)
-        {
-            var tick = _simClock.CurrentTick - ticks + 1 + i;
-            var due = _entityCommands.DrainUpToTick(tick);
-            _entityWorld.Step(tick, _simClock.FixedDelta, due);
-            // Feed quality metrics from the event stream (read-only; the live view
-            // path will later consume these same events for effects/audio/HUD).
-            _entityWorld.Events.DrainInto(_simEventDrainBuffer);
-            _entityWorld.Metrics.Consume(_simEventDrainBuffer);
-            _simEventDrainBuffer.Clear();
-        }
     }
 
     private void ConfigureUnitBattlefield()

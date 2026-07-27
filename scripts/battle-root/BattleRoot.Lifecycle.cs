@@ -153,7 +153,6 @@ public partial class BattleRoot
         _buildPlacement = new BuildPlacementController
         {
             Name = "BuildPlacement",
-            State = _state,
             UnitBattlefield = _unitBattlefield,
             Camera = _camera,
             LocalPlayerSlotId = PlayerSlotId.One,
@@ -183,7 +182,6 @@ public partial class BattleRoot
         _controlGroups = new ControlGroupController
         {
             Name = "ControlGroups",
-            State = _state,
             UnitBattlefield = _unitBattlefield,
             LocalPlayerSlotId = PlayerSlotId.One,
             SelectionChanged = OnSelectionChanged,
@@ -195,7 +193,6 @@ public partial class BattleRoot
         var production = new ProductionController
         {
             Name = "Production",
-            State = _state,
             ProductionRequested = OnProductionRequested,
             CancelProductionRequested = OnCancelProductionRequested,
             StatusChanged = OnStatusChanged,

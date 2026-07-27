@@ -9,7 +9,7 @@ public partial class BattleRoot
     private void QueueCommandAcknowledgementEvent(CommandAcknowledgementKind kind, Vector2 position, CommandAcknowledgementAudioCue audioCue)
     {
         _presentationEvents.Raise(new CommandAcknowledgedEvent(
-            _simClock.CurrentTick,
+            _unitBattlefield.SimulationTick,
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             kind,
             position,

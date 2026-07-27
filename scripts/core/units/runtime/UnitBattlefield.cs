@@ -28,6 +28,7 @@ public sealed partial class UnitBattlefield
     private readonly MovementSystem _movementSystem = new();
     private readonly SeparationSystem _separationSystem = new();
     private readonly VisionSystem _visionSystem = new();
+    private readonly SimClock _simulationClock = new();
     private readonly Dictionary<int, EntityId> _buildingTargetEntityIds = [];
     private readonly Dictionary<EntityId, int> _buildingTargetIdsByEntityId = [];
     private readonly Dictionary<int, EntityId> _resourceFieldEntityIds = [];
@@ -108,6 +109,9 @@ public sealed partial class UnitBattlefield
     public Dictionary<PlayerSlotId, ResourceInventory> ResourceInventories { get; } = [];
     public PlayerRelationTable Relations { get; } = new();
     public EntityWorld EntityWorld => _entityWorld;
+    public int SimulationTick => _simulationClock.CurrentTick;
+    public int LastDroppedSimulationTicks => _simulationClock.LastDroppedBacklogTicks;
+    public double LastDroppedSimulationSeconds => _simulationClock.LastDroppedBacklogSeconds;
     public int AppliedInputCommandCount { get; private set; }
     public Vector2 WorldSize { get; set; } = new(3600, 2400);
     public PlayerSlotId OutcomeViewer { get; set; } = PlayerSlotId.One;
@@ -181,7 +185,27 @@ public sealed partial class UnitBattlefield
 
     public void Update(double delta)
     {
-        var dt = (float)delta;
+        StepSimulation((float)delta);
+    }
+
+    /// <summary>
+    /// Advances the live battlefield from a render/frame delta using the
+    /// battlefield-owned fixed clock. The authoritative EntityWorld is the
+    /// only runtime world stepped by normal gameplay.
+    /// </summary>
+    public int AdvanceSimulation(double realDelta)
+    {
+        var ticks = _simulationClock.Advance(realDelta);
+        for (var index = 0; index < ticks; index++)
+        {
+            StepSimulation(_simulationClock.FixedDelta);
+        }
+
+        return ticks;
+    }
+
+    private void StepSimulation(float dt)
+    {
         foreach (var unit in Units)
         {
             unit.CommandPulse = Mathf.Max(0, unit.CommandPulse - dt * CommandPulseDecay);
