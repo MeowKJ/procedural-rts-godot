@@ -379,6 +379,11 @@ public partial class VisualQaCaptureRoot : Node
 
     private T RequiredNode<T>(string name) where T : Node
     {
+        if (_activeScene is T root && root.Name == name)
+        {
+            return root;
+        }
+
         if (_activeScene?.FindChild(name, recursive: true, owned: false) is T node)
         {
             return node;
