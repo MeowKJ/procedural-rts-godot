@@ -9,7 +9,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireAutoAcquireTargetScan(root, result);
         RequireBuildingTargetCombatEventBuffers(root, result);
         RequireSimEventDrainBuffer(root, result);
-        RequireExplicitUnitBridgeFilters(root, result);
+        RequireExplicitUnitRoutingFilters(root, result);
         RequirePlacementQueryBuffers(root, result);
         RequireConstructionWorkScan(root, result);
     }
@@ -35,13 +35,13 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<PlayerSlotId> _ownerRelationSlots", "Owner relation sync must reuse slot storage.", result);
 
-        var commandBridge = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandBridge.cs");
-        RequireText(commandBridge, "CollectOwnerRelationSlots(_ownerRelationSlots)", "SyncOwnerRelations must fill reusable owner slot storage.", result);
-        RequireText(commandBridge, "AddOwnerRelationSlot(result, unit.PlayerSlotId)", "Owner relation sync must scan unit owners explicitly.", result);
-        RequireText(commandBridge, "AddOwnerRelationSlot(result, identity.PlayerSlotId)", "Owner relation sync must scan building owners explicitly.", result);
-        RequireText(commandBridge, "result.Sort(ComparePlayerSlotIds)", "Owner relation sync must sort the reusable slot buffer in place.", result);
-        ForbidText(commandBridge, ".Concat(BuildingTargetIds()", "Owner relation sync must not allocate chained slot enumerables.", result);
-        ForbidText(commandBridge, ".Distinct()\n            .OrderBy(slot => slot.Value)\n            .ToList();", "Owner relation sync must not materialize distinct ordered slot lists.", result);
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
+        RequireText(commandRouting, "CollectOwnerRelationSlots(_ownerRelationSlots)", "SyncOwnerRelations must fill reusable owner slot storage.", result);
+        RequireText(commandRouting, "AddOwnerRelationSlot(result, unit.PlayerSlotId)", "Owner relation sync must scan unit owners explicitly.", result);
+        RequireText(commandRouting, "AddOwnerRelationSlot(result, identity.PlayerSlotId)", "Owner relation sync must scan building owners explicitly.", result);
+        RequireText(commandRouting, "result.Sort(ComparePlayerSlotIds)", "Owner relation sync must sort the reusable slot buffer in place.", result);
+        ForbidText(commandRouting, ".Concat(BuildingTargetIds()", "Owner relation sync must not allocate chained slot enumerables.", result);
+        ForbidText(commandRouting, ".Distinct()\n            .OrderBy(slot => slot.Value)\n            .ToList();", "Owner relation sync must not materialize distinct ordered slot lists.", result);
     }
 
     private static void RequireResourceHarvestSyncBuffers(string root, GateResult result)
@@ -57,13 +57,13 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         ForbidText(battlefield, "ResourceInventories.ToDictionary", "Harvester update must not allocate credits-before dictionaries.", result);
         ForbidText(battlefield, "Units.Where(IsHarvester)", "Harvester sync must not allocate harvester filter enumerables.", result);
         ForbidText(battlefield, "BuildingTargetIds()\n            .Where(buildingId => BuildingIdentity(buildingId)?.Kind == BuildingDesignIds.Refinery)", "Dock sync must not allocate refinery filter enumerables.", result);
-        var legacy = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.LegacyUtilities.cs");
-        RequireText(legacy, "CollectResourceCreditOwnerIds(_resourceCreditOwnerIds)", "Credit sync must fill reusable owner-id storage.", result);
-        RequireText(legacy, "AddResourceCreditOwnerId(result, entity.OwnerId.Value)", "Credit sync must scan entity owners explicitly.", result);
-        RequireText(legacy, "var copy = new WeaponMountRuntimeState[count]", "Unit sync weapon mount snapshot must use an explicit array copy.", result);
-        ForbidText(legacy, "_entityWorld.ResourceInventories.Keys\n            .Concat(_entityWorld.OrderedEntities.Select(entity => entity.OwnerId.Value))", "Credit sync must not allocate owner concat chains.", result);
-        ForbidText(legacy, ".Distinct()\n            .OrderBy(owner => owner)", "Credit sync must not allocate distinct ordered owner enumerables.", result);
-        ForbidText(legacy, ".Select(mount => mount with { CooldownRemaining = unit.AttackCooldownRemaining })", "Unit sync weapon mount snapshot must not allocate LINQ projection iterators.", result);
+        var utilities = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.RuntimeUtilities.cs");
+        RequireText(utilities, "CollectResourceCreditOwnerIds(_resourceCreditOwnerIds)", "Credit sync must fill reusable owner-id storage.", result);
+        RequireText(utilities, "AddResourceCreditOwnerId(result, entity.OwnerId.Value)", "Credit sync must scan entity owners explicitly.", result);
+        RequireText(utilities, "var copy = new WeaponMountRuntimeState[count]", "Unit sync weapon mount snapshot must use an explicit array copy.", result);
+        ForbidText(utilities, "_entityWorld.ResourceInventories.Keys\n            .Concat(_entityWorld.OrderedEntities.Select(entity => entity.OwnerId.Value))", "Credit sync must not allocate owner concat chains.", result);
+        ForbidText(utilities, ".Distinct()\n            .OrderBy(owner => owner)", "Credit sync must not allocate distinct ordered owner enumerables.", result);
+        ForbidText(utilities, ".Select(mount => mount with { CooldownRemaining = unit.AttackCooldownRemaining })", "Unit sync weapon mount snapshot must not allocate LINQ projection iterators.", result);
     }
 
     private static void RequireUnitMountConstructionBuffers(string root, GateResult result)
@@ -106,22 +106,22 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
         RequireText(battlefield, "HashSet<int> _combatDestroyedBuildingIds", "Building-target combat events must reuse destroyed-building id storage.", result);
         RequireText(battlefield, "HashSet<int> _combatDeadBuildingIds", "Building-target combat events must reuse dead-building de-duplication storage.", result);
 
-        var bridge = ReviewGateSource.Read(
+        var routing = ReviewGateSource.Read(
             root,
             "scripts",
             "core",
             "units",
             "runtime",
             "battlefield",
-            "UnitBattlefield.BuildingTargetCombatBridge.cs");
-        RequireText(bridge, "private bool HasBuildingTargetCombatWork()", "Building-target combat bridge must use an explicit work check.", result);
-        RequireText(bridge, "CollectDeadBuildingTargetIdsFromCombatEvents()", "Building-target combat events must collect dead ids through reusable buffers.", result);
-        RequireText(bridge, "AddCombatDeadBuildingId", "Building-target combat event de-duplication must use reusable storage.", result);
-        ForbidText(bridge, "Units.Any(unit =>", "Building-target combat work check must not allocate LINQ enumerators.", result);
-        ForbidText(bridge, "foreach (var unit in Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building || unit.MoveMode == MoveCommandMode.Attack))", "Building-target combat state sync must not allocate filtered unit enumerables.", result);
-        ForbidText(bridge, "new HashSet<int>()", "Building-target combat events must not allocate local HashSet instances.", result);
-        ForbidText(bridge, ".Concat(_combatDestroyedBuildingIds)", "Building-target combat events must not allocate chained dead-id enumerables.", result);
-        ForbidText(bridge, ".Distinct()\n            .ToList();", "Building-target combat events must not materialize distinct dead-id lists.", result);
+            "UnitBattlefield.BuildingCombatRouting.cs");
+        RequireText(routing, "private bool HasBuildingTargetCombatWork()", "Building-target combat routing must use an explicit work check.", result);
+        RequireText(routing, "CollectDeadBuildingTargetIdsFromCombatEvents()", "Building-target combat events must collect dead ids through reusable buffers.", result);
+        RequireText(routing, "AddCombatDeadBuildingId", "Building-target combat event de-duplication must use reusable storage.", result);
+        ForbidText(routing, "Units.Any(unit =>", "Building-target combat work check must not allocate LINQ enumerators.", result);
+        ForbidText(routing, "foreach (var unit in Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building || unit.MoveMode == MoveCommandMode.Attack))", "Building-target combat state sync must not allocate filtered unit enumerables.", result);
+        ForbidText(routing, "new HashSet<int>()", "Building-target combat events must not allocate local HashSet instances.", result);
+        ForbidText(routing, ".Concat(_combatDestroyedBuildingIds)", "Building-target combat events must not allocate chained dead-id enumerables.", result);
+        ForbidText(routing, ".Distinct()\n            .ToList();", "Building-target combat events must not materialize distinct dead-id lists.", result);
     }
 
     private static void RequireSimEventDrainBuffer(string root, GateResult result)
@@ -130,18 +130,18 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<SimEvent> _simEventDrainBuffer", "UnitBattlefield must reuse a sim-event drain buffer.", result);
 
-        var buildingCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingTargetCombatBridge.cs");
+        var buildingCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingCombatRouting.cs");
         var turretCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.TurretCombat.cs");
         var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
-        var bridgeSources = buildingCombat + turretCombat + constructionTickets;
-        RequireText(bridgeSources, "_entityWorld.Events.DrainInto(_simEventDrainBuffer)", "UnitBattlefield bridge paths must drain sim events into reusable storage.", result);
+        var runtimeSources = buildingCombat + turretCombat + constructionTickets;
+        RequireText(runtimeSources, "_entityWorld.Events.DrainInto(_simEventDrainBuffer)", "UnitBattlefield routing paths must drain sim events into reusable storage.", result);
         RequireText(constructionTickets, "for (var index = _simEventDrainBuffer.Count - 1; index >= 0; index--)", "Construction rejection drain must preserve last-match semantics with an explicit reverse scan.", result);
-        ForbidText(bridgeSources, "_entityWorld.Events.Drain()", "UnitBattlefield bridge paths must not allocate SimEvent snapshot arrays.", result);
+        ForbidText(runtimeSources, "_entityWorld.Events.Drain()", "UnitBattlefield routing paths must not allocate SimEvent snapshot arrays.", result);
         ForbidText(constructionTickets, ".OfType<ConstructionRejectedEvent>()", "Construction rejection drain must not allocate LINQ event filters.", result);
         ForbidText(constructionTickets, ".LastOrDefault(", "Construction rejection drain must not use LINQ last-match queries.", result);
     }
 
-    private static void RequireExplicitUnitBridgeFilters(string root, GateResult result)
+    private static void RequireExplicitUnitRoutingFilters(string root, GateResult result)
     {
         var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingLifecycle.cs");
         var removal = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandApplyRemoval.cs");

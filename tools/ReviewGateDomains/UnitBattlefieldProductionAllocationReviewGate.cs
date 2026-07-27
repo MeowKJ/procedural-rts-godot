@@ -14,10 +14,8 @@ static class UnitBattlefieldProductionAllocationReviewGate
         RequireText(battlefield, "List<int> _productionCandidateProducerIds", "Production enqueue paths must reuse producer candidate storage.", result);
 
         var rally = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionRally.cs");
-        RequireText(rally, "CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds)", "Legacy production enqueue must fill reusable producer candidate storage.", result);
         RequireText(rally, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production enqueue must fill reusable producer candidate storage.", result);
         RequireText(rally, "LeastQueuedProducerId(_productionCandidateProducerIds)", "Production enqueue must choose the least-queued producer without ordered LINQ.", result);
-        ForbidText(rally, "CandidateProducerIds(productionKind, playerSlotId)\n            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)", "Legacy production enqueue must not allocate ordered producer candidate chains.", result);
         ForbidText(rally, "CandidateProducerIds(spec, playerSlotId)\n            .OrderBy(buildingId => BuildingProductionQueue(buildingId).Count)", "UnitDesign production enqueue must not allocate ordered producer candidate chains.", result);
         ForbidText(rally, ".ThenBy(buildingId => buildingId)\n            .Select(buildingId => (int?)buildingId)\n            .FirstOrDefault();", "Production enqueue must not allocate ordered producer candidate chains.", result);
     }
@@ -49,23 +47,18 @@ static class UnitBattlefieldProductionAllocationReviewGate
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<UnitSpec> _productionDesignSpecBuffer", "Production option states must reuse design spec storage.", result);
-        RequireText(battlefield, "List<ProductionOptionState> _legacyProductionOptionStateBuffer", "Legacy production option states must reuse result storage.", result);
         RequireText(battlefield, "List<ProductionOptionState> _designProductionOptionStateBuffer", "UnitDesign production option states must reuse result storage.", result);
         RequireText(battlefield, "List<int> _selectedProductionProducerIdBuffer", "Selected producer command-card states must reuse producer id storage.", result);
 
         var options = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionOptions.cs");
-        RequireText(options, "CollectCandidateProducerIds(kind, playerSlotId, _productionCandidateProducerIds)", "Legacy production option states must reuse producer candidate storage.", result);
         RequireText(options, "CollectCandidateProducerIds(spec, playerSlotId, _productionCandidateProducerIds)", "UnitDesign production option states must reuse producer candidate storage.", result);
         RequireText(options, "ProductionDesignOptionStatesForSelectedProducers", "UnitDesign production options must expose a selected-producer command-card path.", result);
         RequireText(options, "CollectSelectedProductionProducerIds(playerSlotId, selectedBuildingIds, _selectedProductionProducerIdBuffer)", "Selected producer command-card states must fill reusable producer id storage.", result);
         RequireText(options, "CollectCandidateProducerIds(spec, playerSlotId, selectedProducerBuildingIds, _productionCandidateProducerIds)", "Selected producer command-card states must reuse producer candidate storage.", result);
         RequireText(options, "CollectProductionDesignSpecs(playerSlotId, _productionDesignSpecBuffer)", "UnitDesign production option states must reuse design spec storage.", result);
-        RequireText(options, "_legacyProductionOptionStateBuffer.Clear()", "Legacy production option states must clear reusable result storage.", result);
         RequireText(options, "_designProductionOptionStateBuffer.Clear()", "UnitDesign production option states must clear reusable result storage.", result);
-        RequireText(options, "ProductionKindQueueMetrics(kind, spec)", "Legacy production option states must compute queue metrics with explicit loops.", result);
         RequireText(options, "ProductionDesignQueueMetrics(spec)", "UnitDesign production option states must compute queue metrics with explicit loops.", result);
         ForbidText(options, "new List<ProductionOptionState>", "Production option states must not allocate result lists per refresh.", result);
-        ForbidText(options, "CandidateProducerIds(kind, playerSlotId).ToList()", "Production option states must not materialize producer candidates.", result);
         ForbidText(options, "CandidateProducerIds(spec, playerSlotId).ToList()", "Production option states must not materialize producer candidates.", result);
         ForbidText(options, ".Sum(buildingId => BuildingProductionQueue(buildingId).Count", "Production option states must not allocate LINQ queue counts.", result);
         ForbidText(options, ".Select(buildingId => BuildingProductionQueue(buildingId).FirstOrDefault())", "Production option states must not allocate LINQ first-item scans.", result);

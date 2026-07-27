@@ -167,8 +167,7 @@ public sealed class ProjectileSystem : ISimSystem
                     mount.MountId,
                     mount.WeaponId,
                     WeaponEngagementResolution.MuzzlePosition(context.World, interceptor, mount),
-                    projectile.Transform.Position,
-                    mount.LegacyWeaponKind));
+                    projectile.Transform.Position));
                 WeaponEngagementResolution.SpawnInterceptionRound(
                     context.World,
                     interceptor,

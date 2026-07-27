@@ -6,7 +6,6 @@ static class FileSizePolicy
     public const int ReviewGateFileMax = HealthyMax;
     public const int ReviewGateRunnerMax = 1000;
     public const int ValidationToolSuiteMax = 1000;
-    public const int BridgeLegacyCompatibilityBaseline = 8;
 
     public static readonly Dictionary<string, int> KnownRedLineCeilings = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -18,7 +17,6 @@ static class FileSizePolicy
     [
         "scripts/core/sim/systems/CombatSystem.cs",
         "scripts/core/units/runtime/UnitBattlefield.cs",
-        "scripts/core/GameState.cs",
         "scripts/BattleRoot.cs",
         "scripts/ui/HudLayer.cs",
         "tools/ReviewGate/Program.cs",

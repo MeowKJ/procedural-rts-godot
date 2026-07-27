@@ -29,9 +29,7 @@ static class HoverTooltipReviewGate
 
         RequireText(previewKinds, "Move,\n    Attack,\n    Repair,\n    Rally,\n    Harvest,\n    BuildValid,\n    BuildInvalid", "Command preview kinds must cover move/attack/repair/rally/harvest/build states.", result);
         RequireText(preview, "RuntimeUnitAttackPreviewLabel(hoveredUnitInstance.Spec)", "Runtime hostile unit hover must surface matchup text through the command preview.", result);
-        RequireText(preview, "LegacyUnitAttackPreviewLabel(hoveredUnit)", "Legacy hostile unit hover must surface matchup text through the command preview.", result);
         RequireText(preview, "RuntimeBuildingAttackPreviewLabel(buildingProjection)", "Runtime hostile structure hover must surface matchup text through the command preview.", result);
-        RequireText(preview, "LegacyBuildingAttackPreviewLabel(hoveredBuilding)", "Legacy hostile structure hover must surface matchup text through the command preview.", result);
         RequireText(preview, "CommandPreviewKind.Repair", "Selection preview must expose repair affordance state.", result);
         RequireText(preview, "RepairUnitPreviewLabel()", "Smart repair hover must label damaged friendly unit targets distinctly.", result);
         RequireText(preview, "RepairStructurePreviewLabel()", "Smart repair hover must label damaged friendly structure targets distinctly.", result);
@@ -126,8 +124,7 @@ static class HoverTooltipReviewGate
         RequireText(hudLayer, "SetSelectedUnitStance(UnitStance? stance, int selectedUnitCount)", "HUD stance context must receive explicit selection count.", result);
         ForbidText(ribbonContext, "previewLabel ==", "Ribbon context classification must not compare localized preview labels.", result);
         RequireText(selectionInput, "DrawDragSelectionFeedback(localRect, Input.IsKeyPressed(Key.Shift))", "Active marquee must show candidate count and additive state.", result);
-        RequireText(dragFeedback, "UnitBattlefield!.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)", "Runtime drag feedback must use the authoritative candidate collector.", result);
-        RequireText(dragFeedback, "State.CountSelectionRectCandidates(worldRect)", "Legacy drag feedback must use the authoritative candidate collector.", result);
+        RequireText(dragFeedback, "UnitBattlefield.CountSelectionRectCandidates(LocalPlayerSlotId, worldRect)", "Drag feedback must use the authoritative candidate collector.", result);
         RequireText(dragFeedback, "SelectionMath.ScreenPixelsToWorld", "Drag feedback must remain screen-space stable across zoom levels.", result);
         ForbidText(dragFeedback, "foreach", "Drag feedback must not duplicate selection eligibility scans.", result);
         RequireText(englishText, "[\"selection.dragFeedback.add\"] = \"ADD {0}\"", "English additive drag feedback must be localized.", result);

@@ -42,7 +42,7 @@ public sealed record MapBuildingSeedSpec(
     float Facing = 0,
     float? Hp = null,
     float BuildProgress = 1,
-    int? LegacyId = null);
+    int? RuntimeId = null);
 
 public sealed record MapResourceNodeSpec(
     string Id,

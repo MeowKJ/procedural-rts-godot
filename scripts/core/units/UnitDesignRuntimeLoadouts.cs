@@ -16,8 +16,4 @@ public static class UnitDesignRuntimeLoadouts
         return UnitDesignFactionRosterCatalog.ProductionDesignId(faction, production);
     }
 
-    public static string? ProductionDesignId(UnitFactionId faction, ProductionKind productionKind)
-    {
-        return UnitDesignFactionRosterCatalog.ProductionDesignId(faction, productionKind);
-    }
 }

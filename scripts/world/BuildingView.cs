@@ -23,22 +23,24 @@ public partial class BuildingView : Node2D
         Color Effect,
         Color Highlight);
 
-    public required GameState State { get; init; }
-    public required BuildingModel Building { get; init; }
-    public Func<EntityProjection?>? ProjectionProvider { get; init; }
-    public Func<BuildingPresentationProjection?>? BuildingProjectionProvider { get; init; }
-    public Func<BuildingViewProjection?>? ViewProjectionProvider { get; init; }
+    public required Func<BuildingViewProjection?> ViewProjectionProvider { get; init; }
     public Func<Rect2, bool>? ExploredProvider { get; init; }
     public Func<WorldVisualThemeState>? VisualThemeProvider { get; init; }
     public FactionId? ViewerFaction { get; init; }
 
     public override void _Process(double delta)
     {
-        _viewProjection = ViewProjectionProvider?.Invoke();
-        _buildingProjection = _viewProjection?.Presentation ?? BuildingProjectionProvider?.Invoke();
-        _projection = _buildingProjection?.Entity ?? ProjectionProvider?.Invoke();
-        Position = _projection?.Position ?? Building.Position;
-        Rotation = _projection?.Facing ?? Building.Facing;
+        _viewProjection = ViewProjectionProvider();
+        if (_viewProjection is not { } viewProjection)
+        {
+            Visible = false;
+            return;
+        }
+
+        _buildingProjection = viewProjection.Presentation;
+        _projection = _buildingProjection.Value.Entity;
+        Position = _projection.Value.Position;
+        Rotation = _projection.Value.Facing;
         var signature = CaptureRedrawSignature();
         var redrawDirty = _lastRedrawSignature != signature;
         _redrawTimer -= (float)delta;
@@ -52,45 +54,39 @@ public partial class BuildingView : Node2D
 
     public override void _Draw()
     {
-        var kind = _viewProjection?.Kind ?? Building.Kind;
+        if (_viewProjection is not { } viewProjection || _buildingProjection is not { } buildingProjection || _projection is not { } projection)
+        {
+            return;
+        }
+
+        var kind = viewProjection.Kind;
         var spec = BuildSpecCatalog.For(kind);
-        var size = _buildingProjection?.Footprint ?? spec.Footprint;
-        var worldRect = _buildingProjection is { } buildingProjection
-            ? new Rect2(buildingProjection.Entity.Position - buildingProjection.Footprint / 2f, buildingProjection.Footprint)
-            : new Rect2(Building.Position - spec.Footprint / 2f, spec.Footprint);
-        var explored = _buildingProjection is { } projection
-            ? IsProjectedBuildingExplored(projection.Entity.Owner, worldRect)
-            : IsLegacyBuildingExplored(worldRect);
+        var size = buildingProjection.Footprint;
+        var worldRect = new Rect2(projection.Position - buildingProjection.Footprint / 2f, buildingProjection.Footprint);
+        var explored = IsProjectedBuildingExplored(projection.Owner, worldRect);
         if (!explored)
         {
             return;
         }
 
-        var owner = _viewProjection is { } viewProjection
-            ? OwnerForPlayerSlot(viewProjection.PlayerSlotId)
-            : Building.Owner;
-        var faction = _viewProjection is { } identityProjection
-            ? LegacyFaction(identityProjection.Faction)
-            : Building.FactionId;
+        var owner = OwnerForPlayerSlot(viewProjection.PlayerSlotId);
+        var faction = ToFactionId(viewProjection.Faction);
         var (bodyAccent, relationAccent) = ResolvePresentationColors(kind, owner, faction);
-        var ownerColor = _viewProjection is { } ownerProjection
-            ? SoftOldCityPalette.PlayerColor(ownerProjection.PlayerSlotId)
-            : OwnerColor(Building.Owner);
+        var ownerColor = SoftOldCityPalette.PlayerColor(viewProjection.PlayerSlotId);
         var environmentTone = EnvironmentTonePalette.For(VisualThemeProvider?.Invoke());
         var artPalette = EntityRenderPalette.SoftOldCity(ownerColor, bodyAccent);
         var art = ResolveBuildingArt(artPalette, environmentTone);
         var rect = new Rect2(-size / 2f, size);
-        var pulse = 0.58f + Mathf.Sin((float)Time.GetTicksMsec() / 420f + Building.Id) * 0.18f;
-        var powered = _buildingProjection?.Powered ?? Building.Powered;
-        var buildProgress = _buildingProjection?.BuildProgress ?? Building.BuildProgress;
-        var constructionPaused = _buildingProjection?.IsConstructionPaused ?? false;
-        var pauseReason = _buildingProjection?.PauseReason ?? ConstructionPauseReason.None;
-        var projectedMaxHp = _projection?.MaxHp ?? spec.MaxHp;
-        var projectedHp = _projection?.Hp ?? Building.Hp;
+        var pulse = 0.58f + Mathf.Sin((float)Time.GetTicksMsec() / 420f + viewProjection.Id) * 0.18f;
+        var powered = buildingProjection.Powered;
+        var buildProgress = buildingProjection.BuildProgress;
+        var constructionPaused = buildingProjection.IsConstructionPaused;
+        var pauseReason = buildingProjection.PauseReason;
+        var projectedMaxHp = projection.MaxHp;
+        var projectedHp = projection.Hp;
         var healthFraction = projectedMaxHp <= 0 ? 0 : Mathf.Clamp(projectedHp / projectedMaxHp, 0, 1);
-        var damageSeverity = _buildingProjection?.DamageSeverity
-            ?? BuildingPresentationProjection.DamageSeverityFor(healthFraction, projectedHp > 0);
-        var missingHealthFraction = _buildingProjection?.MissingHealthFraction ?? (1f - healthFraction);
+        var damageSeverity = buildingProjection.DamageSeverity;
+        var missingHealthFraction = buildingProjection.MissingHealthFraction;
 
         DrawFootprint(rect, bodyAccent, art);
         DrawStructure(rect, bodyAccent, art, pulse, powered, buildProgress, constructionPaused, pauseReason, kind);

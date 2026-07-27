@@ -44,7 +44,6 @@ public partial class HudLayer
         SetCommandCardState(
         [
             new ProductionOptionState(
-                ProductionKind.InfantrySquad,
                 ProductionCategory.Infantry,
                 BuildingDesignIds.Barracks,
                 "cat.basic",

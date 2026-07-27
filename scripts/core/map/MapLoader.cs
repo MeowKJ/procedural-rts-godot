@@ -38,8 +38,8 @@ public static class MapLoader
         }
 
         var reservedBuildingIds = spec.Buildings
-            .Where(building => building.LegacyId is not null)
-            .Select(building => building.LegacyId!.Value)
+            .Where(building => building.RuntimeId is not null)
+            .Select(building => building.RuntimeId!.Value)
             .ToHashSet();
         var assignedBuildingIds = new HashSet<int>();
         var nextBuildingId = 1;
@@ -51,17 +51,17 @@ public static class MapLoader
         foreach (var building in spec.Buildings)
         {
             var buildSpec = BuildSpecCatalog.For(building.Kind);
-            var legacyId = building.LegacyId ?? NextAvailableBuildingId(
+            var runtimeId = building.RuntimeId ?? NextAvailableBuildingId(
                 ref nextBuildingId,
                 reservedBuildingIds,
                 assignedBuildingIds);
-            assignedBuildingIds.Add(legacyId);
+            assignedBuildingIds.Add(runtimeId);
             world.SpawnBuildingTarget(
                 new BuildingEntitySeed(
-                    legacyId,
+                    runtimeId,
                     building.Kind,
                     building.OwnerId.ToPlayerSlot(),
-                    ProductionKindDesignBridge.UnitFactionFor(building.Faction),
+                    FactionCatalog.UnitFactionFor(building.Faction),
                     building.Position.ToVector2(),
                     building.Facing,
                     building.Hp ?? buildSpec.MaxHp),

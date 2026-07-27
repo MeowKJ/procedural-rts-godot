@@ -79,7 +79,7 @@ public partial class CombatEffectsLayer : Node2D
 
     private sealed class MuzzleFlashEffect
     {
-        public void Reset(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind)
+        public void Reset(Vector2 position, Vector2 targetPosition, Color accent, string? weaponId)
         {
             var toTarget = targetPosition - position;
             Position = position;
@@ -87,7 +87,7 @@ public partial class CombatEffectsLayer : Node2D
             Accent = accent;
             Age = 0;
 
-            var scale = WeaponScale(weaponKind);
+            var scale = WeaponScale(weaponId);
             Length = 14 * scale;
             Width = 4.8f * scale;
             CoreWidth = 2.1f * scale;
@@ -98,13 +98,13 @@ public partial class CombatEffectsLayer : Node2D
             Age = Mathf.Max(Age, MuzzleFlashLifetime - remainingSeconds);
         }
 
-        private static float WeaponScale(WeaponKind? weaponKind)
+        private static float WeaponScale(string? weaponId)
         {
-            return weaponKind switch
+            return weaponId switch
             {
-                WeaponKind.RocketPod or WeaponKind.VectorCannon => 1.25f,
-                WeaponKind.IonEmitter or WeaponKind.ElectromagneticEmitter => 1.12f,
-                WeaponKind.LightRepeater => 0.82f,
+                WeaponIds.RocketPod or WeaponIds.VectorCannon => 1.25f,
+                WeaponIds.IonEmitter or WeaponIds.ElectromagneticEmitter => 1.12f,
+                WeaponIds.LightRepeater => 0.82f,
                 _ => 1f,
             };
         }

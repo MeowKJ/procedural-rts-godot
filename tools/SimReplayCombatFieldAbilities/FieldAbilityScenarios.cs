@@ -115,7 +115,7 @@ static partial class Program
                 Movement = new MovementSpec(MovementDomain.Land, Speed: 0, TurnRate: 0),
                 Weapons =
                 [
-                    WeaponMountSpec.Omni("main", WeaponKind.NeedleRifle, Vector2.Zero, fireWhileMoving: false),
+                    WeaponMountSpec.Omni("main", WeaponIds.NeedleRifle, Vector2.Zero, fireWhileMoving: false),
                 ],
             };
         }
@@ -155,7 +155,7 @@ static partial class Program
                 new StanceComponentState(UnitStance.Hold),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }, new EntityId(2), CombatTargetKind.Unit, AttackTargetIsManual: true),
             });
 

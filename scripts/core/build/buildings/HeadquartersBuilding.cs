@@ -18,7 +18,7 @@ public sealed class HeadquartersBuilding : BuildingDesign
             new PlacementGridFootprint(6, 5),
             620,
             ArmorTag.Structure,
-            WeaponKind.IonEmitter,
+            WeaponIds.IonEmitter,
             new Color("#59f1ff"),
             BuildCategory.Command,
             IconGlyph.Building,

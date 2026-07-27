@@ -25,7 +25,7 @@ static partial class Program
         var attacker = world.OrderedEntities.Single(entity => entity.Id.Value == 1);
         var target = world.OrderedEntities.Single(entity => entity.Id.Value == 2);
         var targetHealth = target.Components.Require<HealthComponentState>();
-        var weapon = WeaponCatalog.Weapons[WeaponKind.LightRepeater];
+        var weapon = WeaponCatalog.WeaponDefinitions[WeaponIds.LightRepeater];
         var radius = target.Components.Require<CollisionComponentState>().Radius;
         var effectiveDistance = WeaponMath.EffectiveTargetDistance(
             attacker.Transform.Position.DistanceTo(target.Transform.Position),
@@ -46,7 +46,7 @@ static partial class Program
         world.AddSystem(new MovementSystem());
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
 
-        var kiterSpec = KitingSpec("replay.kiter", UnitWeightClass.Light, 180, WeaponKind.LightRepeater);
+        var kiterSpec = KitingSpec("replay.kiter", UnitWeightClass.Light, 180, WeaponIds.LightRepeater);
         var targetSpec = KitingSpec("replay.chaser", UnitWeightClass.Light, 90, null);
         world.Spawn(kiterSpec, new OwnerId(1), EntityTransform.At(new Vector2(300, 400)), new EntityComponentState[]
         {
@@ -58,7 +58,7 @@ static partial class Program
             new StanceComponentState(UnitStance.Hold),
             new WeaponUserComponentState(new[]
             {
-                new WeaponMountRuntimeState("main", WeaponKind.LightRepeater, 0, 0),
+                new WeaponMountRuntimeState("main", WeaponIds.LightRepeater, 0, 0),
             }, new EntityId(2), CombatTargetKind.Unit, AttackTargetIsManual: true),
         });
         world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(390, 400)), new EntityComponentState[]
@@ -77,7 +77,7 @@ static partial class Program
         string id,
         UnitWeightClass weight,
         float speed,
-        WeaponKind? weaponKind)
+        string? weaponId)
     {
         return new EntitySpec
         {
@@ -87,7 +87,7 @@ static partial class Program
             Stats = new StatsSpec(weight, ArmorTag.Vehicle, MaxHp: 180, SightRange: 500, Cost: 100, TechTier: 1),
             Movement = new MovementSpec(MovementDomain.Land, Speed: speed, TurnRate: 8),
             Collision = new CollisionSpec(Radius: 14, Mass: 1, PushPriority: 1),
-            Weapons = weaponKind is { } kind
+            Weapons = weaponId is { } kind
                 ? [WeaponMountSpec.Independent("main", kind, Vector2.Zero, new Vector2(18, 0), MathF.Tau, 12, fireWhileMoving: true)]
                 : [],
         };

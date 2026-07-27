@@ -39,9 +39,7 @@ public partial class SelectionController
             return false;
         }
 
-        var selectedCount = UseUnitBattlefieldInput()
-            ? UnitBattlefield!.SelectedCount(LocalPlayerSlotId)
-            : State.SelectedUnitCount();
+        var selectedCount = UnitBattlefield.SelectedCount(LocalPlayerSlotId);
         if (selectedCount == 0)
         {
             StatusChanged?.Invoke(GameText.T("stance.selectRequired"));
@@ -54,26 +52,13 @@ public partial class SelectionController
 
     private int SelectArmy()
     {
-        return UseUnitBattlefieldInput()
-            ? UnitBattlefield!.SelectArmy(LocalPlayerSlotId)
-            : SelectLegacyArmy();
+        return UnitBattlefield.SelectArmy(LocalPlayerSlotId);
     }
 
     private bool SelectNextIdleHarvester()
     {
-        if (UseUnitBattlefieldInput())
-        {
-            var harvester = UnitBattlefield!.SelectNextIdleHarvester(LocalPlayerSlotId);
-            if (harvester is null)
-            {
-                return false;
-            }
-
-            SelectionChanged?.Invoke(1);
-            return true;
-        }
-
-        if (SelectNextLegacyIdleHarvester() is null)
+        var harvester = UnitBattlefield.SelectNextIdleHarvester(LocalPlayerSlotId);
+        if (harvester is null)
         {
             return false;
         }
@@ -82,60 +67,4 @@ public partial class SelectionController
         return true;
     }
 
-    private int SelectLegacyArmy()
-    {
-        _selectionHotkeyUnitIdBuffer.Clear();
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player
-                && unit.Hp > 0
-                && !IsHarvester(unit))
-            {
-                _selectionHotkeyUnitIdBuffer.Add(unit.Id);
-            }
-        }
-
-        return State.SelectUnitsByIds(_selectionHotkeyUnitIdBuffer);
-    }
-
-    private UnitModel? SelectNextLegacyIdleHarvester()
-    {
-        var selectedIdleSeen = false;
-        UnitModel? firstIdleHarvester = null;
-        UnitModel? nextIdleHarvester = null;
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner != ProceduralRts.Core.Owner.Player
-                || unit.Hp <= 0
-                || !IsHarvester(unit)
-                || unit.HarvesterMode != HarvesterMode.Idle
-                || unit.MoveTarget is not null)
-            {
-                continue;
-            }
-
-            firstIdleHarvester ??= unit;
-            if (selectedIdleSeen)
-            {
-                nextIdleHarvester = unit;
-                break;
-            }
-
-            if (unit.Selected)
-            {
-                selectedIdleSeen = true;
-            }
-        }
-
-        var target = nextIdleHarvester ?? firstIdleHarvester;
-        if (target is null)
-        {
-            return null;
-        }
-
-        _selectionHotkeyUnitIdBuffer.Clear();
-        _selectionHotkeyUnitIdBuffer.Add(target.Id);
-        State.SelectUnitsByIds(_selectionHotkeyUnitIdBuffer);
-        return target;
-    }
 }

@@ -6,7 +6,7 @@ public partial class BattleRoot
 {
     private void OnSellOrCancelRequested()
     {
-        if (UseUnitDesignRuntime && _unitBattlefield.HasSelectedBuildings(PlayerSlotId.One))
+        if (_unitBattlefield.HasSelectedBuildings(PlayerSlotId.One))
         {
             var soldCount = _unitBattlefield.SellSelectedBuildings(PlayerSlotId.One, out var status);
             _hud.SetStatus(status);
@@ -28,12 +28,6 @@ public partial class BattleRoot
         var shouldPlayDeathCue = false;
         foreach (var death in deaths)
         {
-            var building = _state.BuildingById(death.Id);
-            if (building is not null)
-            {
-                building.Hp = 0;
-            }
-
             if (!_buildingViews.Remove(death.Id, out var view))
             {
                 continue;

@@ -23,7 +23,7 @@ static class CoreCommentDisciplineChecks
         RequireText(
             gateway,
             "replay, bots, and network clients share the same validation path.",
-            "CommandGateway submission context must document its Godot-free compatibility boundary.",
+            "CommandGateway submission context must document its Godot-free alternate boundary.",
             result);
     }
 

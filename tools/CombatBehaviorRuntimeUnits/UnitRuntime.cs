@@ -44,7 +44,7 @@ static partial class Program
             || driftBeforeProjectionSync.MaxPositionDrift < 19f
             || driftBeforeProjectionSync.MaxFacingDrift < 0.4f)
         {
-            throw new InvalidOperationException("UnitBattlefield projection drift QA should compare legacy UnitInstance state against EntityWorld mirrors before the flag flip");
+            throw new InvalidOperationException("UnitBattlefield projection drift QA should compare retired UnitInstance state against EntityWorld mirrors before the flag flip");
         }
 
         var resyncedGuardProjection = newUnitBattlefield.UnitProjection(playerOneGuard.Id);
@@ -62,7 +62,7 @@ static partial class Program
             || newSelectionSummary.All(item => item.DesignId != "dog.guard_tank")
             || newSelectionSummary.Any(item => item.PlayerSlotId != PlayerSlotId.One))
         {
-            throw new InvalidOperationException("new unit battlefield should provide selection summaries from UnitSpec data without UnitKind presentation catalogs");
+            throw new InvalidOperationException("new unit battlefield should provide selection summaries directly from UnitSpec data");
         }
 
         newUnitBattlefield.ClearSelection(PlayerSlotId.One);
@@ -76,7 +76,7 @@ static partial class Program
             || !selectedEntity.Components.TryGet<SelectableComponentState>(out var bufferedSelection)
             || !bufferedSelection.Selected)
         {
-            throw new InvalidOperationException("new unit battlefield should route single-click selection through EntityCommandBuffer without consulting UnitKind or old UnitModel state");
+            throw new InvalidOperationException("unit battlefield should route single-click selection through EntityCommandBuffer");
         }
 
         var selectedProjection = newUnitBattlefield.UnitProjection(playerOneGuard.Id);
@@ -163,7 +163,7 @@ static partial class Program
         if (selectedBeforeMove.Any(unit => unit.FormationSlot is null || unit.CommandVisualTarget != new Vector2(440, 300) || unit.CommandPulse <= 0)
             || selectedBeforeMove[0].Position.DistanceTo(firstBeforeMove) < 8)
         {
-            throw new InvalidOperationException("new unit battlefield should assign compact formation move slots and advance selected UnitInstance movement without old GameState paths");
+            throw new InvalidOperationException("unit battlefield should assign compact formation move slots and advance selected UnitInstance movement");
         }
 
         var movedProjection = newUnitBattlefield.UnitProjection(selectedBeforeMove[0].Id);
@@ -245,7 +245,7 @@ static partial class Program
 
         if (newCombatAttacker.AttackTargetId != newCombatTarget.Id || newCombatTarget.Hp >= newCombatTarget.Spec.Stats.MaxHp)
         {
-            throw new InvalidOperationException("new unit battlefield should support manual UnitInstance attacks and apply UnitSpec weapon damage without old UnitModel combat");
+            throw new InvalidOperationException("unit battlefield should support manual UnitInstance attacks and apply UnitSpec weapon damage");
         }
 
         var explicitAttackBattlefield = new UnitBattlefield();
@@ -280,7 +280,7 @@ static partial class Program
         if (unitInstanceDeathBattlefield.Units.Any(unit => unit.Id == unitInstanceDeathTarget.Id)
             || unitInstanceDeathEvents.Count != 1
             || unitInstanceDeathEvents[0].DesignId != "cat.basic"
-            || unitInstanceDeathEvents[0].KillingAmmoKind is null
+            || unitInstanceDeathEvents[0].KillingAmmoId is null
             || unitInstanceDeathAttacker.AttackTargetId is not null
             || unitInstanceDeathBattlefield.UnitEntityByInstanceId(unitInstanceDeathTarget.Id) is not null
             || unitInstanceDeathBattlefield.UnitProjection(unitInstanceDeathTarget.Id) is not null)

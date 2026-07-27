@@ -18,7 +18,7 @@ public sealed class DogHarvester : UnitDesign
     public override CollisionSpec Collision => new(25, 1.8f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Omni("main", WeaponKind.ElectromagneticEmitter, Vector2.Zero, true),
+        WeaponMountSpec.Omni("main", WeaponIds.ElectromagneticEmitter, Vector2.Zero, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Harvest, Radius: 96, Value: 700)];

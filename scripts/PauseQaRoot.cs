@@ -253,9 +253,9 @@ public partial class PauseQaRunner : Node
 
     private static void AssertBattleSeed(BattleRoot battle)
     {
-        if (battle.State.MatchConfig.MapSeed != MatchLifecycleSeed
-            || battle.State.MatchConfig.PlayerFaction != FactionId.Cat
-            || battle.State.MatchConfig.AiFaction != FactionId.Dog)
+        if (battle.DebugMatchConfig.MapSeed != MatchLifecycleSeed
+            || battle.DebugMatchConfig.PlayerFaction != FactionId.Cat
+            || battle.DebugMatchConfig.AiFaction != FactionId.Dog)
         {
             throw new InvalidOperationException("Pause QA battle did not use the expected lifecycle skirmish setup.");
         }

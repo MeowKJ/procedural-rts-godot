@@ -55,7 +55,6 @@ public static partial class EntityStateHash
         foreach (var item in ordered)
         {
             hash = Add(hash, item.Id);
-            hash = Add(hash, (int)item.Kind);
             hash = Add(hash, item.DesignId);
             hash = Add(hash, item.Progress);
             hash = Add(hash, (int)item.Faction);

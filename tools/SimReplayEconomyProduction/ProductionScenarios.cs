@@ -131,19 +131,19 @@ static partial class Program
     {
         var cases = new[]
         {
-            (BuildingKind: BuildingDesignIds.Barracks, UnitDesignId: "dog.infantry", Facing: 0f),
-            (BuildingKind: BuildingDesignIds.VehicleFactory, UnitDesignId: "dog.guard_tank", Facing: Mathf.Pi * 0.5f),
-            (BuildingKind: BuildingDesignIds.Airfield, UnitDesignId: "dog.sky_patrol_aircraft", Facing: Mathf.Pi),
+            (BuildingDesignId: BuildingDesignIds.Barracks, UnitDesignId: "dog.infantry", Facing: 0f),
+            (BuildingDesignId: BuildingDesignIds.VehicleFactory, UnitDesignId: "dog.guard_tank", Facing: Mathf.Pi * 0.5f),
+            (BuildingDesignId: BuildingDesignIds.Airfield, UnitDesignId: "dog.sky_patrol_aircraft", Facing: Mathf.Pi),
         };
         for (var caseIndex = 0; caseIndex < cases.Length; caseIndex++)
         {
             var fixture = cases[caseIndex];
             var world = new EntityWorld(seed: (ulong)(6170 + caseIndex)) { WorldWidth = 1600, WorldHeight = 1200 };
             world.AddSystem(new ProductionSystem());
-            var buildingSpec = BuildSpecCatalog.For(fixture.BuildingKind);
+            var buildingSpec = BuildSpecCatalog.For(fixture.BuildingDesignId);
             var unitSpec = UnitDesignCatalog.Spec(fixture.UnitDesignId);
             Assert(buildingSpec.ToEntitySpec().Tags.Contains("Producer"),
-                $"{fixture.BuildingKind} should be classified as a producer");
+                $"{fixture.BuildingDesignId} should be classified as a producer");
             var producer = world.Spawn(
                 buildingSpec.ToEntitySpec(),
                 new OwnerId(1),
@@ -158,7 +158,6 @@ static partial class Program
                         new()
                         {
                             Id = 1,
-                            Kind = ProductionKindDesignBridge.ProductionKindFor(unitSpec),
                             DesignId = unitSpec.Id,
                             Faction = unitSpec.Faction,
                             Progress = unitSpec.Production!.Duration,
@@ -175,11 +174,11 @@ static partial class Program
                     producer.Transform.Position,
                     producer.Transform.Facing,
                     out var expected),
-                $"{fixture.BuildingKind} should resolve a cardinal production egress");
+                $"{fixture.BuildingDesignId} should resolve a cardinal production egress");
             Assert(produced.Transform.Position.DistanceTo(expected) < 0.001f,
-                $"{fixture.BuildingKind} should spawn {fixture.UnitDesignId} at exact egress {expected}, got {produced.Transform.Position}");
+                $"{fixture.BuildingDesignId} should spawn {fixture.UnitDesignId} at exact egress {expected}, got {produced.Transform.Position}");
             Assert(producer.Components.Require<ProductionQueueComponentState>().Items.Count == 0,
-                $"{fixture.BuildingKind} should dequeue only after its exact egress spawn succeeds");
+                $"{fixture.BuildingDesignId} should dequeue only after its exact egress spawn succeeds");
         }
 
         var blockedWorld = new EntityWorld(seed: 6179) { WorldWidth = 1600, WorldHeight = 1200 };
@@ -207,7 +206,6 @@ static partial class Program
                     new()
                     {
                         Id = 1,
-                        Kind = ProductionKindDesignBridge.ProductionKindFor(infantry),
                         DesignId = infantry.Id,
                         Faction = infantry.Faction,
                         Progress = infantry.Production!.Duration,

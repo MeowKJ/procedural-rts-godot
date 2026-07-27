@@ -88,9 +88,9 @@ static class MapAuthoringReviewGate
         RequireText(simReplayMap, "MapLoader.Load", "SimReplay must replay authored maps through MapLoader.", result);
         RequireText(simReplayMap, "AssertDeterministic", "SimReplay map authoring scenario must be deterministic.", result);
         var battleRoot = ReviewGateSource.Read(root, "scripts", "BattleRoot.cs");
-        RequireText(battleRoot, "var world = MapLoader.Load(map);", "Authored BattleRoot startup must load the map once through MapLoader.", result);
-        RequireText(battleRoot, "UnitBattlefield.AdoptLoadedMap(world, map)", "UnitBattlefield must adopt the exact MapLoader world instead of respawning authored entities.", result);
-        RequireText(battleRoot, "_entityWorld = world;\n            _runEntityWorldShadow = false;", "Authored BattleRoot must bypass the separate EntityWorld shadow without double stepping.", result);
+        RequireText(battleRoot, "var world = MapLoader.Load(_runtimeMapSpec);", "BattleRoot startup must load its runtime map once through MapLoader.", result);
+        RequireText(battleRoot, "UnitBattlefield.AdoptLoadedMap(world, _runtimeMapSpec)", "UnitBattlefield must adopt the exact MapLoader world instead of respawning entities.", result);
+        RequireText(battleRoot, "public bool DebugEntityWorldShadowEnabled => false;", "Authored BattleRoot must have no separate EntityWorld shadow.", result);
         var skirmishSetup = ReviewGateSource.Read(root, "scripts", "core", "match", "SkirmishOptions.cs");
         RequireText(skirmishSetup, "MapLoader.Prepare(map);", "Authored match staging must reject invalid maps before publishing pending state.", result);
         var authoredSkirmishFlow = ReviewGateSource.Read(root, "scripts", "qa", "SkirmishFlowQaRunner.AuthoredMap.cs");

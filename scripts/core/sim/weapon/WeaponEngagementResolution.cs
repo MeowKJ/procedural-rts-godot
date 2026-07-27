@@ -24,8 +24,7 @@ static class WeaponEngagementResolution
             mount.MountId,
             mount.WeaponId,
             muzzle,
-            target.Transform.Position,
-            mount.LegacyWeaponKind));
+            target.Transform.Position));
 
         if (ShouldSpawnProjectile(context.World, weaponDef))
         {
@@ -66,8 +65,7 @@ static class WeaponEngagementResolution
             mount.MountId,
             mount.WeaponId,
             muzzle,
-            targetPoint,
-            mount.LegacyWeaponKind));
+            targetPoint));
 
         if (ShouldSpawnProjectile(context.World, weaponDef))
         {
@@ -244,9 +242,7 @@ static class WeaponEngagementResolution
                 0,
                 flightDuration,
                 lifetime,
-                interceptableOverride ?? ammo.Interceptable,
-                weaponDef.LegacyKind,
-                ammo.LegacyKind),
+                interceptableOverride ?? ammo.Interceptable),
         });
     }
 

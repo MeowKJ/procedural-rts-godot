@@ -15,7 +15,8 @@ public sealed partial class UnitBattlefield
                 unit.Spec.Faction,
                 Relations.Relation(viewer, unit.PlayerSlotId),
                 unit.Selected,
-                unit.AlertPulse));
+                unit.AlertPulse,
+                IsVisibleTo(viewer, unit)));
         }
 
         return result;
@@ -347,8 +348,7 @@ public sealed partial class UnitBattlefield
             "main",
             weapon.Id,
             attacker.Facing,
-            attacker.AttackCooldownRemaining,
-            weapon.LegacyKind);
+            attacker.AttackCooldownRemaining);
         var damage = WeaponMath.BaseDamage(_entityWorld, attackerEntity.OwnerId, weapon, targetEntity);
         WeaponEngagementResolution.Fire(
             new SimContext(_entityWorld, _inputCommandTick, 0, []),

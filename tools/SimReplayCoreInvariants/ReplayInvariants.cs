@@ -25,7 +25,7 @@ static partial class Program
             new VisionComponentState(400),
             new WeaponUserComponentState(new[]
             {
-                new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
             }),
             new CommandQueueComponentState(Array.Empty<EntityCommand>()),
         });
@@ -195,7 +195,7 @@ static partial class Program
         sink.DrainInto(events);
         Assert(events.Count == 0, "DrainInto should clear the destination when no events are pending");
 
-        sink.Raise(new WeaponFiredEvent(1, new EntityId(1), "main", WeaponKind.NeedleRifle, Vector2.Zero, Vector2.One));
+        sink.Raise(new WeaponFiredEvent(1, new EntityId(1), "main", WeaponIds.NeedleRifle, Vector2.Zero, Vector2.One));
         sink.Raise(new EntityDamagedEvent(1, new EntityId(2), new EntityId(1), 12, Vector2.One));
         sink.DrainInto(events);
         Assert(events.Count == 2, "DrainInto should move pending events into a reusable destination");

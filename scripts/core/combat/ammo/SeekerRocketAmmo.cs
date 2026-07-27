@@ -4,12 +4,12 @@ namespace ProceduralRts.Core;
 
 public sealed class SeekerRocketAmmo : AmmoDesign
 {
-    public override AmmoKind Kind => AmmoKind.SeekerRocket;
+    public override string Id => AmmoIds.SeekerRocket;
 
     public override AmmoDefinition ToDefinition()
     {
         return new AmmoDefinition(
-            Kind,
+            Id,
             "Seeker Rocket",
             ProjectileBehavior.Tracking,
             HitRule.Guaranteed,

@@ -151,25 +151,25 @@ static partial class Program
 
     private static EntityWorld BuildDirectProjectileWorld()
     {
-        var world = NewObservableProjectileWorld(seed: 5261, WeaponKind.NeedleRifle);
+        var world = NewObservableProjectileWorld(seed: 5261, WeaponIds.NeedleRifle);
         var targetSpec = ProjectileUnitSpec("replay.observable.direct.target", null, 160);
-        var shooterSpec = ProjectileUnitSpec("replay.observable.direct.shooter", WeaponKind.NeedleRifle, 160);
-        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(180, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
-        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.NeedleRifle));
+        var shooterSpec = ProjectileUnitSpec("replay.observable.direct.shooter", WeaponIds.NeedleRifle, 160);
+        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(180, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponIds.NeedleRifle));
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponIds.NeedleRifle));
         return world;
     }
 
     private static EntityWorld BuildBallisticMissWorld()
     {
-        var world = NewObservableProjectileWorld(seed: 5262, WeaponKind.VectorCannon);
+        var world = NewObservableProjectileWorld(seed: 5262, WeaponIds.VectorCannon);
         var targetSpec = ProjectileUnitSpec("replay.observable.ballistic.target", null, 160);
         targetSpec = targetSpec with
         {
             Stats = targetSpec.Stats! with { WeightClass = UnitWeightClass.Light },
         };
-        var shooterSpec = ProjectileUnitSpec("replay.observable.ballistic.shooter", WeaponKind.VectorCannon, 160);
-        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(320, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
-        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponKind.VectorCannon));
+        var shooterSpec = ProjectileUnitSpec("replay.observable.ballistic.shooter", WeaponIds.VectorCannon, 160);
+        var target = world.Spawn(targetSpec, new OwnerId(2), EntityTransform.At(new Vector2(320, 220)), ProjectileUnitState(targetSpec, EntityId.None, WeaponIds.NeedleRifle));
+        world.Spawn(shooterSpec, new OwnerId(1), EntityTransform.At(new Vector2(120, 220)), ProjectileUnitState(shooterSpec, target.Id, WeaponIds.VectorCannon));
         return world;
     }
 
@@ -179,34 +179,34 @@ static partial class Program
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
         world.Relations.Set(new OwnerId(2), new OwnerId(3), PlayerRelation.Hostile);
         world.RegisterCombatDefinitions(
-            [WeaponCatalog.Weapons[WeaponKind.NeedleRifle] with { Cooldown = 10 }],
+            [WeaponCatalog.WeaponDefinitions[WeaponIds.NeedleRifle] with { Cooldown = 10 }],
             WeaponCatalog.AmmoDefinitions.Values);
         world.AddSystem(new VisionSystem());
         world.AddSystem(new CombatSystem());
         world.AddSystem(new ProjectileSystem());
 
         var observerSpec = ProjectileUnitSpec("replay.observable.fog.observer", null, 160);
-        var observerStates = ProjectileUnitState(observerSpec, EntityId.None, WeaponKind.NeedleRifle)
+        var observerStates = ProjectileUnitState(observerSpec, EntityId.None, WeaponIds.NeedleRifle)
             .Append<EntityComponentState>(new VisionComponentState(80))
             .ToArray();
         world.Spawn(observerSpec, new OwnerId(1), EntityTransform.At(new Vector2(80, 80)), observerStates);
 
         var targetSpec = ProjectileUnitSpec("replay.observable.fog.target", null, 160);
-        var shooterSpec = ProjectileUnitSpec("replay.observable.fog.shooter", WeaponKind.NeedleRifle, 160);
-        var target = world.Spawn(targetSpec, new OwnerId(3), EntityTransform.At(new Vector2(820, 500)), ProjectileUnitState(targetSpec, EntityId.None, WeaponKind.NeedleRifle));
-        var shooterStates = ProjectileUnitState(shooterSpec, target.Id, WeaponKind.NeedleRifle)
+        var shooterSpec = ProjectileUnitSpec("replay.observable.fog.shooter", WeaponIds.NeedleRifle, 160);
+        var target = world.Spawn(targetSpec, new OwnerId(3), EntityTransform.At(new Vector2(820, 500)), ProjectileUnitState(targetSpec, EntityId.None, WeaponIds.NeedleRifle));
+        var shooterStates = ProjectileUnitState(shooterSpec, target.Id, WeaponIds.NeedleRifle)
             .Append<EntityComponentState>(new VisionComponentState(240))
             .ToArray();
         world.Spawn(shooterSpec, new OwnerId(2), EntityTransform.At(new Vector2(700, 500)), shooterStates);
         return world;
     }
 
-    private static EntityWorld NewObservableProjectileWorld(ulong seed, WeaponKind weaponKind)
+    private static EntityWorld NewObservableProjectileWorld(ulong seed, string weaponId)
     {
         var world = new EntityWorld(seed) { WorldWidth = 900, WorldHeight = 600 };
         world.Relations.Set(new OwnerId(1), new OwnerId(2), PlayerRelation.Hostile);
         world.RegisterCombatDefinitions(
-            [WeaponCatalog.Weapons[weaponKind] with { Cooldown = 10 }],
+            [WeaponCatalog.WeaponDefinitions[weaponId] with { Cooldown = 10 }],
             WeaponCatalog.AmmoDefinitions.Values);
         world.AddSystem(new CombatSystem());
         world.AddSystem(new ProjectileSystem());

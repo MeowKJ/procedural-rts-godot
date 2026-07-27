@@ -18,10 +18,10 @@ static partial class MapSpecArtifactReader
         return MapSpecArtifactJsonCursor.Array(element, "buildings").Select(item =>
         {
             var value = new MapSpecArtifactJsonCursor(
-                item, "kind", "ownerId", "faction", "position", "facing", "hp", "buildProgress", "legacyId");
+                item, "kind", "ownerId", "faction", "position", "facing", "hp", "buildProgress", "runtimeId");
             return new MapBuildingSeedSpec(
                 value.String("kind"), ReadOwner(value), ReadFaction(value), ReadPoint(value.Element("position")),
-                value.Single("facing"), value.NullableSingle("hp"), value.Single("buildProgress"), value.NullableInt32("legacyId"));
+                value.Single("facing"), value.NullableSingle("hp"), value.Single("buildProgress"), value.NullableInt32("runtimeId"));
         }).ToArray();
     }
 

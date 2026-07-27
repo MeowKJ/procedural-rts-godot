@@ -29,24 +29,7 @@ public sealed record WeaponFiredEvent(
     string MountId,
     string WeaponId,
     Vector2 Muzzle,
-    Vector2 TargetPosition,
-    WeaponKind? LegacyWeaponKind = null) : SimEvent(Tick)
-{
-    public WeaponFiredEvent(
-        int Tick,
-        EntityId Source,
-        string MountId,
-        WeaponKind Weapon,
-        Vector2 Muzzle,
-        Vector2 TargetPosition)
-        : this(Tick, Source, MountId, WeaponCatalog.IdFor(Weapon), Muzzle, TargetPosition, Weapon)
-    {
-    }
-
-    public WeaponKind Weapon => LegacyWeaponKind
-        ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
-        ?? throw new InvalidOperationException($"Weapon fired event uses non-legacy weapon '{WeaponId}'.");
-}
+    Vector2 TargetPosition) : SimEvent(Tick);
 
 public sealed record ProjectileImpactEvent(
     int Tick,

@@ -18,7 +18,8 @@ public partial class FootprintLayer : Node2D
     private readonly List<int> _expiredTrailIds = [];
     private float _redrawTimer;
 
-    public required GameState State { get; init; }
+    public required UnitBattlefield UnitBattlefield { get; init; }
+    public required Func<Vector2, bool> IsVisibleToPlayer { get; init; }
     public Rect2? CullingWorldRect { get; set; }
     public int ActiveMarkCount => _marks.Count;
 
@@ -60,7 +61,8 @@ public partial class FootprintLayer : Node2D
 
     private bool IsMarkVisibleToPlayer(FootprintMark mark)
     {
-        return State.OwnerRelation(CoreOwner.Player, mark.Owner) is PlayerRelation.Self or PlayerRelation.Allied
-            || State.IsVisibleToPlayer(mark.Position);
+        var owner = mark.Owner == CoreOwner.Player ? PlayerSlotId.One : PlayerSlotId.Two;
+        return UnitBattlefield.Relations.Relation(PlayerSlotId.One, owner) is PlayerRelation.Self or PlayerRelation.Allied
+            || IsVisibleToPlayer(mark.Position);
     }
 }

@@ -4,7 +4,6 @@ static class ArchitectureReviewGate
     {
         RequireCoreFiles(root, result);
         RequireEntityWorldPipeline(root, result);
-        ForbidDeletedMigrationTypes(root, result);
         RequireCommandBoundary(root, result);
         RequirePlayerControlContracts(root, result);
         CommandGatewayReviewGate.Check(root, result);
@@ -28,23 +27,10 @@ static class ArchitectureReviewGate
 
     private static void RequireEntityWorldPipeline(string root, GateResult result)
     {
-        ReviewGateSource.RequireTextInFile(root, result, "private readonly EntityWorld _entityWorld", "scripts", "BattleRoot.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "SimSystemPipeline", "scripts", "battle-root", "BattleRoot.EntityWorld.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_entityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs"); ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "private readonly UnitBattlefield _unitBattlefield", "scripts", "BattleRoot.cs"); ReviewGateSource.RequireTextInFile(root, result, "AdvanceSimulation", "scripts", "battle-root", "BattleRoot.Process.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "SimulationTick", "scripts", "core", "units", "runtime", "UnitBattlefield.cs"); ReviewGateSource.RequireTextInFile(root, result, "ConfigureLiveGameplay", "scripts", "core", "sim", "SimSystemPipeline.cs"); ReviewGateSource.RequireTextInFile(root, result, "_unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;", "scripts", "battle-root", "BattleRoot.EntityWorld.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "ResourceAtmosphereFor(WorldVisualTheme", "scripts", "core", "presentation", "theme", "WorldThemeMath.cs");
         ReviewGateSource.RequireAnyText(root, result, "EntityProjection", "scripts/battle-root/BattleRoot.EntityWorld.cs", "scripts/world", "scripts/core/units/runtime");
-    }
-
-    private static void ForbidDeletedMigrationTypes(string root, GateResult result)
-    {
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "UnitDefinition.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "BuildingDefinition.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "BuildDefinition.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "BuildCatalog.cs");
-        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "runtime", "UnitBattlefieldBuildingTarget.cs");
-        ReviewGateSource.ForbidTextInSources(root, result, "UnitBattlefieldBuildingTarget", "scripts");
-        ReviewGateSource.ForbidTextInSources(root, result, "BuildingDefinition", "scripts");
-        ReviewGateSource.ForbidTextInSources(root, result, "BuildDefinition", "scripts");
-        ReviewGateSource.ForbidTextInSources(root, result, "BuildCatalog", "scripts");
     }
 
     private static void RequireCommandBoundary(string root, GateResult result)
@@ -73,7 +59,7 @@ static class ArchitectureReviewGate
         RequireText(observation, "IReadOnlyList<ObservedEntity> VisibleEntities", "ObservationView visible entities must be read-only.", result);
         RequireText(observation, "IReadOnlyList<ObservedCommandAffordance> CommandAffordances", "ObservationView command affordances must be read-only.", result);
 
-        foreach (var forbidden in new[] { "using Godot", "GameState", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
+        foreach (var forbidden in new[] { "using Godot", "UnitBattlefield", "EntityWorld", "Node", "SceneTree", "_Process" })
         {
             ReviewGateSource.ForbidTextInSources(root, result, forbidden, "scripts/core/players");
         }

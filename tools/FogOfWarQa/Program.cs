@@ -2,46 +2,6 @@ using System.Diagnostics;
 using Godot;
 using ProceduralRts.Core;
 
-const string PlayerScoutDesignId = "generic.infantry";
-const string EnemyMobileDesignId = "generic.light_tank";
-
-static UnitSpecRuntimeDescriptor RuntimeDescriptorFor(string designId)
-{
-    var spec = UnitDesignCatalog.Spec(designId);
-    if (UnitDesignDefinitionCatalog.RuntimeDescriptors.TryGetValue(spec.Id, out var descriptor))
-    {
-        return descriptor;
-    }
-
-    throw new InvalidOperationException($"unit design {designId} should have UnitSpec runtime descriptor coverage in FogOfWarQa");
-}
-
-static UnitModel Unit(int id, string designId, Owner owner, Vector2 position)
-{
-    var descriptor = RuntimeDescriptorFor(designId);
-    return new UnitModel
-    {
-        Id = id,
-        DesignId = descriptor.DesignId,
-        Owner = owner,
-        Position = position,
-        AnchorPosition = position,
-        Hp = descriptor.MaxHp,
-    };
-}
-
-static BuildingModel Building(int id, string kind, Owner owner, Vector2 position)
-{
-    return new BuildingModel
-    {
-        Id = id,
-        Kind = kind,
-        Owner = owner,
-        Position = position,
-        Hp = BuildSpecCatalog.For(kind).MaxHp,
-    };
-}
-
 static void Assert(bool condition, string message)
 {
     if (!condition)
@@ -63,15 +23,15 @@ static void AssertBetween(float value, float min, float max, string label)
     Assert(value > min && value < max, $"{label} expected between {min} and {max}, got {value}");
 }
 
-static void Advance(GameState state, float seconds)
+static void Advance(WorldPresentationEnvironment environment, UnitBattlefield battlefield, float seconds)
 {
     for (var elapsed = 0f; elapsed < seconds; elapsed += 0.05f)
     {
-        state.Update(0.05);
+        environment.Update(0.05, battlefield, PlayerSlotId.One);
     }
 }
 
-static Rect2 BuildingRect(BuildingModel building)
+static Rect2 BuildingRect(UnitBattlefieldBuildingSnapshot building)
 {
     var spec = BuildSpecCatalog.For(building.Kind);
     return new Rect2(building.Position - spec.Footprint / 2f, spec.Footprint);
@@ -168,49 +128,39 @@ var featherMemory = fog.DebugMaskPixel(featherEdgePoint);
 AssertBetween(featherMemory.G, 0.08f, 0.92f, "visual feather memory green channel");
 AssertBetween(featherMemory.A, 0.54f, 0.97f, "visual feather memory alpha");
 
-var state = new GameState();
-var highQualityState = new GameState(SkirmishOptions.Default, FogQualityTier.High);
-Assert(highQualityState.FogQuality == FogQualityTier.High, "GameState should retain the configured fog quality tier");
-Assert(MathF.Abs(highQualityState.FogOfWar.CellSize - FogOfWarVisualPolicy.CellSizeFor(FogQualityTier.High)) < 0.001f, "GameState fog map should use quality-specific cell size");
-state.Units.Clear();
-state.Buildings.Clear();
-state.ResourceFields.Clear();
-state.Projectiles.Clear();
-state.Beams.Clear();
+var battlefield = new UnitBattlefield { WorldSize = worldSize };
+battlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
+var state = new WorldPresentationEnvironment(worldSize);
+var highQualityState = new WorldPresentationEnvironment(worldSize, FogQualityTier.High);
+Assert(highQualityState.FogQuality == FogQualityTier.High, "presentation environment should retain the configured fog quality tier");
+Assert(MathF.Abs(highQualityState.FogOfWar.CellSize - FogOfWarVisualPolicy.CellSizeFor(FogQualityTier.High)) < 0.001f, "presentation fog map should use quality-specific cell size");
 state.SetVisualTheme(WorldVisualTheme.DayCommand, "fog-qa", transitionProgress: 1);
 state.FogOfWar.ClearMemory();
 
-var playerScout = Unit(1, PlayerScoutDesignId, Owner.Player, firstScout);
-var enemyMobile = Unit(2, EnemyMobileDesignId, Owner.Enemy, firstScout + new Vector2(40, 0));
-var enemyStructure = Building(3, BuildingDesignIds.PowerPlant, Owner.Enemy, firstScout + new Vector2(96, 0));
-state.Units.AddRange([playerScout, enemyMobile]);
-state.Buildings.Add(enemyStructure);
-Advance(state, 0.2f);
+var playerScout = battlefield.Spawn("generic.infantry", PlayerSlotId.One, firstScout);
+var enemyMobile = battlefield.Spawn("generic.light_tank", PlayerSlotId.Two, firstScout + new Vector2(40, 0));
+var enemyStructure = battlefield.UpsertBuildingTarget(
+    3,
+    BuildingDesignIds.PowerPlant,
+    PlayerSlotId.Two,
+    UnitFactionId.Cat,
+    firstScout + new Vector2(96, 0),
+    0,
+    BuildSpecCatalog.For(BuildingDesignIds.PowerPlant).MaxHp);
+Advance(state, battlefield, 0.2f);
 
-Assert(state.IsVisibleToPlayer(enemyMobile.Position), "enemy mobile unit should be visible in live vision");
+Assert(state.IsVisible(enemyMobile.Position), "enemy mobile unit should be visible in live vision");
 Assert(state.FogOfWar.AnyExplored(BuildingRect(enemyStructure)), "enemy static building should be explored while scouted");
 
 playerScout.Position = secondScout;
-Advance(state, 0.2f);
+Advance(state, battlefield, 0.2f);
 
-Assert(!state.IsVisibleToPlayer(enemyMobile.Position), "enemy mobile unit should be hidden in explored memory outside live vision");
+Assert(!state.IsVisible(enemyMobile.Position), "enemy mobile unit should be hidden in explored memory outside live vision");
 Assert(state.FogOfWar.AnyExplored(BuildingRect(enemyStructure)), "enemy static building should remain in explored memory");
 Assert(!state.FogOfWar.AnyVisible(BuildingRect(enemyStructure)), "enemy static building memory should not be treated as live vision");
 
-var minimapBattlefield = new UnitBattlefield();
-minimapBattlefield.UpsertBuildingTarget(
-    enemyStructure.Id,
-    enemyStructure.Kind,
-    PlayerSlotId.Two,
-    UnitFactionId.Cat,
-    enemyStructure.Position,
-    enemyStructure.Facing,
-    enemyStructure.Hp,
-    true,
-    1,
-    null);
-var hiddenMinimapBuildings = minimapBattlefield.BuildingMinimapProjections(PlayerSlotId.One, _ => false);
-var exploredMinimapBuildings = minimapBattlefield.BuildingMinimapProjections(PlayerSlotId.One, rect => state.FogOfWar.AnyExplored(rect));
+var hiddenMinimapBuildings = battlefield.BuildingMinimapProjections(PlayerSlotId.One, _ => false);
+var exploredMinimapBuildings = battlefield.BuildingMinimapProjections(PlayerSlotId.One, state.FogOfWar.AnyExplored);
 Assert(hiddenMinimapBuildings.All(building => building.Id != enemyStructure.Id), "enemy static building should not enter UnitBattlefield minimap projections while unexplored");
 Assert(exploredMinimapBuildings.Any(building => building.Id == enemyStructure.Id), "enemy static building should enter UnitBattlefield minimap projections from explored memory");
 
@@ -285,10 +235,10 @@ Assert(cameraMath.Contains("StableVisualDelta", StringComparison.Ordinal)
 Assert(cameraController.Contains("CameraInputMath.StableVisualDelta", StringComparison.Ordinal), "camera controller should use stable visual dt for pan/zoom integration");
 
 var battleRoot = ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
-Assert(battleRoot.Contains("_state.IsVisibleToPlayer(unit)", StringComparison.Ordinal), "mobile non-allied units should be filtered by relation-aware live visibility");
-Assert(battleRoot.Contains("_state.IsExploredByPlayer(building)", StringComparison.Ordinal), "non-allied buildings should be filtered by relation-aware explored memory");
-Assert(battleRoot.Contains("BuildingMinimapProjections(PlayerSlotId.One, rect => _state.FogOfWar.AnyExplored(rect))", StringComparison.Ordinal), "live building minimap projections should be filtered by explored fog memory");
-Assert(battleRoot.Contains("_state.FogOfWar.MaskTexture()", StringComparison.Ordinal), "minimap should consume the cached fog mask texture");
+Assert(battleRoot.Contains("IsVisibleToPlayer = _presentationEnvironment.IsVisible", StringComparison.Ordinal), "mobile non-allied presentation should use live fog visibility");
+Assert(battleRoot.Contains("ExploredProvider = _presentationEnvironment.FogOfWar.AnyExplored", StringComparison.Ordinal), "building presentation should use explored fog memory");
+Assert(battleRoot.Contains("BuildingMinimapProjections(PlayerSlotId.One, _presentationEnvironment.FogOfWar.AnyExplored)", StringComparison.Ordinal), "live building minimap projections should be filtered by explored fog memory");
+Assert(battleRoot.Contains("_presentationEnvironment.FogOfWar.MaskTexture()", StringComparison.Ordinal), "minimap should consume the cached fog mask texture");
 Assert(battleRoot.Contains("_fogOfWar.VisibleWorldRect = visibleRect", StringComparison.Ordinal), "battle root should feed the camera culling rect to fog rendering");
 Assert(fogLayer.Contains("VisibleWorldRect", StringComparison.Ordinal)
     && fogLayer.Contains("MaskTexture(VisibleWorldRect)", StringComparison.Ordinal), "world fog layer should request camera-scoped mask texture updates");

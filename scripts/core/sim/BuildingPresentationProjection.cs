@@ -14,10 +14,11 @@ public enum BuildingDamageReadabilityLevel
 /// <summary>
 /// A building-specific view snapshot assembled only from EntityWorld components.
 /// It keeps generic entity projection small while moving building UI state away
-/// from the legacy building runtime one field at a time.
+/// from parallel mutable presentation state one field at a time.
 /// </summary>
 public readonly record struct BuildingPresentationProjection(
     EntityProjection Entity,
+    float TurretFacing,
     Vector2 Footprint,
     float Radius,
     bool Powered,
@@ -76,6 +77,10 @@ public static partial class BuildingPresentationProjector
         var footprint = entity.Components.TryGet<FootprintComponentState>(out var footprintState)
             ? footprintState.Size
             : Vector2.Zero;
+        var turretFacing = entity.Components.TryGet<WeaponUserComponentState>(out var weaponUser)
+            && weaponUser.Mounts.Count > 0
+            ? weaponUser.Mounts[0].Facing
+            : entity.Transform.Facing;
         var radius = entity.Components.TryGet<CollisionComponentState>(out var collision)
             ? collision.Radius
             : Mathf.Max(footprint.X, footprint.Y) * 0.5f;
@@ -108,6 +113,7 @@ public static partial class BuildingPresentationProjector
 
         return new BuildingPresentationProjection(
             EntityProjector.ProjectOne(world, entity),
+            turretFacing,
             footprint,
             radius,
             powered,

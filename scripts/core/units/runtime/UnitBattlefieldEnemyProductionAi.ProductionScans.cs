@@ -9,7 +9,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         for (var index = 0; index < options.Count; index++)
         {
             var option = options[index];
-            if (option.CanQueue && option.UnitDesignId is not null)
+            if (option.CanQueue)
             {
                 _queueableDesignOptions.Add(option);
             }
@@ -31,7 +31,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
                 continue;
             }
 
-            var armyCount = ArmyCountForDesign(battlefield, enemyPlayerSlotId, option.UnitDesignId!);
+            var armyCount = ArmyCountForDesign(battlefield, enemyPlayerSlotId, option.UnitDesignId);
             if (best is null || IsBetterProductionOption(option, armyCount, best, bestArmyCount))
             {
                 best = option;
@@ -54,7 +54,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
                 continue;
             }
 
-            var armyCount = ArmyCountForDesign(battlefield, enemyPlayerSlotId, option.UnitDesignId!);
+            var armyCount = ArmyCountForDesign(battlefield, enemyPlayerSlotId, option.UnitDesignId);
             if (best is null || IsBetterFallbackOption(option, armyCount, best, bestArmyCount))
             {
                 best = option;
@@ -63,21 +63,6 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         }
 
         return best;
-    }
-
-    private static bool CanQueue(UnitBattlefield battlefield, PlayerSlotId playerSlotId, ProductionKind kind)
-    {
-        var states = battlefield.ProductionOptionStates(playerSlotId);
-        for (var index = 0; index < states.Count; index++)
-        {
-            var state = states[index];
-            if (state.Kind == kind && state.HasProducer && state.EnoughCredits)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private int QueuedCount(UnitBattlefield battlefield, PlayerSlotId playerSlotId)
@@ -98,7 +83,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             + QueuedDesignCount(battlefield, enemyPlayerSlotId, designId);
     }
 
-    private int QueuedKindCount(UnitBattlefield battlefield, PlayerSlotId playerSlotId, ProductionKind kind)
+    private int QueuedCategoryCount(UnitBattlefield battlefield, PlayerSlotId playerSlotId, ProductionCategory category)
     {
         CollectOwnedBuildings(battlefield, playerSlotId, _ownedBuildingBuffer, liveOnly: false);
         var count = 0;
@@ -107,7 +92,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             var queue = battlefield.BuildingProductionQueue(_ownedBuildingBuffer[buildingIndex].Id);
             for (var itemIndex = 0; itemIndex < queue.Count; itemIndex++)
             {
-                if (queue[itemIndex].Kind == kind)
+                if (UnitDesignCatalog.Spec(queue[itemIndex].DesignId).Production?.Category == category)
                 {
                     count++;
                 }

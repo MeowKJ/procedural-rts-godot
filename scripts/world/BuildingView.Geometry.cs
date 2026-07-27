@@ -67,9 +67,8 @@ public partial class BuildingView : Node2D
     {
         var dockCenter = new Vector2(rect.End.X + 52, 0);
         var pad = new Rect2(dockCenter - new Vector2(34, 18), new Vector2(68, 36));
-        var deliveryPulse = _buildingProjection?.DeliveryPulse ?? Building.DeliveryPulse;
-        var dockOccupied = _buildingProjection?.DockOccupied
-            ?? (Building.DockReservedByHarvesterId is not null || Building.DockedHarvesterId is not null);
+        var deliveryPulse = _buildingProjection!.Value.DeliveryPulse;
+        var dockOccupied = _buildingProjection.Value.DockOccupied;
         DrawRect(pad, new Color(art.Body, 0.64f), true);
         DrawRect(pad, new Color(art.Effect, 0.48f + deliveryPulse * 0.28f), false, 2.2f);
         DrawLine(pad.Position + new Vector2(10, pad.Size.Y / 2f), pad.End - new Vector2(10, pad.Size.Y / 2f), new Color(art.Highlight, 0.32f + deliveryPulse * 0.36f), 1.8f, true);
@@ -101,8 +100,8 @@ public partial class BuildingView : Node2D
         DrawLine(new Vector2(-radius, -radius * 0.72f), new Vector2(radius, -radius * 0.72f), new Color(art.Effect, 0.28f), 1.4f, true);
         DrawLine(new Vector2(-radius, radius * 0.72f), new Vector2(radius, radius * 0.72f), new Color(art.Effect, 0.28f), 1.4f, true);
 
-        var bodyFacing = _projection?.Facing ?? Building.Facing;
-        DrawSetTransform(Vector2.Zero, Building.TurretFacing - bodyFacing, Vector2.One);
+        var bodyFacing = _projection!.Value.Facing;
+        DrawSetTransform(Vector2.Zero, _buildingProjection!.Value.TurretFacing - bodyFacing, Vector2.One);
         DrawCircle(Vector2.Zero, radius * 0.36f, new Color(art.Body, 0.78f));
         DrawArc(Vector2.Zero, radius * 0.36f, 0, Mathf.Tau, MediumArcSegments, new Color(art.Ink, 0.76f), 1.8f, true);
         DrawArc(Vector2.Zero, radius * 0.25f, 0, Mathf.Tau, SmallArcSegments, new Color(art.Owner, 0.46f), 1.2f, true);

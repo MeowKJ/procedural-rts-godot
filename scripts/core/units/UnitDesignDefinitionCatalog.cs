@@ -24,7 +24,7 @@ public static class UnitDesignDefinitionCatalog
             spec.Stats.WeightClass,
             spec.Movement.Domain,
             spec.Stats.ArmorTag,
-            primaryWeapon.WeaponKind,
+            primaryWeapon.WeaponId,
             spec.Stats.MaxHp,
             spec.Collision.Radius,
             spec.Movement.Speed,

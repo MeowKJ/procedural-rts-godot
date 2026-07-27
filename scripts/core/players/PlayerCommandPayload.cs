@@ -5,19 +5,14 @@ public readonly record struct PlayerCommandPoint(float X, float Y)
     public bool IsFinite => float.IsFinite(X) && float.IsFinite(Y);
 }
 
-public readonly record struct PlayerCommandBuildFacing(int Version, int QuarterTurns)
+public readonly record struct PlayerCommandBuildFacing(int QuarterTurns)
 {
-    public const string InvalidPayloadMessage = "Build facing must be legacy v0/0 or schema v1 quarter-turn 0..3.";
+    public const string InvalidPayloadMessage = "Build facing quarter-turn must be in the range 0..3.";
 
     public bool TryResolveCanonicalRadians(out float radians)
     {
         radians = 0;
-        if (Version == 0)
-        {
-            return QuarterTurns == 0;
-        }
-
-        if (Version != 1 || QuarterTurns is < 0 or > 3)
+        if (QuarterTurns is < 0 or > 3)
         {
             return false;
         }
@@ -138,7 +133,7 @@ public readonly record struct PlayerCommandPayload(
             SpecId = specId,
             HasTargetPoint = true,
             TargetPoint = new PlayerCommandPoint(x, y),
-            BuildFacing = new PlayerCommandBuildFacing(Version: 1, QuarterTurns: quarterTurns),
+            BuildFacing = new PlayerCommandBuildFacing(quarterTurns),
         };
     }
 }

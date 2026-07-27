@@ -57,9 +57,9 @@ internal static class CounterReadabilityWorldSetup
             new PresentationPulseComponentState(),
         };
 
-        if (spec.WeaponKind is { } weaponKind)
+        if (spec.WeaponId is { } weaponId)
         {
-            components.Add(new WeaponUserComponentState(new[] { new WeaponMountRuntimeState("main", weaponKind, facing, 0) }));
+            components.Add(new WeaponUserComponentState(new[] { new WeaponMountRuntimeState("main", weaponId, facing, 0) }));
         }
 
         return world.Spawn(spec.ToEntitySpec(), owner, EntityTransform.At(position, facing), components);

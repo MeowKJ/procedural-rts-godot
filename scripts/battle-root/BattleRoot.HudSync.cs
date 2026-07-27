@@ -6,12 +6,6 @@ namespace ProceduralRts;
 
 public partial class BattleRoot
 {
-    private Rect2 BuildingWorldRect(BuildingModel building)
-    {
-        var spec = BuildSpecCatalog.For(building.Kind);
-        return new Rect2(building.Position - spec.Footprint / 2f, spec.Footprint);
-    }
-
     private static Rect2 BuildingProjectionWorldRect(BuildingPresentationProjection building)
     {
         return new Rect2(building.Entity.Position - building.Footprint / 2f, building.Footprint);
@@ -29,28 +23,16 @@ public partial class BattleRoot
 
     private void RefreshCommandCard()
     {
-        _hud.SetBuildCardState(_state.BuildOptionSnapshots(ProceduralRts.Core.Owner.Player));
-        if (UseUnitDesignRuntime)
-        {
-            CollectSelectedProductionBuildingIds();
-            _hud.SetCommandCardState(RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer));
-            _hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One));
-            _hud.SetConstructionProviderLaneState(_unitBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One));
-            _hud.SetProductionQueueSummary(
-                RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
-                canCancel);
-            var selectedAbilityCards = RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount);
-            _hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount);
-            return;
-        }
-
-        _hud.SetCommandCardState(_unitBattlefield.ProductionOptionStates(PlayerSlotId.One));
+        _hud.SetBuildCardState(_unitBattlefield.BuildOptionSnapshots(PlayerSlotId.One));
+        CollectSelectedProductionBuildingIds();
+        _hud.SetCommandCardState(RuntimeProductionCommandCardStates(_selectedProductionBuildingIdBuffer));
         _hud.SetProductionProviderLaneState(_unitBattlefield.ProductionProviderLaneStates(PlayerSlotId.One));
-        _hud.SetConstructionProviderLaneState([]);
+        _hud.SetConstructionProviderLaneState(_unitBattlefield.ConstructionProviderLaneStates(PlayerSlotId.One));
         _hud.SetProductionQueueSummary(
-            _unitBattlefield.ProductionQueueSummary(PlayerSlotId.One),
-            _unitBattlefield.HasQueuedProduction(PlayerSlotId.One));
-        _hud.SetAbilityCardState([]);
+            RuntimeProductionQueueSummary(_selectedProductionBuildingIdBuffer, out var canCancel),
+            canCancel);
+        var selectedAbilityCards = RuntimeSelectedAbilityCardStates(out var abilitySourceUnitCount);
+        _hud.SetAbilityCardState(selectedAbilityCards, abilitySourceUnitCount);
     }
 
     private void CollectSelectedProductionBuildingIds()
@@ -268,117 +250,26 @@ public partial class BattleRoot
             return;
         }
 
-        if (UseUnitDesignRuntime)
+        var selectedBuildingProjections = _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
+        if (selectedBuildingProjections.Count > 0)
         {
-            var selectedBuildingProjections = _unitBattlefield.SelectedBuildingSelectionProjections(PlayerSlotId.One);
-            if (selectedBuildingProjections.Count > 0)
-            {
-                _hud.SetHudContext(true, true, _buildPlacement.IsActive);
-                _hud.SetSelectedUnitStance(null, 0);
-                if (selectedBuildingProjections.Count == 1)
-                {
-                    SetUnitBattlefieldBuildingSelectionInfo(selectedBuildingProjections[0]);
-                }
-                else
-                {
-                    SetUnitBattlefieldBuildingGroupSelectionInfo(selectedBuildingProjections);
-                }
-
-                return;
-            }
-        }
-
-        CollectSelectedLegacyUnits(_selectedLegacyUnitBuffer);
-        CollectSelectedLegacyBuildings(_selectedLegacyBuildingBuffer);
-        var selectedUnits = _selectedLegacyUnitBuffer;
-        var selectedBuildings = _selectedLegacyBuildingBuffer;
-        var total = selectedUnits.Count + selectedBuildings.Count;
-
-        if (total == 0)
-        {
-            _hud.SetHudContext(false, false, _buildPlacement.IsActive);
+            _hud.SetHudContext(true, true, _buildPlacement.IsActive);
             _hud.SetSelectedUnitStance(null, 0);
-            _hud.SetSelectedCount(0);
+            if (selectedBuildingProjections.Count == 1)
+            {
+                SetUnitBattlefieldBuildingSelectionInfo(selectedBuildingProjections[0]);
+            }
+            else
+            {
+                SetUnitBattlefieldBuildingGroupSelectionInfo(selectedBuildingProjections);
+            }
+
             return;
         }
 
-        _hud.SetHudContext(true, selectedBuildings.Count > 0, _buildPlacement.IsActive);
-        _hud.SetSelectedUnitStance(SelectedUniformStance(selectedUnits), selectedUnits.Count);
-
-        if (total > 1)
-        {
-            var combatUnits = 0;
-            var economyUnits = 0;
-            var cargo = 0;
-            var unitHealthTotal = 0f;
-            foreach (var unit in selectedUnits)
-            {
-                if (IsEconomyUnit(unit))
-                {
-                    economyUnits++;
-                }
-                else
-                {
-                    combatUnits++;
-                }
-
-                cargo += unit.Cargo;
-                unitHealthTotal += UnitHealthRatioForSelection(unit);
-            }
-
-            var buildingHealthTotal = 0f;
-            foreach (var building in selectedBuildings)
-            {
-                var spec = BuildSpecCatalog.For(building.Kind);
-                buildingHealthTotal += spec.MaxHp > 0 ? building.Hp / spec.MaxHp : 0;
-            }
-
-            var avgHealth = selectedUnits.Count == 0
-                ? buildingHealthTotal / selectedBuildings.Count
-                : unitHealthTotal / selectedUnits.Count;
-            _hud.SetSelectionInfo(
-                GameText.Format("ui.multi.title", total),
-                GameText.Format("ui.multi.meta", combatUnits, economyUnits, selectedBuildings.Count),
-                GameText.Format("ui.multi.stats", Mathf.RoundToInt(avgHealth * 100), cargo),
-                GameText.T("ui.multi.detail"),
-                "multi",
-                IconGlyph.Group,
-                SelectionIconSummary(selectedUnits, selectedBuildings),
-                HudMint);
-            return;
-        }
-
-        if (selectedUnits.Count == 1)
-        {
-            SetUnitSelectionInfo(selectedUnits[0]);
-            return;
-        }
-
-        SetBuildingSelectionInfo(selectedBuildings[0]);
-    }
-
-    private void CollectSelectedLegacyUnits(List<UnitModel> result)
-    {
-        result.Clear();
-        foreach (var unit in _state.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
-            {
-                result.Add(unit);
-            }
-        }
-    }
-
-    private void CollectSelectedLegacyBuildings(List<BuildingModel> result)
-    {
-        result.Clear();
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Owner == ProceduralRts.Core.Owner.Player && building.Selected)
-            {
-                result.Add(building);
-            }
-        }
+        _hud.SetHudContext(false, false, _buildPlacement.IsActive);
+        _hud.SetSelectedUnitStance(null, 0);
+        _hud.SetSelectedCount(0);
     }
 
     private void CollectSelectedUnitInstances(PlayerSlotId playerSlotId, List<UnitInstance> result)
@@ -396,7 +287,7 @@ public partial class BattleRoot
     private void SetUnitInstanceSelectionInfo(UnitInstance unit)
     {
         var spec = unit.Spec;
-        var weapon = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind];
+        var weapon = WeaponCatalog.WeaponDefinitions[spec.PrimaryWeapon.WeaponId];
         var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(spec.Stats.MaxHp)}";
         var role = GameText.T(spec.RoleKey);
         var detail = UnitInstanceDetail(unit, weapon);
@@ -518,30 +409,6 @@ public partial class BattleRoot
             IconGlyph.Group,
             UnitBattlefieldBuildingIconSummary(buildings),
             PlayerSlotAccent(PlayerSlotId.One));
-    }
-
-    private void SetUnitSelectionInfo(UnitModel unit)
-    {
-        var style = UnitSpecReadPathFor(unit);
-        var health = $"{Mathf.CeilToInt(unit.Hp)}/{Mathf.CeilToInt(style.Descriptor.MaxHp)}";
-        var isEconomy = style.Spec.RoleTags.Contains(UnitRoleTag.Economy);
-        var cargo = isEconomy
-            ? GameText.Format("ui.detail.cargo", unit.Cargo, GameState.HarvesterCargoCapacity)
-            : GameText.Format("ui.detail.damage", style.Descriptor.Damage);
-        var detail = isEconomy
-            ? $"{HarvestModeLabel(unit.HarvesterMode)}   {cargo}"
-            : GameText.Format("ui.detail.cooldown", UnitStancePresentationCatalog.DefinitionFor(unit.Stance).Label, style.Descriptor.AttackCooldown);
-
-        _hud.SetSelectionInfo(
-            GameText.T(style.Presentation.NameKey).ToUpperInvariant(),
-            UnitAffiliationLabel(unit),
-            GameText.Format("ui.stat.unit", health, GameText.T(style.Presentation.RoleKey), style.Descriptor.AttackRange),
-            detail,
-            style.Presentation.PortraitMode,
-            style.Presentation.Icon,
-            [],
-            style.EntityAccent,
-            style.Spec.Id);
     }
 
 }

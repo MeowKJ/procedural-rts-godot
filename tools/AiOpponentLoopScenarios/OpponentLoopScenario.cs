@@ -79,7 +79,7 @@ internal static partial class AiOpponentLoopQaProgram
             runtime.EnemyResource,
             metrics.AssignedHarvesters);
         metrics.HarvestAssignments += assignments;
-        metrics.HarvestBridgeCommands += battlefield.AppliedInputCommandCount - beforeCommands;
+        metrics.HarvestAppliedCommands += battlefield.AppliedInputCommandCount - beforeCommands;
         if (assignments > 0 && metrics.FirstHarvestTick < 0)
         {
             metrics.FirstHarvestTick = tick;
@@ -100,13 +100,13 @@ internal static partial class AiOpponentLoopQaProgram
         var commandDelta = battlefield.AppliedInputCommandCount - beforeCommands;
         if (production.SuccessfulConstructionOrders > previousConstructionOrders)
         {
-            metrics.ConstructionBridgeCommands += commandDelta;
+            metrics.ConstructionAppliedCommands += commandDelta;
             metrics.FirstConstructionTick = metrics.FirstConstructionTick < 0 ? tick : metrics.FirstConstructionTick;
         }
 
         if (production.SuccessfulOrders > previousOrders)
         {
-            metrics.ProductionBridgeCommands += commandDelta;
+            metrics.ProductionAppliedCommands += commandDelta;
         }
     }
 
@@ -125,7 +125,7 @@ internal static partial class AiOpponentLoopQaProgram
             return;
         }
 
-        metrics.WaveBridgeCommands += battlefield.AppliedInputCommandCount - beforeCommands;
+        metrics.WaveAppliedCommands += battlefield.AppliedInputCommandCount - beforeCommands;
         metrics.LaunchedWaveUnitOrders += battlefield.Units.Count(unit =>
             unit.PlayerSlotId == PlayerSlotId.Two
             && unit.AttackTargetIsManual

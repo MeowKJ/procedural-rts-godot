@@ -75,62 +75,11 @@ public sealed record ProjectileComponentState(
     float Age,
     float FlightDuration,
     float LifetimeRemaining,
-    bool Interceptable = false,
-    WeaponKind? LegacyWeaponKind = null,
-    AmmoKind? LegacyAmmoKind = null) : EntityComponentState
+    bool Interceptable = false) : EntityComponentState
 {
-    public ProjectileComponentState(
-        EntityId Source,
-        EntityId Target,
-        WeaponKind WeaponKind,
-        AmmoKind AmmoKind,
-        ProjectileBehavior Behavior,
-        HitRule HitRule,
-        Vector2 Origin,
-        Vector2 AimPoint,
-        float Damage,
-        Vector2 Velocity,
-        float Speed,
-        float TrackingStrength,
-        float HitRadius,
-        float Age,
-        float FlightDuration,
-        float LifetimeRemaining,
-        bool Interceptable = false)
-        : this(
-            Source,
-            Target,
-            WeaponCatalog.IdFor(WeaponKind),
-            WeaponCatalog.IdFor(AmmoKind),
-            Behavior,
-            HitRule,
-            Origin,
-            AimPoint,
-            Damage,
-            Velocity,
-            Speed,
-            TrackingStrength,
-            HitRadius,
-            Age,
-            FlightDuration,
-            LifetimeRemaining,
-            Interceptable,
-            WeaponKind,
-            AmmoKind)
-    {
-    }
-
     public float FlightProgress => FlightDuration <= 0
         ? 1
         : Mathf.Clamp(Age / FlightDuration, 0, 1);
-
-    public WeaponKind WeaponKind => LegacyWeaponKind
-        ?? WeaponCatalog.LegacyKindForWeapon(WeaponId)
-        ?? throw new InvalidOperationException($"Projectile uses non-legacy weapon '{WeaponId}'.");
-
-    public AmmoKind AmmoKind => LegacyAmmoKind
-        ?? WeaponCatalog.LegacyKindForAmmo(AmmoId)
-        ?? throw new InvalidOperationException($"Projectile uses non-legacy ammo '{AmmoId}'.");
 }
 
 public sealed record VeterancyComponentState(
@@ -209,7 +158,7 @@ public sealed record FootprintComponentState(Vector2 Size, MovementDomain Placem
 }
 
 public sealed record BuildingIdentityComponentState(
-    int LegacyBuildingId,
+    int BuildingId,
     string Kind,
     PlayerSlotId PlayerSlotId,
     UnitFactionId Faction) : EntityComponentState;

@@ -5,8 +5,8 @@ namespace ProceduralRts.Controllers;
 
 public partial class ProductionController : Node
 {
-    public required GameState State { get; init; }
-    public Action<ProductionKind, int>? ProductionRequested { get; init; }
+    public required UnitFactionId LocalFaction { get; init; }
+    public Action<string, int>? ProductionDesignRequested { get; init; }
     public Action? CancelProductionRequested { get; init; }
     public Action<string>? StatusChanged { get; init; }
     public Action<string>? ProductionStatusChanged { get; init; }
@@ -20,43 +20,26 @@ public partial class ProductionController : Node
 
         if (key.Keycode == Key.Delete)
         {
-            if (CancelProductionRequested is not null)
-            {
-                CancelProductionRequested.Invoke();
-                GetViewport().SetInputAsHandled();
-                return;
-            }
-
-            State.CancelFirstProduction(ProceduralRts.Core.Owner.Player, out var cancelStatus);
-            StatusChanged?.Invoke(cancelStatus);
-            ProductionStatusChanged?.Invoke(cancelStatus);
+            CancelProductionRequested?.Invoke();
             GetViewport().SetInputAsHandled();
             return;
         }
 
-        ProductionKind? productionKind = key.Keycode switch
+        ProductionCategory? category = key.Keycode switch
         {
-            Key.Q => ProductionKind.InfantrySquad,
-            Key.E => ProductionKind.LightTank,
-            Key.T => ProductionKind.Harvester,
+            Key.Q => ProductionCategory.Infantry,
+            Key.E => ProductionCategory.Vehicle,
+            Key.T => ProductionCategory.Economy,
             _ => null,
         };
 
-        if (productionKind is null)
+        if (category is null
+            || UnitDesignFactionRosterCatalog.PreferredProductionDesignId(LocalFaction, category.Value) is not { } designId)
         {
             return;
         }
 
-        if (ProductionRequested is not null)
-        {
-            ProductionRequested.Invoke(productionKind.Value, key.ShiftPressed ? BattleRoot.ShiftProductionBatchCount : 1);
-            GetViewport().SetInputAsHandled();
-            return;
-        }
-
-        State.EnqueueProduction(productionKind.Value, ProceduralRts.Core.Owner.Player, out var status);
-        StatusChanged?.Invoke(status);
-        ProductionStatusChanged?.Invoke(status);
+        ProductionDesignRequested?.Invoke(designId, key.ShiftPressed ? BattleRoot.ShiftProductionBatchCount : 1);
         GetViewport().SetInputAsHandled();
     }
 }

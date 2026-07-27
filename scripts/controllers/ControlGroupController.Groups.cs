@@ -14,7 +14,6 @@ public partial class ControlGroupController
         }
 
         CollectSelectedUnitIds(selectedIds);
-        _groups[groupNumber] = selectedIds;
         _feedbackPulses[groupNumber] = 1;
         StatusChanged?.Invoke(GameText.Format("group.saved", groupNumber, selectedIds.Count));
     }
@@ -46,22 +45,9 @@ public partial class ControlGroupController
     private void CollectSelectedUnitIds(List<int> result)
     {
         result.Clear();
-        if (UseUnitBattlefieldGroups())
+        foreach (var unit in UnitBattlefield.Units)
         {
-            foreach (var unit in UnitBattlefield!.Units)
-            {
-                if (unit.PlayerSlotId == LocalPlayerSlotId && unit.Selected)
-                {
-                    result.Add(unit.Id);
-                }
-            }
-
-            return;
-        }
-
-        foreach (var unit in State.Units)
-        {
-            if (unit.Owner == ProceduralRts.Core.Owner.Player && unit.Selected)
+            if (unit.PlayerSlotId == LocalPlayerSlotId && unit.Selected)
             {
                 result.Add(unit.Id);
             }
@@ -70,77 +56,28 @@ public partial class ControlGroupController
 
     private int SelectUnitsByIds(IReadOnlyList<int> unitIds)
     {
-        if (!UseUnitBattlefieldGroups())
-        {
-            return SelectLegacyUnitsByIds(unitIds);
-        }
-
-        State.ClearSelection();
-        return UnitBattlefield!.SelectUnitsByIds(LocalPlayerSlotId, unitIds).Count;
-    }
-
-    private int SelectLegacyUnitsByIds(IReadOnlyList<int> unitIds)
-    {
-        var selectedCount = 0;
-        foreach (var unit in State.Units)
-        {
-            unit.Selected = unit.Owner == ProceduralRts.Core.Owner.Player
-                && ContainsUnitId(unitIds, unit.Id);
-            if (unit.Selected)
-            {
-                selectedCount++;
-            }
-        }
-
-        foreach (var building in State.Buildings)
-        {
-            building.Selected = false;
-        }
-
-        return selectedCount;
+        UnitBattlefield.ClearSelection(LocalPlayerSlotId);
+        return UnitBattlefield.SelectUnitsByIds(LocalPlayerSlotId, unitIds).Count;
     }
 
     private Vector2? GroupCenter(IReadOnlyList<int> unitIds)
     {
         var sum = Vector2.Zero;
         var count = 0;
-        if (UseUnitBattlefieldGroups())
+        foreach (var unit in UnitBattlefield.Units)
         {
-            foreach (var unit in UnitBattlefield!.Units)
+            if (unit.PlayerSlotId != LocalPlayerSlotId
+                || unit.Hp <= 0
+                || !ContainsUnitId(unitIds, unit.Id))
             {
-                if (unit.PlayerSlotId != LocalPlayerSlotId
-                    || unit.Hp <= 0
-                    || !ContainsUnitId(unitIds, unit.Id))
-                {
-                    continue;
-                }
-
-                sum += unit.Position;
-                count++;
+                continue;
             }
-        }
-        else
-        {
-            foreach (var unit in State.Units)
-            {
-                if (unit.Owner != ProceduralRts.Core.Owner.Player
-                    || unit.Hp <= 0
-                    || !ContainsUnitId(unitIds, unit.Id))
-                {
-                    continue;
-                }
 
-                sum += unit.Position;
-                count++;
-            }
+            sum += unit.Position;
+            count++;
         }
 
-        if (count == 0)
-        {
-            return null;
-        }
-
-        return sum / count;
+        return count == 0 ? null : sum / count;
     }
 
     private static bool ContainsUnitId(IReadOnlyList<int> unitIds, int unitId)

@@ -117,7 +117,7 @@ public sealed record BuildSpec(
     PlacementGridFootprint FootprintCells,
     float SightRange,
     ArmorTag ArmorTag,
-    WeaponKind? WeaponKind,
+    string? WeaponId,
     Color Accent,
     BuildCategory Category,
     IconGlyph Icon,

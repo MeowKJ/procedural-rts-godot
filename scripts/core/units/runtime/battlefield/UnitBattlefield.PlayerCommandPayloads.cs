@@ -29,46 +29,6 @@ public sealed partial class UnitBattlefield
         return _resourceFieldEntityIds.TryGetValue(field.Id, out entityId);
     }
 
-    public bool TryCreateProductionPayload(
-        ProductionKind productionKind,
-        PlayerSlotId playerSlotId,
-        out PlayerCommandPayload payload,
-        out string status)
-    {
-        payload = PlayerCommandPayload.Empty;
-        CollectCandidateProducerIds(productionKind, playerSlotId, _productionCandidateProducerIds);
-        var producerId = LeastQueuedProducerId(_productionCandidateProducerIds);
-        var designId = producerId is null ? FirstDesignIdFor(productionKind, playerSlotId) : ProductionDesignIdCore(producerId.Value, productionKind);
-        var spec = designId is null ? null : UnitDesignCatalog.Spec(designId);
-        if (producerId is null || spec is null || !SyncBuildingTargetEntity(producerId.Value))
-        {
-            status = GameText.Format("production.needProducer", ProducerLabelFor(spec), ProductionLabel(productionKind, spec));
-            return false;
-        }
-
-        var inventory = ResourceInventory(playerSlotId);
-        if (inventory.Credits < spec.Stats.Cost)
-        {
-            status = GameText.Format("production.needCredits", spec.Stats.Cost, spec.Label, inventory.Credits);
-            return false;
-        }
-
-        if (BuildingSnapshot(producerId.Value) is not { } producerSnapshot)
-        {
-            status = GameText.Format("production.needProducer", ProducerLabelFor(spec), ProductionLabel(productionKind, spec));
-            return false;
-        }
-
-        payload = PlayerCommandPayload.ForSpec(spec.Id, [_buildingTargetEntityIds[producerId.Value]]);
-        status = GameText.Format(
-            "production.queued",
-            spec.Label,
-            BuildSpecCatalog.For(producerSnapshot.Kind).Label,
-            spec.Stats.Cost,
-            Math.Max(0, inventory.Credits - spec.Stats.Cost));
-        return true;
-    }
-
     public bool TryCreateProductionDesignPayload(
         string designId,
         PlayerSlotId playerSlotId,

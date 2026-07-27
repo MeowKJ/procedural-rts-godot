@@ -49,17 +49,6 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.TargetHover, relation == PlayerRelation.Hostile ? GameText.T("preview.enemy") : GameText.T("preview.unit"), screenPosition, hoveredUnitInstance.Position, true);
         }
 
-        if (_hoveredUnit is { } hoveredUnit)
-        {
-            var isEnemy = State.IsHostileToPlayer(hoveredUnit);
-            if (isEnemy && HasSelectedLegacyUnits())
-            {
-                return new CommandPreviewState(CommandPreviewKind.Attack, LegacyUnitAttackPreviewLabel(hoveredUnit), screenPosition, hoveredUnit.Position, true);
-            }
-
-            return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemy") : GameText.T("preview.unit"), screenPosition, hoveredUnit.Position, true);
-        }
-
         if (_hoveredBuildingProjection is { } buildingProjection)
         {
             var isEnemy = buildingProjection.Relation == PlayerRelation.Hostile;
@@ -81,17 +70,6 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, buildingProjection.Position, true);
         }
 
-        if (_hoveredBuilding is { } hoveredBuilding)
-        {
-            var isEnemy = State.IsHostileToPlayer(hoveredBuilding);
-            if (isEnemy && HasSelectedLegacyUnits())
-            {
-                return new CommandPreviewState(CommandPreviewKind.Attack, LegacyBuildingAttackPreviewLabel(hoveredBuilding), screenPosition, hoveredBuilding.Position, true);
-            }
-
-            return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, hoveredBuilding.Position, true);
-        }
-
         if (_hoveredResourceField is { } resourceField)
         {
             var hasHarvester = HasSelectedHarvester();
@@ -108,12 +86,7 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.TargetHover, GameText.T("preview.resource"), screenPosition, resourceField.Position, true);
         }
 
-        if (UseUnitBattlefieldInput() && UnitBattlefield!.SelectedCount(LocalPlayerSlotId) > 0)
-        {
-            return MovePreviewState(screenPosition, worldPosition);
-        }
-
-        if (HasSelectedLegacyUnits())
+        if (UnitBattlefield.SelectedCount(LocalPlayerSlotId) > 0)
         {
             return MovePreviewState(screenPosition, worldPosition);
         }

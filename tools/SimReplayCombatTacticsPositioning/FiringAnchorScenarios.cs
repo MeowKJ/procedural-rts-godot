@@ -19,7 +19,7 @@ static partial class Program
                 Collision = new CollisionSpec(Radius: 18, Mass: 1, PushPriority: 1),
                 Weapons =
                 [
-                    WeaponMountSpec.Independent("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(14, 0), MathF.Tau, 12, fireWhileMoving: true),
+                    WeaponMountSpec.Independent("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(14, 0), MathF.Tau, 12, fireWhileMoving: true),
                 ],
             };
         }
@@ -47,7 +47,7 @@ static partial class Program
                 new StanceComponentState(UnitStance.Hold),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }, new EntityId(3), CombatTargetKind.Unit, AttackTargetIsManual: true),
             });
             world.Spawn(moverSpec, new OwnerId(1), EntityTransform.At(new Vector2(478, 500)), new EntityComponentState[]
@@ -119,7 +119,7 @@ static partial class Program
                 new StanceComponentState(UnitStance.Hold),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 5f),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 5f),
                 }, new EntityId(3), CombatTargetKind.Unit, AttackTargetIsManual: true),
             });
             world.Spawn(moverSpec, new OwnerId(1), EntityTransform.At(new Vector2(478, 620)), new EntityComponentState[]

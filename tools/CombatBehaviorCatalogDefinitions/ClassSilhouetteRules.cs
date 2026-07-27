@@ -75,7 +75,7 @@ static partial class Program
             || turret.Category != BuildCategory.Defense
             || turret.Icon != IconGlyph.Turret
             || turret.RoleGlyph != IconGlyph.AttackMove
-            || turret.WeaponKind is null
+            || turret.WeaponId is null
             || turret.RequiredProducer != BuildingDesignIds.Headquarters
             || !turret.RequiredBuildings.Contains(BuildingDesignIds.PowerPlant)
             || turret.Footprint.X >= headquarters.Footprint.X

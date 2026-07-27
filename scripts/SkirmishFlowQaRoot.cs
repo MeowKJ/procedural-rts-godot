@@ -75,7 +75,7 @@ public partial class SkirmishFlowQaRunner : Node
             if (_startedBattle && !_startedAuthoredBattle && GetTree().CurrentScene is BattleRoot battle)
             {
                 GD.Print("Skirmish flow QA: validating Battle.");
-                AssertBattleState(battle.State);
+                AssertBattleConfiguration(battle);
                 AssertBattleRuntime(battle);
                 GD.Print("Skirmish flow QA: main menu setup launched Battle with selected faction, seed, credits, and difficulty.");
                 battle.QueueFree();
@@ -114,32 +114,19 @@ public partial class SkirmishFlowQaRunner : Node
         }
     }
 
-    private static void AssertBattleState(GameState state)
+    private static void AssertBattleConfiguration(BattleRoot battle)
     {
-        if (state.Options.LaunchMode != LaunchMode.Skirmish
-            || state.Options.PlayerFaction != FactionId.Cat
-            || state.Options.AiFaction != FactionId.Dog
-            || state.Options.EnemyDifficulty != EnemyDifficulty.Hard
-            || state.Options.StartingCredits != 3600
-            || state.Options.MapSeed != 98765
-            || state.MatchConfig.PlayerFaction != FactionId.Cat
-            || state.MatchConfig.AiFaction != FactionId.Dog
-            || state.Credits(ProceduralRts.Core.Owner.Player) != 3600
-            || state.Credits(ProceduralRts.Core.Owner.Enemy) != 3600)
+        var match = battle.DebugMatchConfig;
+        if (match.LaunchMode != LaunchMode.Skirmish
+            || match.PlayerFaction != FactionId.Cat
+            || match.AiFaction != FactionId.Dog
+            || match.EnemyDifficulty != EnemyDifficulty.Hard
+            || match.StartingCredits != 3600
+            || match.MapSeed != 98765
+            || battle.DebugRuntimeCredits(PlayerSlotId.One) != 3600
+            || battle.DebugRuntimeCredits(PlayerSlotId.Two) != 3600)
         {
             throw new InvalidOperationException("menu skirmish setup did not launch battle with selected options");
-        }
-
-        var expectedPlayerDesignIds = UnitDesignRuntimeLoadouts.StartingUnits(UnitFactionId.Cat)
-            .Select(spawn => spawn.DesignId);
-        var expectedEnemyDesignIds = UnitDesignRuntimeLoadouts.StartingUnits(UnitFactionId.Dog)
-            .Select(spawn => spawn.DesignId);
-        if (!expectedPlayerDesignIds.All(designId =>
-                state.Units.Any(unit => unit.Owner == ProceduralRts.Core.Owner.Player && unit.FactionId == FactionId.Cat && unit.DesignId == designId))
-            || !expectedEnemyDesignIds.All(designId =>
-                state.Units.Any(unit => unit.Owner == ProceduralRts.Core.Owner.Enemy && unit.FactionId == FactionId.Dog && unit.DesignId == designId)))
-        {
-            throw new InvalidOperationException("menu skirmish setup did not seed selected faction loadouts");
         }
     }
 

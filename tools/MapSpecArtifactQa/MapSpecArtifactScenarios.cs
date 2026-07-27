@@ -42,8 +42,8 @@ static class MapSpecArtifactScenarios
         var text = Encoding.UTF8.GetString(canonical);
         RejectArtifact(() => MapSpecArtifactCodec.Decode([]), "empty input", failures);
         RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes("{")), "malformed JSON", failures);
-        RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":2", StringComparison.Ordinal))), "unknown schemaVersion", failures);
-        RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":\"1\"", StringComparison.Ordinal))), "wrong schemaVersion type", failures);
+        RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":2", "\"schemaVersion\":3", StringComparison.Ordinal))), "unknown schemaVersion", failures);
+        RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":2", "\"schemaVersion\":\"2\"", StringComparison.Ordinal))), "wrong schemaVersion type", failures);
         RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"faction\":\"dog\"", "\"faction\":\"Dog\"", StringComparison.Ordinal))), "wrong-case faction wire value", failures);
         RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"faction\":\"dog\"", "\"faction\":\"wolf\"", StringComparison.Ordinal))), "unknown faction wire value", failures);
         RejectArtifact(() => MapSpecArtifactCodec.Decode(Encoding.UTF8.GetBytes(text.Replace("\"map\":", "\"extra\":0,\"map\":", StringComparison.Ordinal))), "unknown envelope field", failures);

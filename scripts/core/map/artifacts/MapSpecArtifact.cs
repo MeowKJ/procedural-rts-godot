@@ -39,7 +39,7 @@ public sealed class MapSpecArtifact
 public static class MapSpecArtifactCodec
 {
     public const string Format = "procedural-rts.mapspec";
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
 
     public static MapSpecArtifact Encode(MapSpec spec)
     {
@@ -63,7 +63,7 @@ public static class MapSpecArtifactCodec
             var canonical = Encode(parsed).ToArray();
             if (!bytes.SequenceEqual(canonical))
             {
-                throw new MapSpecArtifactException("MapSpec artifact is not canonical schema-v1 UTF-8.");
+                throw new MapSpecArtifactException("MapSpec artifact is not canonical schema-v2 UTF-8.");
             }
 
             return MapSpecSnapshot.Create(parsed);

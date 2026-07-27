@@ -13,7 +13,7 @@ public sealed class TypedMapSceneProjector : IMapSpecSceneProjector
     {
         var mapRoot = root as MapRoot
             ?? throw new InvalidOperationException("Typed projection requires MapRoot as the supplied root.");
-        RejectLegacyMetadata(mapRoot);
+        RejectUnsupportedMetadata(mapRoot);
         var owners = new List<MapOwnerStartSpec>(); var terrain = new List<MapTerrainCellSpec>();
         var resources = new List<MapResourceNodeSpec>(); var obstacles = new List<MapObstacleSpec>();
         var buildings = new List<MapBuildingSeedSpec>(); var units = new List<MapUnitSeedSpec>();
@@ -21,7 +21,7 @@ public sealed class TypedMapSceneProjector : IMapSpecSceneProjector
         var narrative = new List<MapNarrativeNodeSpec>();
         foreach (var node in MapSceneProjection.SceneOrder(mapRoot).Skip(1))
         {
-            RejectLegacyMetadata(node);
+            RejectUnsupportedMetadata(node);
 
             switch (node)
             {
@@ -48,7 +48,7 @@ public sealed class TypedMapSceneProjector : IMapSpecSceneProjector
         };
     }
 
-    private static void RejectLegacyMetadata(Node node)
+    private static void RejectUnsupportedMetadata(Node node)
     {
         if (node.HasMeta("map_kind"))
         {

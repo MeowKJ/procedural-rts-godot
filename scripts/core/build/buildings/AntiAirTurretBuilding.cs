@@ -18,7 +18,7 @@ public sealed class AntiAirTurretBuilding : BuildingDesign
             new PlacementGridFootprint(3, 3),
             500,
             ArmorTag.Structure,
-            WeaponKind.SkySpear,
+            WeaponIds.SkySpear,
             new Color("#b5f8ff"),
             BuildCategory.Defense,
             IconGlyph.Air,

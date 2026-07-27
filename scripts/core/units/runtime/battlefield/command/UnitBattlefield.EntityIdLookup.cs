@@ -4,7 +4,7 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private int? LegacyTargetId(EntityId entityId, CombatTargetKind targetKind)
+    private int? TargetIdForEntity(EntityId entityId, CombatTargetKind targetKind)
     {
         if (!entityId.IsValid)
         {
@@ -21,7 +21,7 @@ public sealed partial class UnitBattlefield
         return UnitByEntityId(entityId)?.Id;
     }
 
-    private int? LegacyResourceFieldId(int? entityId)
+    private int? ResourceFieldIdForEntity(int? entityId)
     {
         if (entityId is not int id)
         {
@@ -39,7 +39,7 @@ public sealed partial class UnitBattlefield
         return null;
     }
 
-    private int? LegacyBuildingTargetId(int? entityId)
+    private int? BuildingIdForEntity(int? entityId)
     {
         if (entityId is not int id)
         {
@@ -77,7 +77,7 @@ public sealed partial class UnitBattlefield
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
                 || identity.PlayerSlotId != playerSlotId
                 || identity.Kind != BuildingDesignIds.Refinery
-                || BuildingSnapshot(identity.LegacyBuildingId) is not { } building
+                || BuildingSnapshot(identity.BuildingId) is not { } building
                 || building.Hp <= 0
                 || BuildingBuildProgress(building.Id) < 1)
             {

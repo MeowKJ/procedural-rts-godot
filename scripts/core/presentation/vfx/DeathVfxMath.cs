@@ -6,15 +6,15 @@ public static class DeathVfxMath
 {
     public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoDefinition ammo, float overkillDamage)
     {
-        return StyleFor(weightClass, movementDomain, ammo.LegacyKind, overkillDamage, ammo.DamageElementId);
+        return StyleFor(weightClass, movementDomain, ammo.Id, overkillDamage, ammo.DamageElementId);
     }
 
-    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoKind? ammoKind, float overkillDamage)
+    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, string? ammoId, float overkillDamage)
     {
-        return StyleFor(weightClass, movementDomain, ammoKind, overkillDamage, ElementPresentationCatalog.DamageElementIdFor(ammoKind));
+        return StyleFor(weightClass, movementDomain, ammoId, overkillDamage, ElementPresentationCatalog.DamageElementIdFor(ammoId));
     }
 
-    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, AmmoKind? ammoKind, float overkillDamage, string? damageElementId)
+    public static DeathVfxStyle StyleFor(UnitWeightClass weightClass, MovementDomain movementDomain, string? ammoId, float overkillDamage, string? damageElementId)
     {
         var weightScale = weightClass switch
         {
@@ -44,13 +44,13 @@ public static class DeathVfxMath
 
         var secondary = ElementPresentationCatalog.TryFor(damageElementId, out var element)
             ? element.DeathColor
-            : ammoKind switch
+            : ammoId switch
         {
-            AmmoKind.ElectromagneticLance => new Color("#8fffe1", 0.92f),
-            AmmoKind.IonBeam => new Color("#d8f7ff", 0.94f),
-            AmmoKind.SeekerRocket => new Color("#ffb35c", 0.9f),
-            AmmoKind.BallisticCannon => new Color("#f6c55c", 0.88f),
-            AmmoKind.NeedleDart => new Color("#ffffff", 0.82f),
+            AmmoIds.ElectromagneticLance => new Color("#8fffe1", 0.92f),
+            AmmoIds.IonBeam => new Color("#d8f7ff", 0.94f),
+            AmmoIds.SeekerRocket => new Color("#ffb35c", 0.9f),
+            AmmoIds.BallisticCannon => new Color("#f6c55c", 0.88f),
+            AmmoIds.NeedleDart => new Color("#ffffff", 0.82f),
             _ => new Color("#d8f7ff", 0.86f),
         };
 
@@ -64,7 +64,7 @@ public static class DeathVfxMath
             ScorchAlpha: Mathf.Clamp(0.16f + weightScale * 0.06f + overkillScale * 0.08f, 0.12f, 0.34f),
             RingWidth: 1.8f + weightScale * 1.2f + overkillScale * 1.4f,
             SecondaryColor: secondary,
-            EmitsEmbers: element?.EmitsEmbers == true || ammoKind is AmmoKind.BallisticCannon or AmmoKind.SeekerRocket || overkillDamage > 25,
-            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoKind is AmmoKind.ElectromagneticLance or AmmoKind.IonBeam);
+            EmitsEmbers: element?.EmitsEmbers == true || ammoId is AmmoIds.BallisticCannon or AmmoIds.SeekerRocket || overkillDamage > 25,
+            EmitsEmpDissolve: element?.EmitsEmpDissolve == true || ammoId is AmmoIds.ElectromagneticLance or AmmoIds.IonBeam);
     }
 }

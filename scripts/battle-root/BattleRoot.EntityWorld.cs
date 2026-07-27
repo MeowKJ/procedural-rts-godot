@@ -10,23 +10,14 @@ public partial class BattleRoot
 {
     private void ConfigureEntityWorld()
     {
-        SyncEntityWorldResourceAtmosphere(_state.VisualTheme);
-        _entityWorld.WorldWidth = _state.WorldSize.X;
-        _entityWorld.WorldHeight = _state.WorldSize.Y;
-        _entityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
-
-        if (!RunEntityWorldShadow)
-        {
-            return;
-        }
-
-        SimSystemPipeline.ConfigureLiveGameplay(
-            _entityWorld,
-            OwnerId.FromPlayerSlot(PlayerSlotId.One));
+        SyncEntityWorldResourceAtmosphere(_presentationEnvironment.VisualTheme);
+        _unitBattlefield.EntityWorld.WorldWidth = _worldSize.X;
+        _unitBattlefield.EntityWorld.WorldHeight = _worldSize.Y;
+        _unitBattlefield.EntityWorld.InstallMapEnvironment(_unitBattlefield.EntityWorld.MapEnvironment);
 
         // Runtime hostility is owner-based, never faction-based. Mirror the
-        // skirmish relation (player vs enemy) into the entity world.
-        _entityWorld.Relations.Set(
+        // skirmish relation (player vs enemy) into the single live entity world.
+        _unitBattlefield.EntityWorld.Relations.Set(
             OwnerId.FromPlayerSlot(PlayerSlotId.One),
             OwnerId.FromPlayerSlot(PlayerSlotId.Two),
             PlayerRelation.Hostile);
@@ -34,63 +25,24 @@ public partial class BattleRoot
 
     private void SyncEntityWorldResourceAtmosphere(WorldVisualThemeState _)
     {
-        var atmosphere = _state.ResourceAtmosphere;
-        _entityWorld.ResourceAtmosphere = atmosphere;
+        var atmosphere = _presentationEnvironment.ResourceAtmosphere;
         _unitBattlefield.EntityWorld.ResourceAtmosphere = atmosphere;
-    }
-
-    private void StepEntityWorld(double delta)
-    {
-        if (!RunEntityWorldShadow)
-        {
-            return;
-        }
-
-        // Convert variable frame delta into whole fixed ticks and step the
-        // authoritative world once per tick, draining due commands in stable
-        // order. Keeps the new sim path running on a deterministic clock.
-        var ticks = _simClock.Advance(delta);
-        _entityWorld.Metrics.RecordClockBacklogDrop(_simClock.LastDroppedBacklogTicks, _simClock.LastDroppedBacklogSeconds);
-        for (var i = 0; i < ticks; i++)
-        {
-            var tick = _simClock.CurrentTick - ticks + 1 + i;
-            var due = _entityCommands.DrainUpToTick(tick);
-            _entityWorld.Step(tick, _simClock.FixedDelta, due);
-            // Feed quality metrics from the event stream (read-only; the live view
-            // path will later consume these same events for effects/audio/HUD).
-            _entityWorld.Events.DrainInto(_simEventDrainBuffer);
-            _entityWorld.Metrics.Consume(_simEventDrainBuffer);
-            _simEventDrainBuffer.Clear();
-        }
     }
 
     private void ConfigureUnitBattlefield()
     {
-        _unitBattlefield.WorldSize = _state.WorldSize;
-        _unitBattlefield.SetResourceFields(_state.ResourceFields);
-        _unitBattlefield.SetCredits(PlayerSlotId.One, _state.Credits(ProceduralRts.Core.Owner.Player));
-        _unitBattlefield.SetCredits(PlayerSlotId.Two, _state.Credits(ProceduralRts.Core.Owner.Enemy));
+        _unitBattlefield.WorldSize = _worldSize;
         _unitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
 
-        if (_state.MatchConfig.AuthoredMap is not null)
-        {
-            // MapLoader already populated the authoritative EntityWorld and
-            // UnitBattlefield adopted those exact entities before the scene ran.
-        }
-        else if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
         {
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.One, new Vector2(820, 1180), new Vector2(58, 0));
             _unitBattlefield.SpawnRoster(UnitRosters.DogT1, PlayerSlotId.Two, new Vector2(1280, 1180), new Vector2(58, 0));
         }
-        else
-        {
-            SpawnStartingUnitDesigns(PlayerSlotId.One, ToUnitFaction(_state.Options.PlayerFaction), new Vector2(720, 760), 0);
-            SpawnStartingUnitDesigns(PlayerSlotId.Two, ToUnitFaction(_state.Options.AiFaction), new Vector2(2510, 1370), Mathf.Pi);
-        }
 
         foreach (var unit in _unitBattlefield.Units)
         {
-            if (_state.Options.LaunchMode == LaunchMode.Sandbox)
+            if (_matchConfig.LaunchMode == LaunchMode.Sandbox)
             {
                 SetUnitInstanceFacing(unit, unit.PlayerSlotId == PlayerSlotId.One ? 0 : Mathf.Pi);
             }
@@ -168,26 +120,11 @@ public partial class BattleRoot
             Viewer = PlayerSlotId.One,
             Relations = _unitBattlefield.Relations,
             PresentationProvider = () => _unitBattlefield.UnitPresentationProjection(unit.Id),
-            VisualThemeProvider = () => _state.VisualTheme,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
             DrawBodyArt = false,
         };
         _unitInstanceRoot.AddChild(view);
         _unitInstanceViews[unit.Id] = view;
-    }
-
-    private void UpsertBuildingTarget(BuildingModel building)
-    {
-        _unitBattlefield.UpsertBuildingTarget(
-            building.Id,
-            building.Kind,
-            ToPlayerSlot(building.Owner),
-            ToUnitFaction(building.FactionId),
-            building.Position,
-            building.Facing,
-            building.Hp,
-            building.Powered,
-            building.BuildProgress,
-            building.RallyPoint);
     }
 
     private static UnitFactionId ToUnitFaction(FactionId factionId)
@@ -200,7 +137,7 @@ public partial class BattleRoot
         };
     }
 
-    private static FactionId ToLegacyFaction(UnitFactionId factionId)
+    private static FactionId ToFactionId(UnitFactionId factionId)
     {
         return factionId switch
         {
@@ -209,11 +146,6 @@ public partial class BattleRoot
             UnitFactionId.Corruption => FactionId.Corruption,
             _ => FactionId.Dog,
         };
-    }
-
-    private static PlayerSlotId ToPlayerSlot(ProceduralRts.Core.Owner owner)
-    {
-        return owner == ProceduralRts.Core.Owner.Player ? PlayerSlotId.One : PlayerSlotId.Two;
     }
 
 }

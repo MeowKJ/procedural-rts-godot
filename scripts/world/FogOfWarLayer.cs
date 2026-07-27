@@ -27,7 +27,8 @@ public partial class FogOfWarLayer : Node2D
     private int _lastDrawnMaskRevision = -1;
     private Rect2? _lastTextureRequestRect;
 
-    public required GameState State { get; init; }
+    public required FogOfWarMap FogOfWar { get; init; }
+    public required Vector2 WorldSize { get; init; }
     public FogQualityTier Quality { get; init; } = FogQualityTier.Medium;
     public Rect2? VisibleWorldRect { get; set; }
 
@@ -90,15 +91,15 @@ public partial class FogOfWarLayer : Node2D
 
     public override void _Draw()
     {
-        var texture = State.FogOfWar.MaskTexture(VisibleWorldRect);
+        var texture = FogOfWar.MaskTexture(VisibleWorldRect);
         if (texture is null)
         {
             return;
         }
 
-        DrawTextureRect(texture, new Rect2(Vector2.Zero, State.WorldSize), false);
-        _lastDrawnMaskRevision = State.FogOfWar.MaskRevision;
-        _lastTextureRequestRect = VisibleWorldRect ?? new Rect2(Vector2.Zero, State.WorldSize);
+        DrawTextureRect(texture, new Rect2(Vector2.Zero, WorldSize), false);
+        _lastDrawnMaskRevision = FogOfWar.MaskRevision;
+        _lastTextureRequestRect = VisibleWorldRect ?? new Rect2(Vector2.Zero, WorldSize);
     }
 
     private bool ShouldQueueFogRedraw()
@@ -108,12 +109,12 @@ public partial class FogOfWarLayer : Node2D
             return true;
         }
 
-        if (!State.FogOfWar.HasPendingMaskTextureUpload(VisibleWorldRect))
+        if (!FogOfWar.HasPendingMaskTextureUpload(VisibleWorldRect))
         {
             return false;
         }
 
-        if (State.FogOfWar.MaskRevision != _lastDrawnMaskRevision)
+        if (FogOfWar.MaskRevision != _lastDrawnMaskRevision)
         {
             return true;
         }
@@ -123,8 +124,8 @@ public partial class FogOfWarLayer : Node2D
 
     private bool ShouldQueueImmediateFogUpload()
     {
-        return State.FogOfWar.MaskRevision != _lastDrawnMaskRevision
-            && State.FogOfWar.HasPendingMaskTextureUpload(VisibleWorldRect);
+        return FogOfWar.MaskRevision != _lastDrawnMaskRevision
+            && FogOfWar.HasPendingMaskTextureUpload(VisibleWorldRect);
     }
 
     private bool CameraScopedRectMoved(Rect2 previous, Rect2? current)

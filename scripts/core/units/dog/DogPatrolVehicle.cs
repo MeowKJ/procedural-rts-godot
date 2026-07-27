@@ -18,7 +18,7 @@ public sealed class DogPatrolVehicle : UnitDesign
     public override CollisionSpec Collision => new(18, 1.1f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.LightRepeater, Vector2.Zero, new Vector2(22, 0), 0.9f, 10, true),
+        WeaponMountSpec.Independent("main", WeaponIds.LightRepeater, Vector2.Zero, new Vector2(22, 0), 0.9f, 10, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 6.5f, 0, "production.lane.vehicle", IconGlyph.Move);

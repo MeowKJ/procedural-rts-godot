@@ -3,10 +3,9 @@ using Godot;
 namespace ProceduralRts.Core;
 
 public sealed record ProductionOptionState(
-    ProductionKind Kind,
     ProductionCategory Category,
     string ProducerKind,
-    string? UnitDesignId,
+    string UnitDesignId,
     string ShortCode,
     IconGlyph Icon,
     IconGlyph RoleGlyph,

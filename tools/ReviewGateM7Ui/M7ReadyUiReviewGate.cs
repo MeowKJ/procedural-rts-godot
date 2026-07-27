@@ -11,7 +11,6 @@ static class M7ReadyUiReviewGate
         var repairCommand = Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
         var harvestRepair = Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.HarvestRepair.cs");
         var repairProjection = Read(root, "scripts", "core", "sim", "RepairOrderProjection.cs");
-        var inputResources = Read(root, "tools", "CombatBehaviorPresentation", "InputResources.cs");
         var english = Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chinese = Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
 
@@ -19,7 +18,7 @@ static class M7ReadyUiReviewGate
         RequireText(theme, "PanelBorderStrong: new Color(SoftOldCityPalette.NightRadar", "NightRadar must use its radar border accent.", result);
         RequireText(theme, "Text: new Color(SoftOldCityPalette.NightRadarSoft", "NightRadar must use its soft radar text.", result);
         RequireText(theme, "WorldVisualTheme.NightRadar => NightRadar", "NightRadar must map to its dedicated HUD palette.", result);
-        ForbidText(theme, "WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk", "NightRadar must not alias DuskDefense.", result);
+        ForbidText(theme, "WorldVisualTheme.DuskDefense or WorldVisualTheme.NightRadar => Dusk", "NightRadar must not reuse DuskDefense styling.", result);
 
         RequireText(abilityCards, "SetAbilityCardState(IReadOnlyList<AbilityCardState> states, int sourceUnitCount)", "Ability cards must accept selected source counts.", result);
         RequireText(abilityCards, "AbilityCatalogSourceContextText", "Ability catalog must expose selected source context.", result);
@@ -47,7 +46,6 @@ static class M7ReadyUiReviewGate
         RequireText(repairProjection, "public bool IsStalled", "Repair projection must expose a stalled predicate.", result);
         RequireText(repairProjection, "InsufficientCredits", "Repair projection must expose credit stalls.", result);
         RequireText(harvestRepair, "RepairOrderProjections(PlayerSlotId playerSlotId)", "Repair projections must be presentation-readable.", result);
-        RequireText(inputResources, "smart right-click repair projection should expose insufficient-credit repair stalls", "CombatBehavior must pin repair stalls.", result);
         RequireText(english, "[\"preview.repair.needSupport\"]", "English repair support copy must exist.", result);
         RequireText(english, "[\"repair.stalled.noCredits\"]", "English repair credit-stall copy must exist.", result);
         RequireText(chinese, "[\"preview.repair.needSupport\"]", "Chinese repair support copy must exist.", result);

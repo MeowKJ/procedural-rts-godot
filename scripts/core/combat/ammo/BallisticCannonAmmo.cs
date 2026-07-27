@@ -4,12 +4,12 @@ namespace ProceduralRts.Core;
 
 public sealed class BallisticCannonAmmo : AmmoDesign
 {
-    public override AmmoKind Kind => AmmoKind.BallisticCannon;
+    public override string Id => AmmoIds.BallisticCannon;
 
     public override AmmoDefinition ToDefinition()
     {
         return new AmmoDefinition(
-            Kind,
+            Id,
             "Ballistic Cannon",
             ProjectileBehavior.Ballistic,
             HitRule.BallisticDeviation,

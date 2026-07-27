@@ -4,12 +4,12 @@ namespace ProceduralRts.Core;
 
 public sealed class IonBeamAmmo : AmmoDesign
 {
-    public override AmmoKind Kind => AmmoKind.IonBeam;
+    public override string Id => AmmoIds.IonBeam;
 
     public override AmmoDefinition ToDefinition()
     {
         return new AmmoDefinition(
-            Kind,
+            Id,
             "Ion Beam",
             ProjectileBehavior.Beam,
             HitRule.Guaranteed,

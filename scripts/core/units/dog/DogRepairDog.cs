@@ -18,7 +18,7 @@ public sealed class DogRepairDog : UnitDesign
     public override CollisionSpec Collision => new(14, 0.72f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Omni("main", WeaponKind.ElectromagneticEmitter, Vector2.Zero, true),
+        WeaponMountSpec.Omni("main", WeaponIds.ElectromagneticEmitter, Vector2.Zero, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.RepairField, Radius: 145, Value: 18)];

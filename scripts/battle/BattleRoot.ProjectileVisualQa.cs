@@ -7,7 +7,7 @@ public partial class BattleRoot
 {
     public Vector2 DebugConfigureProjectileVisualQaScenario()
     {
-        var focus = new Vector2(_state.WorldSize.X * 0.58f, _state.WorldSize.Y * 0.38f);
+        var focus = new Vector2(_worldSize.X * 0.58f, _worldSize.Y * 0.38f);
         string[] shooterDesignIds = ["dog.infantry", "dog.guard_tank", "dog.rocket"];
         float[] laneHalfGaps = [90f, 70f, 50f];
         for (var index = 0; index < shooterDesignIds.Length; index++)

@@ -17,7 +17,7 @@ static partial class Program
         var veterancy = veteran.Components.Require<VeterancyComponentState>();
         var health = veteran.Components.Require<HealthComponentState>();
         var projection = EntityProjector.ProjectOne(world, veteran);
-        var weapon = WeaponCatalog.Weapons[WeaponKind.VectorCannon];
+        var weapon = WeaponCatalog.WeaponDefinitions[WeaponIds.VectorCannon];
         var baseDamage = WeaponMath.BaseDamage(new EntityWorld(seed: 90), veteran.OwnerId, weapon, veteran);
         var rankedDamage = WeaponMath.BaseDamage(world, veteran, weapon, veteran);
 
@@ -27,7 +27,7 @@ static partial class Program
         Assert(health.MaxHp > 100, $"veterancy rank should derive higher max hp, got {health.MaxHp:0.0}.");
         Assert(projection.VeterancyRank == veterancy.Rank && projection.VeterancyKills == veterancy.Kills,
             "EntityProjection should expose owner-neutral veterancy rank and kill count.");
-        Assert(WeaponCatalog.Weapons[WeaponKind.VectorCannon].Range == weapon.Range,
+        Assert(WeaponCatalog.WeaponDefinitions[WeaponIds.VectorCannon].Range == weapon.Range,
             "veterancy must not mutate WeaponDefinition.");
 
         Console.WriteLine($"OK [veterancy-progression]: kills {veterancy.Kills}, rank {veterancy.Rank}, max hp {health.MaxHp:0.0}, damage {rankedDamage:0.0}.");
@@ -48,7 +48,7 @@ static partial class Program
             new HealthComponentState(100, 100),
             new CollisionComponentState(18, 1, 1, true),
             new VisionComponentState(420),
-            new WeaponUserComponentState([new WeaponMountRuntimeState("main", WeaponKind.VectorCannon, 0, 0)]),
+            new WeaponUserComponentState([new WeaponMountRuntimeState("main", WeaponIds.VectorCannon, 0, 0)]),
             new VeterancyComponentState(),
             new StanceComponentState(UnitStance.Aggressive),
             new AutonomyComponentState(420, 520, new Vector2(80, 200)),

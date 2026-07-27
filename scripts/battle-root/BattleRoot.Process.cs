@@ -8,25 +8,14 @@ namespace ProceduralRts;
 
 public partial class BattleRoot
 {
-    private readonly List<(Vector2 Position, float SightRange)> _unitBattlefieldVisionSourceBuffer = [];
-
     public override void _Process(double delta)
     {
         _processStopwatch.Restart();
         _elapsed += (float)delta;
-        var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _state.Options.LaunchMode, _sandboxTimeScale);
-        if (UseUnitDesignRuntime)
-        {
-            _state.UpdateWorldOnly(gameplayDelta, UnitBattlefieldVisionSources());
-        }
-        else
-        {
-            _state.Update(gameplayDelta);
-        }
-
-        _unitBattlefield.Update(gameplayDelta);
+        var gameplayDelta = SandboxTimeScaleMath.ScaledGameplayDelta(delta, _matchConfig.LaunchMode, _sandboxTimeScale);
         _simStepStopwatch.Restart();
-        StepEntityWorld(gameplayDelta);
+        _unitBattlefield.AdvanceSimulation(gameplayDelta);
+        _presentationEnvironment.Update(gameplayDelta, _unitBattlefield, PlayerSlotId.One);
         _simStepStopwatch.Stop();
         DrainPresentationEvents();
         SyncUnitBattlefieldBuildingRuntimeState();
@@ -79,30 +68,15 @@ public partial class BattleRoot
 
         foreach (var (id, view) in _buildingViews)
         {
-            var projection = UseUnitDesignRuntime
-                ? _unitBattlefield.BuildingPresentationProjection(id)
-                : null;
-            var shouldShow = projection is { } liveBuilding
-                ? liveBuilding.Entity.IsAlive && visibleRect.Intersects(BuildingProjectionWorldRect(liveBuilding))
-                : view.Building.Hp > 0 && visibleRect.Intersects(BuildingWorldRect(view.Building));
+            var projection = _unitBattlefield.BuildingPresentationProjection(id);
+            var shouldShow = projection is { } liveProjection
+                && liveProjection.Entity.IsAlive
+                && visibleRect.Intersects(BuildingProjectionWorldRect(liveProjection));
             if (shouldShow)
             {
-                view.Position = projection?.Entity.Position ?? view.Building.Position;
-                view.Rotation = projection?.Entity.Facing ?? view.Building.Facing;
-            }
-
-            SetPresentationViewActive(view, shouldShow);
-        }
-
-        foreach (var (id, view) in _unitViews)
-        {
-            var unit = view.Unit;
-            var radius = UnitSpecReadPathFor(unit).Descriptor.Radius;
-            var unitRect = new Rect2(unit.Position - Vector2.One * radius, Vector2.One * radius * 2f);
-            var shouldShow = unit.Hp > 0 && (visibleRect.HasPoint(unit.Position) || visibleRect.Intersects(unitRect));
-            if (shouldShow)
-            {
-                view.Position = unit.Position;
+                var liveBuilding = projection!.Value;
+                view.Position = liveBuilding.Entity.Position;
+                view.Rotation = liveBuilding.Entity.Facing;
             }
 
             SetPresentationViewActive(view, shouldShow);
@@ -138,14 +112,10 @@ public partial class BattleRoot
 
     private PerfHudCounts PerfHudCounts()
     {
-        var liveUnitCount = UseUnitDesignRuntime
-            ? LiveUnitBattlefieldUnitCount()
-            : LiveLegacyUnitCount();
-        var liveBuildingCount = UseUnitDesignRuntime
-            ? _unitBattlefield.LiveBuildingCount()
-            : LiveLegacyBuildingCount();
+        var liveUnitCount = LiveUnitBattlefieldUnitCount();
+        var liveBuildingCount = _unitBattlefield.LiveBuildingCount();
         var visibleUnitCount = VisibleUnitViewCount();
-        var projectileCount = _state.Projectiles.Count + _state.Beams.Count;
+        var projectileCount = _unitBattlefield.ProjectileProjectionCount();
         var effectCount = (_combatEffects?.ActiveEffectCount ?? 0)
             + (_commandAcknowledgements?.ActiveRingCount ?? 0)
             + (_footprints?.ActiveMarkCount ?? 0);
@@ -156,8 +126,8 @@ public partial class BattleRoot
             visibleUnitCount,
             projectileCount,
             effectCount,
-            _state.FogOfWar.MaskTextureUploadCount,
-            _state.LastFogUpdateMs);
+            _presentationEnvironment.FogOfWar.MaskTextureUploadCount,
+            _presentationEnvironment.LastFogUpdateMs);
     }
 
     private int LiveUnitBattlefieldUnitCount()
@@ -174,46 +144,10 @@ public partial class BattleRoot
         return count;
     }
 
-    private int LiveLegacyUnitCount()
-    {
-        var count = 0;
-        foreach (var unit in _state.Units)
-        {
-            if (unit.Hp > 0)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private int LiveLegacyBuildingCount()
-    {
-        var count = 0;
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Hp > 0)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
     private int VisibleUnitViewCount()
     {
         var count = 0;
         foreach (var (_, view) in _unitInstanceViews)
-        {
-            if (view.Visible)
-            {
-                count++;
-            }
-        }
-
-        foreach (var (_, view) in _unitViews)
         {
             if (view.Visible)
             {
@@ -242,39 +176,26 @@ public partial class BattleRoot
 
     private void SyncUnitBattlefieldBuildingRuntimeState()
     {
-        foreach (var target in _unitBattlefield.BuildingSnapshots())
+        _buildingSyncSnapshotBuffer.Clear();
+        _buildingSyncSnapshotBuffer.AddRange(_unitBattlefield.BuildingSnapshots());
+        foreach (var target in _buildingSyncSnapshotBuffer)
         {
-            var presentation = _unitBattlefield.BuildingPresentationProjection(target.Id);
-            var building = _state.UpsertRuntimeBuilding(target, presentation);
-            if (!_buildingViews.ContainsKey(building.Id))
+            if (!_buildingViews.ContainsKey(target.Id))
             {
-                var view = CreateBuildingView(building);
+                var view = CreateBuildingView(target.Id);
                 _buildingRoot.AddChild(view);
-                _buildingViews[building.Id] = view;
-                if (building.Owner == ProceduralRts.Core.Owner.Player)
+                _buildingViews[target.Id] = view;
+                if (target.PlayerSlotId == PlayerSlotId.One)
                 {
-                    AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(building.Kind).Label), building.Position);
+                    AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(target.Kind).Label), target.Position);
+                    PlayAudioCue(TacticalAudioCue.BuildComplete, target.Position);
+                    if (target.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
+                    {
+                        UpdatePowerAlert(true);
+                    }
                 }
             }
-
-            building.DeliveryPulse = Mathf.Max(building.DeliveryPulse, presentation?.DeliveryPulse ?? 0);
-            building.DockReservedByHarvesterId = _unitBattlefield.BuildingDockReservedByHarvesterId(target.Id);
-            building.DockedHarvesterId = _unitBattlefield.BuildingDockedHarvesterId(target.Id);
-            building.RallyPoint = presentation?.RallyPoint;
-            building.RallyPulse = Mathf.Max(building.RallyPulse, presentation?.RallyPulse ?? 0);
-            building.Selected = _unitBattlefield.BuildingProjection(target.Id)?.Selected == true;
         }
-    }
-
-    private IReadOnlyList<(Vector2 Position, float SightRange)> UnitBattlefieldVisionSources()
-    {
-        _unitBattlefieldVisionSourceBuffer.Clear();
-        foreach (var source in _unitBattlefield.VisionSources(PlayerSlotId.One))
-        {
-            _unitBattlefieldVisionSourceBuffer.Add((source.Position, source.SightRange));
-        }
-
-        return _unitBattlefieldVisionSourceBuffer;
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -290,7 +211,7 @@ public partial class BattleRoot
             return;
         }
 
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode != LaunchMode.Sandbox)
         {
             return;
         }

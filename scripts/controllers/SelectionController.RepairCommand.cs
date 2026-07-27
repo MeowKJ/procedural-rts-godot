@@ -12,7 +12,7 @@ public partial class SelectionController
     {
         _rallyCommandArmed = false;
         _armedAbility = null;
-        if (!UseUnitBattlefieldInput() || !HasSelectedRuntimeRepairer())
+        if (!HasSelectedRuntimeRepairer())
         {
             _repairCommandArmed = false;
             StatusChanged?.Invoke(GameText.Format("ui.ability.unavailable", GameText.T("ui.context.repair")));
@@ -178,12 +178,7 @@ public partial class SelectionController
 
     private bool HasSelectedRuntimeRepairer()
     {
-        if (!UseUnitBattlefieldInput())
-        {
-            return false;
-        }
-
-        foreach (var unit in UnitBattlefield!.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.PlayerSlotId == LocalPlayerSlotId
                 && unit.Selected

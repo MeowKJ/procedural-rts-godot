@@ -14,10 +14,10 @@ public sealed class MapSemanticValidationException : InvalidOperationException
     public IReadOnlyList<string> Diagnostics { get; }
 }
 
-public enum MapSemanticConflictKind { CatalogUnknown, IdEmpty, IdDuplicate, LegacyInvalid, LegacyDuplicate, ReferenceMissing }
+public enum MapSemanticConflictKind { CatalogUnknown, IdEmpty, IdDuplicate, RuntimeIdInvalid, RuntimeIdDuplicate, ReferenceMissing }
 public sealed record MapSemanticConflict(
     MapSemanticConflictKind Kind,
-    string LegacyText,
+    string Message,
     MapValidationSource Source,
     MapValidationSource? Conflict = null);
 
@@ -28,7 +28,7 @@ public static class MapSemanticValidator
         var conflicts = Validate(map);
         if (conflicts.Count > 0)
         {
-            throw new MapSemanticValidationException(map.Id, conflicts.Select(value => value.LegacyText).ToArray());
+            throw new MapSemanticValidationException(map.Id, conflicts.Select(value => value.Message).ToArray());
         }
     }
 
@@ -37,7 +37,7 @@ public static class MapSemanticValidator
         var conflicts = new List<MapSemanticConflict>();
         ValidateCatalogs(map, conflicts);
         ValidateSemanticIds(map, conflicts);
-        ValidateLegacyBuildingIds(map, conflicts);
+        ValidateBuildingIds(map, conflicts);
         return conflicts.AsReadOnly();
     }
 
@@ -137,26 +137,26 @@ public static class MapSemanticValidator
         }
     }
 
-    private static void ValidateLegacyBuildingIds(MapSpec map, List<MapSemanticConflict> conflicts)
+    private static void ValidateBuildingIds(MapSpec map, List<MapSemanticConflict> conflicts)
     {
         var seen = new Dictionary<int, MapValidationSource>();
         for (var index = 0; index < map.Buildings.Count; index++)
         {
-            if (map.Buildings[index].LegacyId is not { } id)
+            if (map.Buildings[index].RuntimeId is not { } id)
             {
                 continue;
             }
 
             if (id <= 0)
             {
-                conflicts.Add(new MapSemanticConflict(MapSemanticConflictKind.LegacyInvalid,
-                    $"building index={index} legacy_id={id} expected_positive",
+                conflicts.Add(new MapSemanticConflict(MapSemanticConflictKind.RuntimeIdInvalid,
+                    $"building index={index} runtime_id={id} expected_positive",
                     Source(MapValidationSourceKind.Building, index, map.Buildings[index].Kind)));
             }
             else if (seen.TryGetValue(id, out var first))
             {
-                conflicts.Add(new MapSemanticConflict(MapSemanticConflictKind.LegacyDuplicate,
-                    $"building index={index} legacy_id={id} duplicate",
+                conflicts.Add(new MapSemanticConflict(MapSemanticConflictKind.RuntimeIdDuplicate,
+                    $"building index={index} runtime_id={id} duplicate",
                     Source(MapValidationSourceKind.Building, index, map.Buildings[index].Kind), first));
             }
             else

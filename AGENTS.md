@@ -12,9 +12,6 @@ Read in this order:
 3. The issue context pack, if present.
 4. Only the target files named by the issue or discovered by focused `rg`.
 
-Do not read `docs/reviews/` or historical archive files by default. They are
-evidence stores, not navigation entry points.
-
 ## Work Rules
 
 - One bounded issue per branch unless the user explicitly asks for a batch.

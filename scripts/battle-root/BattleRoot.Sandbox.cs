@@ -10,12 +10,11 @@ public partial class BattleRoot
 {
     private void ApplySandboxLaunchState()
     {
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode != LaunchMode.Sandbox)
         {
             return;
         }
 
-        _state.ClearSelection();
         CollectSandboxLaunchSelectionIds();
         _unitBattlefield.SelectUnitsByIds(PlayerSlotId.One, _sandboxLaunchUnitIdBuffer);
         _camera.FocusOnWorldPoint(SandboxLaunchFocus);
@@ -36,7 +35,7 @@ public partial class BattleRoot
 
     private void OnSandboxStressRequested()
     {
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox)
+        if (_matchConfig.LaunchMode != LaunchMode.Sandbox)
         {
             return;
         }
@@ -76,7 +75,7 @@ public partial class BattleRoot
         _sandboxContext = _sandboxContext.Apply(request);
         _sandboxTimeScale = _sandboxContext.TimeScale;
         ApplySandboxRelationsFromContext();
-        _state.ApplySandboxAtmosphere(_sandboxContext.Environment);
+        _presentationEnvironment.ApplySandboxAtmosphere(_sandboxContext.Environment);
         _hud.SetSandboxDeveloperContext(_sandboxContext);
         RefreshSandboxStateHash();
         _hud.SetStatus(statusOverride ?? _sandboxContext.FormatStatus());
@@ -86,7 +85,7 @@ public partial class BattleRoot
 
     private void RefreshSandboxStateHash()
     {
-        if (_state.Options.LaunchMode != LaunchMode.Sandbox
+        if (_matchConfig.LaunchMode != LaunchMode.Sandbox
             || !_sandboxContext.DebugOverlay.IsEnabled(SandboxDebugOverlayFlag.StateHash))
         {
             _hud.SetSandboxStateHash(null);
@@ -107,7 +106,7 @@ public partial class BattleRoot
             }
 
             _unitBattlefield.Relations.Set(playerSlot, subject, _sandboxContext.Relation);
-            _entityWorld.Relations.Set(_sandboxContext.OwnerId, OwnerId.FromPlayerSlot(subject), _sandboxContext.Relation);
+            _unitBattlefield.EntityWorld.Relations.Set(_sandboxContext.OwnerId, OwnerId.FromPlayerSlot(subject), _sandboxContext.Relation);
         }
     }
 
@@ -143,18 +142,7 @@ public partial class BattleRoot
             position,
             request.Transform.Facing,
             spec.MaxHp);
-        var viewModel = new BuildingModel
-        {
-            Id = building.Id,
-            Kind = kind,
-            Owner = LegacyOwnerForPlayerSlot(playerSlot) ?? ProceduralRts.Core.Owner.Enemy,
-            FactionId = ToLegacyFaction(_sandboxContext.Faction),
-            Position = position,
-            Facing = request.Transform.Facing,
-            TurretFacing = request.Transform.Facing,
-            Hp = spec.MaxHp,
-        };
-        var view = CreateBuildingView(viewModel);
+        var view = CreateBuildingView(building.Id);
         AddChild(view);
         _buildingViews[building.Id] = view;
         return true;
@@ -217,28 +205,13 @@ public partial class BattleRoot
     private Vector2 ClampSandboxWorldPoint(Vector2 point, float margin)
     {
         return new Vector2(
-            Mathf.Clamp(point.X, margin, _state.WorldSize.X - margin),
-            Mathf.Clamp(point.Y, margin, _state.WorldSize.Y - margin));
+            Mathf.Clamp(point.X, margin, _worldSize.X - margin),
+            Mathf.Clamp(point.Y, margin, _worldSize.Y - margin));
     }
 
     private static Vector2 SandboxAlertPosition()
     {
         return new Vector2(980, 940);
-    }
-
-    private static ProceduralRts.Core.Owner? LegacyOwnerForPlayerSlot(PlayerSlotId playerSlotId)
-    {
-        if (playerSlotId == PlayerSlotId.One)
-        {
-            return ProceduralRts.Core.Owner.Player;
-        }
-
-        if (playerSlotId == PlayerSlotId.Two)
-        {
-            return ProceduralRts.Core.Owner.Enemy;
-        }
-
-        return null;
     }
 
     private void ApplySandboxAtmosphere(SandboxAtmospherePreset preset)

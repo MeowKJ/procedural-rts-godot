@@ -22,9 +22,12 @@ public partial class CombatEffectsLayer : Node2D
     private const int LargeEffectArcSegments = 48;
     private const int MediumEffectArcSegments = 36;
     private const int SmallEffectArcSegments = 24;
+    private const float AllyThreatShareRadius = 330;
+    private const float PassiveAllyCallRadius = 115;
 
-    public required GameState State { get; init; }
-    public UnitBattlefield? UnitBattlefield { get; init; }
+    public required UnitBattlefield UnitBattlefield { get; init; }
+    public required Func<Vector2, bool> IsVisibleToPlayer { get; init; }
+    public required Func<Vector2, bool> IsExploredByPlayer { get; init; }
     public Rect2? CullingWorldRect { get; set; }
     public int CommandMarkerCount { get; set; }
 
@@ -41,9 +44,14 @@ public partial class CombatEffectsLayer : Node2D
         + _impactFlashes.Count
         + _muzzleFlashes.Count
         + _beamEffects.Count
-        + State.Projectiles.Count
-        + State.Beams.Count
-        + (UnitBattlefield?.ProjectileProjectionCount() ?? 0);
+        + UnitBattlefield.ProjectileProjectionCount();
+
+    private static int EffectIdSeed(string? id)
+    {
+        return id is null
+            ? 0
+            : unchecked((int)EntityStateHash.Add(EntityStateHash.Begin(), id));
+    }
 
     public void AddUnitDeath(UnitDeathInfo death, Color accent)
     {
@@ -68,21 +76,21 @@ public partial class CombatEffectsLayer : Node2D
         UnitWeightClass weightClass = UnitWeightClass.Medium,
         MovementDomain movementDomain = MovementDomain.Land,
         float damage = 0,
-        AmmoKind? ammoKind = null,
+        string? ammoId = null,
         string? damageElementId = null)
     {
-        var style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoKind, damage, damageElementId);
+        var style = ImpactVfxMath.StyleFor(weightClass, movementDomain, ammoId, damage, damageElementId);
         var effect = RentImpactFlashEffect();
-        effect.Reset(position, radius, accent, damage, ammoKind, style);
+        effect.Reset(position, radius, accent, damage, ammoId, style);
         _impactFlashes.Add(effect);
         ApplyImpactFlashBudget();
         return style;
     }
 
-    public void AddMuzzleFlash(Vector2 position, Vector2 targetPosition, Color accent, WeaponKind? weaponKind = null)
+    public void AddMuzzleFlash(Vector2 position, Vector2 targetPosition, Color accent, string? weaponId = null)
     {
         var effect = RentMuzzleFlashEffect();
-        effect.Reset(position, targetPosition, accent, weaponKind);
+        effect.Reset(position, targetPosition, accent, weaponId);
         _muzzleFlashes.Add(effect);
         ApplyMuzzleFlashBudget();
     }

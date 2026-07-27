@@ -87,12 +87,13 @@ static partial class Program
             throw new InvalidOperationException("world visual themes should map explicitly to the sim resource atmosphere used by live signal systems");
         }
 
-        var themedState = EmptyState();
+        var themeBattlefield = new UnitBattlefield();
+        var themedState = new WorldPresentationEnvironment(new Vector2(3600, 2400));
         var observedThemes = new List<WorldVisualThemeState>();
         themedState.VisualThemeChanged += observedThemes.Add;
         themedState.SetVisualTheme(WorldVisualTheme.DayCommand, "objective-phase", transitionProgress: 1);
         themedState.SetVisualTheme(WorldVisualTheme.NightRadar, "signal-loss", transitionProgress: 0);
-        themedState.AdvanceVisualThemeTransition(0.5f);
+        themedState.Update(0.5f, themeBattlefield, PlayerSlotId.One);
         if (themedState.VisualTheme.Driver != "signal-loss"
             || themedState.VisualTheme.Target != WorldVisualTheme.NightRadar
             || themedState.VisualTheme.TransitionProgress <= 0
@@ -106,10 +107,13 @@ static partial class Program
             throw new InvalidOperationException("in-progress day-to-night visual theme transitions should keep the current sim atmosphere until the transition completes");
         }
 
-        themedState.AdvanceVisualThemeTransition(10f);
+        for (var step = 0; step < 100; step++)
+        {
+            themedState.Update(0.05f, themeBattlefield, PlayerSlotId.One);
+        }
         if (themedState.ResourceAtmosphere != ResourceAtmosphere.Night)
         {
-            throw new InvalidOperationException("completed visual theme transitions should update GameState.ResourceAtmosphere to the target theme's sim atmosphere");
+            throw new InvalidOperationException("completed visual theme transitions should update presentation resource atmosphere to the target theme");
         }
 
         var signalNodes = SignalNetworkMath.CreateDefaultNetwork(new Vector2(3600, 2400));
@@ -127,20 +131,18 @@ static partial class Program
             throw new InvalidOperationException("signal nodes should glow more strongly at night than during daytime planning mode");
         }
 
-        var signalProbeState = EmptyState();
-        signalProbeState.Units.Clear();
-        signalProbeState.Buildings.Clear();
+        var signalProbeState = new WorldPresentationEnvironment(new Vector2(3600, 2400));
         signalProbeState.FogOfWar.ClearMemory();
         var probeNode = signalProbeState.SignalNodes.First(node => node.Kind == SignalNodeKind.SignalTower);
         signalProbeState.SetVisualTheme(WorldVisualTheme.DayCommand, "test-day", transitionProgress: 1);
-        Advance(signalProbeState, 0.2f);
+        signalProbeState.Update(0.2f, themeBattlefield, PlayerSlotId.One);
         if (signalProbeState.FogOfWar.IsVisible(probeNode.Position))
         {
             throw new InvalidOperationException("daytime signal nodes should read as engineering/control infrastructure without acting as night vision sources");
         }
 
         signalProbeState.SetVisualTheme(WorldVisualTheme.NightRadar, "test-night", transitionProgress: 1);
-        Advance(signalProbeState, 0.2f);
+        signalProbeState.Update(0.2f, themeBattlefield, PlayerSlotId.One);
         if (!signalProbeState.FogOfWar.IsVisible(probeNode.Position))
         {
             throw new InvalidOperationException("nighttime signal nodes should contribute safety/vision to the fog network");

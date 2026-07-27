@@ -14,8 +14,8 @@ internal static partial class AiOpponentLoopQaProgram
             AiFaction = tournamentCase.RightFaction,
         };
         var map = SkirmishMapGenerator.GenerateSpec(matchConfig);
-        var leftFaction = ProductionKindDesignBridge.UnitFactionFor(tournamentCase.LeftFaction);
-        var rightFaction = ProductionKindDesignBridge.UnitFactionFor(tournamentCase.RightFaction);
+        var leftFaction = FactionCatalog.UnitFactionFor(tournamentCase.LeftFaction);
+        var rightFaction = FactionCatalog.UnitFactionFor(tournamentCase.RightFaction);
         var leftStart = map.StartFor(new OwnerId(1)).Position.ToVector2();
         var rightStart = map.StartFor(new OwnerId(2)).Position.ToVector2();
         var battlefield = new UnitBattlefield

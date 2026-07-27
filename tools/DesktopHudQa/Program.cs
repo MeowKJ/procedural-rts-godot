@@ -182,7 +182,7 @@ static void AssertHudFactoryExtraction(string root)
     ForbidText(hudLayer, "CatalogInspectorState _catalogInspectorState", "HudLayer must not own the authoritative catalog inspector reducer state.");
     RequireText(battleRoot, "CatalogInspectorReducer.Apply(_catalogInspectorState, intent)", "BattleRoot must own and reduce catalog inspector state outside the widget layer.");
     RequireText(battleRoot, "_hud.SetCatalogInspectorState(_catalogInspectorState)", "BattleRoot must feed resolved catalog inspector state back to HudLayer.");
-    RequireText(battleRoot, "LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),\n            StatusChanged = OnBuildPlacementStatusChanged,", "BuildPlacement must forward its authoritative status callback into command-panel feedback.");
+    RequireText(battleRoot, "LocalFaction = ToUnitFaction(_matchConfig.PlayerFaction),\n            StatusChanged = OnBuildPlacementStatusChanged,", "BuildPlacement must forward its authoritative status callback into command-panel feedback.");
     RequireText(battleRoot, "_hud.SetCommandPanelResult(status);", "BuildPlacement status must be forwarded without reconstructing presentation text.");
     RequireText(hudLayer, "SetCommandPanelResult(status);", "Train/repeat/cancel production status must reuse the same typed command-result entry.");
     RequireText(hudLayer, "CommandFailurePresentation.PanelText(status)", "Command-panel results must use the shared localized failure classifier and formatter.");
@@ -258,7 +258,7 @@ static void AssertHudFactoryExtraction(string root)
     RequireText(hudLayer, "AddProductionProviderLaneButton(_rightRail, index)", "Train provider lanes must live in the right rail instead of compressing the 12-slot card grid.");
     RightCommandDeckQa.AssertSource(root, hudLayer);
     RequireText(hudLayer, "ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount())", "Shift-click train cards must pass a bounded production request count while preserving provider lane selection.");
-    RequireText(hudLayer, "ProductionRequested?.Invoke(button.Kind, ProductionRequestCount())", "Legacy production card requests must pass the same Shift batch count path.");
+    ForbidText(hudLayer, "ProductionRequested?.Invoke(button", "HUD production cards must submit concrete UnitDesign ids only.");
     RequireText(hudLayer, "Input.IsKeyPressed(Key.Shift) ? ShiftProductionBatchCount : 1", "HUD train cards must keep single-click unchanged and Shift-click bounded.");
     RequireText(hudLayer, "Action<string, int>? ProductionRepeatRequested", "HUD must expose a selected-provider repeat-production request.");
     RequireText(hudLayer, "Name = \"RepeatProduction\"", "Right Train controls must expose a stable repeat-production toggle node.");

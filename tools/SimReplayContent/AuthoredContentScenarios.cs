@@ -5,7 +5,7 @@ static partial class Program
         // ---- Scenario 3: authored content (dog vs cat) -------------------------------
         // Proves the full authoring -> EntitySpec -> components -> systems -> projection
         // loop with REAL game designs. A new unit being "just a spec" means no system
-        // edits: we spawn authored UnitDesigns via the bridge and the generic systems
+        // edits: we spawn authored UnitDesigns via the routing and the generic systems
         // drive them. Determinism must hold and combat must resolve.
         const int AuthoredTicks = 5000;
 

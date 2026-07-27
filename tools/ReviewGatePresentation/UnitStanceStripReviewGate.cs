@@ -60,7 +60,6 @@ static class UnitStanceStripReviewGate
 
         ForbidText(strip, "SetSelectedUnitStance", "UnitStanceStrip must not call the HudLayer stance setter.", result);
         ForbidText(strip, "UnitBattlefield", "UnitStanceStrip must not read runtime authority.", result);
-        ForbidText(strip, "GameState", "UnitStanceStrip must not read legacy authority.", result);
         ForbidText(strip, "SubmitLiveLocalPlayerCommand", "UnitStanceStrip must not submit player commands directly.", result);
         ForbidText(hudControls, "SetSelectedUnitStance(presentation.Stance",
             "The retired HudLayer stance button must not restore optimistic highlighting.", result);
@@ -88,31 +87,24 @@ static class UnitStanceStripReviewGate
             battleEvents,
             "private void OnUnitStanceRequested(UnitStance stance)",
             "private static string GatewayStatus(CommandGatewayResult result, string acceptedStatus)");
-        var runtimeStart = stanceHandler.IndexOf("if (UseUnitDesignRuntime)", StringComparison.Ordinal);
-        var legacyStart = stanceHandler.IndexOf("var legacySelectedCount = _state.SelectedUnitCount();", StringComparison.Ordinal);
-        if (runtimeStart < 0 || legacyStart <= runtimeStart)
+        RequireText(stanceHandler, "var selectedCount = _unitBattlefield.SelectedCount(PlayerSlotId.One);",
+            "BattleRoot stance intent must read selection count from UnitBattlefield.", result);
+        RequireText(stanceHandler, "SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload)",
+            "BattleRoot must keep stance intent submission behind PlayerCommandGateway.", result);
+        RequireText(stanceHandler, "RefreshSelectionInfo();",
+            "Accepted runtime stance commands must re-project selection from authority.", result);
+        ForbidText(stanceHandler, "_state.SelectedUnitCount()",
+            "BattleRoot stance intent must not read an external selection authority.", result);
+        ForbidText(stanceHandler, "_state.SetSelectedStance(stance)",
+            "BattleRoot stance intent must not mutate an external unit container.", result);
+        var zeroCheck = stanceHandler.IndexOf("if (selectedCount == 0)", StringComparison.Ordinal);
+        var submit = stanceHandler.IndexOf("SubmitLiveLocalPlayerCommand", StringComparison.Ordinal);
+        if (zeroCheck < 0 || submit <= zeroCheck)
         {
-            result.Error("BattleRoot runtime stance command block is missing.");
+            result.Error("UnitBattlefield no-selection stance intent must return before PlayerCommandGateway submission.");
         }
-        else
-        {
-            var runtimeBlock = stanceHandler[runtimeStart..legacyStart];
-            RequireText(runtimeBlock, "SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload)",
-                "BattleRoot must keep stance intent submission behind PlayerCommandGateway.", result);
-            RequireText(runtimeBlock, "RefreshSelectionInfo();",
-                "Accepted runtime stance commands must re-project selection from authority.", result);
-            ForbidText(runtimeBlock, "_hud.SetSelectedUnitStance(stance",
-                "BattleRoot runtime stance acceptance must not project the requested value directly.", result);
-
-            var selectionRead = runtimeBlock.IndexOf("var selectedCount = _unitBattlefield.SelectedCount(PlayerSlotId.One);", StringComparison.Ordinal);
-            var zeroCheck = runtimeBlock.IndexOf("if (selectedCount == 0)", StringComparison.Ordinal);
-            var zeroReturn = zeroCheck < 0 ? -1 : runtimeBlock.IndexOf("return;", zeroCheck, StringComparison.Ordinal);
-            var submit = runtimeBlock.IndexOf("SubmitLiveLocalPlayerCommand", StringComparison.Ordinal);
-            if (selectionRead < 0 || zeroCheck <= selectionRead || zeroReturn <= zeroCheck || submit <= zeroReturn)
-            {
-                result.Error("UnitDesign runtime no-selection stance intent must return before PlayerCommandGateway submission.");
-            }
-        }
+        ForbidText(stanceHandler, "_hud.SetSelectedUnitStance(stance",
+            "BattleRoot stance acceptance must not project the requested value directly.", result);
     }
 
     private static int CountOccurrences(string source, string value)

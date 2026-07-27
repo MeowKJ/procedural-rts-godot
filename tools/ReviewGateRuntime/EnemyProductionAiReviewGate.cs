@@ -6,7 +6,6 @@ static class EnemyProductionAiReviewGate
         RequireProductionBuffers(root, result);
         RequireConstructionScans(root, result);
         RequireEconomyScans(root, result);
-        RequireLegacyProductionScans(root, result);
     }
 
     private static void RequireFileBudgets(string root, GateResult result)
@@ -33,12 +32,12 @@ static class EnemyProductionAiReviewGate
         RequireText(ai, "List<UnitBattlefieldBuildingSnapshot> _ownedBuildingBuffer", "Enemy production AI must reuse owned-building snapshot storage.", result);
         RequireText(ai, "CollectQueueableDesignOptions(", "Enemy production design choices must fill reusable option storage.", result);
         RequireText(ai, "FirstFallbackCombatOption(", "Enemy production fallback must use an explicit best-option scan.", result);
-        RequireText(ai, "QueuedKindCount(", "Enemy production queued-kind counts must use explicit queue scans.", result);
+        RequireText(ai, "QueuedCategoryCount(", "Enemy production queued-category counts must use explicit queue scans.", result);
         RequireText(ai, "QueuedDesignCount(", "Enemy production queued-design counts must use explicit queue scans.", result); RequireText(ai, "LiveUnitDesignCount(", "Runtime enemy production AI must use UnitBattlefield design-count queries.", result); RequireText(ai, "LiveEconomyUnitCount(", "Runtime enemy production AI must use UnitBattlefield economy-unit count queries.", result);
 
         var production = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Production.cs");
         var productionScans = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ProductionScans.cs");
-        RequireText(ai, "CommandEnqueueProductionDesign(", "Runtime enemy production AI must submit design queueing through the UnitBattlefield command bridge.", result); RequireText(ai, "CommandEnqueueProduction(", "Runtime enemy production AI must submit kind queueing through the UnitBattlefield command bridge.", result); ForbidText(ai, "battlefield.EnqueueProductionDesign(", "Runtime enemy production AI must not bypass the design production command bridge.", result); ForbidText(ai, "battlefield.EnqueueProduction(", "Runtime enemy production AI must not bypass the production command bridge.", result);
+        RequireText(ai, "CommandEnqueueProductionDesign(", "Runtime enemy production AI must submit concrete design ids through UnitBattlefield.", result); ForbidText(ai, "battlefield.EnqueueProductionDesign(", "Runtime enemy production AI must not bypass the authoritative design command path.", result); ForbidText(ai, "CommandEnqueueProduction(", "Runtime enemy production AI must not restore generic production-kind commands.", result);
         ForbidProductionLinq(production, "Enemy production choice", result);
         ForbidProductionLinq(productionScans, "Enemy production scan helpers", result); ForbidText(productionScans, "battlefield.Units", "Runtime enemy production scan helpers must not scan the UnitBattlefield unit list directly.", result);
     }
@@ -48,7 +47,7 @@ static class EnemyProductionAiReviewGate
         var construction = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Construction.cs");
         var offsets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.ConstructionOffsets.cs");
         RequireText(construction, "CollectOwnedBuildings(battlefield, enemyPlayerSlotId, _ownedBuildingBuffer", "Enemy construction requirements must reuse owned-building storage.", result);
-        RequireText(construction, "battlefield.ConstructBuilding(", "Enemy construction decisions must enter through the UnitBattlefield construction command bridge.", result);
+        RequireText(construction, "battlefield.ConstructBuilding(", "Enemy construction decisions must enter through the UnitBattlefield construction command routing.", result);
         RequireText(construction, "new Vector2(placement.X, placement.Y)", "Enemy construction must submit the shared authority's snapped coordinates.", result);
         RequireText(construction, "ConstructionPlacementIntent.Direct", "Enemy construction must query the shared Direct placement intent.", result);
         RequireText(construction, "CandidateBuildOffsets(next)", "Enemy construction placement must iterate static build offsets.", result); RequireText(construction, "LiveNonEconomyUnitsNear(", "Enemy construction defense decisions must use the UnitBattlefield combat-unit count query.", result);
@@ -67,9 +66,9 @@ static class EnemyProductionAiReviewGate
         RequireText(ai, "List<int> _idleHarvesterIds", "Enemy economy must reuse harvester command id storage.", result);
 
         var economy = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Economy.cs"); var queries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionEconomyQueries.cs");
-        RequireText(economy, "battlefield.CollectIdleEconomyUnits(", "Enemy economy must fill idle harvester storage through the UnitBattlefield query bridge.", result); RequireText(economy, "battlefield.NearestVisibleResourceField(", "Enemy economy must choose resources through the UnitBattlefield visibility query bridge.", result);
-        RequireText(economy, "CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds)", "Enemy economy harvest commands must reuse id storage.", result); RequireText(economy, "battlefield.CollectOwnedBuildings(", "Enemy economy/base helpers must use the UnitBattlefield owned-building query bridge.", result);
-        RequireText(economy, "SetMissingProducerRallyPoints(", "Enemy economy rally setup must use the UnitBattlefield rally command bridge.", result); RequireText(economy, "LiveBuildingCenterOrFallback(", "Enemy base center must use the UnitBattlefield building-center query bridge.", result); RequireText(economy, "FirstOwnedBuildingFactionOrDefault(", "Enemy faction lookup must use the UnitBattlefield building-faction query bridge.", result);
+        RequireText(economy, "battlefield.CollectIdleEconomyUnits(", "Enemy economy must fill idle harvester storage through the UnitBattlefield query routing.", result); RequireText(economy, "battlefield.NearestVisibleResourceField(", "Enemy economy must choose resources through the UnitBattlefield visibility query routing.", result);
+        RequireText(economy, "CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds)", "Enemy economy harvest commands must reuse id storage.", result); RequireText(economy, "battlefield.CollectOwnedBuildings(", "Enemy economy/base helpers must use the UnitBattlefield owned-building query routing.", result);
+        RequireText(economy, "SetMissingProducerRallyPoints(", "Enemy economy rally setup must use the UnitBattlefield rally command routing.", result); RequireText(economy, "LiveBuildingCenterOrFallback(", "Enemy base center must use the UnitBattlefield building-center query routing.", result); RequireText(economy, "FirstOwnedBuildingFactionOrDefault(", "Enemy faction lookup must use the UnitBattlefield building-faction query routing.", result);
         RequireText(queries, "CollectIdleEconomyUnits(", "UnitBattlefield must own idle economy-unit collection.", result); RequireText(queries, "NearestVisibleResourceField(", "UnitBattlefield must own visible resource-field selection.", result);
         ForbidProductionLinq(economy, "Enemy economy", result);
         ForbidText(economy, "battlefield.Units", "Enemy economy must not scan UnitBattlefield units directly.", result); ForbidText(economy, "battlefield.BuildingSnapshots()", "Enemy economy must not scan UnitBattlefield buildings directly.", result); ForbidText(economy, "battlefield.ResourceFields", "Enemy economy must not scan resource fields directly.", result); ForbidText(economy, "EntityWorld.Visibility", "Enemy economy must not inspect visibility directly.", result); ForbidText(economy, ".Aggregate(", "Enemy base-center calculation must not allocate aggregate delegates.", result);
@@ -88,17 +87,6 @@ static class EnemyProductionAiReviewGate
         ForbidText(source, ".Any(", $"{name} must not allocate LINQ Any queries.", result);
         ForbidText(source, ".Sum(", $"{name} must not allocate LINQ Sum queries.", result);
         ForbidText(source, ".FirstOrDefault()", $"{name} must not use LINQ first queries.", result);
-    }
-
-    private static void RequireLegacyProductionScans(string root, GateResult result)
-    {
-        var legacy = ReviewGateSource.Read(root, "scripts", "core", "ai", "EnemyProductionAi.cs"); var commands = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.Commands.cs");
-        RequireText(legacy, "state.LiveHarvesterCount(", "Legacy EnemyProductionAi must use the GameState harvester query bridge.", result); RequireText(legacy, "state.QueuedProductionCount(", "Legacy EnemyProductionAi must use the GameState production queue query bridge.", result);
-        RequireText(legacy, "state.CanQueueProduction(", "Legacy EnemyProductionAi must use the GameState production affordability query bridge.", result); RequireText(legacy, "state.LiveBuildingCenter(", "Legacy EnemyProductionAi must use the GameState base-center query bridge.", result);
-        RequireText(legacy, "state.CommandEnqueueProduction(", "Legacy EnemyProductionAi must submit production through the GameState command bridge.", result); RequireText(legacy, "state.CommandSetProducerRallyPoints(", "Legacy EnemyProductionAi rally setup must submit through the GameState command bridge.", result);
-        RequireText(commands, "public bool CommandEnqueueProduction(", "GameState must expose a legacy production command bridge.", result); RequireText(commands, "public int CommandSetProducerRallyPoints(", "GameState must expose a legacy producer-rally command bridge.", result);
-        ForbidProductionLinq(legacy, "Legacy enemy production AI", result); ForbidText(legacy, "state.Units", "Legacy EnemyProductionAi must not scan units directly.", result); ForbidText(legacy, "state.Buildings", "Legacy EnemyProductionAi must not scan buildings directly.", result); ForbidText(legacy, "state.EnqueueProduction(", "Legacy EnemyProductionAi must not bypass the production command bridge.", result); ForbidText(legacy, "building.RallyPoint", "Legacy EnemyProductionAi must not write producer rally state directly.", result);
-        ForbidText(legacy, "ReadyProductionSpecs(", "Legacy EnemyProductionAi must not expose allocating ready-spec iterators.", result); ForbidText(legacy, "new[] { ProductionKind", "Legacy EnemyProductionAi must not allocate combat preference arrays.", result);
     }
 
     private static string ProductionAiPath(string root, string file)

@@ -8,4 +8,5 @@ public readonly record struct UnitMinimapPip(
     UnitFactionId Faction,
     PlayerRelation Relation,
     bool Selected,
-    float AlertPulse);
+    float AlertPulse,
+    bool IsVisible);

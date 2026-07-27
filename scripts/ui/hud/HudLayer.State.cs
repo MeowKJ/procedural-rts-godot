@@ -583,7 +583,6 @@ public partial class HudLayer : CanvasLayer
 
             button.Hotkey = ProductionHotkey(index);
             button.Position = ProductionButtonPosition(index);
-            button.Kind = state.Kind;
             button.UnitDesignId = state.UnitDesignId;
 
             var disabledReason = LocalizedDisabledReason(state.DisabledReasonKey, state.Cost);

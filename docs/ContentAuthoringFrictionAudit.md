@@ -30,14 +30,14 @@ Add one concrete `WeaponDesign` class under `scripts/core/combat/weapons/` and,
 when needed, one concrete `AmmoDesign` class under `scripts/core/combat/ammo/`.
 `WeaponCatalog` discovers both by reflection, validates weapon-to-ammo links, and
 keeps deterministic string-id lookup for runtime combat systems. Existing
-`WeaponKind` and `AmmoKind` values are compatibility aliases only; a brand-new
-weapon or ammo can be added with a new design class and stable string id, without
-editing the enum or catalog.
+`WeaponIds` and `AmmoIds` provide stable built-in string ids. A brand-new weapon
+or ammo can be added with a new design class and stable string id without editing
+an enum or a central lookup switch.
 
 ## Turret
 
-Add a `BuildingDesign` whose `BuildSpec.WeaponKind` is not null. The generic
-`BuildSpec.ToEntitySpec()` bridge projects it as `EntityKind.Turret`, gives it a
+Add a `BuildingDesign` whose `BuildSpec.WeaponId` is not null. The generic
+`BuildSpec.ToEntitySpec()` projection marks it as `EntityKind.Turret`, gives it a
 `WeaponUserComponentState`, and existing construction/repair/selection/power
 systems treat it as an entity. Remaining friction: turret art is still derived
 from building presentation rather than a standalone turret art recipe.

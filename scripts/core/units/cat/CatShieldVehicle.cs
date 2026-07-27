@@ -18,7 +18,7 @@ public sealed class CatShieldVehicle : UnitDesign
     public override CollisionSpec Collision => new(26, 1.45f, 3);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Omni("main", WeaponKind.ElectromagneticEmitter, Vector2.Zero, true),
+        WeaponMountSpec.Omni("main", WeaponIds.ElectromagneticEmitter, Vector2.Zero, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.ShieldField, Radius: 145, Value: 0.55f)];

@@ -51,7 +51,7 @@ public sealed partial class UnitBattlefield
         {
             unit.AttackTargetKind = weapon.AttackTargetKind;
             unit.AttackTargetIsManual = weapon.AttackTargetIsManual;
-            unit.AttackTargetId = LegacyTargetId(weapon.AttackTarget, weapon.AttackTargetKind);
+            unit.AttackTargetId = TargetIdForEntity(weapon.AttackTarget, weapon.AttackTargetKind);
             if (weapon.AttackTargetIsManual)
             {
                 unit.MoveMode = MoveCommandMode.Attack;
@@ -66,8 +66,8 @@ public sealed partial class UnitBattlefield
         if (entity.Components.TryGet<HarvesterComponentState>(out var harvester))
         {
             unit.HarvesterMode = harvester.Mode;
-            unit.HarvestFieldId = LegacyResourceFieldId(harvester.FieldId);
-            unit.HarvestRefineryId = LegacyBuildingTargetId(harvester.RefineryId);
+            unit.HarvestFieldId = ResourceFieldIdForEntity(harvester.FieldId);
+            unit.HarvestRefineryId = BuildingIdForEntity(harvester.RefineryId);
             unit.HarvestPulse = harvester.HarvestPulse;
         }
 

@@ -18,7 +18,7 @@ public sealed class DogInfantry : UnitDesign
     public override CollisionSpec Collision => new(13, 0.75f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.62f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.62f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Barracks, ProductionCategory.Infantry, 5.5f, 0, "production.lane.infantry", IconGlyph.Infantry);

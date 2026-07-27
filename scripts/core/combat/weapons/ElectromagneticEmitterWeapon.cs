@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class ElectromagneticEmitterWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.ElectromagneticEmitter;
+    public override string Id => WeaponIds.ElectromagneticEmitter;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Electromagnetic Emitter",
-            AmmoKind.ElectromagneticLance,
+            AmmoIds.ElectromagneticLance,
             WeaponMountKind.MobileTurret,
             125,
             1.6f,

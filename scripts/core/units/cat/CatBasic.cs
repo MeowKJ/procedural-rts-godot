@@ -18,7 +18,7 @@ public sealed class CatBasic : UnitDesign
     public override CollisionSpec Collision => new(12, 0.68f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.58f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.58f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Barracks, ProductionCategory.Infantry, 5.2f, 0, "production.lane.infantry", IconGlyph.Infantry);

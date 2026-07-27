@@ -87,9 +87,9 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            SetBuildingTargetEntityId(identity.LegacyBuildingId, entity.Id);
-            _nextBuildingTargetId = Math.Max(_nextBuildingTargetId, identity.LegacyBuildingId + 1);
-            EnsureProductionQueueComponent(identity.LegacyBuildingId, entity);
+            SetBuildingTargetEntityId(identity.BuildingId, entity.Id);
+            _nextBuildingTargetId = Math.Max(_nextBuildingTargetId, identity.BuildingId + 1);
+            EnsureProductionQueueComponent(identity.BuildingId, entity);
         }
     }
 

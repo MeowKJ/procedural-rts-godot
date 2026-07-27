@@ -113,9 +113,9 @@ static class CommandSystemAllocationReviewGate
         RequireText(tickets, "CollectReadyConstructionTickets(playerSlotId, includeQueued: false, _constructionTicketBuffer)", "Ready ticket snapshots must use the reusable ticket buffer.", result);
         RequireText(tickets, "return _constructionTicketBuffer;", "Ready ticket readouts must return the reusable ticket buffer without an array copy.", result);
         RequireText(tickets, "_constructionSubjectEntityBuffer.Add(ticketId)", "Construction ticket cancel must reuse the construction subject buffer.", result); RequireText(tickets, "DrainConstructionCancellation(command.Tick, owner, ticketId)", "Construction ticket cancel must drain the cancellation event instead of inferring success.", result); RequireText(tickets, "_entityWorld.FlushQueuedRemovals();", "Construction ticket cancel must remove cancelled tickets immediately for UI readouts.", result);
-        ForbidText(tickets, ".ToHashSet()", "Construction ticket bridge must not allocate before-entity HashSets.", result);
+        ForbidText(tickets, ".ToHashSet()", "Construction ticket routing must not allocate before-entity HashSets.", result);
         ForbidText(tickets, "_constructionTicketBuffer.ToArray()", "Ready ticket readouts must not allocate array snapshots.", result);
-        ForbidText(tickets, ".Where(ticket", "Construction ticket bridge must not allocate LINQ ticket filters.", result);
-        ForbidText(tickets, ".Where(entity", "Construction ticket bridge must not allocate LINQ entity filters.", result);
+        ForbidText(tickets, ".Where(ticket", "Construction ticket routing must not allocate LINQ ticket filters.", result);
+        ForbidText(tickets, ".Where(entity", "Construction ticket routing must not allocate LINQ entity filters.", result);
     }
 }

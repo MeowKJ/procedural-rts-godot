@@ -20,24 +20,6 @@ public partial class BattleRoot
         _hud.SetCommandPanelResult(status);
     }
 
-    private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
-    {
-        foreach (var death in deaths)
-        {
-            if (!_unitViews.Remove(death.Id, out var view))
-            {
-                continue;
-            }
-
-            var style = UnitDeathSpecReadPathFor(death);
-            _combatEffects.AddUnitDeath(style.Death, style.EffectAccent);
-
-            view.QueueFree();
-        }
-
-        PlayDeathCue(deaths);
-    }
-
     private void OnUnitInstancesRemoved(IReadOnlyList<UnitInstanceDeathInfo> deaths)
     {
         foreach (var death in deaths)
@@ -63,7 +45,7 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            target.LastDamageAmmoKind,
+            target.LastDamageAmmoId,
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
@@ -74,8 +56,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind,
-            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
+            target.LastDamageAmmoId,
+            DamageElementIdForAmmoId(target.LastDamageAmmoId));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -92,7 +74,7 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            target.LastDamageAmmoKind,
+            target.LastDamageAmmoId,
             attacker.Faction,
             attacker.PlayerSlotId);
 
@@ -103,8 +85,8 @@ public partial class BattleRoot
             target.Spec.Stats.WeightClass,
             target.Spec.Movement.Domain,
             target.LastDamageAmount,
-            target.LastDamageAmmoKind,
-            DamageElementIdForAmmoKind(target.LastDamageAmmoKind));
+            target.LastDamageAmmoId,
+            DamageElementIdForAmmoId(target.LastDamageAmmoId));
         RequestImpactShake(target.Position, impactStyle);
 
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"unit-attack:{target.Id}", CombatAlertCooldown))
@@ -122,17 +104,11 @@ public partial class BattleRoot
         AddBeamIfNeeded(
             attacker.Position,
             target.Position,
-            AmmoKindForPrimaryWeapon(attacker),
+            AmmoIdForPrimaryWeapon(attacker),
             attacker.Spec.Faction,
             attacker.PlayerSlotId);
 
-        if (_state.BuildingById(target.Id) is { } building)
-        {
-            building.Hp = target.Hp;
-            building.HitPulse = 1;
-        }
-
-        var ammoKind = AmmoKindForPrimaryWeapon(attacker);
+        var ammoId = AmmoIdForPrimaryWeapon(attacker);
         var damage = DamageForPrimaryWeapon(attacker, spec);
         var impactStyle = _combatEffects.AddImpactFlash(
             target.Position,
@@ -141,8 +117,8 @@ public partial class BattleRoot
             UnitWeightClass.Heavy,
             MovementDomain.Land,
             damage,
-            ammoKind,
-            DamageElementIdForAmmoKind(ammoKind));
+            ammoId,
+            DamageElementIdForAmmoId(ammoId));
         RequestImpactShake(target.Position, impactStyle);
         if (target.PlayerSlotId != PlayerSlotId.One || !TryUseAlertCooldown($"building-attack:{target.Id}", CombatAlertCooldown))
         {
@@ -159,7 +135,7 @@ public partial class BattleRoot
             && WeaponCatalog.AmmoDefinitions.TryGetValue(weapon.AmmoId, out var ammo)
             ? ammo.Accent
             : new Color("#f6c55c");
-        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.LegacyWeaponKind);
+        _combatEffects.AddMuzzleFlash(fired.Muzzle, fired.TargetPosition, accent, fired.WeaponId);
     }
 
     private void OnProjectileImpacted(ProjectileImpactEvent impact)
@@ -179,7 +155,7 @@ public partial class BattleRoot
             ammo.Behavior == ProjectileBehavior.Ballistic ? UnitWeightClass.Heavy : UnitWeightClass.Light,
             MovementDomain.Land,
             ammo.BaseDamage,
-            ammo.LegacyKind,
+            ammo.Id,
             ammo.DamageElementId);
         if (ammo.Behavior == ProjectileBehavior.Ballistic || ammo.SplashRadius > 0)
         {
@@ -190,48 +166,6 @@ public partial class BattleRoot
     private void OnUnitBattlefieldOutcomeChanged(GameOutcome outcome)
     {
         OnOutcomeChanged(outcome);
-    }
-
-    private void OnBuildingsRemoved(IReadOnlyList<int> buildingIds)
-    {
-        Vector2? deathCuePosition = null;
-        foreach (var id in buildingIds)
-        {
-            _unitBattlefield.RemoveBuildingTarget(id);
-            if (!_buildingViews.Remove(id, out var view))
-            {
-                continue;
-            }
-
-            deathCuePosition ??= view.Building.Position;
-            if (view.Building.Owner == ProceduralRts.Core.Owner.Player)
-            {
-                AddAlert(AlertKind.Building, GameText.Format("ui.building.destroyed", BuildSpecCatalog.For(view.Building.Kind).Label), view.Building.Position);
-                if (view.Building.Kind == BuildingDesignIds.PowerPlant)
-                {
-                    UpdatePowerAlert(true);
-                }
-            }
-
-            view.QueueFree();
-        }
-
-        PlayDeathCue(deathCuePosition);
-    }
-
-    private void OnProductionCompleted(BuildingModel building, CompletedProductionItem completed)
-    {
-        if (UseUnitDesignRuntime)
-        {
-            return;
-        }
-
-        var spec = UnitDesignCatalog.Spec(completed.DesignId);
-        _hud.SetStatus(GameText.Format("ui.production.deployedFrom", spec.Label, BuildSpecCatalog.For(building.Kind).Label));
-        _hud.SetProductionStatus(GameText.Format("ui.production.deployed", spec.Label));
-        AddProductionCompleteAlert(completed.DesignId, spec.Label, building.Position);
-        PlayAudioCue(TacticalAudioCue.Production, building.Position);
-        RefreshCommandCard();
     }
 
     private void OnUnitBattlefieldProductionCompleted(UnitBattlefieldBuildingSnapshot building, UnitProductionQueueItem item, UnitInstance unit)
@@ -245,33 +179,9 @@ public partial class BattleRoot
         RefreshCommandCard();
     }
 
-    private void OnProductionRequested(ProductionKind productionKind, int requestCount = 1)
+    private void OnProductionHotkeyRequested(string designId, int requestCount = 1)
     {
-        var status = "";
-        var queued = 0;
-        var attempts = Math.Max(1, requestCount);
-        for (var attempt = 0; attempt < attempts; attempt++)
-        {
-            if (!_unitBattlefield.TryCreateProductionPayload(productionKind, PlayerSlotId.One, out var payload, out status))
-            {
-                break;
-            }
-
-            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.Produce, payload);
-            status = GatewayStatus(result, status);
-            if (result.AcceptedCount == 0)
-            {
-                break;
-            }
-
-            queued++;
-        }
-
-        status = ProductionBatchStatus(queued, attempts, status);
-        _hud.SetStatus(status);
-        _hud.SetProductionStatus(status);
-        AddStatusAlert(status);
-        RefreshCommandCard();
+        OnProductionDesignRequested(designId, () => null, requestCount);
     }
 
     private void OnProductionDesignRequested(string designId, Func<int?> providerIdSelector, int requestCount = 1)
@@ -354,33 +264,8 @@ public partial class BattleRoot
         AddStatusAlert(status);
     }
 
-    private void OnResourceInventoryChanged(ProceduralRts.Core.Owner owner, ResourceInventory inventory)
-    {
-        if (UseUnitDesignRuntime && !_syncingResourceInventories)
-        {
-            _syncingResourceInventories = true;
-            _unitBattlefield.SetCredits(PlayerSlotForOwner(owner), inventory.Credits);
-            _syncingResourceInventories = false;
-        }
-
-        if (owner != ProceduralRts.Core.Owner.Player)
-        {
-            return;
-        }
-
-        _hud.SetResourceCredits(inventory.Credits);
-        RefreshCommandCard();
-    }
-
     private void OnUnitBattlefieldResourceInventoryChanged(PlayerSlotId playerSlotId, ResourceInventory inventory)
     {
-        if (UseUnitDesignRuntime && !_syncingResourceInventories && OwnerForPlayerSlot(playerSlotId) is { } owner)
-        {
-            _syncingResourceInventories = true;
-            _state.SetCredits(owner, inventory.Credits);
-            _syncingResourceInventories = false;
-        }
-
         if (playerSlotId != PlayerSlotId.One)
         {
             return;
@@ -407,44 +292,27 @@ public partial class BattleRoot
 
     private void OnUnitStanceRequested(UnitStance stance)
     {
-        if (UseUnitDesignRuntime)
-        {
-            var selectedCount = _unitBattlefield.SelectedCount(PlayerSlotId.One);
-            if (selectedCount == 0)
-            {
-                _hud.SetStatus(GameText.T("stance.selectRequired"));
-                PlayAudioCue(TacticalAudioCue.Invalid);
-                return;
-            }
-
-            var subjects = _unitBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
-            var payload = PlayerCommandPayload.ForSubjects(subjects) with { Stance = stance };
-            var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload);
-            var changed = result.AcceptedCount > 0 ? selectedCount : 0;
-            if (changed == 0)
-            {
-                _hud.SetStatus(GatewayStatus(result, GameText.T("stance.selectRequired")));
-                PlayAudioCue(TacticalAudioCue.Invalid);
-                return;
-            }
-
-            RefreshSelectionInfo();
-            _hud.SetStatus(GameText.Format("stance.changed", changed, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
-            PlayAudioCue(TacticalAudioCue.Selection);
-            return;
-        }
-
-        var legacySelectedCount = _state.SelectedUnitCount();
-        if (legacySelectedCount == 0)
+        var selectedCount = _unitBattlefield.SelectedCount(PlayerSlotId.One);
+        if (selectedCount == 0)
         {
             _hud.SetStatus(GameText.T("stance.selectRequired"));
             PlayAudioCue(TacticalAudioCue.Invalid);
             return;
         }
 
-        _state.SetSelectedStance(stance);
-        _hud.SetSelectedUnitStance(stance, legacySelectedCount);
-        _hud.SetStatus(GameText.Format("stance.changed", legacySelectedCount, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
+        var subjects = _unitBattlefield.SelectedUnitEntityIds(PlayerSlotId.One);
+        var payload = PlayerCommandPayload.ForSubjects(subjects) with { Stance = stance };
+        var result = _unitBattlefield.SubmitLiveLocalPlayerCommand(PlayerSlotId.One, PlayerCommandKind.SetStance, payload);
+        var changed = result.AcceptedCount > 0 ? selectedCount : 0;
+        if (changed == 0)
+        {
+            _hud.SetStatus(GatewayStatus(result, GameText.T("stance.selectRequired")));
+            PlayAudioCue(TacticalAudioCue.Invalid);
+            return;
+        }
+
+        RefreshSelectionInfo();
+        _hud.SetStatus(GameText.Format("stance.changed", changed, UnitStancePresentationCatalog.DefinitionFor(stance).Label));
         PlayAudioCue(TacticalAudioCue.Selection);
     }
 
@@ -457,26 +325,6 @@ public partial class BattleRoot
     {
         _pauseMenu.SetPaused(true);
         _pauseMenu.OpenSettings();
-    }
-
-    private void OnEntityAttacked(ProceduralRts.Core.Owner owner, FactionId factionId, Vector2 position, string label)
-    {
-        var impactStyle = _combatEffects.AddImpactFlash(
-            position,
-            24,
-            _state.VisualAccent(owner, factionId, FactionCatalog.For(factionId).Accent),
-            UnitWeightClass.Medium,
-            MovementDomain.Land);
-        RequestImpactShake(position, impactStyle);
-
-        if (!FactionRelations.IsAllied(ProceduralRts.Core.Owner.Player, _state.MatchConfig.PlayerFaction, owner, factionId)
-            || !TryUseAlertCooldown($"attack:{label}", CombatAlertCooldown))
-        {
-            return;
-        }
-
-        AddAlert(AlertKind.Combat, GameText.Format("ui.alert.underAttack", label), position);
-        PlayAudioCue(TacticalAudioCue.Alert, position);
     }
 
     private void OnOutcomeChanged(GameOutcome outcome)

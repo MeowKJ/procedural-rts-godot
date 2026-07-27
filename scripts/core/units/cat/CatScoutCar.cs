@@ -18,7 +18,7 @@ public sealed class CatScoutCar : UnitDesign
     public override CollisionSpec Collision => new(17, 1.0f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.LightRepeater, Vector2.Zero, new Vector2(22, 0), 0.88f, 10.5f, true),
+        WeaponMountSpec.Independent("main", WeaponIds.LightRepeater, Vector2.Zero, new Vector2(22, 0), 0.88f, 10.5f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 6.2f, 0, "production.lane.vehicle", IconGlyph.Move);

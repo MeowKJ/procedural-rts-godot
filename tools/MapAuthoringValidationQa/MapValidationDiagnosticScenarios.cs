@@ -8,8 +8,8 @@ static class MapValidationDiagnosticScenarios
         Add(observed, UnknownCatalog(), MapValidationCodes.CatalogUnknown, failures);
         Add(observed, EmptyId(), MapValidationCodes.IdEmpty, failures);
         Add(observed, DuplicateId(), MapValidationCodes.IdDuplicate, failures, requireConflict: true);
-        Add(observed, LegacyInvalid(), MapValidationCodes.LegacyInvalid, failures);
-        Add(observed, LegacyDuplicate(), MapValidationCodes.LegacyDuplicate, failures, requireConflict: true);
+        Add(observed, RuntimeIdInvalid(), MapValidationCodes.RuntimeIdInvalid, failures);
+        Add(observed, RuntimeIdDuplicate(), MapValidationCodes.RuntimeIdDuplicate, failures, requireConflict: true);
         Add(observed, MissingOwnerStart(), MapValidationCodes.OwnerStartCount, failures);
         Add(observed, UnsupportedOwner(), MapValidationCodes.OwnerUnsupported, failures);
         Add(observed, MissingOwnerReference(), MapValidationCodes.OwnerReference, failures);
@@ -33,7 +33,7 @@ static class MapValidationDiagnosticScenarios
         ValidateContract(observed, failures);
         ValidateEqualBuildingIdentity(failures);
         ValidateReadOnly(failures);
-        ValidateLegacyBehavior(failures);
+        ValidateExceptionBehavior(failures);
         return MapValidationOrdering.Sort(observed);
     }
 
@@ -87,14 +87,14 @@ static class MapValidationDiagnosticScenarios
             "Value-equal buildings must retain explicit Building[0]/Building[1] identity.", failures);
     }
 
-    private static void ValidateLegacyBehavior(List<string> failures)
+    private static void ValidateExceptionBehavior(List<string> failures)
     {
         var map = MissingOwnerStart();
-        var legacy = MapOwnerTopologyValidator.Validate(map).Select(value => value.LegacyText).ToArray();
+        var messages = MapOwnerTopologyValidator.Validate(map).Select(value => value.Message).ToArray();
         try { MapOwnerTopologyValidator.EnsureValid(map); }
         catch (MapOwnerTopologyValidationException exception)
         {
-            MapValidationFixtures.Require(exception.Diagnostics.SequenceEqual(legacy), "Owner EnsureValid diagnostics changed.", failures);
+            MapValidationFixtures.Require(exception.Diagnostics.SequenceEqual(messages), "Owner EnsureValid diagnostics changed.", failures);
             return;
         }
         failures.Add("Owner EnsureValid must still throw for invalid topology.");
@@ -113,11 +113,11 @@ static class MapValidationDiagnosticScenarios
         Resources = [new MapResourceNodeSpec("same", new MapPoint(256, 256), 32, 100, new MapColor("#ffffff"))],
         Obstacles = [new MapObstacleSpec("same", new MapRect(512, 512, 64, 64))],
     };
-    private static MapSpec LegacyInvalid() => MapValidationFixtures.WithBuildings(
-        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 384, 384, legacyId: -1)) with { Id = "qa.legacy.invalid" };
-    private static MapSpec LegacyDuplicate() => MapValidationFixtures.WithBuildings(
-        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 384, 384, legacyId: 7),
-        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 1024, 640, 2, legacyId: 7)) with { Id = "qa.legacy.duplicate" };
+    private static MapSpec RuntimeIdInvalid() => MapValidationFixtures.WithBuildings(
+        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 384, 384, runtimeId: -1)) with { Id = "qa.runtime-id.invalid" };
+    private static MapSpec RuntimeIdDuplicate() => MapValidationFixtures.WithBuildings(
+        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 384, 384, runtimeId: 7),
+        MapValidationFixtures.Building(BuildingDesignIds.PowerPlant, 1024, 640, 2, runtimeId: 7)) with { Id = "qa.runtime-id.duplicate" };
     private static MapSpec MissingOwnerStart() => MapValidationFixtures.Valid("qa.owner.count") with
     {
         OwnerStarts = [MapValidationFixtures.Valid().OwnerStarts[0]],

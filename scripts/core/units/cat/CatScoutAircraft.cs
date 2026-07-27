@@ -18,7 +18,7 @@ public sealed class CatScoutAircraft : UnitDesign
     public override CollisionSpec Collision => new(17, 0.5f, 1, BlocksMovement: false);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(24, 0), 0.62f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(24, 0), 0.62f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Airfield, ProductionCategory.Air, 8.0f, 0, "production.lane.air", IconGlyph.Air);

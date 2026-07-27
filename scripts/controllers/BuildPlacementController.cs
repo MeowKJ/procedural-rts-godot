@@ -5,7 +5,6 @@ namespace ProceduralRts.Controllers;
 
 public partial class BuildPlacementController : Node2D
 {
-    public required GameState State { get; init; }
     public required UnitBattlefield UnitBattlefield { get; init; }
     public required Camera2D Camera { get; init; }
     public PlayerSlotId LocalPlayerSlotId { get; init; } = PlayerSlotId.One;

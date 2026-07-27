@@ -10,7 +10,7 @@ public static partial class MapValidationService
             MapOwnerTopologyConflictKind.Unsupported => MapValidationCodes.OwnerUnsupported,
             _ => MapValidationCodes.OwnerReference,
         };
-        return Diagnostic(code, MapValidationPhase.Owner, conflict.Source, conflict.LegacyText);
+        return Diagnostic(code, MapValidationPhase.Owner, conflict.Source, conflict.Message);
     }
 
     private static MapValidationDiagnostic Semantic(MapSemanticConflict conflict)
@@ -20,11 +20,11 @@ public static partial class MapValidationService
             MapSemanticConflictKind.CatalogUnknown => MapValidationCodes.CatalogUnknown,
             MapSemanticConflictKind.IdEmpty => MapValidationCodes.IdEmpty,
             MapSemanticConflictKind.IdDuplicate => MapValidationCodes.IdDuplicate,
-            MapSemanticConflictKind.LegacyInvalid => MapValidationCodes.LegacyInvalid,
-            MapSemanticConflictKind.LegacyDuplicate => MapValidationCodes.LegacyDuplicate,
+            MapSemanticConflictKind.RuntimeIdInvalid => MapValidationCodes.RuntimeIdInvalid,
+            MapSemanticConflictKind.RuntimeIdDuplicate => MapValidationCodes.RuntimeIdDuplicate,
             _ => MapValidationCodes.ReferenceMissing,
         };
-        return Diagnostic(code, MapValidationPhase.Semantic, conflict.Source, conflict.LegacyText, conflict.Conflict);
+        return Diagnostic(code, MapValidationPhase.Semantic, conflict.Source, conflict.Message, conflict.Conflict);
     }
 
     private static MapValidationDiagnostic Environment(MapSpec map, MapEnvironmentValidationConflict conflict)

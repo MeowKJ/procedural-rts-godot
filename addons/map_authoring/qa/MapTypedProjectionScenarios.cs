@@ -20,7 +20,7 @@ static class MapTypedProjectionScenarios
             ValidateProjection(fixture);
             ValidateCatalogFailures(fixture);
             ValidateSemanticFailures(fixture);
-            ValidateLegacyIdPresence(fixture);
+            ValidateRuntimeIdPresence(fixture);
             ValidateRotations(fixture);
             MapTypedTransformScenarios.Run(fixture);
             ValidateInspectorCatalog(fixture);
@@ -64,7 +64,7 @@ static class MapTypedProjectionScenarios
         var map = MapSpecArtifactCodec.Decode(first.ToArray());
         Require(map.Id == fixture.Root.Id && map.Seed == fixture.Root.Seed, "MapRoot explicit id/seed must project without Node.Name fallback.");
         Require(map.OwnerStarts.Count == 2 && map.Buildings.Count == 1 && map.Units.Count == 1, "Typed entity collections must project.");
-        Require(map.Buildings[0].LegacyId is null, "Unset legacy-id presence must project as null.");
+        Require(map.Buildings[0].RuntimeId is null, "Unset runtime-id presence must project as null.");
         Require(map.Resources.Count == 1 && map.Obstacles.Count == 1 && map.TerrainCells.Count == 2, "Typed environment collections must project.");
         Require(map.Triggers.Count == 1 && map.Objectives.Count == 1 && map.NarrativeNodes.Count == 1, "Typed narrative collections must project.");
         Require(map.Resources[0].Id == fixture.Resource.Id && map.Resources[0].Id != fixture.Resource.Name.ToString(), "Semantic ids must use exported values, never Node.Name.");
@@ -101,15 +101,15 @@ static class MapTypedProjectionScenarios
         fixture.Root.RemoveChild(metadata); metadata.Free();
     }
 
-    private static void ValidateLegacyIdPresence(MapTypedProjectionFixture fixture)
+    private static void ValidateRuntimeIdPresence(MapTypedProjectionFixture fixture)
     {
-        fixture.Building.HasLegacyId = true;
-        fixture.Building.LegacyId = -7;
-        var exception = Capture<MapSemanticValidationException>(() => Bake(fixture), "Negative explicit legacy id must reach shared validation.");
-        Require(exception.Diagnostics.Any(value => value.Contains("legacy_id=-7 expected_positive", StringComparison.Ordinal)),
-            "Shared validation must report the original negative legacy id.");
-        fixture.Building.HasLegacyId = false;
-        fixture.Building.LegacyId = 0;
+        fixture.Building.HasRuntimeId = true;
+        fixture.Building.RuntimeId = -7;
+        var exception = Capture<MapSemanticValidationException>(() => Bake(fixture), "Negative explicit runtime id must reach shared validation.");
+        Require(exception.Diagnostics.Any(value => value.Contains("runtime_id=-7 expected_positive", StringComparison.Ordinal)),
+            "Shared validation must report the original negative runtime id.");
+        fixture.Building.HasRuntimeId = false;
+        fixture.Building.RuntimeId = 0;
     }
 
     private static void ValidateRotations(MapTypedProjectionFixture fixture)

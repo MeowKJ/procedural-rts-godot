@@ -18,7 +18,7 @@ public sealed class CatSpecial : UnitDesign
     public override CollisionSpec Collision => new(14, 0.9f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.IonEmitter, Vector2.Zero, new Vector2(18, 0), 0.72f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.IonEmitter, Vector2.Zero, new Vector2(18, 0), 0.72f, true),
     ];
 
     public override IReadOnlyList<AbilitySpec> Abilities => [new(AbilityKind.Scan, Radius: 420, Value: 5)];

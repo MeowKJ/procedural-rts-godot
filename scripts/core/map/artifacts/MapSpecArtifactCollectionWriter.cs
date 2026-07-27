@@ -68,7 +68,7 @@ static partial class MapSpecArtifactWriter
             writer.WritePropertyName("position"); WritePoint(writer, item.Position); Number(writer, "facing", item.Facing);
             if (item.Hp is { } hp) Number(writer, "hp", hp); else writer.WriteNull("hp");
             Number(writer, "buildProgress", item.BuildProgress);
-            if (item.LegacyId is { } legacyId) writer.WriteNumber("legacyId", legacyId); else writer.WriteNull("legacyId");
+            if (item.RuntimeId is { } runtimeId) writer.WriteNumber("runtimeId", runtimeId); else writer.WriteNull("runtimeId");
             writer.WriteEndObject();
         }
         writer.WriteEndArray();

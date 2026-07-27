@@ -102,6 +102,12 @@ Require(!applicator.Contains("SetProcess(false)", StringComparison.Ordinal)
     "capture-only authority freeze must not leak into HudLayer or production BattleRoot sources", failures);
 Require(!capture.Contains("SetSandboxDeveloperControlsVisible(false)", StringComparison.Ordinal),
     "runtime capture must not hide sandbox controls and mask the real launch gate", failures);
+var rootLookup = capture.IndexOf("_activeScene is T root && root.Name == name", StringComparison.Ordinal);
+var descendantLookup = capture.IndexOf("_activeScene?.FindChild(name", StringComparison.Ordinal);
+Require(rootLookup >= 0 && descendantLookup > rootLookup,
+    "visual capture node lookup must match the loaded scene root before searching descendants", failures);
+Require(capture.Contains("RequiredNode<BattleRoot>(\"Battle\")", StringComparison.Ordinal),
+    "visual capture theme controls must resolve the actual Battle scene root name", failures);
 Require(!harness.Contains("for state in", StringComparison.Ordinal),
     "Visual QA harness must not duplicate the typed runtime state catalog in bash", failures);
 RequireText(harness, "git status --porcelain=v1 --untracked-files=all",

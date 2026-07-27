@@ -79,7 +79,7 @@ static partial class Program
             || footprintInfantryRuntimeDefinition.WeightClass != UnitWeightClass.Light
             || footprintHarvesterRuntimeDefinition.WeightClass != UnitWeightClass.Heavy)
         {
-            throw new InvalidOperationException("UnitDesign runtime descriptors should expose light, medium, and heavy weight classes without legacy GameState unit definitions");
+            throw new InvalidOperationException("UnitDesign runtime descriptors should expose light, medium, and heavy weight classes");
         }
 
         var infantryFootprint = FootprintVisualMath.StyleFor(footprintInfantryRuntimeDefinition);
@@ -148,7 +148,7 @@ static partial class Program
         if (!unitDesignRuntimeDefinitions.Any(definition => definition.MovementDomain == MovementDomain.Land)
             || !unitDesignRuntimeDefinitions.Any(definition => definition.MovementDomain == MovementDomain.Air))
         {
-            throw new InvalidOperationException("UnitDesign definition catalog should expose runtime definition data from UnitSpec without reading legacy UnitCatalog definitions");
+            throw new InvalidOperationException("UnitDesign definition catalog should expose runtime definition data directly from UnitSpec");
         }
 
         if (!unitDesignRuntimeDefinitions.Any(definition => definition.WeightClass == UnitWeightClass.Light && definition.ArmorTag == ArmorTag.Infantry)
@@ -195,19 +195,19 @@ static partial class Program
 
         if (unitDesignRuntimeDefinitions.Any(definition => definition.TechTier is < 1 or > 3))
         {
-            throw new InvalidOperationException("UnitDesign runtime definitions should validate the T1-T3 vertical-slice tier range without legacy GameState unit definitions");
+            throw new InvalidOperationException("UnitDesign runtime definitions should validate the T1-T3 vertical-slice tier range");
         }
 
         if (!unitDesignWorkerDefinitions.Any(definition => definition.RoleTags.Contains(UnitRoleTag.Economy) && definition.MovementDomain == MovementDomain.Land))
         {
-            throw new InvalidOperationException("UnitDesign runtime role queries should cover land harvester/economy workers without legacy GameState unit definition entries");
+            throw new InvalidOperationException("UnitDesign runtime role queries should cover land harvester/economy workers");
         }
 
         if (aircraftDescriptor.MovementDomain != MovementDomain.Air
             || aircraftDescriptor.ArmorTag != ArmorTag.Aircraft
             || aircraftDescriptor.AttackRange <= 0)
         {
-            throw new InvalidOperationException("UnitDesign runtime definitions should project aircraft target metadata without legacy GameState unit definitions");
+            throw new InvalidOperationException("UnitDesign runtime definitions should project aircraft target metadata");
         }
         AssertAircraftPathingDomain();
 
@@ -220,7 +220,7 @@ static partial class Program
 
         foreach (var faction in new[] { dogFaction, catFaction })
         {
-            var unitFaction = ProductionKindDesignBridge.UnitFactionFor(faction.Id);
+            var unitFaction = FactionCatalog.UnitFactionFor(faction.Id);
             var factionTiers = PlayableUnitSpecs(unitFaction)
                 .Select(spec => spec.Stats.TechTier)
                 .ToHashSet();
@@ -265,7 +265,7 @@ static partial class Program
 
         if (!UnitDesignCatalog.Designs.ContainsKey("dog.guard_tank"))
         {
-            throw new InvalidOperationException("unit design catalog should discover inherited unit design classes without a central compatibility registry");
+            throw new InvalidOperationException("unit design catalog should discover inherited unit design classes without a central alternate registry");
         }
 
         var requiredDogUnitDesignIds = new[]
@@ -348,13 +348,13 @@ static partial class Program
             || dogGuardRuntimeDefinition.WeightClass != dogGuardDesign.Stats.WeightClass
             || dogGuardRuntimeDefinition.MovementDomain != dogGuardDesign.Movement.Domain
             || dogGuardRuntimeDefinition.ArmorTag != dogGuardDesign.Stats.ArmorTag
-            || dogGuardRuntimeDefinition.WeaponKind != dogGuardDesign.PrimaryWeapon.WeaponKind
+            || dogGuardRuntimeDefinition.WeaponId != dogGuardDesign.PrimaryWeapon.WeaponId
             || dogGuardRuntimeDefinition.MaxHp != dogGuardDesign.Stats.MaxHp
             || dogGuardRuntimeDefinition.Radius != dogGuardDesign.Collision.Radius
             || dogGuardRuntimeDefinition.Speed != dogGuardDesign.Movement.Speed
             || dogGuardRuntimeDefinition.SightRange != dogGuardDesign.Stats.SightRange
-            || dogGuardRuntimeDefinition.AttackRange != WeaponCatalog.Weapons[dogGuardDesign.PrimaryWeapon.WeaponKind].Range
-            || dogGuardRuntimeDefinition.Damage != WeaponCatalog.Ammo[WeaponCatalog.Weapons[dogGuardDesign.PrimaryWeapon.WeaponKind].AmmoKind].BaseDamage
+            || dogGuardRuntimeDefinition.AttackRange != WeaponCatalog.WeaponDefinitions[dogGuardDesign.PrimaryWeapon.WeaponId].Range
+            || dogGuardRuntimeDefinition.Damage != WeaponCatalog.AmmoDefinitions[WeaponCatalog.WeaponDefinitions[dogGuardDesign.PrimaryWeapon.WeaponId].AmmoId].BaseDamage
             || dogGuardRuntimeDefinition.TechTier != dogGuardDesign.Stats.TechTier
             || dogGuardRuntimeDefinition.Cost != dogGuardDesign.Stats.Cost
             || dogGuardRuntimeDefinition.ProductionCategory != dogGuardDesign.Production?.Category
@@ -363,7 +363,7 @@ static partial class Program
             || dogGuardRuntimeDefinition.ProductionLaneIndex != dogGuardDesign.Production?.LaneIndex
             || dogGuardRuntimeDefinition.ProductionLaneKey != dogGuardDesign.Production?.LaneKey)
         {
-            throw new InvalidOperationException("UnitDesign definition catalog should project UnitSpec runtime stats directly without legacy runtime projections");
+            throw new InvalidOperationException("UnitDesign definition catalog should project UnitSpec runtime stats directly without retired runtime projections");
         }
 
         var dogGuardEntitySpec = dogGuardDesign.ToEntitySpec();

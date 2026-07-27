@@ -17,7 +17,7 @@ public sealed class MapOwnerTopologyValidationException : InvalidOperationExcept
 public enum MapOwnerTopologyConflictKind { StartCount, Unsupported, Reference }
 public sealed record MapOwnerTopologyConflict(
     MapOwnerTopologyConflictKind Kind,
-    string LegacyText,
+    string Message,
     MapValidationSource Source);
 
 public static class MapOwnerTopologyValidator
@@ -27,7 +27,7 @@ public static class MapOwnerTopologyValidator
         var conflicts = Validate(map);
         if (conflicts.Count > 0)
         {
-            throw new MapOwnerTopologyValidationException(map.Id, conflicts.Select(value => value.LegacyText).ToArray());
+            throw new MapOwnerTopologyValidationException(map.Id, conflicts.Select(value => value.Message).ToArray());
         }
     }
 

@@ -18,7 +18,7 @@ public sealed class GenericInfantry : UnitDesign
     public override CollisionSpec Collision => new(13, 0.55f, 1);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.62f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(17, 0), 0.62f, true),
     ];
 
     public override UnitArtRecipe Art => DogUnitArt.Infantry("art.generic.infantry", IconGlyph.Infantry);

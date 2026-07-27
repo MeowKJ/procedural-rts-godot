@@ -48,7 +48,7 @@ static partial class Program
                 new AutonomyComponentState(acquireRange, leashRange, position),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }),
             });
         }

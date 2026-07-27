@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class RocketPodWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.RocketPod;
+    public override string Id => WeaponIds.RocketPod;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Seeker Rocket Pod",
-            AmmoKind.SeekerRocket,
+            AmmoIds.SeekerRocket,
             WeaponMountKind.MobileTurret,
             360,
             1.35f,

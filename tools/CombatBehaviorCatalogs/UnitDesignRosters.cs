@@ -67,16 +67,16 @@ static partial class Program
             || UnitDesignFactionRosterCatalog.ProductionDesignId(UnitFactionId.Dog, UnitDesignCatalog.Spec("dog.patrol_vehicle").Production!) != "dog.guard_tank"
             || UnitDesignFactionRosterCatalog.ProductionDesignId(UnitFactionId.Cat, UnitDesignCatalog.Spec("cat.scout_car").Production!) != "cat.tank")
         {
-            throw new InvalidOperationException("UnitDesign faction roster bridge should expose playable design ids from UnitSpec production authoring");
+            throw new InvalidOperationException("UnitDesign faction roster routing should expose playable design ids from UnitSpec production authoring");
         }
 
         if (dogRuntimeStart.Count == 0
             || catRuntimeStart.Count == 0
             || dogRuntimeStart.Any(spawn => UnitDesignCatalog.Spec(spawn.DesignId).Faction != UnitFactionId.Dog)
             || catRuntimeStart.Any(spawn => UnitDesignCatalog.Spec(spawn.DesignId).Faction != UnitFactionId.Cat)
-            || UnitDesignRuntimeLoadouts.ProductionDesignId(UnitFactionId.Dog, ProductionKind.LightTank) != "dog.guard_tank"
-            || UnitDesignRuntimeLoadouts.ProductionDesignId(UnitFactionId.Cat, ProductionKind.LightTank) != "cat.tank"
-            || UnitDesignRuntimeLoadouts.ProductionDesignId(UnitFactionId.Cat, ProductionKind.Harvester) != "cat.harvester")
+            || UnitDesignFactionRosterCatalog.PreferredProductionDesignId(UnitFactionId.Dog, ProductionCategory.Vehicle) != "dog.guard_tank"
+            || UnitDesignFactionRosterCatalog.PreferredProductionDesignId(UnitFactionId.Cat, ProductionCategory.Vehicle) != "cat.tank"
+            || UnitDesignFactionRosterCatalog.PreferredProductionDesignId(UnitFactionId.Cat, ProductionCategory.Economy) != "cat.harvester")
         {
             throw new InvalidOperationException("unit design runtime loadouts should define starting and production units directly with UnitDesign ids per faction");
         }

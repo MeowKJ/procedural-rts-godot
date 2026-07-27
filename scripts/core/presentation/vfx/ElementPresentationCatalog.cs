@@ -33,9 +33,9 @@ public static partial class ElementPresentationCatalog
         return For(damageElementId).Badge;
     }
 
-    public static string? DamageElementIdFor(AmmoKind? ammoKind)
+    public static string? DamageElementIdFor(string? ammoId)
     {
-        return ammoKind is { } kind && WeaponCatalog.Ammo.TryGetValue(kind, out var ammo)
+        return ammoId is { } kind && WeaponCatalog.AmmoDefinitions.TryGetValue(kind, out var ammo)
             ? ammo.DamageElementId
             : null;
     }

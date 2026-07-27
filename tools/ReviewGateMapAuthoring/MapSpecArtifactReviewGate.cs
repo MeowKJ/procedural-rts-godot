@@ -36,7 +36,7 @@ static class MapSpecArtifactReviewGate
     {
         var artifact = ReviewGateSource.Read(root, "scripts", "core", "map", "artifacts", "MapSpecArtifact.cs");
         RequireText(artifact, "procedural-rts.mapspec", "MapSpec artifact must keep its stable format identifier.", result);
-        RequireText(artifact, "SchemaVersion = 1", "MapSpec artifact must keep explicit schemaVersion 1.", result);
+        RequireText(artifact, "SchemaVersion = 2", "MapSpec artifact must keep explicit schemaVersion 2.", result);
         RequireText(artifact, "SHA256.HashData", "MapSpec artifact hash must use SHA-256 over exact bytes.", result);
         RequireText(artifact, "MapSpecSnapshot.Create", "Artifact encoding must deep-snapshot caller-owned collections.", result);
         RequireText(artifact, "MapLoader.Prepare(snapshot)", "Artifact encoding must use MapLoader.Prepare as domain-validation authority.", result);
@@ -68,11 +68,11 @@ static class MapSpecArtifactReviewGate
     private static void CheckGodotBoundary(string root, GateResult result)
     {
         var baker = ReviewGateSource.Read(root, "addons", "map_authoring", "baker", "GodotMapSpecBaker.cs");
-        ForbidText(baker, "string id, int seed", "Product baker must not expose the legacy fixture metadata signature.", result);
+        ForbidText(baker, "string id, int seed", "Product baker must not expose the retired fixture metadata signature.", result);
         RequireText(baker, "MapLoader.Prepare(snapshot)", "Godot baker must validate the deep snapshot before output.", result);
         var fixtureBaker = ReviewGateSource.Read(root, "addons", "map_authoring", "baker", "FixtureOnlyMetadataMapBaker.cs");
-        RequireText(fixtureBaker, "internal static class FixtureOnlyMetadataMapBaker", "Metadata fixture baking must be a restricted legacy API.", result);
-        RequireText(fixtureBaker, "BakeFixture", "Legacy metadata entry point must be explicitly fixture-only.", result);
+        RequireText(fixtureBaker, "internal static class FixtureOnlyMetadataMapBaker", "Metadata fixture baking must be a restricted retired API.", result);
+        RequireText(fixtureBaker, "BakeFixture", "Retired metadata entry point must be explicitly fixture-only.", result);
         var adapter = ReviewGateSource.Read(root, "addons", "map_authoring", "baker", "FixtureOnlyMetadataMapSceneAdapter.cs");
         RequireText(adapter, "node.HasMeta", "Godot adapter must inspect loaded Node metadata.", result);
         RequireText(adapter, "node as Node2D", "Godot adapter must read positions from loaded Node2D APIs.", result);
@@ -80,7 +80,7 @@ static class MapSpecArtifactReviewGate
         ForbidText(adapter, "Regex", "Godot adapter must not parse scene text with regex.", result);
         ForbidText(adapter, "File.ReadAllText", "Godot adapter must not treat scene text as authority.", result);
         var smoke = ReviewGateSource.Read(root, "scripts", "qa", "MapApiBakeQaRoot.cs");
-        RequireText(smoke, "FixtureOnlyMetadataMapBaker.BakeFixture", "Legacy #566 QA must use the explicit fixture-only baker.", result);
+        RequireText(smoke, "FixtureOnlyMetadataMapBaker.BakeFixture", "Retired #566 QA must use the explicit fixture-only baker.", result);
         RequireText(smoke, "ResourceLoader.Load<PackedScene>", "Godot smoke must load the fixture through PackedScene APIs.", result);
         RequireText(smoke, "first.Sha256 == second.Sha256", "Godot smoke must prove unchanged bake hash parity.", result);
         RequireText(smoke, "MapBuildingPlacementValidationException", "Godot smoke must prove typed invalid-scene rejection.", result);

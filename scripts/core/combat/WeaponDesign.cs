@@ -2,10 +2,7 @@ namespace ProceduralRts.Core;
 
 public abstract class WeaponDesign
 {
-    public virtual string Id => WeaponCatalog.IdFor(Kind);
-
-    public virtual WeaponKind Kind =>
-        throw new InvalidOperationException($"{GetType().Name} has no legacy WeaponKind enum alias.");
+    public abstract string Id { get; }
 
     public abstract WeaponDefinition ToDefinition();
 }

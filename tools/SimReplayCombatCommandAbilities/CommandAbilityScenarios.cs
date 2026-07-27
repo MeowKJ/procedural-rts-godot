@@ -15,7 +15,7 @@ static partial class Program
                 Movement = new MovementSpec(MovementDomain.Land, Speed: 120, TurnRate: 6),
                 Weapons =
                 [
-                    WeaponMountSpec.Omni("main", WeaponKind.NeedleRifle, Vector2.Zero, fireWhileMoving: false),
+                    WeaponMountSpec.Omni("main", WeaponIds.NeedleRifle, Vector2.Zero, fireWhileMoving: false),
                 ],
                 Abilities =
                 [
@@ -53,7 +53,7 @@ static partial class Program
                 new StanceComponentState(UnitStance.Hold),
                 new WeaponUserComponentState(new[]
                 {
-                    new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                    new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
                 }, new EntityId(2), CombatTargetKind.Unit, AttackTargetIsManual: true),
                 new AbilityRuntimeComponentState(new[]
                 {
@@ -118,7 +118,7 @@ static partial class Program
         Console.WriteLine($"OK [deploy]: setup shots {shotsBeforeSetup}, deployed shots {shotsAfterSetupBeforeUndeploy}, undeployed shots {shotsAfterUndeploy}, target hp {targetHp:0.0}.");
     }
 
-    static void AssertLiveAbilityPlayerCommandBridge()
+    static void AssertLiveAbilityPlayerCommandRouting()
     {
         var battlefield = new UnitBattlefield();
         var scout = battlefield.Spawn<CatSpecial>(PlayerSlotId.One, Vector2.Zero);

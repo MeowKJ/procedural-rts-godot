@@ -2,14 +2,14 @@ namespace ProceduralRts.Core;
 
 public sealed class SkySpearWeapon : WeaponDesign
 {
-    public override WeaponKind Kind => WeaponKind.SkySpear;
+    public override string Id => WeaponIds.SkySpear;
 
     public override WeaponDefinition ToDefinition()
     {
         return new WeaponDefinition(
-            Kind,
+            Id,
             "Sky Spear Battery",
-            AmmoKind.SeekerRocket,
+            AmmoIds.SeekerRocket,
             WeaponMountKind.StaticTurret,
             390,
             1.05f,

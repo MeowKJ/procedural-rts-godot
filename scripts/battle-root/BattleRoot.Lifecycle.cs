@@ -17,12 +17,12 @@ public partial class BattleRoot
 
         if (_hud is not null)
         {
-            _state.VisualThemeChanged -= _hud.SetVisualTheme;
+            _presentationEnvironment.VisualThemeChanged -= OnVisualThemeChanged;
         }
 
-        _state.VisualThemeChanged -= SyncEntityWorldResourceAtmosphere;
+        _presentationEnvironment.SignalNetworkChanged -= OnSignalNetworkChanged;
         _audio?.ReleaseManagedResources();
-        _state.FogOfWar.ReleaseManagedResources();
+        _presentationEnvironment.ReleaseManagedResources();
         ManagedGodotResourceCleanup.ReleaseTree(this);
     }
 
@@ -30,76 +30,42 @@ public partial class BattleRoot
     {
         DisplayAudioSettings.LoadAndApply();
 
-        _grid = new GridLayer { Name = "Grid", WorldSize = _state.WorldSize, State = _state };
+        _grid = new GridLayer
+        {
+            Name = "Grid",
+            WorldSize = _worldSize,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
+        };
         AddChild(_grid);
 
-        AddChild(new SignalNetworkLayer { Name = "SignalNetwork", State = _state });
+        _signalNetwork = new SignalNetworkLayer
+        {
+            Name = "SignalNetwork",
+            Nodes = _presentationEnvironment.SignalNodes,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
+        };
+        AddChild(_signalNetwork);
 
         var resourceRoot = new Node2D { Name = "Resources" };
         AddChild(resourceRoot);
 
-        foreach (var field in _state.ResourceFields)
+        foreach (var field in _unitBattlefield.ResourceFields)
         {
             var view = new ResourceFieldView { Name = $"ResourceField_{field.Id}", Field = field };
             resourceRoot.AddChild(view);
             _resourceViews[field.Id] = view;
         }
 
-        _footprints = new FootprintLayer { Name = "Footprints", State = _state };
+        _footprints = new FootprintLayer
+        {
+            Name = "Footprints",
+            UnitBattlefield = _unitBattlefield,
+            IsVisibleToPlayer = _presentationEnvironment.IsVisible,
+        };
         AddChild(_footprints);
 
         _buildingRoot = new Node2D { Name = "Buildings" };
         AddChild(_buildingRoot);
-
-        foreach (var building in _state.Buildings)
-        {
-            var view = CreateBuildingView(building);
-            _buildingRoot.AddChild(view);
-            _buildingViews[building.Id] = view;
-            UpsertBuildingTarget(building);
-        }
-
-        _state.BuildingAdded += building =>
-        {
-            var view = CreateBuildingView(building);
-            _buildingRoot.AddChild(view);
-            _buildingViews[building.Id] = view;
-            UpsertBuildingTarget(building);
-            if (building.Owner == ProceduralRts.Core.Owner.Player)
-            {
-                AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(building.Kind).Label), building.Position);
-                PlayAudioCue(TacticalAudioCue.BuildComplete, building.Position);
-                if (building.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
-                {
-                    UpdatePowerAlert(true);
-                }
-            }
-        };
-
-        var unitRoot = new Node2D { Name = "Units" };
-        AddChild(unitRoot);
-
-        if (!UseUnitDesignRuntime)
-        {
-            foreach (var unit in _state.Units)
-            {
-                var view = new UnitView { Name = $"Unit_{unit.Id}", State = _state, Unit = unit };
-                unitRoot.AddChild(view);
-                _unitViews[unit.Id] = view;
-            }
-        }
-
-        _state.UnitAdded += unit =>
-        {
-            if (UseUnitDesignRuntime)
-            {
-                return;
-            }
-
-            var view = new UnitView { Name = $"Unit_{unit.Id}", State = _state, Unit = unit };
-            unitRoot.AddChild(view);
-            _unitViews[unit.Id] = view;
-        };
 
         _unitBodyBatchLayer = new UnitBodyBatchLayer
         {
@@ -108,7 +74,7 @@ public partial class BattleRoot
             Viewer = PlayerSlotId.One,
             Relations = _unitBattlefield.Relations,
             PresentationProvider = id => _unitBattlefield.UnitPresentationProjection(id),
-            VisualThemeProvider = () => _state.VisualTheme,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
         };
         AddChild(_unitBodyBatchLayer);
 
@@ -116,9 +82,9 @@ public partial class BattleRoot
         AddChild(_unitInstanceRoot);
         ConfigureUnitBattlefield();
         ConfigureEntityWorld();
+        SyncUnitBattlefieldBuildingRuntimeState();
+        _presentationEnvironment.Update(0, _unitBattlefield, PlayerSlotId.One);
 
-        _state.UnitsRemoved += OnUnitsRemoved;
-        _state.BuildingsRemoved += OnBuildingsRemoved;
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;
         _unitBattlefield.WeaponFired += OnWeaponFired;
         _unitBattlefield.ProjectileImpacted += OnProjectileImpacted;
@@ -130,34 +96,38 @@ public partial class BattleRoot
         _unitBattlefield.ResourceInventoryChanged += OnUnitBattlefieldResourceInventoryChanged;
         _unitBattlefield.ProductionCompleted += OnUnitBattlefieldProductionCompleted;
 
-        _fogOfWar = new FogOfWarLayer { Name = "FogOfWar", State = _state, Quality = _state.FogQuality };
+        _fogOfWar = new FogOfWarLayer
+        {
+            Name = "FogOfWar",
+            FogOfWar = _presentationEnvironment.FogOfWar,
+            WorldSize = _worldSize,
+            Quality = _presentationEnvironment.FogQuality,
+        };
         AddChild(_fogOfWar);
 
-        _combatEffects = new CombatEffectsLayer { Name = "CombatEffects", State = _state, UnitBattlefield = _unitBattlefield };
+        _combatEffects = new CombatEffectsLayer
+        {
+            Name = "CombatEffects",
+            UnitBattlefield = _unitBattlefield,
+            IsVisibleToPlayer = _presentationEnvironment.IsVisible,
+            IsExploredByPlayer = _presentationEnvironment.IsExplored,
+        };
         AddChild(_combatEffects);
 
         _commandAcknowledgements = new CommandAcknowledgementLayer { Name = "CommandAcknowledgements" };
         AddChild(_commandAcknowledgements);
 
-        AddChild(new PathDebugLayer
-        {
-            Name = "PathDebug",
-            State = _state,
-            StatusChanged = OnStatusChanged,
-        });
-
-        _camera = new CameraController { Name = "Camera", WorldSize = _state.WorldSize };
+        _camera = new CameraController { Name = "Camera", WorldSize = _worldSize };
         _camera.ViewChanged += RefreshViewCulling;
         AddChild(_camera);
 
         _buildPlacement = new BuildPlacementController
         {
             Name = "BuildPlacement",
-            State = _state,
             UnitBattlefield = _unitBattlefield,
             Camera = _camera,
             LocalPlayerSlotId = PlayerSlotId.One,
-            LocalFaction = ToUnitFaction(_state.Options.PlayerFaction),
+            LocalFaction = ToUnitFaction(_matchConfig.PlayerFaction),
             StatusChanged = OnBuildPlacementStatusChanged,
             CommandAcknowledged = QueueCommandAcknowledgementEvent,
         };
@@ -166,7 +136,6 @@ public partial class BattleRoot
         _selection = new SelectionController
         {
             Name = "Selection",
-            State = _state,
             Camera = _camera,
             UnitBattlefield = _unitBattlefield,
             LocalPlayerSlotId = PlayerSlotId.One,
@@ -183,7 +152,6 @@ public partial class BattleRoot
         _controlGroups = new ControlGroupController
         {
             Name = "ControlGroups",
-            State = _state,
             UnitBattlefield = _unitBattlefield,
             LocalPlayerSlotId = PlayerSlotId.One,
             SelectionChanged = OnSelectionChanged,
@@ -195,22 +163,21 @@ public partial class BattleRoot
         var production = new ProductionController
         {
             Name = "Production",
-            State = _state,
-            ProductionRequested = OnProductionRequested,
+            LocalFaction = ToUnitFaction(_matchConfig.PlayerFaction),
+            ProductionDesignRequested = OnProductionHotkeyRequested,
             CancelProductionRequested = OnCancelProductionRequested,
             StatusChanged = OnStatusChanged,
             ProductionStatusChanged = OnProductionStatusChanged,
         };
         AddChild(production);
 
-        if (UseUnitDesignRuntime)
         {
             AddChild(new EnemyUnitBattlefieldProductionController
             {
                 Name = "EnemyProduction",
                 Battlefield = _unitBattlefield,
                 EnemyPlayerSlotId = PlayerSlotId.Two,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
+                DifficultyProfile = EnemyDifficultyProfile.For(_matchConfig.EnemyDifficulty),
             });
 
             AddChild(new EnemyUnitBattlefieldAttackWaveController
@@ -218,35 +185,14 @@ public partial class BattleRoot
                 Name = "EnemyAttackWaves",
                 Battlefield = _unitBattlefield,
                 EnemyPlayerSlotId = PlayerSlotId.Two,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
-            });
-        }
-        else
-        {
-            AddChild(new EnemyProductionController
-            {
-                Name = "EnemyProduction",
-                State = _state,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
-            });
-
-            AddChild(new EnemyAttackWaveController
-            {
-                Name = "EnemyAttackWaves",
-                State = _state,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
+                DifficultyProfile = EnemyDifficultyProfile.For(_matchConfig.EnemyDifficulty),
             });
         }
 
-        _state.ProductionCompleted += OnProductionCompleted;
-        _state.ResourceInventoryChanged += OnResourceInventoryChanged;
-        _state.EntityAttacked += OnEntityAttacked;
-        _state.OutcomeChanged += OnOutcomeChanged;
 
         _hud = new HudLayer
         {
             Name = "Hud",
-            ProductionRequested = OnProductionRequested,
             ProductionDesignRequested = OnProductionDesignRequested,
             ProductionRepeatRequested = OnProductionRepeatRequested,
             CancelProductionRequested = OnCancelProductionRequested,
@@ -262,14 +208,14 @@ public partial class BattleRoot
             SettingsRequested = OnSettingsRequested,
             SandboxDeveloperContextRequested = OnSandboxDeveloperContextRequested,
             SandboxStressRequested = OnSandboxStressRequested,
-            ViewerFaction = _state.MatchConfig.PlayerFaction,
+            ViewerFaction = _matchConfig.PlayerFaction,
         };
         AddChild(_hud);
-        _hud.SetVisualTheme(_state.VisualTheme);
-        _hud.SetSandboxDeveloperControlsVisible(_state.Options.LaunchMode == LaunchMode.Sandbox);
+        _hud.SetVisualTheme(_presentationEnvironment.VisualTheme);
+        _hud.SetSandboxDeveloperControlsVisible(_matchConfig.LaunchMode == LaunchMode.Sandbox);
         _hud.SetSandboxDeveloperContext(_sandboxContext);
-        _state.VisualThemeChanged += _hud.SetVisualTheme;
-        _state.VisualThemeChanged += SyncEntityWorldResourceAtmosphere;
+        _presentationEnvironment.VisualThemeChanged += OnVisualThemeChanged;
+        _presentationEnvironment.SignalNetworkChanged += OnSignalNetworkChanged;
 
         _perfHud = new PerfHudLayer
         {
@@ -301,19 +247,28 @@ public partial class BattleRoot
         ApplySandboxLaunchState();
     }
 
-    private BuildingView CreateBuildingView(BuildingModel building)
+    private BuildingView CreateBuildingView(int buildingId)
     {
         return new BuildingView
         {
-            Name = $"Building_{building.Id}",
-            State = _state,
-            Building = building,
-            ProjectionProvider = () => _unitBattlefield.BuildingProjection(building.Id),
-            BuildingProjectionProvider = () => _unitBattlefield.BuildingPresentationProjection(building.Id),
-            ViewProjectionProvider = () => _unitBattlefield.BuildingViewProjection(building.Id),
-            ExploredProvider = rect => _state.FogOfWar.AnyExplored(rect),
-            VisualThemeProvider = () => _state.VisualTheme,
-            ViewerFaction = _state.MatchConfig.PlayerFaction,
+            Name = $"Building_{buildingId}",
+            ViewProjectionProvider = () => _unitBattlefield.BuildingViewProjection(buildingId),
+            ExploredProvider = _presentationEnvironment.FogOfWar.AnyExplored,
+            VisualThemeProvider = () => _presentationEnvironment.VisualTheme,
+            ViewerFaction = _matchConfig.PlayerFaction,
         };
+    }
+
+    private void OnVisualThemeChanged(WorldVisualThemeState theme)
+    {
+        _hud.SetVisualTheme(theme);
+        _grid.QueueRedraw();
+        _signalNetwork.QueueRedraw();
+        SyncEntityWorldResourceAtmosphere(theme);
+    }
+
+    private void OnSignalNetworkChanged()
+    {
+        _signalNetwork.QueueRedraw();
     }
 }

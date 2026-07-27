@@ -48,9 +48,9 @@ internal static partial class AiOpponentLoopQaProgram
             failures.Add($"AI harvest loop should assign harvesters and deplete resources; assignments {report.HarvestAssignments}, depleted {report.EnemyFieldDepleted}.");
         }
 
-        if (report.HarvestBridgeCommands < 2)
+        if (report.HarvestAppliedCommands < 2)
         {
-            failures.Add($"AI harvest should enter through selection/harvest command bridge; command delta {report.HarvestBridgeCommands}.");
+            failures.Add($"AI harvest should enter through selection/harvest command routing; command delta {report.HarvestAppliedCommands}.");
         }
 
         var requiredBuildings = new[] { BuildingDesignIds.Headquarters, BuildingDesignIds.Refinery, BuildingDesignIds.Barracks, BuildingDesignIds.VehicleFactory, BuildingDesignIds.GroundTurret };
@@ -67,9 +67,9 @@ internal static partial class AiOpponentLoopQaProgram
             failures.Add($"AI construction should place multiple runtime buildings; construction orders {report.ConstructionOrders}.");
         }
 
-        if (report.ConstructionBridgeCommands < report.ConstructionOrders)
+        if (report.ConstructionAppliedCommands < report.ConstructionOrders)
         {
-            failures.Add($"AI construction should enter through the UnitBattlefield construction command bridge; bridge/orders = {report.ConstructionBridgeCommands}/{report.ConstructionOrders}.");
+            failures.Add($"AI construction should enter through the UnitBattlefield construction command routing; routing/orders = {report.ConstructionAppliedCommands}/{report.ConstructionOrders}.");
         }
 
         if (report.ProductionOrders < 5 || report.ProductionQueuedEvents < 5 || report.ProductionCompletedEvents < 3)
@@ -82,9 +82,9 @@ internal static partial class AiOpponentLoopQaProgram
             failures.Add($"AI should produce a mixed combat army; produced infantry/vehicles = {report.ProducedInfantry}/{report.ProducedVehicles} [{string.Join(", ", report.ProducedCombatDesignIds)}].");
         }
 
-        if (report.ProductionBridgeCommands < report.ProductionOrders)
+        if (report.ProductionAppliedCommands < report.ProductionOrders)
         {
-            failures.Add($"AI production orders should advance the EntityWorld production command bridge; bridge/orders = {report.ProductionBridgeCommands}/{report.ProductionOrders}.");
+            failures.Add($"AI production orders should advance the EntityWorld production command routing; routing/orders = {report.ProductionAppliedCommands}/{report.ProductionOrders}.");
         }
 
         if (report.DefenseBuildingHits + report.DefenseUnitHits <= 0 || report.RaiderHpDamage <= 0)
@@ -97,14 +97,14 @@ internal static partial class AiOpponentLoopQaProgram
             failures.Add($"AI should attack in repeated waves and damage the player HQ; waves {report.WavesLaunched}, attackers {report.MaxManualWaveAttackers}, HQ damage {report.PlayerHqDamage:0}.");
         }
 
-        if (report.WaveBridgeCommands < report.WavesLaunched)
+        if (report.WaveAppliedCommands < report.WavesLaunched)
         {
-            failures.Add($"AI attack waves should enter through CommandAttackUnits/command buffer; bridge/waves = {report.WaveBridgeCommands}/{report.WavesLaunched}.");
+            failures.Add($"AI attack waves should enter through CommandAttackUnits/command buffer; routing/waves = {report.WaveAppliedCommands}/{report.WavesLaunched}.");
         }
 
-        if (report.LeftAttackCommands < 1 || report.WaveBridgeCommands < 1)
+        if (report.LeftAttackCommands < 1 || report.WaveAppliedCommands < 1)
         {
-            failures.Add($"both sides should submit attack commands; left/right command deltas {report.LeftAttackCommands}/{report.WaveBridgeCommands}.");
+            failures.Add($"both sides should submit attack commands; left/right command deltas {report.LeftAttackCommands}/{report.WaveAppliedCommands}.");
         }
 
         if (report.LeftToRightDamage <= 0 || report.RightToLeftDamage <= 0)
@@ -120,9 +120,9 @@ internal static partial class AiOpponentLoopQaProgram
             failures.Add("final unit/building counts should be non-negative for both sides.");
         }
 
-        if (report.TotalAppliedCommands <= report.HarvestBridgeCommands + report.ProductionBridgeCommands + report.WaveBridgeCommands - 1)
+        if (report.TotalAppliedCommands <= report.HarvestAppliedCommands + report.ProductionAppliedCommands + report.WaveAppliedCommands - 1)
         {
-            failures.Add($"applied command total should cover observed bridge deltas; total {report.TotalAppliedCommands}, deltas {report.HarvestBridgeCommands}/{report.ProductionBridgeCommands}/{report.WaveBridgeCommands}.");
+            failures.Add($"applied command total should cover observed routing deltas; total {report.TotalAppliedCommands}, deltas {report.HarvestAppliedCommands}/{report.ProductionAppliedCommands}/{report.WaveAppliedCommands}.");
         }
     }
 

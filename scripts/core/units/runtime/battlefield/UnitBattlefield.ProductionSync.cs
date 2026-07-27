@@ -13,7 +13,7 @@ public sealed partial class UnitBattlefield
 
         SyncUnitEntities();
         CollectKnownProductionEntityIds(_productionKnownEntityIds);
-        CollectQueuedProductionSnapshots(_productionActiveProducerIds, _productionQueuedBefore);
+        CollectProductionCompletionCandidates(_productionActiveProducerIds, _productionCompletionCandidates);
 
         _productionSystem.Step(new SimContext(
             _entityWorld,
@@ -42,13 +42,13 @@ public sealed partial class UnitBattlefield
         foreach (var entity in _entityWorld.OrderedEntities)
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                || !_productionBuildingIdSeen.Add(identity.LegacyBuildingId)
-                || BuildingProductionQueue(identity.LegacyBuildingId).Count == 0)
+                || !_productionBuildingIdSeen.Add(identity.BuildingId)
+                || BuildingProductionQueue(identity.BuildingId).Count == 0)
             {
                 continue;
             }
 
-            result.Add(identity.LegacyBuildingId);
+            result.Add(identity.BuildingId);
         }
     }
 
@@ -61,9 +61,9 @@ public sealed partial class UnitBattlefield
         }
     }
 
-    private void CollectQueuedProductionSnapshots(
+    private void CollectProductionCompletionCandidates(
         IReadOnlyList<int> activeProducerIds,
-        List<UnitBattlefieldProductionQueueSnapshot> result)
+        List<ProductionCompletionCandidate> result)
     {
         result.Clear();
         foreach (var buildingId in activeProducerIds)
@@ -73,7 +73,7 @@ public sealed partial class UnitBattlefield
                 continue;
             }
 
-            result.Add(new UnitBattlefieldProductionQueueSnapshot(
+            result.Add(new ProductionCompletionCandidate(
                 buildingId,
                 snapshot,
                 BuildingProductionQueue(buildingId)[0]));
@@ -98,12 +98,12 @@ public sealed partial class UnitBattlefield
 
     private bool TryFindCompletedProduction(
         EntityInstance entity,
-        out UnitBattlefieldProductionQueueSnapshot completed)
+        out ProductionCompletionCandidate completed)
     {
         completed = default;
         var found = false;
         var bestDistance = 0f;
-        foreach (var candidate in _productionQueuedBefore)
+        foreach (var candidate in _productionCompletionCandidates)
         {
             if (candidate.Snapshot.PlayerSlotId != entity.OwnerId.ToPlayerSlot()
                 || candidate.Item.DesignId != entity.SpecId)

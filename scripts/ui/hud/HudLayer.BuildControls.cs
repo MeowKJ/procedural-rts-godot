@@ -258,10 +258,7 @@ public partial class HudLayer : CanvasLayer
             {
                 FocusRepeatProductionDesign(button.UnitDesignId);
                 ProductionDesignRequested?.Invoke(button.UnitDesignId, () => SelectedProductionProviderId(button.UnitDesignId), ProductionRequestCount());
-                return;
             }
-
-            ProductionRequested?.Invoke(button.Kind, ProductionRequestCount());
         };
         _commandButtons[optionId] = button;
         parent.AddChild(button);
@@ -270,9 +267,7 @@ public partial class HudLayer : CanvasLayer
 
     private static string ProductionOptionId(ProductionOptionState state)
     {
-        return string.IsNullOrWhiteSpace(state.UnitDesignId)
-            ? $"legacy.{state.Kind}"
-            : $"design.{state.UnitDesignId}";
+        return $"design.{state.UnitDesignId}";
     }
 
     private static string BuildOptionId(BuildOptionSnapshot state)

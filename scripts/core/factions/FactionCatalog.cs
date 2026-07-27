@@ -27,4 +27,15 @@ public static class FactionCatalog
     {
         return Definitions[factionId];
     }
+
+    public static UnitFactionId UnitFactionFor(FactionId factionId)
+    {
+        return factionId switch
+        {
+            FactionId.Dog => UnitFactionId.Dog,
+            FactionId.Cat => UnitFactionId.Cat,
+            FactionId.Corruption => UnitFactionId.Corruption,
+            _ => throw new ArgumentOutOfRangeException(nameof(factionId), factionId, null),
+        };
+    }
 }

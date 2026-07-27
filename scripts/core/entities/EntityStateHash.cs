@@ -295,7 +295,7 @@ public static partial class EntityStateHash
 
     private static ulong AddBuildingIdentity(ulong hash, BuildingIdentityComponentState state)
     {
-        hash = Add(hash, state.LegacyBuildingId);
+        hash = Add(hash, state.BuildingId);
         hash = Add(hash, state.Kind);
         hash = Add(hash, state.PlayerSlotId.Value);
         return Add(hash, (int)state.Faction);

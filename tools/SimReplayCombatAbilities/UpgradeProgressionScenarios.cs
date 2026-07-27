@@ -6,7 +6,7 @@ static partial class Program
         var spec = UnitDesignCatalog.Spec("dog.guard_tank");
         var baseSpeed = spec.Movement.Speed;
         var baseSight = spec.Stats.SightRange;
-        var baseRange = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind].Range;
+        var baseRange = WeaponCatalog.WeaponDefinitions[spec.PrimaryWeapon.WeaponId].Range;
 
         var world = new EntityWorld(seed: 5150);
         var attacker = world.SpawnUnit(spec, owner, Vector2.Zero);
@@ -16,7 +16,7 @@ static partial class Program
             new HealthComponentState(targetSpec.Stats!.MaxHp, targetSpec.Stats.MaxHp),
         });
 
-        var weapon = WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind];
+        var weapon = WeaponCatalog.WeaponDefinitions[spec.PrimaryWeapon.WeaponId];
         var baseDamage = WeaponMath.BaseDamage(world, owner, weapon, target);
 
         world.Upgrades(owner).Complete(UpgradeIds.FocusedMunitions);
@@ -26,7 +26,7 @@ static partial class Program
 
         Assert(spec.Movement.Speed == baseSpeed, "UpgradeState must not mutate UnitSpec movement.");
         Assert(spec.Stats.SightRange == baseSight, "UpgradeState must not mutate UnitSpec stats.");
-        Assert(WeaponCatalog.Weapons[spec.PrimaryWeapon.WeaponKind].Range == baseRange, "UpgradeState must not mutate WeaponDefinition.");
+        Assert(WeaponCatalog.WeaponDefinitions[spec.PrimaryWeapon.WeaponId].Range == baseRange, "UpgradeState must not mutate WeaponDefinition.");
         Assert(UpgradeResolver.MoveSpeed(world, attacker, baseSpeed) > baseSpeed, "ServoTuning should derive higher move speed.");
         Assert(UpgradeResolver.SightRange(world, attacker, baseSight) > baseSight, "OpticArray should derive higher sight range.");
         Assert(UpgradeResolver.WeaponRange(world, attacker, baseRange) > baseRange, "ExtendedBarrels should derive higher weapon range.");

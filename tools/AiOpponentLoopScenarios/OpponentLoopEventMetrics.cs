@@ -32,10 +32,10 @@ internal static partial class AiOpponentLoopQaProgram
         public int EnemyBuildingHits { get; private set; }
         public int ResourceEvents { get; private set; }
         public int HarvestAssignments { get; set; }
-        public int HarvestBridgeCommands { get; set; }
-        public int ConstructionBridgeCommands { get; set; }
-        public int ProductionBridgeCommands { get; set; }
-        public int WaveBridgeCommands { get; set; }
+        public int HarvestAppliedCommands { get; set; }
+        public int ConstructionAppliedCommands { get; set; }
+        public int ProductionAppliedCommands { get; set; }
+        public int WaveAppliedCommands { get; set; }
         public int LeftAttackCommands { get; set; }
         public float LeftToRightDamage { get; private set; }
         public float RightToLeftDamage { get; private set; }

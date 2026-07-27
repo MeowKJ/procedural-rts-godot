@@ -156,7 +156,6 @@ public partial class VisualQaCaptureRoot : Node
             hud.SetCommandCardState(
             [
                 new ProductionOptionState(
-                    ProductionKind.InfantrySquad,
                     ProductionCategory.Infantry,
                     BuildingDesignIds.Barracks,
                     "cat.basic",
@@ -219,7 +218,6 @@ public partial class VisualQaCaptureRoot : Node
                 .Where(spec => spec.Production?.Category == ProductionCategory.Infantry)
                 .Take(9)
                 .Select((spec, index) => new ProductionOptionState(
-                    ProductionKind.InfantrySquad,
                     ProductionCategory.Infantry,
                     spec.Production!.ProducerKind,
                     spec.Id,
@@ -329,7 +327,7 @@ public partial class VisualQaCaptureRoot : Node
 
     private async Task CaptureProjectileFrame(string outputPath, string fileName, BattleRoot battle, Vector2 focus)
     {
-        battle.State.FogOfWar.Update(battle.State.WorldSize, [(focus, 900f)]);
+        battle.DebugRevealFog(focus, 900f);
         RequiredNode<FogOfWarLayer>("FogOfWar").QueueRedraw();
         GetTree().Paused = true;
         try
@@ -381,6 +379,11 @@ public partial class VisualQaCaptureRoot : Node
 
     private T RequiredNode<T>(string name) where T : Node
     {
+        if (_activeScene is T root && root.Name == name)
+        {
+            return root;
+        }
+
         if (_activeScene?.FindChild(name, recursive: true, owned: false) is T node)
         {
             return node;
@@ -391,8 +394,8 @@ public partial class VisualQaCaptureRoot : Node
 
     private void SetBattleTheme(WorldVisualTheme theme, string driver)
     {
-        var grid = RequiredNode<GridLayer>("Grid");
-        grid.State?.SetVisualTheme(theme, driver, transitionProgress: 1);
+        var battle = RequiredNode<BattleRoot>("Battle");
+        battle.DebugSetVisualTheme(theme, driver, transitionProgress: 1);
     }
 
     private void SetBattleThemeTransition(
@@ -401,10 +404,9 @@ public partial class VisualQaCaptureRoot : Node
         float transitionProgress,
         string driver)
     {
-        var grid = RequiredNode<GridLayer>("Grid");
-        var state = grid.State ?? throw new InvalidOperationException("Visual QA theme transition requires GameState.");
-        state.SetVisualTheme(current, $"{driver}-start", transitionProgress: 1);
-        state.SetVisualTheme(target, driver, transitionProgress);
+        var battle = RequiredNode<BattleRoot>("Battle");
+        battle.DebugSetVisualTheme(current, $"{driver}-start", transitionProgress: 1);
+        battle.DebugSetVisualTheme(target, driver, transitionProgress);
     }
 
     private async Task Capture(

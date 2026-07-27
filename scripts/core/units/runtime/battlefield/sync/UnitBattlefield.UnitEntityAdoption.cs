@@ -31,8 +31,8 @@ public sealed partial class UnitBattlefield
             MoveMode = commandable?.MoveMode ?? MoveCommandMode.Direct,
             Stance = entity.Components.TryGet<StanceComponentState>(out var stance) ? stance.Stance : spec.Weapons.Count > 0 ? UnitStance.Aggressive : UnitStance.Ignore,
             HarvesterMode = entity.Components.TryGet<HarvesterComponentState>(out var harvester) ? harvester.Mode : HarvesterMode.Idle,
-            HarvestFieldId = harvester is null ? null : LegacyResourceFieldId(harvester.FieldId),
-            HarvestRefineryId = harvester is null ? null : LegacyBuildingTargetId(harvester.RefineryId),
+            HarvestFieldId = harvester is null ? null : ResourceFieldIdForEntity(harvester.FieldId),
+            HarvestRefineryId = harvester is null ? null : BuildingIdForEntity(harvester.RefineryId),
             HarvestPulse = harvester?.HarvestPulse ?? 0,
             HarvesterRetreating = harvester?.Retreating ?? false,
             Cargo = entity.Components.TryGet<ResourceCargoComponentState>(out var cargo) ? cargo.Cargo : 0,
@@ -64,7 +64,7 @@ public sealed partial class UnitBattlefield
         for (var index = 0; index < spec.Weapons.Count; index++)
         {
             var mount = spec.Weapons[index];
-            result.Add(new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0, mount.LegacyWeaponKind));
+            result.Add(new WeaponMountRuntimeState(mount.MountId, mount.WeaponId, facing, 0));
         }
     }
 }

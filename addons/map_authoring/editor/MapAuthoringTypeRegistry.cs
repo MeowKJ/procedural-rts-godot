@@ -22,7 +22,7 @@ public static class MapAuthoringTypeRegistry
         Type("Narrative", "Narrative"),
     });
 
-    internal static void ValidateAliases(
+    internal static void ValidateTypeNames(
         IReadOnlyList<MapAuthoringTypeDescriptor> types,
         Func<string, bool> nativeClassExists)
     {
@@ -31,12 +31,12 @@ public static class MapAuthoringTypeRegistry
         {
             if (!names.Add(descriptor.Name))
             {
-                throw new InvalidOperationException($"Duplicate custom type alias '{descriptor.Name}'.");
+                throw new InvalidOperationException($"Duplicate custom type name '{descriptor.Name}'.");
             }
             if (nativeClassExists(descriptor.Name))
             {
                 throw new InvalidOperationException(
-                    $"Custom type alias '{descriptor.Name}' collides with native Godot class '{descriptor.Name}'.");
+                    $"Custom type name '{descriptor.Name}' collides with native Godot class '{descriptor.Name}'.");
             }
         }
     }

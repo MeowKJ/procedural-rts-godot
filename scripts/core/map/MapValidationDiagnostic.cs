@@ -33,8 +33,8 @@ public static class MapValidationCodes
     public const string CatalogUnknown = "map.catalog.unknown";
     public const string IdEmpty = "map.id.empty";
     public const string IdDuplicate = "map.id.duplicate";
-    public const string LegacyInvalid = "map.id.legacy_invalid";
-    public const string LegacyDuplicate = "map.id.legacy_duplicate";
+    public const string RuntimeIdInvalid = "map.id.runtime_invalid";
+    public const string RuntimeIdDuplicate = "map.id.runtime_duplicate";
     public const string OwnerStartCount = "map.owner.start_count";
     public const string OwnerUnsupported = "map.owner.unsupported";
     public const string OwnerReference = "map.owner.reference";
@@ -57,7 +57,7 @@ public static class MapValidationCodes
 
     public static IReadOnlyList<string> Ordered { get; } = Array.AsReadOnly(new[]
     {
-        CatalogUnknown, IdEmpty, IdDuplicate, LegacyInvalid, LegacyDuplicate,
+        CatalogUnknown, IdEmpty, IdDuplicate, RuntimeIdInvalid, RuntimeIdDuplicate,
         OwnerStartCount, OwnerUnsupported, OwnerReference, WorldInvalidSize,
         GeometryInvalidRect, GeometryInvalidCircle, GeometryInvalidCost,
         GeometryUnrepresentableTransform, BoundsOutside, GridUnsnapped,

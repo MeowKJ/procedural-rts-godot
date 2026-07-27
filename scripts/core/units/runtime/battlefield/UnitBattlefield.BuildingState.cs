@@ -80,7 +80,7 @@ public sealed partial class UnitBattlefield
     private int? BuildingAttackTargetIdCore(int buildingId)
     {
         return BuildingWeaponStateCore(buildingId) is { } weapon
-            ? LegacyTargetId(weapon.AttackTarget, weapon.AttackTargetKind)
+            ? TargetIdForEntity(weapon.AttackTarget, weapon.AttackTargetKind)
             : null;
     }
 
@@ -170,7 +170,7 @@ public sealed partial class UnitBattlefield
     private int? BuildingDockReservedByHarvesterIdCore(int buildingId)
     {
         return BuildingDockStateCore(buildingId).ReservedByEntityId is { } entityId
-            ? LegacyUnitId(entityId)
+            ? UnitIdForEntity(entityId)
             : null;
     }
 
@@ -182,7 +182,7 @@ public sealed partial class UnitBattlefield
     private int? BuildingDockedHarvesterIdCore(int buildingId)
     {
         return BuildingDockStateCore(buildingId).DockedEntityId is { } entityId
-            ? LegacyUnitId(entityId)
+            ? UnitIdForEntity(entityId)
             : null;
     }
 

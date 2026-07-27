@@ -56,18 +56,18 @@ internal static class MapPreflightAtomicScenarios
                 .. valid.NarrativeNodes.Skip(1),
             ],
         }, failures);
-        AssertAtomic("nonpositive-legacy-id", valid, valid with
+        AssertAtomic("nonpositive-runtime-id", valid, valid with
         {
-            Id = "qa.preflight.nonpositive-legacy-id",
-            Buildings = [valid.Buildings[0] with { LegacyId = 0 }, .. valid.Buildings.Skip(1)],
+            Id = "qa.preflight.nonpositive-runtime-id",
+            Buildings = [valid.Buildings[0] with { RuntimeId = 0 }, .. valid.Buildings.Skip(1)],
         }, failures);
-        AssertAtomic("duplicate-legacy-id", valid, valid with
+        AssertAtomic("duplicate-runtime-id", valid, valid with
         {
-            Id = "qa.preflight.duplicate-legacy-id",
+            Id = "qa.preflight.duplicate-runtime-id",
             Buildings =
             [
-                valid.Buildings[0] with { LegacyId = 7 },
-                valid.Buildings[1] with { LegacyId = 7 },
+                valid.Buildings[0] with { RuntimeId = 7 },
+                valid.Buildings[1] with { RuntimeId = 7 },
                 .. valid.Buildings.Skip(2),
             ],
         }, failures);
@@ -139,15 +139,15 @@ internal static class MapPreflightAtomicScenarios
             Id = "qa.preflight.reserved-auto-id",
             Buildings =
             [
-                valid.Buildings[0] with { LegacyId = null },
-                valid.Buildings[1] with { LegacyId = 1 },
-                .. valid.Buildings.Skip(2).Select(building => building with { LegacyId = null }),
+                valid.Buildings[0] with { RuntimeId = null },
+                valid.Buildings[1] with { RuntimeId = 1 },
+                .. valid.Buildings.Skip(2).Select(building => building with { RuntimeId = null }),
             ],
         };
         var world = MapLoader.Load(map);
         var ids = world.OrderedEntities
             .Select(entity => entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                ? identity.LegacyBuildingId
+                ? identity.BuildingId
                 : (int?)null)
             .Where(id => id is not null)
             .Select(id => id!.Value)

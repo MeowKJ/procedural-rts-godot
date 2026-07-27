@@ -52,7 +52,6 @@ static class UnitStanceStripQa
             "The reusable stance strip must expose exactly one intent emission site.");
         Require(!strip.Contains("SetSelectedUnitStance", StringComparison.Ordinal)
             && !strip.Contains("UnitBattlefield", StringComparison.Ordinal)
-            && !strip.Contains("GameState", StringComparison.Ordinal)
             && !strip.Contains("SubmitLiveLocalPlayerCommand", StringComparison.Ordinal),
             "The stance strip must not read authority or submit commands directly.");
         Require(!hudControls.Contains("SetSelectedUnitStance(presentation.Stance", StringComparison.Ordinal),

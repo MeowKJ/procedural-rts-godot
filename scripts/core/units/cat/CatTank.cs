@@ -18,7 +18,7 @@ public sealed class CatTank : UnitDesign
     public override CollisionSpec Collision => new(22, 1.15f, 2);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.Independent("main", WeaponKind.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.48f, 8.8f, true),
+        WeaponMountSpec.Independent("main", WeaponIds.VectorCannon, Vector2.Zero, new Vector2(24, 0), 0.48f, 8.8f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.VehicleFactory, ProductionCategory.Vehicle, 8.2f, 0, "production.lane.vehicle", IconGlyph.Tank);

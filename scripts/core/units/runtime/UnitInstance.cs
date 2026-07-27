@@ -23,7 +23,7 @@ public sealed class UnitInstance
     public CombatTargetKind AttackTargetKind { get; set; } = CombatTargetKind.Unit;
     public bool AttackTargetIsManual { get; set; }
     public float AttackCooldownRemaining { get; set; }
-    public AmmoKind? LastDamageAmmoKind { get; set; }
+    public string? LastDamageAmmoId { get; set; }
     public float LastDamageAmount { get; set; }
     public float DeathOverkillDamage { get; set; }
     public float CommandPulse { get; set; }

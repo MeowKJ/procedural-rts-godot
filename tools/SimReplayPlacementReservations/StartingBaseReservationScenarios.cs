@@ -45,7 +45,7 @@ static partial class Program
                         cardinalFacing,
                         out var egress))
                 {
-                    var producerFaction = ProductionKindDesignBridge.UnitFactionFor(faction);
+                    var producerFaction = FactionCatalog.UnitFactionFor(faction);
                     var spawnRadius = UnitDesignCatalog.Designs.Values
                         .Where(design => design.Faction == producerFaction
                             && design.Production?.ProducerKind == building.Kind)

@@ -78,11 +78,7 @@ static partial class Program
             1,
             12,
             PlayerCommandKind.Build,
-            PlayerCommandPayload.ForSpec("building.powerplant") with
-            {
-                HasTargetPoint = true,
-                TargetPoint = new PlayerCommandPoint(64, 96),
-            });
+            PlayerCommandPayload.ForBuild("building.powerplant", 64, 96, quarterTurns: 0));
         AssertAccepted(gateway.Submit(submission, new[] { build }, sink), "gateway should accept build payloads with spec and point");
 
         AssertBuildFacingPayloadVariants(submission);
@@ -163,16 +159,14 @@ static partial class Program
                 PlayerCommandPayload.ForBuild("building.powerplant", 64, 96, quarterTurns));
             AssertAccepted(
                 cardinalGateway.Submit(submission, [build], cardinalSink),
-                $"gateway should accept schema v1 Build quarter-turn {quarterTurns}");
+                $"gateway should accept Build quarter-turn {quarterTurns}");
         }
 
         Assert(cardinalSink.Accepted.Count == 4,
-            "all four schema v1 cardinal Build payloads should reach the gateway sink");
+            "all four cardinal Build payloads should reach the gateway sink");
 
-        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(0, 1), "legacy v0 nonzero turn");
-        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, -1), "schema v1 negative turn");
-        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(1, 4), "schema v1 turn above three");
-        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(2, 0), "unknown schema version");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(-1), "negative turn");
+        AssertBuildFacingRejected(submission, new PlayerCommandBuildFacing(4), "turn above three");
 
         var missingSpecBeforeFacing = new PlayerCommand(
             PlayerSlotId.One,
@@ -192,7 +186,7 @@ static partial class Program
             PlayerCommandKind.Build,
             PlayerCommandPayload.ForSpec("building.powerplant") with
             {
-                BuildFacing = new PlayerCommandBuildFacing(1, 4),
+                BuildFacing = new PlayerCommandBuildFacing(4),
             });
         var missingPointResult = new CommandGateway().Submit(
             submission,
@@ -212,7 +206,7 @@ static partial class Program
             PlayerCommandKind.Move,
             PlayerCommandPayload.ForPoint([new EntityId(7)], 64, 96) with
             {
-                BuildFacing = new PlayerCommandBuildFacing(1, 1),
+                BuildFacing = new PlayerCommandBuildFacing(1),
             });
         AssertRejected(
             new CommandGateway().Submit(submission, [pollutedMove], new RecordingGatewaySink()),

@@ -4,46 +4,64 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private static readonly ProductionKind[] ProductionOptionKinds = Enum.GetValues<ProductionKind>();
-
-    public IReadOnlyList<ProductionOptionState> ProductionOptionStates(PlayerSlotId playerSlotId)
+    public IReadOnlyList<BuildOptionSnapshot> BuildOptionSnapshots(PlayerSlotId playerSlotId)
     {
-        var credits = Credits(playerSlotId);
-        _legacyProductionOptionStateBuffer.Clear();
-        foreach (var kind in ProductionOptionKinds)
+        _readyBuildingKinds.Clear();
+        foreach (var building in BuildingSnapshots())
         {
-            var designId = FirstDesignIdFor(kind, playerSlotId);
-            var spec = designId is null ? null : UnitDesignCatalog.Spec(designId);
-            var production = spec?.Production;
-            var presentation = spec is null ? null : UnitPresentationCatalog.ForProductionSpec(kind, spec);
-            CollectCandidateProducerIds(kind, playerSlotId, _productionCandidateProducerIds);
-            var metrics = ProductionKindQueueMetrics(kind, spec);
-            var cost = spec?.Stats.Cost ?? 0;
-            var hasProducer = _productionCandidateProducerIds.Count > 0;
-            var enoughCredits = credits >= cost;
-            var disabledReason = hasProducer
-                ? enoughCredits ? "" : "ui.needCredits"
-                : "ui.producerUnavailable";
-            _legacyProductionOptionStateBuffer.Add(new ProductionOptionState(
-                kind,
-                production?.Category ?? ProductionCategory.Infantry,
-                production?.ProducerKind ?? BuildingDesignIds.Barracks,
-                spec?.Id,
-                presentation?.ShortCode ?? kind.ToString(),
-                presentation?.Icon ?? production?.CategoryIcon ?? IconGlyph.Infantry,
-                presentation?.RoleGlyph ?? spec?.Icon ?? IconGlyph.None,
-                presentation?.Accent ?? new Color("#8fffe1"),
-                cost,
-                production?.Duration ?? 0,
-                hasProducer,
-                enoughCredits,
-                metrics.QueuedCount,
-                metrics.ActiveProgress,
-                disabledReason));
+            if (building.PlayerSlotId == playerSlotId
+                && building.Hp > 0
+                && BuildingPresentationProjection(building.Id) is { BuildProgress: >= 1 })
+            {
+                _readyBuildingKinds.Add(building.Kind);
+            }
         }
 
-        _legacyProductionOptionStateBuffer.Sort(CompareLegacyProductionOptionStates);
-        return _legacyProductionOptionStateBuffer;
+        var credits = Credits(playerSlotId);
+        _buildOptionSnapshotBuffer.Clear();
+        foreach (var entry in BuildSpecCatalog.Definitions)
+        {
+            var spec = entry.Value;
+            var hasPrerequisites = HasBuildPrerequisites(spec, _readyBuildingKinds);
+            var canAfford = credits >= spec.Cost;
+            _buildOptionSnapshotBuffer.Add(new BuildOptionSnapshot(
+                spec.Kind,
+                spec.Category,
+                spec.Icon,
+                spec.Cost,
+                spec.BuildTime,
+                spec.Footprint,
+                canAfford,
+                hasPrerequisites,
+                hasPrerequisites
+                    ? canAfford ? "" : "ui.needCredits"
+                    : "build.disabled.prerequisites",
+                spec.PowerProvided,
+                spec.PowerUsed,
+                spec.BuildRadius));
+        }
+
+        _buildOptionSnapshotBuffer.Sort(CompareBuildOptionSnapshots);
+        return _buildOptionSnapshotBuffer;
+    }
+
+    private static bool HasBuildPrerequisites(BuildSpec spec, IReadOnlySet<string> readyBuildingKinds)
+    {
+        foreach (var required in spec.RequiredBuildings)
+        {
+            if (!readyBuildingKinds.Contains(required))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static int CompareBuildOptionSnapshots(BuildOptionSnapshot left, BuildOptionSnapshot right)
+    {
+        var categoryOrder = left.Category.CompareTo(right.Category);
+        return categoryOrder != 0 ? categoryOrder : left.Kind.CompareTo(right.Kind);
     }
 
     public IReadOnlyList<ProductionOptionState> ProductionDesignOptionStates(PlayerSlotId playerSlotId)
@@ -172,14 +190,13 @@ public sealed partial class UnitBattlefield
             }
 
             var metrics = ProductionDesignQueueMetrics(spec);
-            var presentation = UnitPresentationCatalog.ForProductionSpec(ProductionKindFor(spec), spec);
+            var presentation = UnitPresentationCatalog.ForProductionSpec(spec);
             var hasProducer = _productionCandidateProducerIds.Count > 0;
             var enoughCredits = credits >= spec.Stats.Cost;
             var disabledReason = hasProducer
                 ? enoughCredits ? "" : "ui.needCredits"
                 : "ui.producerUnavailable";
             _designProductionOptionStateBuffer.Add(new ProductionOptionState(
-                ProductionKindFor(spec),
                 production.Category,
                 production.ProducerKind,
                 spec.Id,
@@ -311,35 +328,6 @@ public sealed partial class UnitBattlefield
         }
     }
 
-    private (int QueuedCount, float ActiveProgress) ProductionKindQueueMetrics(ProductionKind kind, UnitSpec? spec)
-    {
-        var queued = 0;
-        var progress = 0f;
-        foreach (var buildingId in _productionCandidateProducerIds)
-        {
-            var queue = BuildingProductionQueue(buildingId);
-            for (var index = 0; index < queue.Count; index++)
-            {
-                if (queue[index].Kind == kind)
-                {
-                    queued++;
-                }
-            }
-
-            if (queue.Count == 0
-                || queue[0].Kind != kind
-                || spec?.Production is null)
-            {
-                continue;
-            }
-
-            var duration = UnitDesignCatalog.Spec(queue[0].DesignId).Production!.Duration;
-            progress = Mathf.Max(progress, Mathf.Clamp(queue[0].Progress / duration, 0, 1));
-        }
-
-        return (queued, progress);
-    }
-
     private (int QueuedCount, float ActiveProgress) ProductionDesignQueueMetrics(UnitSpec spec)
     {
         var queued = 0;
@@ -366,12 +354,6 @@ public sealed partial class UnitBattlefield
         return (queued, progress);
     }
 
-    private static int CompareLegacyProductionOptionStates(ProductionOptionState left, ProductionOptionState right)
-    {
-        var categoryOrder = left.Category.CompareTo(right.Category);
-        return categoryOrder != 0 ? categoryOrder : left.Kind.CompareTo(right.Kind);
-    }
-
     private static int CompareDesignProductionOptionStates(ProductionOptionState left, ProductionOptionState right)
     {
         var categoryOrder = left.Category.CompareTo(right.Category);
@@ -380,8 +362,8 @@ public sealed partial class UnitBattlefield
             return categoryOrder;
         }
 
-        var leftSpec = UnitDesignCatalog.Spec(left.UnitDesignId!);
-        var rightSpec = UnitDesignCatalog.Spec(right.UnitDesignId!);
+        var leftSpec = UnitDesignCatalog.Spec(left.UnitDesignId);
+        var rightSpec = UnitDesignCatalog.Spec(right.UnitDesignId);
         var tierOrder = leftSpec.Stats.TechTier.CompareTo(rightSpec.Stats.TechTier);
         if (tierOrder != 0)
         {

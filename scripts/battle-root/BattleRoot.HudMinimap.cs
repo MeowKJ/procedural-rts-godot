@@ -29,77 +29,50 @@ public partial class BattleRoot
         alertPings.Clear();
 
         FillMinimapUnits(units);
-        if (UseUnitDesignRuntime)
-        {
-            FillUnitBattlefieldMinimapBuildings(buildings);
-        }
-        else
-        {
-            FillLegacyMinimapBuildings(buildings);
-        }
+        FillUnitBattlefieldMinimapBuildings(buildings);
 
         FillMinimapResources(resources);
         FillMinimapAlertPings(alertPings);
 
         _hud.SetMinimapState(
-            _state.WorldSize,
+            _worldSize,
             _camera.VisibleWorldRect(),
             units,
             buildings,
             resources,
-            _state.FogOfWar.MaskTexture(),
+            _presentationEnvironment.FogOfWar.MaskTexture(),
             _unitBattlefield.MinimapPips(PlayerSlotId.One),
             alertPings);
     }
 
     private void FillMinimapUnits(List<HudLayer.MinimapUnit> result)
     {
-        foreach (var unit in _state.Units)
+        foreach (var unit in _unitBattlefield.MinimapPips(PlayerSlotId.One))
         {
-            if (unit.Hp <= 0 || !_state.IsVisibleToPlayer(unit))
+            if (unit.Relation == PlayerRelation.Hostile && !unit.IsVisible)
             {
                 continue;
             }
 
             result.Add(new HudLayer.MinimapUnit(
                 unit.Position,
-                unit.Owner,
-                unit.FactionId,
+                OwnerForPlayerSlot(unit.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
+                ToFactionId(unit.Faction),
                 unit.Selected,
                 unit.AlertPulse));
         }
     }
 
-    private void FillLegacyMinimapBuildings(List<HudLayer.MinimapBuilding> result)
-    {
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Hp <= 0 || !_state.IsExploredByPlayer(building))
-            {
-                continue;
-            }
-
-            var spec = BuildSpecCatalog.For(building.Kind);
-            result.Add(new HudLayer.MinimapBuilding(
-                building.Position,
-                spec.Footprint,
-                building.Owner,
-                building.FactionId,
-                building.Selected,
-                Mathf.Max(building.HitPulse, building.DeliveryPulse * 0.45f)));
-        }
-    }
-
     private void FillUnitBattlefieldMinimapBuildings(List<HudLayer.MinimapBuilding> result)
     {
-        var projections = _unitBattlefield.BuildingMinimapProjections(PlayerSlotId.One, rect => _state.FogOfWar.AnyExplored(rect));
+        var projections = _unitBattlefield.BuildingMinimapProjections(PlayerSlotId.One, _presentationEnvironment.FogOfWar.AnyExplored);
         foreach (var building in projections)
         {
             result.Add(new HudLayer.MinimapBuilding(
                 building.Position,
                 building.Footprint,
                 OwnerForPlayerSlot(building.PlayerSlotId) ?? ProceduralRts.Core.Owner.Enemy,
-                ToLegacyFaction(building.Faction),
+                ToFactionId(building.Faction),
                 building.Selected,
                 building.AlertPulse));
         }
@@ -107,7 +80,7 @@ public partial class BattleRoot
 
     private void FillMinimapResources(List<HudLayer.MinimapResource> result)
     {
-        var pips = _unitBattlefield.ResourcePips(_state.IsExploredByPlayer);
+        var pips = _unitBattlefield.ResourcePips(_presentationEnvironment.IsExplored);
         foreach (var resource in pips)
         {
             result.Add(new HudLayer.MinimapResource(

@@ -43,7 +43,7 @@ static class TypedMapAuthoringReviewGate
             var source = ReviewGateSource.Read(root, "addons", "map_authoring", "nodes", file);
             RequireText(source, "[Tool]", $"{file} must remain editor-aware.", result);
             RequireText(source, ": Node2D", $"{file} must remain a typed Node2D script.", result);
-            ForbidText(source, "metadata/map_kind", "Typed nodes must not use legacy metadata fallback.", result);
+            ForbidText(source, "metadata/map_kind", "Typed nodes must not use metadata fallback.", result);
             ForbidText(source, "GlobalClass", "Typed nodes must have one plugin registration authority.", result);
         }
         foreach (var file in SemanticIdNodeFiles)
@@ -70,12 +70,12 @@ static class TypedMapAuthoringReviewGate
             RequireText(project, runtimeSetting, $"Plugin enablement must preserve runtime setting {runtimeSetting}.", result);
         }
         var plugin = ReviewGateSource.Read(root, "addons", "map_authoring", "editor", "MapAuthoringPlugin.cs");
-        RequireText(plugin, "MapAuthoringTypeRegistry.ValidateAliases", "Plugin must validate aliases before mutating registration state.", result);
-        var validationIndex = plugin.IndexOf("MapAuthoringTypeRegistry.ValidateAliases", StringComparison.Ordinal);
+        RequireText(plugin, "MapAuthoringTypeRegistry.ValidateTypeNames", "Plugin must validate custom type names before mutating registration state.", result);
+        var validationIndex = plugin.IndexOf("MapAuthoringTypeRegistry.ValidateTypeNames", StringComparison.Ordinal);
         var beginIndex = plugin.IndexOf("MapAuthoringRegistrationState.Begin", StringComparison.Ordinal);
         if (validationIndex < 0 || beginIndex < 0 || validationIndex > beginIndex)
         {
-            result.Error("Map Authoring native-alias validation must run before registration begins.");
+            result.Error("Map Authoring native type-name validation must run before registration begins.");
         }
         RequireText(plugin, "AddCustomType", "Plugin must register typed nodes.", result);
         RequireText(plugin, "RemoveCustomType", "Plugin must remove typed nodes.", result);
@@ -88,7 +88,7 @@ static class TypedMapAuthoringReviewGate
             RequireText(registry, $"Type(\"{type}\"", $"Plugin registry must include {type}.", result);
         }
         RequireText(registry, "Type(\"ResourceField\", \"Resource\")", "ResourceField must intentionally map to typed Resource.cs without colliding with Godot.Resource.", result);
-        ForbidText(registry, "Type(\"Resource\", \"Resource\")", "Custom type alias must not collide with native Godot.Resource.", result);
+        ForbidText(registry, "Type(\"Resource\", \"Resource\")", "Custom type name must not collide with native Godot.Resource.", result);
         RequireText(registry, "nativeClassExists(descriptor.Name)", "Registry validation must reject native class collisions deterministically.", result);
     }
 
@@ -98,8 +98,8 @@ static class TypedMapAuthoringReviewGate
         RequireText(baker, "IMapSpecSceneProjector projector", "Formal baker must accept typed projection without editor coupling.", result);
         var projector = ReviewGateSource.Read(root, "addons", "map_authoring", "projection", "TypedMapSceneProjector.cs");
         RequireText(projector, "MapSceneProjection.SceneOrder", "Typed projection must preserve shared scene preorder.", result);
-        RequireText(projector, "must not use metadata/map_kind fallback", "Typed projection must reject legacy metadata fallback.", result);
-        RequireText(projector, "RejectLegacyMetadata(mapRoot)", "Typed projection must reject metadata on its root before traversal.", result);
+        RequireText(projector, "must not use metadata/map_kind fallback", "Typed projection must reject metadata fallback.", result);
+        RequireText(projector, "RejectUnsupportedMetadata(mapRoot)", "Typed projection must reject metadata on its root before traversal.", result);
         RequireText(projector, "MapRoot", "Typed projection must require typed MapRoot.", result);
         var inspector = ReviewGateSource.Read(root, "addons", "map_authoring", "editor", "MapAuthoringInspectorPlugin.cs");
         RequireText(inspector, "MapCatalogOptionProperty", "Inspector must persist stable catalog strings.", result);
@@ -129,7 +129,7 @@ static class TypedMapAuthoringReviewGate
         RequireText(entityProjection, "TypedMapTransformValidation.Entity", "Entity projection must reject unsupported effective scale/skew/reflection.", result);
         RequireText(entityProjection, "RequirePersisted(node.Rotation)", "Building projection must reject modulo-equivalent persisted rotations before transform normalization.", result);
         RequireText(entityProjection, "RequireRootLocal(transform.Rotation)", "Building projection must validate final root-local cardinal rotation.", result);
-        RequireText(entityProjection, "node.HasLegacyId ? node.LegacyId : null", "Building legacy id must use explicit presence semantics.", result);
+        RequireText(entityProjection, "node.HasRuntimeId ? node.RuntimeId : null", "Building runtime id must use explicit presence semantics.", result);
     }
 
     private static void CheckEvidence(string root, GateResult result)
@@ -149,7 +149,7 @@ static class TypedMapAuthoringReviewGate
         RequireText(smokeDriver, "ReloadSceneFromPath(AcceptanceScenePath)", "Plugin smoke must prove the editor fixture can reopen.", result);
         RequireText(smokeDriver, "unknown.visual-sentinel.building", "Plugin smoke must use a visible stable unknown-catalog sentinel.", result);
         RequireText(smokeDriver, "ReloadSceneFromPath(UnknownScenePath)", "Plugin smoke must prove unknown catalog strings survive editor reload.", result);
-        RequireText(smokeDriver, "ValidateAliasRejectionIsSideEffectFree", "Plugin smoke must prove rejected aliases do not mutate registration state.", result);
+        RequireText(smokeDriver, "ValidateTypeNameRejectionIsSideEffectFree", "Plugin smoke must prove rejected custom type names do not mutate registration state.", result);
         if (smokeDriver.Split("MapAuthoringCreateDialogSmoke.Run", StringSplitOptions.None).Length - 1 < 2)
         {
             result.Error("Non-headless plugin smoke must validate Create Dialog before and after plugin re-enable.");

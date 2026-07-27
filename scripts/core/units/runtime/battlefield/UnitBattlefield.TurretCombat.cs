@@ -9,7 +9,7 @@ public sealed partial class UnitBattlefield
         foreach (var buildingId in _buildingTargetIdSecondaryBuffer)
         {
             if (BuildingIdentity(buildingId) is { } identity
-                && BuildSpecCatalog.For(identity.Kind).WeaponKind is not null)
+                && BuildSpecCatalog.For(identity.Kind).WeaponId is not null)
             {
                 hasWeaponBuilding = true;
                 break;
@@ -24,7 +24,7 @@ public sealed partial class UnitBattlefield
         SyncBuildingTargetEntities();
         SyncUnitEntities();
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
-        StepCombatBridge(context, _turretCombatSystem);
+        StepCombatSystem(context, _turretCombatSystem);
     }
 
     private void ApplyTurretCombatEvents(IReadOnlyList<SimEvent> events)
@@ -59,8 +59,8 @@ public sealed partial class UnitBattlefield
             }
 
             target.LastDamageAmount = damaged.Damage;
-            target.LastDamageAmmoKind = BuildSpecCatalog.For(attackerSnapshot.Kind).WeaponKind is { } weaponKind
-                ? WeaponCatalog.Weapons[weaponKind].AmmoKind
+            target.LastDamageAmmoId = BuildSpecCatalog.For(attackerSnapshot.Kind).WeaponId is { } weaponId
+                ? WeaponCatalog.WeaponDefinitions[weaponId].AmmoId
                 : null;
             target.DeathOverkillDamage = MathF.Max(0, -target.Hp);
             target.HitPulse = 1;

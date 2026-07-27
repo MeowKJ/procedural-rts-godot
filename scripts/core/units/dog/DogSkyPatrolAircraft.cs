@@ -18,7 +18,7 @@ public sealed class DogSkyPatrolAircraft : UnitDesign
     public override CollisionSpec Collision => new(18, 0.55f, 1, BlocksMovement: false);
     public override IReadOnlyList<WeaponMountSpec> Weapons =>
     [
-        WeaponMountSpec.BodyFixed("main", WeaponKind.SkySpear, Vector2.Zero, new Vector2(25, 0), 0.74f, true),
+        WeaponMountSpec.BodyFixed("main", WeaponIds.SkySpear, Vector2.Zero, new Vector2(25, 0), 0.74f, true),
     ];
 
     public override ProductionSpec Production => new(BuildingDesignIds.Airfield, ProductionCategory.Air, 9.2f, 0, "production.lane.air", IconGlyph.Air);

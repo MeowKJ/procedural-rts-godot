@@ -7,7 +7,7 @@ public partial class CombatEffectsLayer : Node2D
 {
     private void DrawHitPulses()
     {
-        foreach (var unit in State.Units)
+        foreach (var unit in UnitBattlefield.Units)
         {
             if (unit.HitPulse <= 0)
             {
@@ -33,48 +33,17 @@ public partial class CombatEffectsLayer : Node2D
             DrawHitPunch(unit.Position, style.Radius, style.Accent, unit.HitPulse, unit.LastDamageAmount, readability);
         }
 
-        if (UnitBattlefield is not null && UnitBattlefield.LiveBuildingCount() > 0)
-        {
-            DrawUnitBattlefieldBuildingHitPulses();
-            return;
-        }
-
-        foreach (var building in State.Buildings)
-        {
-            if (building.HitPulse <= 0)
-            {
-                continue;
-            }
-
-            var spec = BuildSpecCatalog.For(building.Kind);
-            var accent = State.VisualAccent(building.Owner, building.FactionId, spec.Accent);
-            var radius = Mathf.Max(spec.Footprint.X, spec.Footprint.Y) * 0.5f + 12 + (1 - building.HitPulse) * 30;
-            if (!IsVisible(building.Position, radius))
-            {
-                continue;
-            }
-
-            var readability = ReadabilityFor(building.Position);
-            if (!readability.Draw)
-            {
-                continue;
-            }
-
-            DrawArc(building.Position, radius, 0, Mathf.Tau, LargeEffectArcSegments, Readable(accent, building.HitPulse * 0.75f, readability), ReadableWidth(4, readability), true);
-            DrawCircle(building.Position, radius * 0.72f, Readable(new Color("#ffffff"), building.HitPulse * 0.08f, readability));
-            DrawHitPunch(building.Position, radius * 0.48f, accent, building.HitPulse, 0, readability);
-        }
+        DrawUnitBattlefieldBuildingHitPulses();
     }
 
-    private (float Radius, Color Accent) UnitEffectStyleFor(UnitModel unit)
+    private (float Radius, Color Accent) UnitEffectStyleFor(UnitInstance unit)
     {
-        var descriptor = unit.RuntimeDescriptor;
-        return (descriptor.Radius, State.VisualAccent(unit.Owner, unit.FactionId, descriptor.Accent));
+        return (unit.Spec.Collision.Radius, UnitFactionAccent(unit.Spec.Faction, unit.PlayerSlotId));
     }
 
     private void DrawUnitBattlefieldBuildingHitPulses()
     {
-        foreach (var building in UnitBattlefield!.BuildingHitPulseProjections())
+        foreach (var building in UnitBattlefield.BuildingHitPulseProjections())
         {
             var radius = building.Radius + 12 + (1 - building.HitPulse) * 30;
             if (!IsVisible(building.Position, radius))
@@ -92,6 +61,24 @@ public partial class CombatEffectsLayer : Node2D
             DrawCircle(building.Position, radius * 0.72f, Readable(new Color("#ffffff"), building.HitPulse * 0.08f, readability));
             DrawHitPunch(building.Position, radius * 0.48f, building.Accent, building.HitPulse, 0, readability);
         }
+    }
+
+    private static Color UnitFactionAccent(UnitFactionId faction, PlayerSlotId playerSlotId)
+    {
+        var factionAccent = faction switch
+        {
+            UnitFactionId.Dog => new Color("#64c7c7"),
+            UnitFactionId.Cat => new Color("#c98293"),
+            UnitFactionId.Corruption => new Color("#9d4259"),
+            _ => new Color("#d7b66a"),
+        };
+        var playerAccent = playerSlotId.Value switch
+        {
+            1 => new Color("#68a6c8"),
+            2 => new Color("#c86c68"),
+            _ => new Color("#b7ad9c"),
+        };
+        return factionAccent.Lerp(playerAccent, 0.36f);
     }
 
     private void DrawHitPunch(Vector2 position, float radius, Color accent, float pulse, float damage, CombatReadabilityStyle readability)

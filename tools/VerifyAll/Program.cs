@@ -57,7 +57,6 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("project-blueprint", "dotnet", "run --project tools/ProjectBlueprint/ProjectBlueprint.csproj --no-restore -- --self-test"),
         Dotnet("sim-replay", "dotnet", "run --project tools/SimReplay/SimReplay.csproj --no-restore"),
         Dotnet("combat-behavior", "dotnet", "run --project tools/CombatBehavior/CombatBehavior.csproj --no-restore"),
-        Dotnet("simulation-smoke", "dotnet", "run --project tools/SimulationSmoke/SimulationSmoke.csproj --no-restore"),
         Dotnet("fog-qa", "dotnet", "run --project tools/FogOfWarQa/FogOfWarQa.csproj --no-restore"),
         Dotnet("selection-stress", "dotnet", "run --project tools/SelectionStress/SelectionStress.csproj --no-restore"),
         Dotnet("ai-difficulty-smoke", "dotnet", "run --project tools/AiDifficultySmoke/AiDifficultySmoke.csproj --no-restore"),

@@ -1,38 +1,31 @@
 # Entity Framework Architecture
 
-目标：把当前项目从“新单位系统 + 旧建筑/生产系统并存”升级为一个长期可扩展的 RTS 实体框架。
+目标：以一个长期可扩展的 RTS 实体框架承载单位、建筑、资源、命令、战斗和胜负状态。
 
-这个文档是给后续 AI 和人工开发看的架构锁定稿。它不要求一次推倒重写，但要求后续功能都朝这个方向收敛。
+这个文档是给后续 AI 和人工开发看的架构锁定稿。运行时迁移已经完成；后续功能不得重新引入并行权威状态。
 
 ## 当前代码状态
 
-现在项目已经有一条新单位链路：
+live gameplay 只有一条状态链：
 
 ```text
-UnitDesign -> UnitSpec -> UnitInstance -> UnitBattlefield -> UnitInstanceView
+MapSpec -> MapLoader.Load -> EntityWorld
+PlayerCommand -> CommandGateway -> EntityCommandBuffer -> systems
+EntityWorld -> projections/events -> BattleRoot/views/HUD
 ```
 
-这条链路已经承载了单位生成、移动、战斗、生产映射、采矿、选择、迷你地图、沙盒展示等很多内容。
+`UnitBattlefield` 持有唯一 `EntityWorld` 和固定模拟时钟，负责命令应用、系统推进和只读查询。普通遭遇战与 authored map 使用相同加载入口。
 
-但建筑和旧数据仍然分散在另一套系统里：
+`BattleRoot` 只负责编排 Godot 节点和表现消费；`WorldPresentationEnvironment` 只管理雾、主题和信号节点，不保存单位、建筑、资源、命令或胜负状态。
 
 ```text
-GameState
-UnitKind / UnitModel / UnitView
-BuildingKind / BuildingModel / BuildingView
-BuildingDefinition
-BuildDefinition / BuildCatalog
-UnitBattlefieldBuildingTarget
+UnitDesign / BuildingDesign / MapSpec
+                |
+                v
+EntitySpec -> EntityInstance + component state -> systems
 ```
 
-风险是继续做下去会形成两个中心：
-
-```text
-UnitInstance 很重
-UnitBattlefieldBuildingTarget 也越来越重
-```
-
-最终会变成“单位 God Object”和“建筑 God Object”。现在正是把共同实体语言定下来的时间。
+单位和建筑仍可有表现投影或 UI descriptor，但这些对象不是模拟权威，也不能回写 world。
 
 ## 最终模型
 
@@ -354,9 +347,9 @@ WarningFixed
 
 `Owner` 层必须在白天、雾、夜晚、腐化、隐身、受损状态下保持可读。
 
-## 迁移顺序
+## 已完成的迁移
 
-第一步：只加骨架，不删旧系统。
+实体骨架和固定 tick 管线已经成为 live authority：
 
 ```text
 EntityKind
@@ -369,7 +362,7 @@ EntityWorld
 EntityCommand
 ```
 
-当前第一步已经有代码骨架：
+核心代码入口：
 
 ```text
 scripts/core/entities/EntityKind.cs
@@ -384,25 +377,16 @@ scripts/core/entities/EntityCommandBuffer.cs
 scripts/core/entities/EntityStateHash.cs
 scripts/core/entities/UnitSpecEntityBridge.cs
 scripts/core/entities/BuildingTargetEntityBridge.cs
+scripts/core/units/runtime/UnitBattlefield.cs
+scripts/core/units/runtime/battlefield/UnitBattlefield.MapLoading.cs
+scripts/core/presentation/WorldPresentationEnvironment.cs
 ```
 
-`tools/CombatBehavior` 已覆盖第一批验证：`UnitSpec -> EntitySpec` 转换、实体生成、组件状态、命令缓冲、稳定顺序、state hash、OwnerColor 环境保护入口。
+`tools/SimReplay`、`PlayerLoopQa`、`CombatBehavior`、地图 handoff QA、Fog QA、SelectionStress 和 ReviewGate 覆盖 spec 转换、地图采用、命令缓冲、稳定顺序、state hash、单位/建筑/资源生命周期以及表现边界。
 
-建筑桥接也已经有第一版：`UnitBattlefieldBuildingTarget` 可以转换为 `EntitySpec` / `EntityInstance`，覆盖生命、占地、建造进度、电力、集结点、生产队列、精炼厂 dock、建筑武器、Turret 分类和 deterministic hash。注意：这只是迁移桥，旧 `UnitBattlefieldBuildingTarget` 还没有被删除。
+已删除并禁止恢复：并行 runtime authority、旧单位/建筑模型、旧敌方 AI 实现，以及只验证这些路径的测试和 ReviewGate。新代码不得增加 shadow world、双向状态同步或表现层模拟回写。
 
-第二步：让现有 `UnitSpec` 能转换或映射到 `EntitySpec`。
-
-第三步：把 `UnitInstance` 里的重字段拆成组件状态，但可以暂时保留兼容访问器。
-
-第四步：把 `UnitBattlefieldBuildingTarget` 迁成真正的实体组件组合。
-
-第五步：合并 `BuildingDefinition` 和 `BuildDefinition`。
-
-第六步：生产、建造、炮塔、资源、目标全部走 Entity。
-
-第七步：确认新实体路径接管玩法后，再删旧 `UnitKind` / `BuildingKind` / `GameState.Definitions` 等旧入口。
-
-## 最小验证切片
+## 持续验证切片
 
 先证明这几个实体能工作：
 
@@ -486,5 +470,3 @@ command = view.Submit(EntityCommand)              // 只写命令
 经由 `UnitSpecEntityBridge.SpawnUnit` 把 `UnitDesign -> UnitSpec -> EntitySpec + 组件`，
 然后完全由通用 `CombatSystem`/`MovementSystem` 驱动战斗到死亡——**没有任何单位专用代码**。
 两遍重放 state hash 一致。这正是 99 分里"新增单位主要新增 spec"的可执行证据。
-
-## 最小验证切片

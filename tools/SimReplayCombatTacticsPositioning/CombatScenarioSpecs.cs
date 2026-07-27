@@ -12,7 +12,7 @@ static partial class Program
             Collision = new CollisionSpec(Radius: 14, Mass: 1, PushPriority: 1),
             Weapons = new[]
             {
-                WeaponMountSpec.Independent("main", WeaponKind.NeedleRifle, Vector2.Zero, new Vector2(14, 0), MathF.Tau, 8, fireWhileMoving: true),
+                WeaponMountSpec.Independent("main", WeaponIds.NeedleRifle, Vector2.Zero, new Vector2(14, 0), MathF.Tau, 8, fireWhileMoving: true),
             },
         };
     }
@@ -28,7 +28,7 @@ static partial class Program
             new StanceComponentState(UnitStance.Aggressive),
             new WeaponUserComponentState(new[]
             {
-                new WeaponMountRuntimeState("main", WeaponKind.NeedleRifle, 0, 0),
+                new WeaponMountRuntimeState("main", WeaponIds.NeedleRifle, 0, 0),
             }),
         });
     }

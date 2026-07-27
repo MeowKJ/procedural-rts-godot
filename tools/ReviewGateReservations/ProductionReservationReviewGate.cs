@@ -12,14 +12,6 @@ static class ProductionReservationReviewGate
         RequireText(spawning, "PlacementReservationKind.ProductionEgress", "ECS production must consume its egress reservation.", result);
         RequireText(spawning, "ProductionSpawnMath.IsSpawnPointAvailable(", "ECS production must test the fixed egress.", result);
         ForbidText(spawning, "RemoveFirstQueueItem", "The spawn helper must not dequeue blocked production.", result);
-        var legacy = ReviewGateSource.Read(root, "scripts", "core", "game-state", "GameState.ProductionHarvest.cs");
-        RequireText(legacy, "PlacementReservationMath.TryCenter(", "Legacy production must use reservation metadata.", result);
-        RequireText(legacy, "PlacementReservationKind.ProductionEgress", "Legacy production must consume its egress reservation.", result);
-        RequireText(legacy, "ProductionSpawnMath.IsSpawnPointAvailable(", "Legacy production must test the fixed egress.", result);
-        RequireText(
-            legacy,
-            "if (!TryProducedUnitSpawnPoint(building, item.DesignId, out var spawn))\n            {\n                continue;\n            }\n\n            building.ProductionQueue.RemoveAt(0);",
-            "Legacy production must retain a completed item until fixed-egress spawn succeeds.", result);
         var spawnMath = ReviewGateSource.Read(root, "scripts", "core", "production", "ProductionSpawnMath.cs");
         RequireText(spawnMath, "IsSpawnPointAvailable(", "Spawn math must test only the fixed egress.", result);
         ForbidText(spawnMath, "DirectionOffsets", "Spawn math must not search alternate directions.", result);

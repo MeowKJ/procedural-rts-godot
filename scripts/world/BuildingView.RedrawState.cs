@@ -8,42 +8,37 @@ public partial class BuildingView : Node2D
 {
     private BuildingRedrawSignature CaptureRedrawSignature()
     {
-        var kind = _viewProjection?.Kind ?? Building.Kind;
+        var viewProjection = _viewProjection!.Value;
+        var buildingProjection = _buildingProjection!.Value;
+        var projection = _projection!.Value;
+        var kind = viewProjection.Kind;
         var spec = BuildSpecCatalog.For(kind);
-        var footprint = _buildingProjection?.Footprint ?? spec.Footprint;
-        var position = _projection?.Position ?? Building.Position;
+        var footprint = buildingProjection.Footprint;
+        var position = projection.Position;
         var worldRect = new Rect2(position - footprint / 2f, footprint);
-        var explored = _buildingProjection is { } buildingProjection
-            ? IsProjectedBuildingExplored(buildingProjection.Entity.Owner, worldRect)
-            : IsLegacyBuildingExplored(worldRect);
-        var playerSlot = _viewProjection?.PlayerSlotId.Value ?? PlayerSlotForOwner(Building.Owner).Value;
-        var owner = _viewProjection is { } viewProjection
-            ? OwnerForPlayerSlot(viewProjection.PlayerSlotId)
-            : Building.Owner;
-        var faction = _viewProjection is { } identityProjection
-            ? LegacyFaction(identityProjection.Faction)
-            : Building.FactionId;
+        var explored = IsProjectedBuildingExplored(projection.Owner, worldRect);
+        var playerSlot = viewProjection.PlayerSlotId.Value;
+        var owner = OwnerForPlayerSlot(viewProjection.PlayerSlotId);
+        var faction = ToFactionId(viewProjection.Faction);
         var viewerFactionKey = ViewerFaction is { } viewerFaction ? (int)viewerFaction : -1;
-        var selected = _projection?.Selected ?? Building.Selected;
-        var powered = _buildingProjection?.Powered ?? Building.Powered;
-        var buildProgress = _buildingProjection?.BuildProgress ?? Building.BuildProgress;
+        var selected = projection.Selected;
+        var powered = buildingProjection.Powered;
+        var buildProgress = buildingProjection.BuildProgress;
         var constructionPaused = _buildingProjection?.IsConstructionPaused ?? false;
         var pauseReason = _buildingProjection?.PauseReason ?? ConstructionPauseReason.None;
-        var hp = _projection?.Hp ?? Building.Hp;
-        var maxHp = _projection?.MaxHp ?? spec.MaxHp;
+        var hp = projection.Hp;
+        var maxHp = projection.MaxHp;
         var healthFraction = maxHp <= 0 ? 0 : Mathf.Clamp(hp / maxHp, 0, 1);
-        var damageSeverity = _buildingProjection?.DamageSeverity
-            ?? BuildingPresentationProjection.DamageSeverityFor(healthFraction, hp > 0);
-        var missingHealthFraction = _buildingProjection?.MissingHealthFraction ?? (1f - healthFraction);
-        var rallyPulse = _buildingProjection?.RallyPulse ?? Building.RallyPulse;
-        var hasRallyPoint = (_buildingProjection?.RallyPoint ?? Building.RallyPoint) is not null;
-        var deliveryPulse = _buildingProjection?.DeliveryPulse ?? Building.DeliveryPulse;
-        var dockOccupied = _buildingProjection?.DockOccupied
-            ?? (Building.DockReservedByHarvesterId is not null || Building.DockedHarvesterId is not null);
-        var bodyFacing = _projection?.Facing ?? Building.Facing;
-        var turretRelativeFacing = Mathf.AngleDifference(bodyFacing, Building.TurretFacing);
+        var damageSeverity = buildingProjection.DamageSeverity;
+        var missingHealthFraction = buildingProjection.MissingHealthFraction;
+        var rallyPulse = buildingProjection.RallyPulse;
+        var hasRallyPoint = buildingProjection.RallyPoint is not null;
+        var deliveryPulse = buildingProjection.DeliveryPulse;
+        var dockOccupied = buildingProjection.DockOccupied;
+        var bodyFacing = projection.Facing;
+        var turretRelativeFacing = Mathf.AngleDifference(bodyFacing, buildingProjection.TurretFacing);
         var theme = VisualThemeProvider?.Invoke();
-        CaptureProductionSignature(out var queueCount, out var firstProductionKind, out var firstProductionProgress);
+        CaptureProductionSignature(out var queueCount, out var firstProductionDesignId, out var firstProductionProgress);
 
         return new BuildingRedrawSignature(
             kind,
@@ -63,7 +58,7 @@ public partial class BuildingView : Node2D
             (int)damageSeverity,
             Quantize(missingHealthFraction, 1000),
             queueCount,
-            firstProductionKind,
+            firstProductionDesignId,
             Quantize(firstProductionProgress, 1000),
             hasRallyPoint,
             Quantize(rallyPulse, 1000),
@@ -77,31 +72,19 @@ public partial class BuildingView : Node2D
             explored);
     }
 
-    private void CaptureProductionSignature(out int queueCount, out int firstKind, out float firstProgress)
+    private void CaptureProductionSignature(out int queueCount, out string firstDesignId, out float firstProgress)
     {
-        var projectedQueue = _buildingProjection?.ProductionQueue;
-        queueCount = projectedQueue?.Count ?? Building.ProductionQueue.Count;
+        var projectedQueue = _buildingProjection!.Value.ProductionQueue;
+        queueCount = projectedQueue.Count;
         if (queueCount == 0)
         {
-            firstKind = -1;
+            firstDesignId = "";
             firstProgress = 0;
             return;
         }
 
-        if (projectedQueue is not null)
-        {
-            firstKind = (int)projectedQueue[0].Kind;
-            firstProgress = projectedQueue[0].Progress;
-            return;
-        }
-
-        firstKind = (int)Building.ProductionQueue[0].Kind;
-        firstProgress = Building.ProductionQueue[0].Progress;
-    }
-
-    private static PlayerSlotId PlayerSlotForOwner(CoreOwner owner)
-    {
-        return owner == CoreOwner.Player ? PlayerSlotId.One : PlayerSlotId.Two;
+        firstDesignId = projectedQueue[0].DesignId;
+        firstProgress = projectedQueue[0].Progress;
     }
 
     private static int Quantize(float value, float scale)
@@ -127,7 +110,7 @@ public partial class BuildingView : Node2D
         int DamageSeverity,
         int MissingHealthFraction,
         int ProductionQueueCount,
-        int FirstProductionKind,
+        string FirstProductionDesignId,
         int FirstProductionProgress,
         bool HasRallyPoint,
         int RallyPulse,

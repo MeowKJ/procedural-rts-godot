@@ -64,8 +64,8 @@ public sealed partial class UnitBattlefield
         foreach (var entity in _entityWorld.OrderedEntities)
         {
             if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                || !_removedBuildingIdBuffer.Add(identity.LegacyBuildingId)
-                || BuildingSnapshot(identity.LegacyBuildingId) is not { Hp: <= 0 } snapshot)
+                || !_removedBuildingIdBuffer.Add(identity.BuildingId)
+                || BuildingSnapshot(identity.BuildingId) is not { Hp: <= 0 } snapshot)
             {
                 continue;
             }
@@ -137,7 +137,7 @@ public sealed partial class UnitBattlefield
                 unit.Spec.Collision.Radius,
                 unit.Spec.Stats.WeightClass,
                 unit.Spec.Movement.Domain,
-                unit.LastDamageAmmoKind,
+                unit.LastDamageAmmoId,
                 unit.DeathOverkillDamage));
             _removedUnitIdBuffer.Add(unit.Id);
         }

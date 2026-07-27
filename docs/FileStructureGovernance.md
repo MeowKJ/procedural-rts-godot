@@ -26,7 +26,7 @@ Every large subsystem must keep a stable entrypoint file:
 
 - `CombatSystem.cs`
 - `UnitBattlefield.cs`
-- `GameState.cs`
+- `EntityWorld.cs`
 - `BattleRoot.cs`
 - `HudLayer.cs`
 - `tools/ReviewGate/Program.cs`
@@ -44,8 +44,8 @@ Good first-stage examples:
 - `UnitBattlefield.Units.cs`
 - `UnitBattlefield.Buildings.cs`
 - `UnitBattlefield.Production.cs`
-- `UnitBattlefield.CombatBridge.cs`
-- `UnitBattlefield.LegacySync.cs`
+- `UnitBattlefield.CombatSystems.cs`
+- `UnitBattlefield.RuntimeSync.cs`
 
 Move code first. Do not change semantics in the same slice. After build and
 replay gates pass, a later slice may convert partial files into composed helper
@@ -78,8 +78,7 @@ Allowed suffixes:
 - `*Queries.cs`
 - `*Math.cs`
 - `*Projection.cs`
-- `*Bridge.cs`
-- `*LegacySync.cs`
+- `*Routing.cs`
 - `*State.cs`
 - `*ComponentState.cs`
 - `*Spec.cs`
@@ -95,14 +94,12 @@ Forbidden vague names:
 - `Common.cs`
 - `Manager.cs` unless it truly owns lifecycle management.
 
-## Bridge And Legacy Rules
+## Final Responsibility Names
 
-Any file containing `Bridge`, `Legacy`, or `Compatibility` in its name must have
-a deletion condition in a GitHub issue or governance document.
-
-Bridge files should trend downward. Adding a new bridge requires explicit
-justification. ReviewGate should fail when bridge/legacy/compatibility file
-count rises above the registered baseline.
+Source files must describe their final responsibility. Migration-only wrappers,
+secondary identity paths, and duplicate runtime authorities are forbidden.
+Conversion code uses `*Factory.cs` or `*Projection.cs`; command dispatch uses
+`*Routing.cs`; simulation behavior uses `*System.cs`.
 
 ## Directory Governance
 
@@ -134,14 +131,13 @@ Do not add one-off gates for every small issue slice. Prefer a small set of gene
 discipline gates:
 
 - `ArchitectureGate`: layer boundaries and authority rules.
-- `FileStructureGate`: size, names, directories, bridge counts.
+- `FileStructureGate`: size, names, and directory boundaries.
 - `RegressionGate`: replay, combat behavior, perf smoke, and VerifyAll grouping.
 
 ReviewGate itself must follow this governance. `Program.cs` should become an
 entrypoint and registry, not a growing archive of every historical rule.
 `tools/ReviewGate` has an additional total C# source budget of 2000 lines. Keep
-historical narrow mode names as compatibility aliases, but route them to broad
-domain gates instead of adding one C# check per issue slice.
+only current broad domain modes instead of adding one C# check per issue slice.
 `ReviewGate filesize` must enforce validation-system source budgets directly so
 size evidence cannot drift from the actual source tree.
 `tools/ReviewGate` build output must live outside that source directory, currently
