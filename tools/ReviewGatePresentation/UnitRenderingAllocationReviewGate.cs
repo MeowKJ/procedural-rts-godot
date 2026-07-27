@@ -6,7 +6,6 @@ static class UnitRenderingAllocationReviewGate
         var facingSource = ReviewGateSource.Read(root, "scripts", "core", "presentation", "rendering", "UnitMountFacingSource.cs");
         var bodyBatch = ReviewGateSource.Read(root, "scripts", "world", "UnitBodyBatchLayer.cs");
         var runtimeView = ReviewGateSource.Read(root, "scripts", "world", "UnitInstanceView.cs");
-        var legacyView = ReviewGateSource.Read(root, "scripts", "world", "UnitView.cs");
         var unitPresentation = ReviewGateSource.Read(root, "scripts", "core", "sim", "UnitPresentationProjection.cs");
         var dynamicIcon = ReviewGateSource.Read(root, "scripts", "ui", "DynamicUnitIcon.cs");
         var unitInstance = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitInstance.cs");
@@ -34,7 +33,6 @@ static class UnitRenderingAllocationReviewGate
         RequireText(runtimeView, "UnitMountFacingSource.FromRuntimeMounts(presentation.Mounts)", "UnitInstanceView must draw mounts from the projection.", result);
         RequireText(runtimeView, "public bool DrawBodyArt { get; init; } = true", "UnitInstanceView must keep a fallback body-art switch for non-batched callers.", result);
         RequireText(runtimeView, "if (DrawBodyArt)", "UnitInstanceView body drawing must be gated so runtime overlays can avoid duplicate body draws.", result);
-        RequireText(legacyView, "UnitMountFacingSource.FromLegacyUnit(style.Spec, Unit.Facing, Unit.TurretFacing)", "Legacy UnitView must draw from a mount-facing source.", result);
         RequireText(dynamicIcon, "UnitMountFacingSource.Single(\"main\", turretFacing)", "DynamicUnitIcon must not allocate a mount-facing dictionary.", result);
         RequireText(unitBattlefield, "event Action<WeaponFiredEvent>? WeaponFired", "UnitBattlefield must expose WeaponFiredEvent data for presentation-only muzzle flashes.", result);
         RequireText(battleRoot, "_unitBattlefield.WeaponFired += OnWeaponFired", "BattleRoot must subscribe to runtime WeaponFiredEvent presentation data.", result);

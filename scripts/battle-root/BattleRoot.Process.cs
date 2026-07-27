@@ -74,30 +74,15 @@ public partial class BattleRoot
 
         foreach (var (id, view) in _buildingViews)
         {
-            var projection = UseUnitDesignRuntime
-                ? _unitBattlefield.BuildingPresentationProjection(id)
-                : null;
-            var shouldShow = projection is { } liveBuilding
-                ? liveBuilding.Entity.IsAlive && visibleRect.Intersects(BuildingProjectionWorldRect(liveBuilding))
-                : view.Building.Hp > 0 && visibleRect.Intersects(BuildingWorldRect(view.Building));
+            var projection = _unitBattlefield.BuildingPresentationProjection(id);
+            var shouldShow = projection is { } liveProjection
+                && liveProjection.Entity.IsAlive
+                && visibleRect.Intersects(BuildingProjectionWorldRect(liveProjection));
             if (shouldShow)
             {
-                view.Position = projection?.Entity.Position ?? view.Building.Position;
-                view.Rotation = projection?.Entity.Facing ?? view.Building.Facing;
-            }
-
-            SetPresentationViewActive(view, shouldShow);
-        }
-
-        foreach (var (id, view) in _unitViews)
-        {
-            var unit = view.Unit;
-            var radius = UnitSpecReadPathFor(unit).Descriptor.Radius;
-            var unitRect = new Rect2(unit.Position - Vector2.One * radius, Vector2.One * radius * 2f);
-            var shouldShow = unit.Hp > 0 && (visibleRect.HasPoint(unit.Position) || visibleRect.Intersects(unitRect));
-            if (shouldShow)
-            {
-                view.Position = unit.Position;
+                var liveBuilding = projection!.Value;
+                view.Position = liveBuilding.Entity.Position;
+                view.Rotation = liveBuilding.Entity.Facing;
             }
 
             SetPresentationViewActive(view, shouldShow);
@@ -133,14 +118,10 @@ public partial class BattleRoot
 
     private PerfHudCounts PerfHudCounts()
     {
-        var liveUnitCount = UseUnitDesignRuntime
-            ? LiveUnitBattlefieldUnitCount()
-            : LiveLegacyUnitCount();
-        var liveBuildingCount = UseUnitDesignRuntime
-            ? _unitBattlefield.LiveBuildingCount()
-            : LiveLegacyBuildingCount();
+        var liveUnitCount = LiveUnitBattlefieldUnitCount();
+        var liveBuildingCount = _unitBattlefield.LiveBuildingCount();
         var visibleUnitCount = VisibleUnitViewCount();
-        var projectileCount = _state.Projectiles.Count + _state.Beams.Count;
+        var projectileCount = _unitBattlefield.ProjectileProjectionCount();
         var effectCount = (_combatEffects?.ActiveEffectCount ?? 0)
             + (_commandAcknowledgements?.ActiveRingCount ?? 0)
             + (_footprints?.ActiveMarkCount ?? 0);
@@ -169,46 +150,10 @@ public partial class BattleRoot
         return count;
     }
 
-    private int LiveLegacyUnitCount()
-    {
-        var count = 0;
-        foreach (var unit in _state.Units)
-        {
-            if (unit.Hp > 0)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private int LiveLegacyBuildingCount()
-    {
-        var count = 0;
-        foreach (var building in _state.Buildings)
-        {
-            if (building.Hp > 0)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
     private int VisibleUnitViewCount()
     {
         var count = 0;
         foreach (var (_, view) in _unitInstanceViews)
-        {
-            if (view.Visible)
-            {
-                count++;
-            }
-        }
-
-        foreach (var (_, view) in _unitViews)
         {
             if (view.Visible)
             {

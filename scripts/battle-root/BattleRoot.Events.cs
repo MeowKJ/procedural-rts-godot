@@ -20,24 +20,6 @@ public partial class BattleRoot
         _hud.SetCommandPanelResult(status);
     }
 
-    private void OnUnitsRemoved(IReadOnlyList<UnitDeathInfo> deaths)
-    {
-        foreach (var death in deaths)
-        {
-            if (!_unitViews.Remove(death.Id, out var view))
-            {
-                continue;
-            }
-
-            var style = UnitDeathSpecReadPathFor(death);
-            _combatEffects.AddUnitDeath(style.Death, style.EffectAccent);
-
-            view.QueueFree();
-        }
-
-        PlayDeathCue(deaths);
-    }
-
     private void OnUnitInstancesRemoved(IReadOnlyList<UnitInstanceDeathInfo> deaths)
     {
         foreach (var death in deaths)

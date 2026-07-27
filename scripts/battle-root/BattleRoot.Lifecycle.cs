@@ -76,31 +76,6 @@ public partial class BattleRoot
             }
         };
 
-        var unitRoot = new Node2D { Name = "Units" };
-        AddChild(unitRoot);
-
-        if (!UseUnitDesignRuntime)
-        {
-            foreach (var unit in _state.Units)
-            {
-                var view = new UnitView { Name = $"Unit_{unit.Id}", State = _state, Unit = unit };
-                unitRoot.AddChild(view);
-                _unitViews[unit.Id] = view;
-            }
-        }
-
-        _state.UnitAdded += unit =>
-        {
-            if (UseUnitDesignRuntime)
-            {
-                return;
-            }
-
-            var view = new UnitView { Name = $"Unit_{unit.Id}", State = _state, Unit = unit };
-            unitRoot.AddChild(view);
-            _unitViews[unit.Id] = view;
-        };
-
         _unitBodyBatchLayer = new UnitBodyBatchLayer
         {
             Name = "UnitBodyBatch",
@@ -117,8 +92,6 @@ public partial class BattleRoot
         ConfigureUnitBattlefield();
         ConfigureEntityWorld();
 
-        _state.UnitsRemoved += OnUnitsRemoved;
-        _state.BuildingsRemoved += OnBuildingsRemoved;
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;
         _unitBattlefield.WeaponFired += OnWeaponFired;
         _unitBattlefield.ProjectileImpacted += OnProjectileImpacted;
@@ -200,7 +173,6 @@ public partial class BattleRoot
         };
         AddChild(production);
 
-        if (UseUnitDesignRuntime)
         {
             AddChild(new EnemyUnitBattlefieldProductionController
             {
@@ -218,27 +190,7 @@ public partial class BattleRoot
                 DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
             });
         }
-        else
-        {
-            AddChild(new EnemyProductionController
-            {
-                Name = "EnemyProduction",
-                State = _state,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
-            });
 
-            AddChild(new EnemyAttackWaveController
-            {
-                Name = "EnemyAttackWaves",
-                State = _state,
-                DifficultyProfile = EnemyDifficultyProfile.For(_state.Options.EnemyDifficulty),
-            });
-        }
-
-        _state.ProductionCompleted += OnProductionCompleted;
-        _state.ResourceInventoryChanged += OnResourceInventoryChanged;
-        _state.EntityAttacked += OnEntityAttacked;
-        _state.OutcomeChanged += OnOutcomeChanged;
 
         _hud = new HudLayer
         {
