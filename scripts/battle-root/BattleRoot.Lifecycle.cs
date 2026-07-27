@@ -56,31 +56,6 @@ public partial class BattleRoot
         _buildingRoot = new Node2D { Name = "Buildings" };
         AddChild(_buildingRoot);
 
-        foreach (var building in _state.Buildings)
-        {
-            var view = CreateBuildingView(building.Id);
-            _buildingRoot.AddChild(view);
-            _buildingViews[building.Id] = view;
-            UpsertBuildingTarget(building);
-        }
-
-        _state.BuildingAdded += building =>
-        {
-            var view = CreateBuildingView(building.Id);
-            _buildingRoot.AddChild(view);
-            _buildingViews[building.Id] = view;
-            UpsertBuildingTarget(building);
-            if (building.Owner == ProceduralRts.Core.Owner.Player)
-            {
-                AddAlert(AlertKind.Building, GameText.Format("ui.building.online", BuildSpecCatalog.For(building.Kind).Label), building.Position);
-                PlayAudioCue(TacticalAudioCue.BuildComplete, building.Position);
-                if (building.Kind == BuildingDesignIds.PowerPlant || !_powerStable)
-                {
-                    UpdatePowerAlert(true);
-                }
-            }
-        };
-
         _unitBodyBatchLayer = new UnitBodyBatchLayer
         {
             Name = "UnitBodyBatch",
@@ -96,6 +71,7 @@ public partial class BattleRoot
         AddChild(_unitInstanceRoot);
         ConfigureUnitBattlefield();
         ConfigureEntityWorld();
+        SyncUnitBattlefieldBuildingRuntimeState();
 
         _unitBattlefield.UnitsRemoved += OnUnitInstancesRemoved;
         _unitBattlefield.WeaponFired += OnWeaponFired;

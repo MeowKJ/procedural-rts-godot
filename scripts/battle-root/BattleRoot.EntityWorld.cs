@@ -53,6 +53,14 @@ public partial class BattleRoot
             SpawnStartingUnitDesigns(PlayerSlotId.Two, ToUnitFaction(_state.Options.AiFaction), new Vector2(2510, 1370), Mathf.Pi);
         }
 
+        if (_state.MatchConfig.AuthoredMap is null)
+        {
+            foreach (var building in _state.Buildings)
+            {
+                UpsertBuildingTarget(building);
+            }
+        }
+
         foreach (var unit in _unitBattlefield.Units)
         {
             if (_state.Options.LaunchMode == LaunchMode.Sandbox)

@@ -20,7 +20,7 @@ static class TacticalAudioReviewGate
         RequireText(deduper, "TacticalAudioCue.OutcomeVictory => 0", "Outcome audio cues must remain outside tactical repeat suppression.", result);
         RequireText(events, "PlayDeathCue", "Death events must route through the shared tactical death cue helper.", result);
         RequireText(feedback, "PlayAudioCue(TacticalAudioCue.Death", "Death events must route to a dedicated tactical audio cue.", result);
-        RequireText(lifecycle, "PlayAudioCue(TacticalAudioCue.BuildComplete", "Player building completion must route to a dedicated tactical audio cue.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Process.cs"), "PlayAudioCue(TacticalAudioCue.BuildComplete", "Player building completion must route to a dedicated tactical audio cue.", result);
         RequireText(alerts, "PlayAudioCue(TacticalAudioCue.LowPower", "Low-power alerts must route to a dedicated tactical audio cue.", result);
     }
 }
