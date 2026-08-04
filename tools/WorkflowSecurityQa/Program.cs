@@ -197,6 +197,9 @@ static void CheckPublicArtifactBoundary(string root, List<string> failures)
     Require(!source.Contains("artifacts/**/*.json", StringComparison.Ordinal), "VerifyAll must not use recursive JSON artifact globs", failures);
     Require(!source.Contains("artifacts/**/*.png", StringComparison.Ordinal), "VerifyAll must not use recursive PNG artifact globs", failures);
     Require(source.Contains("retention-days: 14", StringComparison.Ordinal), "public CI artifacts must have bounded retention", failures);
+    const string visualCondition = "if: github.ref_name != 'main' || github.event_name == 'workflow_dispatch'";
+    Require(source.Split(visualCondition, StringSplitOptions.None).Length - 1 == 2,
+        "automatic main pushes must reuse branch visual evidence while workflow_dispatch retains an explicit main visual path", failures);
 }
 
 static void RequireExactSection(
