@@ -6,14 +6,6 @@ namespace ProceduralRts;
 
 public partial class BattleRoot
 {
-    private void PlayDeathCue(IReadOnlyList<UnitDeathInfo> deaths)
-    {
-        if (deaths.Count > 0)
-        {
-            PlayAudioCue(TacticalAudioCue.Death, deaths[0].Position);
-        }
-    }
-
     private void PlayDeathCue(IReadOnlyList<UnitInstanceDeathInfo> deaths)
     {
         if (deaths.Count > 0)

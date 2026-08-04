@@ -2,8 +2,6 @@ namespace ProceduralRts.Core;
 
 public readonly record struct SpawnObstacle(float X, float Y, float Radius);
 
-public readonly record struct SpawnPoint(float X, float Y);
-
 public static class ProductionSpawnMath
 {
     public static bool IsSpawnPointAvailable(

@@ -267,7 +267,7 @@ public partial class HudLayer : CanvasLayer
         {
             if (RoleGlyph != IconGlyph.None)
             {
-                DrawIconGlyph(
+                HudIconRenderer.Draw(
                     this,
                     RoleGlyph,
                     new Vector2(size.X - 11, 23),

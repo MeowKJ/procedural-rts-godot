@@ -17,15 +17,22 @@ static void Advance(UnitBattlefield battlefield, float seconds, float step = 0.1
     }
 }
 
-static UnitBattlefield NewBattlefield(int credits = 12000)
+static UnitBattlefield NewBattlefield(int credits = 12000, MapResourceNodeSpec? resource = null)
 {
-    var battlefield = new UnitBattlefield
+    var map = new MapSpec
     {
-        WorldSize = MatchConfig.DefaultWorldSize,
+        Id = "qa.player-loop",
+        Seed = 626,
+        WorldSize = MatchConfig.DefaultWorldSize.ToMapSize(),
+        OwnerStarts =
+        [
+            new(new OwnerId(1), FactionId.Dog, new MapPoint(320, 320), 0, credits),
+            new(new OwnerId(2), FactionId.Cat, new MapPoint(3_280, 2_080), MathF.PI, credits),
+        ],
+        Resources = resource is null ? [] : [resource],
     };
+    var battlefield = UnitBattlefield.AdoptLoadedMap(MapLoader.Load(map), map);
     battlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
-    battlefield.SetCredits(PlayerSlotId.One, credits);
-    battlefield.SetCredits(PlayerSlotId.Two, credits);
     return battlefield;
 }
 
@@ -48,19 +55,6 @@ static UnitBattlefieldBuildingSnapshot AddBuilding(
         position,
         facing,
         hp ?? spec.MaxHp);
-}
-
-static ResourceFieldModel ResourceField(int id, Vector2 position)
-{
-    return new ResourceFieldModel
-    {
-        Id = id,
-        Position = position,
-        Radius = 64,
-        MaxAmount = 8000,
-        Amount = 8000,
-        Accent = new Color("#f6c55c"),
-    };
 }
 
 static UnitBattlefieldBuildingSnapshot? TryConstructInBuildRadius(
@@ -186,9 +180,14 @@ static void AssertCatReadyTicketPlacement()
 
 static void AssertHarvestAndBank()
 {
-    var battlefield = NewBattlefield();
-    var field = ResourceField(1, new Vector2(720, 650));
-    battlefield.SetResourceFields([field]);
+    var resource = new MapResourceNodeSpec(
+        "harvest",
+        new MapPoint(720, 650),
+        64,
+        8_000,
+        new MapColor("#f6c55c"));
+    var battlefield = NewBattlefield(resource: resource);
+    var field = battlefield.ResourceFields[0];
     AddBuilding(battlefield, 1, BuildingDesignIds.Refinery, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(620, 700));
     var harvester = battlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(690, 665));
     battlefield.SelectUnitsByIds(PlayerSlotId.One, [harvester.Id]);

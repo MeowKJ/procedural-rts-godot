@@ -5,7 +5,24 @@ internal static partial class SelectionStressSuite
 {
     private static int RunUnitBattlefieldPickingQueries()
     {
-        var battlefield = new UnitBattlefield();
+        var resourceMap = new MapSpec
+        {
+            Id = "qa.selection.resource-picking",
+            Seed = 626,
+            WorldSize = new MapSize(1_200, 900),
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(120, 120), 0, 0),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(1_080, 780), MathF.PI, 0),
+            ],
+            Resources =
+            [
+                new("depleted", new MapPoint(500, 500), 45, 0, new MapColor("#ffffff")),
+                new("nearest-live", new MapPoint(508, 500), 45, 1_000, new MapColor("#ffffff")),
+                new("farther-live", new MapPoint(520, 500), 45, 1_000, new MapColor("#ffffff")),
+            ],
+        };
+        var battlefield = UnitBattlefield.AdoptLoadedMap(MapLoader.Load(resourceMap), resourceMap);
         var farSelf = battlefield.Spawn<DogInfantry>(PlayerSlotId.One, new Vector2(116, 100));
         var nearSelf = battlefield.Spawn<DogHarvester>(PlayerSlotId.One, new Vector2(101, 100));
         var hostile = battlefield.Spawn<CatTank>(PlayerSlotId.Two, new Vector2(103, 100));
@@ -54,12 +71,6 @@ internal static partial class SelectionStressSuite
             throw new InvalidOperationException("hostile building pick should ignore dead building targets");
         }
 
-        battlefield.SetResourceFields(
-        [
-            new ResourceFieldModel { Id = 1, Position = new Vector2(500, 500), Radius = 45, MaxAmount = 1000, Amount = 0, Accent = Colors.White },
-            new ResourceFieldModel { Id = 2, Position = new Vector2(508, 500), Radius = 45, MaxAmount = 1000, Amount = 1000, Accent = Colors.White },
-            new ResourceFieldModel { Id = 3, Position = new Vector2(520, 500), Radius = 45, MaxAmount = 1000, Amount = 1000, Accent = Colors.White },
-        ]);
         if (battlefield.PickResourceField(new Vector2(501, 500))?.Id != 2)
         {
             throw new InvalidOperationException("resource pick should ignore depleted fields and choose nearest live field");

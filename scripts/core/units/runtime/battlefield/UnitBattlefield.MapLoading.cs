@@ -55,15 +55,13 @@ public sealed partial class UnitBattlefield
                 ?? throw new InvalidOperationException($"Loaded map resource '{source.Id}' is missing its EntityWorld entity.");
             var node = entity.Components.Require<ResourceNodeComponentState>();
             var collision = entity.Components.Require<CollisionComponentState>();
-            var field = new ResourceFieldModel
-            {
-                Id = index + 1,
-                Position = entity.Transform.Position,
-                Radius = collision.Radius,
-                Amount = node.Amount,
-                MaxAmount = node.MaxAmount,
-                Accent = source.Accent.ToColor(),
-            };
+            var field = new ResourceFieldModel(
+                index + 1,
+                entity.Transform.Position,
+                collision.Radius,
+                node.MaxAmount,
+                node.Amount,
+                source.Accent.ToColor());
             _resourceFields.Add(field);
             _resourceFieldEntityIds[field.Id] = entity.Id;
         }

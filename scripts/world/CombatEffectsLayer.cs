@@ -53,14 +53,6 @@ public partial class CombatEffectsLayer : Node2D
             : unchecked((int)EntityStateHash.Add(EntityStateHash.Begin(), id));
     }
 
-    public void AddUnitDeath(UnitDeathInfo death, Color accent)
-    {
-        var effect = RentUnitDeathEffect();
-        effect.Reset(death, accent);
-        _unitDeaths.Add(effect);
-        ApplyDeathEffectBudget();
-    }
-
     public void AddUnitDeath(UnitInstanceDeathInfo death, Color accent)
     {
         var effect = RentUnitDeathEffect();

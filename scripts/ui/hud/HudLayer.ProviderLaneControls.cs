@@ -62,7 +62,7 @@ public partial class HudLayer : CanvasLayer
                     new Rect2(Vector2.Zero, Size).Grow(-metrics.ItemSpacing));
             }
 
-            DrawIconGlyph(
+            HudIconRenderer.Draw(
                 this,
                 ScopeGlyph(State.Scope),
                 new Vector2(16, Size.Y * 0.5f),

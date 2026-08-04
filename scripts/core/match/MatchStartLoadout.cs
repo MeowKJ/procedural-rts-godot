@@ -112,10 +112,9 @@ public static class MatchStartLoadouts
         return StartingBuildingsByFaction[faction];
     }
 
-    public static MatchStartOwnerLoadout For(Owner owner, FactionId faction, SkirmishMapLayout layout)
+    public static MatchStartOwnerLoadout For(Owner owner, FactionId faction, Vector2 start)
     {
         var reference = owner == Owner.Player ? PlayerReferenceStart : EnemyReferenceStart;
-        var start = owner == Owner.Player ? layout.PlayerStart : layout.EnemyStart;
         var baseLoadout = For(owner, faction);
         return new MatchStartOwnerLoadout(
             owner,
