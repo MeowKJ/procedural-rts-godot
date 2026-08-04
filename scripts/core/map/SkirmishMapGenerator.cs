@@ -2,15 +2,6 @@ using Godot;
 
 namespace ProceduralRts.Core;
 
-public sealed record SkirmishResourceNode(Vector2 Position, float Radius, int Amount, Color Accent);
-
-public sealed record SkirmishMapLayout(
-    Vector2 WorldSize,
-    Vector2 PlayerStart,
-    Vector2 EnemyStart,
-    IReadOnlyList<SkirmishResourceNode> Resources,
-    IReadOnlyList<PlacementObstacle> Obstacles);
-
 public static class SkirmishMapGenerator
 {
     public static MapSpec GenerateSpec(MatchConfig config)
@@ -22,22 +13,18 @@ public static class SkirmishMapGenerator
             config.PlayerFaction,
             config.AiFaction,
             SkirmishOptions.DefaultMapSeed));
-        var layout = spec.ToSkirmishMapLayout();
+        var playerStart = spec.StartFor(new OwnerId(1)).Position.ToVector2();
+        var enemyStart = spec.StartFor(new OwnerId(2)).Position.ToVector2();
         var withLoadout = spec with
         {
-            Buildings = StandardBuildings(Owner.Player, config.PlayerFaction, layout)
-                .Concat(StandardBuildings(Owner.Enemy, config.AiFaction, layout))
+            Buildings = StandardBuildings(Owner.Player, config.PlayerFaction, playerStart)
+                .Concat(StandardBuildings(Owner.Enemy, config.AiFaction, enemyStart))
                 .ToArray(),
-            Units = StandardUnits(Owner.Player, config.PlayerFaction, layout)
-                .Concat(StandardUnits(Owner.Enemy, config.AiFaction, layout))
+            Units = StandardUnits(Owner.Player, config.PlayerFaction, playerStart)
+                .Concat(StandardUnits(Owner.Enemy, config.AiFaction, enemyStart))
                 .ToArray(),
         };
         return SkirmishStartingEnvironmentAdapter.Apply(withLoadout);
-    }
-
-    public static SkirmishMapLayout Generate(MatchConfig config)
-    {
-        return GenerateSpec(config).ToSkirmishMapLayout();
     }
 
     public static Vector2 Mirror(Vector2 point, Vector2 worldSize)
@@ -47,10 +34,10 @@ public static class SkirmishMapGenerator
             .ToVector2();
     }
 
-    private static IEnumerable<MapBuildingSeedSpec> StandardBuildings(Owner owner, FactionId faction, SkirmishMapLayout layout)
+    private static IEnumerable<MapBuildingSeedSpec> StandardBuildings(Owner owner, FactionId faction, Vector2 start)
     {
         var ownerId = OwnerIdFor(owner);
-        return MatchStartLoadouts.For(owner, faction, layout)
+        return MatchStartLoadouts.For(owner, faction, start)
             .Buildings
             .Select(building => new MapBuildingSeedSpec(
                 building.Kind,
@@ -60,10 +47,10 @@ public static class SkirmishMapGenerator
                 building.Facing));
     }
 
-    private static IEnumerable<MapUnitSeedSpec> StandardUnits(Owner owner, FactionId faction, SkirmishMapLayout layout)
+    private static IEnumerable<MapUnitSeedSpec> StandardUnits(Owner owner, FactionId faction, Vector2 start)
     {
         var ownerId = OwnerIdFor(owner);
-        return MatchStartLoadouts.For(owner, faction, layout)
+        return MatchStartLoadouts.For(owner, faction, start)
             .Units
             .Select(unit => new MapUnitSeedSpec(
                 unit.DesignId,

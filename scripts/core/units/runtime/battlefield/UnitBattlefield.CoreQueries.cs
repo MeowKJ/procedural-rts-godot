@@ -164,13 +164,6 @@ public sealed partial class UnitBattlefield
         ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
     }
 
-    public void SetResourceFields(IEnumerable<ResourceFieldModel> fields)
-    {
-        _resourceFields.Clear();
-        _resourceFields.AddRange(fields);
-        CreateResourceFieldEntities();
-    }
-
     public ResourceFieldModel? PickResourceField(Vector2 worldPoint, float pickPadding = 8)
     {
         return NearestResourceField(worldPoint, pickPadding);

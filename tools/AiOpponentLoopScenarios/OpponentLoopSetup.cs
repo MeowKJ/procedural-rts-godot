@@ -18,23 +18,22 @@ internal static partial class AiOpponentLoopQaProgram
         var rightFaction = FactionCatalog.UnitFactionFor(tournamentCase.RightFaction);
         var leftStart = map.StartFor(new OwnerId(1)).Position.ToVector2();
         var rightStart = map.StartFor(new OwnerId(2)).Position.ToVector2();
-        var battlefield = new UnitBattlefield
+        var authorityMap = map with
         {
-            WorldSize = map.WorldSize.ToVector2(),
-            OutcomeViewer = PlayerSlotId.One,
+            Buildings = [],
+            Units = [],
         };
+        var battlefield = UnitBattlefield.AdoptLoadedMap(MapLoader.Load(authorityMap), authorityMap);
+        battlefield.OutcomeViewer = PlayerSlotId.One;
         battlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
         battlefield.SetCredits(PlayerSlotId.One, 9000);
         battlefield.SetCredits(PlayerSlotId.Two, 11000);
 
         var playerBase = BuildRuntimeBase(battlefield, PlayerSlotId.One, leftFaction, leftStart, 0, 100);
         var enemyBase = BuildRuntimeBase(battlefield, PlayerSlotId.Two, rightFaction, rightStart, MathF.PI, 200);
-        var resourceFields = map.Resources
-            .Select((resource, index) => ResourceField(index + 1, resource))
-            .ToArray();
+        var resourceFields = battlefield.ResourceFields;
         var enemyResource = resourceFields.MinBy(field => field.Position.DistanceSquaredTo(rightStart))
             ?? throw new InvalidOperationException($"seed {tournamentCase.Seed} generated no enemy resource field");
-        battlefield.SetResourceFields(resourceFields);
 
         SpawnMapRoster(battlefield, map, new OwnerId(2), PlayerSlotId.Two);
         var raiders = SpawnPlayerRaiders(battlefield, leftFaction, rightStart + new Vector2(280, 260));

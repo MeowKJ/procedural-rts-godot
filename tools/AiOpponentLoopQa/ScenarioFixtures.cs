@@ -49,19 +49,6 @@ internal static partial class AiOpponentLoopQaProgram
             BuildSpecCatalog.For(kind).MaxHp);
     }
 
-    private static ResourceFieldModel ResourceField(int id, MapResourceNodeSpec resource)
-    {
-        return new ResourceFieldModel
-        {
-            Id = id,
-            Position = resource.Position.ToVector2(),
-            Radius = resource.Radius,
-            MaxAmount = resource.Amount,
-            Amount = resource.Amount,
-            Accent = resource.Accent.ToColor(),
-        };
-    }
-
     private static void SpawnMapRoster(
         UnitBattlefield battlefield,
         MapSpec map,

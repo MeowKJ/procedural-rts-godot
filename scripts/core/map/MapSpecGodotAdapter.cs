@@ -38,21 +38,4 @@ public static class MapSpecGodotAdapter
             obstacle.Bounds.Height);
     }
 
-    public static SkirmishMapLayout ToSkirmishMapLayout(this MapSpec spec)
-    {
-        return new SkirmishMapLayout(
-            spec.WorldSize.ToVector2(),
-            spec.StartFor(new OwnerId(1)).Position.ToVector2(),
-            spec.StartFor(new OwnerId(2)).Position.ToVector2(),
-            spec.Resources
-                .Select(resource => new SkirmishResourceNode(
-                    resource.Position.ToVector2(),
-                    resource.Radius,
-                    resource.Amount,
-                    resource.Accent.ToColor()))
-                .ToArray(),
-            spec.Obstacles
-                .Select(obstacle => obstacle.ToPlacementObstacle())
-                .ToArray());
-    }
 }

@@ -5,7 +5,10 @@ static class UnitStanceStripReviewGate
         var projection = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "UnitStanceStripProjection.cs");
         var strip = ReviewGateSource.Read(root, "scripts", "ui", "UnitStanceStrip.cs");
         var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
-        var hudControls = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.BuildControls.cs");
+        var hudIconCallers = string.Concat(
+            ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs"),
+            ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.NestedControls.cs"),
+            ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.ProviderLaneControls.cs"));
         var hudContext = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandRibbonContext.cs");
         var iconRenderer = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Icons.cs");
         var battleEvents = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Events.cs");
@@ -37,8 +40,12 @@ static class UnitStanceStripReviewGate
             "UnitStanceStrip must not depend back on its HudLayer container.", result);
         RequireText(iconRenderer, "internal static class HudIconRenderer",
             "HUD glyph drawing must live behind a small shared renderer boundary.", result);
-        RequireText(iconRenderer, "HudIconRenderer.Draw(canvas, glyph, center, size, color);",
-            "HudLayer must preserve existing call sites through a shared-renderer wrapper.", result);
+        ForbidText(iconRenderer, "DrawIconGlyph",
+            "HUD glyph callers must use HudIconRenderer directly without a forwarding wrapper.", result);
+        RequireText(hudIconCallers, "HudIconRenderer.Draw(",
+            "HudLayer controls must call the shared renderer directly.", result);
+        ForbidText(hudIconCallers, "DrawIconGlyph",
+            "HudLayer controls must not restore the retired forwarding wrapper.", result);
         if (CountOccurrences(strip, "IntentRequested?.Invoke") != 1)
         {
             result.Error("UnitStanceStrip must contain exactly one typed intent emission site.");

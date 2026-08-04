@@ -160,19 +160,6 @@ public partial class CombatEffectsLayer : Node2D
 
     private sealed class UnitDeathEffect
     {
-        public void Reset(UnitDeathInfo death, Color accent)
-        {
-            Reset(
-                death.Id,
-                death.Position,
-                death.Radius,
-                death.WeightClass,
-                death.MovementDomain,
-                death.KillingAmmoId,
-                death.OverkillDamage,
-                accent);
-        }
-
         public void Reset(UnitInstanceDeathInfo death, Color accent)
         {
             Reset(

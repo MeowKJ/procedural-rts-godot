@@ -5,10 +5,22 @@ static class UnitPresentationProjectionRuntimeScenarios
 {
     public static void Run(List<string> failures)
     {
-        var battlefield = new UnitBattlefield
+        var map = new MapSpec
         {
-            WorldSize = new Vector2(2_000, 1_400),
+            Id = "qa.unit-presentation-projection",
+            Seed = 626,
+            WorldSize = new MapSize(2_000, 1_400),
+            OwnerStarts =
+            [
+                new(new OwnerId(1), FactionId.Dog, new MapPoint(160, 180), 0, 0),
+                new(new OwnerId(2), FactionId.Cat, new MapPoint(1_500, 700), MathF.PI, 0),
+            ],
+            Resources =
+            [
+                new("projection-harvest", new MapPoint(680, 180), 64, 4_000, new MapColor("#f6c55c")),
+            ],
         };
+        var battlefield = UnitBattlefield.AdoptLoadedMap(MapLoader.Load(map), map);
         battlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Hostile);
 
         var infantry = battlefield.Spawn("dog.infantry", PlayerSlotId.One, new Vector2(160, 180));
@@ -31,19 +43,6 @@ static class UnitPresentationProjectionRuntimeScenarios
             new Vector2(560, 180),
             0,
             BuildSpecCatalog.For(BuildingDesignIds.Refinery).MaxHp);
-        battlefield.SetResourceFields(
-        [
-            new ResourceFieldModel
-            {
-                Id = 1,
-                Position = new Vector2(680, 180),
-                Radius = 64,
-                MaxAmount = 4_000,
-                Amount = 4_000,
-                Accent = new Color("#f6c55c"),
-            },
-        ]);
-
         var selected = battlefield.SelectUnitsByIds(
             PlayerSlotId.One,
             [infantry.Id, vehicle.Id, aircraft.Id, harvester.Id]);

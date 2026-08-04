@@ -59,7 +59,7 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
             var glyphSize = Mathf.Clamp(Mathf.Min(rect.Size.X, rect.Size.Y) * 0.64f, 28, 32);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, glyphSize, style.Icon);
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, glyphSize, style.Icon);
         }
     }
 
@@ -102,7 +102,7 @@ public partial class HudLayer : CanvasLayer
             var active = new Rect2(new Vector2(6, 6), new Vector2(36, 36));
             DrawRect(active, new Color(accent, _queued > 0 ? 0.15f : 0.06f), true);
             DrawRect(active, new Color(accent, 0.72f), false, 1.4f, true);
-            DrawIconGlyph(this, _glyph, active.GetCenter(), 26, accent);
+            HudIconRenderer.Draw(this, _glyph, active.GetCenter(), 26, accent);
 
             if (_progress > 0)
             {
@@ -176,7 +176,7 @@ public partial class HudLayer : CanvasLayer
 
             var glyph = CatalogModeGlyph(Mode);
             var signalStrength = _selected || focused ? 1f : 0.72f;
-            DrawIconGlyph(this, glyph, new Vector2(13, rect.Size.Y * 0.5f), 16, new Color(style.Accent, signalStrength));
+            HudIconRenderer.Draw(this, glyph, new Vector2(13, rect.Size.Y * 0.5f), 16, new Color(style.Accent, signalStrength));
 
             var labelBounds = new Rect2(new Vector2(23, 3), new Vector2(rect.Size.X - 27, 14));
             DrawString(
@@ -223,7 +223,7 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect, style.Fill, true);
             DrawRect(rect.Grow(-2), style.AccentFill, true);
             DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
         }
     }
 
@@ -247,7 +247,7 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect, style.Fill, true);
             DrawRect(rect.Grow(-2), style.AccentFill, true);
             DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
         }
     }
 
@@ -270,7 +270,7 @@ public partial class HudLayer : CanvasLayer
             DrawRect(rect, style.Fill, true);
             DrawRect(rect.Grow(-2), style.AccentFill, true);
             DrawRect(rect.Grow(-1), style.AccentBorder, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.58f, style.Icon);
         }
     }
 
@@ -284,7 +284,7 @@ public partial class HudLayer : CanvasLayer
             base._Draw();
             var rect = new Rect2(Vector2.Zero, Size);
             DrawRect(rect.Grow(-2), new Color(IconColor, 0.08f), true);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.54f, new Color(IconColor, 0.88f));
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.54f, new Color(IconColor, 0.88f));
         }
     }
 
@@ -308,7 +308,7 @@ public partial class HudLayer : CanvasLayer
             var style = UiFactory.GetHudModeButtonDrawStyle(accent, _selected);
             DrawRect(rect.Grow(-2), style.Fill, true);
             DrawRect(rect.Grow(-1), style.Border, false, style.BorderWidth);
-            DrawIconGlyph(this, Glyph, rect.Size / 2f, 28, style.Icon);
+            HudIconRenderer.Draw(this, Glyph, rect.Size / 2f, 28, style.Icon);
         }
     }
 

@@ -3,14 +3,6 @@ using ProceduralRts.Core;
 
 namespace ProceduralRts.Ui;
 
-public partial class HudLayer : CanvasLayer
-{
-    private static void DrawIconGlyph(CanvasItem canvas, IconGlyph glyph, Vector2 center, float size, Color color)
-    {
-        HudIconRenderer.Draw(canvas, glyph, center, size, color);
-    }
-}
-
 internal static class HudIconRenderer
 {
     private static readonly Dictionary<IconGlyph, Texture2D?> IconTextureCache = [];
