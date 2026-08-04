@@ -90,6 +90,7 @@ jobs:
           sh tools/verify-all.sh "${verify_args[@]}" 2>&1 | tee artifacts/ci/verify-all.log
 
       - name: Capture visual QA
+        if: github.ref_name != 'main' || github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           BATTLE_HUD_CAPTURE_COMMIT: ${{ github.sha }}
@@ -97,6 +98,7 @@ jobs:
         run: bash tools/VisualQaCapture.sh
 
       - name: 验证 Battle HUD 证据完整性
+        if: github.ref_name != 'main' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           test -s artifacts/visual-qa/battle-hud-runtime-artifact-manifest.json
