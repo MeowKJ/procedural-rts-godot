@@ -83,7 +83,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/ci
-          sh tools/verify-all.sh 2>&1 | tee artifacts/ci/verify-all.log
+          verify_args=()
+          if [[ "$GITHUB_REF_NAME" != "main" ]]; then
+            verify_args+=(--pr-fast)
+          fi
+          sh tools/verify-all.sh "${verify_args[@]}" 2>&1 | tee artifacts/ci/verify-all.log
 
       - name: Capture visual QA
         shell: bash

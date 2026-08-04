@@ -63,9 +63,10 @@ static class MapAuthoringValidationReviewGate
         ForbidText(overlay, "catch", "Per-building overlay programming failures must propagate.", result);
 
         var verify = ReviewGateSource.Read(root, "tools", "VerifyAll", "Program.cs");
-        RequireText(verify, "map-authoring-validation-qa", "VerifyAll must run validation contract QA.", result);
         RequireText(verify, "godot-map-authoring-validation-smoke", "VerifyAll must run validation editor smoke.", result);
         var smoke = ReviewGateSource.Read(root, "tools", "map-authoring-validation-smoke.sh");
+        RequireText(smoke, "tools/MapAuthoringValidationQa/MapAuthoringValidationQa.csproj",
+            "Validation smoke must run the contract QA exactly once before the editor smoke.", result);
         RequireText(smoke, "--non-headless", "Validation smoke must preserve non-headless mode.", result);
         RequireText(smoke, "--diagnostics-json", "Validation evidence must serialize all 24 exercised diagnostics.", result);
         RequireText(smoke, "MAP_AUTHORING_OUTPUT_COPY", "Validation evidence must copy actual Godot output.", result);

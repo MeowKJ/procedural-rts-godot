@@ -60,7 +60,12 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("fog-qa", "dotnet", "run --project tools/FogOfWarQa/FogOfWarQa.csproj --no-restore"),
         Dotnet("selection-stress", "dotnet", "run --project tools/SelectionStress/SelectionStress.csproj --no-restore"),
         Dotnet("ai-difficulty-smoke", "dotnet", "run --project tools/AiDifficultySmoke/AiDifficultySmoke.csproj --no-restore"),
-        Dotnet("ai-opponent-loop-qa", "dotnet", "run --project tools/AiOpponentLoopQa/AiOpponentLoopQa.csproj --no-restore"),
+        Dotnet(
+            "ai-opponent-loop-qa",
+            "dotnet",
+            options.PrFast
+                ? "run --project tools/AiOpponentLoopQa/AiOpponentLoopQa.csproj --no-restore -- --seed 1729 --mapping dog-left"
+                : "run --project tools/AiOpponentLoopQa/AiOpponentLoopQa.csproj --no-restore"),
         Dotnet("roster-authoring-qa", "dotnet", "run --project tools/RosterAuthoringQa/RosterAuthoringQa.csproj --no-restore"),
         Dotnet("content-authoring-qa", "dotnet", "run --project tools/ContentAuthoringQa/ContentAuthoringQa.csproj --no-restore"),
         Dotnet("map-authoring-export-debug", "dotnet", "build ProceduralRts.csproj -c ExportDebug --no-restore"),
@@ -71,8 +76,6 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         Dotnet("windows-acceptance-evidence", "dotnet", "run --project tools/WindowsAcceptanceEvidence/WindowsAcceptanceEvidence.csproj --no-restore -- --self-test"),
         Dotnet("map-authoring-qa", "dotnet", "run --project tools/MapAuthoringQa/MapAuthoringQa.csproj --no-restore"),
         Dotnet("pathfinding-environment-cache-qa", "dotnet", "run --project tools/PathfindingEnvironmentCacheQa/PathfindingEnvironmentCacheQa.csproj --no-restore"),
-        Dotnet("map-authoring-validation-qa", "dotnet", "run --project tools/MapAuthoringValidationQa/MapAuthoringValidationQa.csproj --no-restore"),
-        Dotnet("map-authoring-bake-play-qa", "dotnet", "run --project tools/MapAuthoringBakePlayQa/MapAuthoringBakePlayQa.csproj --no-restore"),
         Dotnet("playable-map-handoff-qa", "dotnet", "run --project tools/PlayableMapHandoffQa/PlayableMapHandoffQa.csproj --no-restore"),
         Dotnet("sandbox-spawn-authoring-qa", "dotnet", "run --project tools/SandboxSpawnAuthoringQa/SandboxSpawnAuthoringQa.csproj --no-restore"),
         Dotnet("player-loop-qa", "dotnet", "run --project tools/PlayerLoopQa/PlayerLoopQa.csproj --no-restore"),
@@ -100,6 +103,12 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
         : new VerifyStep("balance-report", "dotnet", "run --project tools/BalanceReport/BalanceReport.csproj --no-restore", "tools/BalanceReport is not implemented yet; keep the corresponding GitHub issue open."));
     steps.Add(Dotnet("counter-readability-qa", "dotnet", "run --project tools/CounterReadabilityQa/CounterReadabilityQa.csproj --no-restore"));
 
+    if (options.SkipGodot)
+    {
+        steps.Add(Dotnet("map-authoring-validation-qa", "dotnet", "run --project tools/MapAuthoringValidationQa/MapAuthoringValidationQa.csproj --no-restore"));
+        steps.Add(Dotnet("map-authoring-bake-play-qa", "dotnet", "run --project tools/MapAuthoringBakePlayQa/MapAuthoringBakePlayQa.csproj --no-restore"));
+    }
+
     if (!options.SkipGodot)
     {
         var godot = GodotExecutableLocator.Find();
@@ -123,7 +132,10 @@ static IReadOnlyList<VerifyStep> CreateSteps(string root, VerifyOptions options)
             steps.Add(new VerifyStep("godot-map-authoring-export-pack", "sh", $"tools/map-authoring-export-pack-qa.sh \"{godot.Path}\""));
             steps.Add(new VerifyStep("godot-map-authoring-bake-play-smoke", "sh", $"tools/map-authoring-bake-play-smoke.sh \"{godot.Path}\" --headless"));
             steps.Add(new VerifyStep("godot-skirmish-flow-qa", godot.Path, "--headless --path . --scene res://scenes/SkirmishFlowQa.tscn"));
-            steps.Add(new VerifyStep("godot-active-battle-perf-qa", godot.Path, "--headless --path . --scene res://scenes/ActiveBattlePerfQa.tscn"));
+            if (!options.PrFast)
+            {
+                steps.Add(new VerifyStep("godot-active-battle-perf-qa", godot.Path, "--headless --path . --scene res://scenes/ActiveBattlePerfQa.tscn"));
+            }
             steps.Add(new VerifyStep("godot-pause-qa", godot.Path, "--headless --path . --scene res://scenes/PauseQa.tscn"));
         }
     }
@@ -222,7 +234,7 @@ sealed record StepResult(string Name, int ExitCode, TimeSpan Elapsed, bool Skipp
     }
 }
 
-sealed record VerifyOptions(bool ContinueOnFailure, bool SkipPerf, bool SkipGodot, bool AllowMissingBalanceReport)
+sealed record VerifyOptions(bool ContinueOnFailure, bool SkipPerf, bool SkipGodot, bool AllowMissingBalanceReport, bool PrFast)
 {
     public static VerifyOptions Parse(string[] args)
     {
@@ -231,6 +243,7 @@ sealed record VerifyOptions(bool ContinueOnFailure, bool SkipPerf, bool SkipGodo
             ContinueOnFailure: values.Contains("--continue-on-failure"),
             SkipPerf: values.Contains("--skip-perf"),
             SkipGodot: values.Contains("--skip-godot"),
-            AllowMissingBalanceReport: values.Contains("--allow-missing-balance-report"));
+            AllowMissingBalanceReport: values.Contains("--allow-missing-balance-report"),
+            PrFast: values.Contains("--pr-fast"));
     }
 }

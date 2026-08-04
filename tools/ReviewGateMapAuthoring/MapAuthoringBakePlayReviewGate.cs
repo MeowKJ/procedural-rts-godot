@@ -76,8 +76,11 @@ static class MapAuthoringBakePlayReviewGate
         RequireText(packProbe, "--main-pack", "Export boundary must execute an actual PCK runtime probe.", result);
 
         var verify = ReviewGateSource.Read(root, "tools", "VerifyAll", "Program.cs");
-        foreach (var token in new[] { "map-authoring-bake-play-qa", "godot-map-authoring-sample-parity", "godot-map-authoring-export-pack", "godot-map-authoring-bake-play-smoke" })
+        foreach (var token in new[] { "godot-map-authoring-sample-parity", "godot-map-authoring-export-pack", "godot-map-authoring-bake-play-smoke" })
             RequireText(verify, token, $"VerifyAll must register {token}.", result);
+        var smoke = ReviewGateSource.Read(root, "tools", "map-authoring-bake-play-smoke.sh");
+        RequireText(smoke, "tools/MapAuthoringBakePlayQa/MapAuthoringBakePlayQa.csproj",
+            "Bake Play smoke must run the contract QA exactly once before the editor smoke.", result);
     }
 
     private static int Occurrences(string text, string token)
