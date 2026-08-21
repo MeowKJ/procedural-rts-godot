@@ -2,16 +2,16 @@ static class HoverTooltipReviewGate
 {
     public static void Check(string root, GateResult result)
     {
-        var preview = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Preview.cs");
-        var tooltips = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.HoverTooltips.cs");
+        var preview = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "Preview.cs");
+        var tooltips = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "HoverTooltips.cs");
         var hotkeys = ReviewGateSource.Read(root, "scripts", "ui", "HotkeyLegendLayer.cs");
         var controlBindingCatalog = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "ControlBindingCatalog.cs");
         var selectionInput = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.cs");
-        var dragFeedback = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.DragFeedback.cs");
-        var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RallyCommand.cs");
-        var repairCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
-        var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Hotkeys.cs");
-        var abilityCommand = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.AbilityCommand.cs");
+        var dragFeedback = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "DragFeedback.cs");
+        var rallyCommand = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "RallyCommand.cs");
+        var repairCommand = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "RepairCommand.cs");
+        var selectionHotkeys = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "Hotkeys.cs");
+        var abilityCommand = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "AbilityCommand.cs");
         var stancePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "UnitStancePresentation.cs");
         var ribbonContext = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandRibbonContextState.cs");
         var previewState = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewState.cs");

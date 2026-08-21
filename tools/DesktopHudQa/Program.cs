@@ -539,6 +539,22 @@ static string ReadSourceWithPartials(string sourcePath)
                 parts.Add(File.ReadAllText(partialPath));
             }
         }
+
+        if (sourceName.Equals("SelectionController", StringComparison.Ordinal))
+        {
+            var selectionDomain = Path.Combine(directory, "selection");
+            if (Directory.Exists(selectionDomain))
+            {
+                foreach (var modulePath in Directory.EnumerateFiles(selectionDomain, "*.cs", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => path))
+                {
+                    if (addedPaths.Add(modulePath))
+                    {
+                        parts.Add(File.ReadAllText(modulePath));
+                    }
+                }
+            }
+        }
     }
 
     return string.Join("\n\n", parts);

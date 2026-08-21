@@ -6,7 +6,7 @@ static class UnitSpecAbilityAllocationReviewGate
         RequireText(unitSpec, "public bool HasAbility(AbilityKind kind)", "UnitSpec ability checks must expose an explicit no-LINQ scan.", result);
         RequireText(unitSpec, "public bool TryGetAbility(AbilityKind kind, out AbilitySpec ability)", "UnitSpec ability lookup must expose an explicit no-LINQ scan.", result);
         var battleRootSelection = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Selection.cs");
-        var selectionController = ReviewGateSource.Read(root, "scripts", "controllers", "SelectionController.Utilities.cs");
+        var selectionController = ReviewGateSource.Read(root, "scripts", "controllers", "selection", "Utilities.cs");
         var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
         var syncRuntime = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.SyncRuntime.cs");
         var entityFactory = ReviewGateSource.Read(root, "scripts", "core", "entities", "UnitEntityFactory.cs");
