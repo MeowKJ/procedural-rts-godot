@@ -9,7 +9,6 @@ static class FileSizePolicy
 
     public static readonly Dictionary<string, int> KnownRedLineCeilings = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["scripts/ui/hud/HudLayer.State.cs"] = 625,
         ["tools/DesktopHudQa/Program.cs"] = 607,
     };
 

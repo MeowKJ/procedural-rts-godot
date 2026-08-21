@@ -8,7 +8,7 @@ static class BattleRootHudAllocationReviewGate
         var minimap = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.HudMinimap.cs");
         var alerts = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Alerts.cs");
         var sandbox = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Sandbox.cs");
-        var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
+        var hudState = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
         var commandFailurePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandFailurePresentation.cs");
         var commandGatewayFeedback = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandGatewayFeedback.cs");
         var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.Commands.cs");
