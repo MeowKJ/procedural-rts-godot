@@ -19,7 +19,7 @@ static class HoverTooltipReviewGate
         var battleRoot = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "BattleRoot.cs"));
         var previewKinds = ReviewGateSource.Read(root, "scripts", "core", "commands", "CommandPreviewKind.cs");
         var buildPlacement = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "controllers", "BuildPlacementController.cs"));
-        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
+        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.ConstructionTickets.cs");
         var battleRootAlerts = ReviewGateSource.Read(root, "scripts", "battle-root", "BattleRoot.Alerts.cs");
         var hudPreview = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs");
         var hudLayer = ReviewGateEvidence.ReadSourceWithPartials(Path.Combine(root, "scripts", "ui", "HudLayer.cs"));
