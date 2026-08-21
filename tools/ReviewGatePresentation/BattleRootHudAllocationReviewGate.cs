@@ -11,7 +11,7 @@ static class BattleRootHudAllocationReviewGate
         var hudState = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.State.cs");
         var commandFailurePresentation = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandFailurePresentation.cs");
         var commandGatewayFeedback = ReviewGateSource.Read(root, "scripts", "core", "presentation", "ui", "CommandGatewayFeedback.cs");
-        var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
+        var unitBattlefieldCommands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.Commands.cs");
 
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitBuffer", "BattleRoot minimap units must use reusable storage.", result);
         RequireText(battleRoot, "List<HudLayer.MinimapUnit> _minimapUnitSecondaryBuffer", "BattleRoot minimap units must be double-buffered for redraw safety.", result);
@@ -201,7 +201,7 @@ static class BattleRootHudAllocationReviewGate
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionRally.cs"), "SetRepeatProductionEntityCommand", "UnitBattlefield repeat toggle must reuse the deterministic repeat-production command.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.ConstructionProviderLanes.cs"), "public IReadOnlyList<ProductionProviderLaneState> ConstructionProviderLaneStates(PlayerSlotId playerSlotId)", "UnitBattlefield must expose construction provider lane read models without HUD hard-coding provider names.", result);
         RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.ConstructionTickets.cs"), "ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId)", "Construction ticket queuing must honor specific Build provider lane selection.", result);
-        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PlayerCommandPayloads.cs"), "TryCreateProductionDesignPayloadForProvider", "UnitBattlefield must expose a specific-provider production payload helper.", result);
+        RequireText(ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.PlayerCommandPayloads.cs"), "TryCreateProductionDesignPayloadForProvider", "UnitBattlefield must expose a specific-provider production payload helper.", result);
         var englishProviderText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.English.cs");
         var chineseProviderText = ReviewGateSource.Read(root, "scripts", "core", "localization", "GameText.ChineseSimplified.cs");
         RequireText(englishProviderText, "[\"ui.providerLane.summaryOk\"] = \"OK\"", "English provider summary must use a rail-safe OK code.", result);

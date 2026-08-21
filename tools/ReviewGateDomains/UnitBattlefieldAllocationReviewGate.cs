@@ -102,7 +102,7 @@ static class UnitBattlefieldAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "HashSet<int> _selectionUnitIdBuffer", "UnitBattlefield selection commands must reuse requested-id storage.", result);
 
-        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
+        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.Commands.cs");
         RequireText(commands, "CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer)", "Selection commands must fill reusable unit storage.", result);
         RequireText(commands, "_selectionUnitIdBuffer.Add(unitId)", "Selection commands must reuse requested-id storage.", result);
         ForbidText(commands, "unitIds.ToHashSet()", "Selection commands must not allocate requested-id sets.", result);
@@ -153,7 +153,7 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<int> _constructionSubjectBuildingIds", "Construction command routing must reuse subject building-id storage.", result);
         RequireText(battlefield, "List<EntityId> _constructionSubjectEntityBuffer", "Construction command routing must reuse subject entity-id storage.", result);
 
-        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.CommandRouting.cs");
         RequireText(commandRouting, "CollectConstructionSubjectEntities(playerSlotId, spec, _constructionSubjectBuildingIds, _constructionSubjectEntityBuffer)", "Construction commands must fill reusable subject buffers.", result);
         RequireText(commandRouting, "buildingIds.Sort(CompareBuildingIds)", "Construction subject building ids must sort the reusable buffer in place.", result);
         ForbidText(commandRouting, ".Select(BuildingSnapshot)\n            .Where(snapshot => snapshot is not null)", "Construction subject routing must not allocate snapshot LINQ chains.", result);

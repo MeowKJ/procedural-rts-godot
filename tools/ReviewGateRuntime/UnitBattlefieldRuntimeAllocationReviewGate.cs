@@ -34,7 +34,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "List<PlayerSlotId> _ownerRelationSlots", "Owner relation sync must reuse slot storage.", result);
 
-        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.CommandRouting.cs");
         RequireText(commandRouting, "CollectOwnerRelationSlots(_ownerRelationSlots)", "SyncOwnerRelations must fill reusable owner slot storage.", result);
         RequireText(commandRouting, "AddOwnerRelationSlot(result, unit.PlayerSlotId)", "Owner relation sync must scan unit owners explicitly.", result);
         RequireText(commandRouting, "AddOwnerRelationSlot(result, identity.PlayerSlotId)", "Owner relation sync must scan building owners explicitly.", result);

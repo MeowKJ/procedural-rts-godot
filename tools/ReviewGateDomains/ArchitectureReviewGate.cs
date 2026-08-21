@@ -2,6 +2,7 @@ static class ArchitectureReviewGate
 {
     public static void Check(string root, GateResult result)
     {
+        UnitBattlefieldCommandDomainReviewGate.Check(root, result);
         RequireCoreFiles(root, result);
         RequireEntityWorldPipeline(root, result);
         RequireCommandBoundary(root, result);

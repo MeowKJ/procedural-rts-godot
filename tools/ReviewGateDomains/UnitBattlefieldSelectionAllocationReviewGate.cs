@@ -62,12 +62,12 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         RequireText(battlefield, "_selectionEntityBuffer.Clear();", "Selection buffer helpers must clear reusable storage.", result);
         ForbidText(battlefield, ".ToHashSet()", "UnitBattlefield selection picking must not allocate HashSets per selection command.", result);
         ForbidText(battlefield, "new HashSet<EntityId>()", "UnitBattlefield selection picking must reuse the selection entity buffer.", result);
-        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandRouting.cs");
+        var commandRouting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.CommandRouting.cs");
         RequireText(commandRouting, "CollectSelectionCommandEntityIds(selectedEntityIds, _selectionCommandEntityBuffer)", "Selection commands must fill the reusable sorted subject buffer.", result);
         RequireText(commandRouting, "result.Sort(CompareEntityIds)", "Selection command subjects must sort the reusable buffer in place.", result);
         ForbidText(commandRouting, "selectedEntityIds\n                .Where(id => id.IsValid)", "Selection commands must not allocate LINQ-filtered subject lists.", result);
         ForbidText(commandRouting, ".Distinct()\n                .OrderBy(id => id.Value)", "Selection commands must not allocate distinct ordered LINQ subject lists.", result);
-        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
+        var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "command", "UnitBattlefield.Commands.cs");
         RequireText(commands, "CollectSelectionRectCandidates(playerSlotId, worldRect)", "Rect selection commit must consume the shared candidate collector.", result);
         RequireText(commands, "public int CountSelectionRectCandidates(PlayerSlotId playerSlotId, Rect2 worldRect)", "Rect selection preview must expose the shared candidate count.", result);
         RequireText(commands, "private IReadOnlyCollection<EntityId> CollectSelectionRectCandidates", "Rect selection eligibility must have one reusable candidate collector.", result);
