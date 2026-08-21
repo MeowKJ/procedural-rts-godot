@@ -19,11 +19,13 @@ static class PresentationReviewGate
     private static void RequireHudAndTheme(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "HudLayer.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.State.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.ContextState.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.FeedbackState.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.CatalogState.cs");
-        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.CatalogCardRefresh.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "state", "HudLayer.State.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "state", "HudLayer.ContextState.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "state", "HudLayer.FeedbackState.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "state", "HudLayer.CatalogState.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "state", "HudLayer.CatalogCardRefresh.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "provider", "HudLayer.ProviderRepeatControls.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "provider", "HudLayer.ProviderLaneRouting.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "provider", "HudLayer.ProviderLaneSelection.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "controls", "HudLayer.CatalogControls.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "controls", "HudLayer.SelectionControls.cs"); ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "controls", "HudLayer.AlertGroupControls.cs");
+        ReviewGateSource.ForbidFile(root, result, "scripts", "ui", "hud", "HudLayer.ProviderLanes.cs");
+        ReviewGateSource.ForbidFile(root, result, "scripts", "ui", "hud", "HudLayer.NestedControls.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFactory.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFontProfile.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "SoftOldCityTheme.cs");

@@ -25,6 +25,6 @@ static class CommandConsoleReviewGate
         ReviewGateSource.ForbidTextInSources(root, result, "FogLift", "scripts/ui/hud/HudLayer.Minimap.cs");
         ReviewGateSource.ForbidTextInSources(root, result, "new Vector2(36, 34)", "scripts/ui/hud");
         ReviewGateSource.RequireTextInFile(root, result, "DrawFogTacticalGrid(rect);", "scripts", "ui", "hud", "HudLayer.Minimap.cs");
-        ReviewGateSource.RequireTextInFile(root, result, "visible && !string.IsNullOrWhiteSpace(statusText)", "scripts", "ui", "hud", "HudLayer.ProviderLanes.cs");
+        ReviewGateSource.RequireTextInFile(root, result, "visible && !string.IsNullOrWhiteSpace(statusText)", "scripts", "ui", "hud", "provider", "HudLayer.ProviderRepeatControls.cs");
     }
 }
