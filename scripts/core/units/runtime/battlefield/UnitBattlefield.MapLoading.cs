@@ -20,7 +20,6 @@ public sealed partial class UnitBattlefield
             WorldSize = map.WorldSize.ToVector2(),
         };
         battlefield.AdoptLoadedOwners(map);
-        battlefield.AdoptLoadedResources(map);
         battlefield.AdoptLoadedBuildings();
         battlefield.AdoptLoadedUnits();
         return battlefield;
@@ -42,28 +41,6 @@ public sealed partial class UnitBattlefield
                     second.OwnerId.ToPlayerSlot(),
                     _entityWorld.Relations.Relation(first.OwnerId, second.OwnerId));
             }
-        }
-    }
-
-    private void AdoptLoadedResources(MapSpec map)
-    {
-        for (var index = 0; index < map.Resources.Count; index++)
-        {
-            var source = map.Resources[index];
-            var entity = _entityWorld.OrderedEntities.FirstOrDefault(candidate =>
-                candidate.SpecId == $"map.resource.{source.Id}")
-                ?? throw new InvalidOperationException($"Loaded map resource '{source.Id}' is missing its EntityWorld entity.");
-            var node = entity.Components.Require<ResourceNodeComponentState>();
-            var collision = entity.Components.Require<CollisionComponentState>();
-            var field = new ResourceFieldModel(
-                index + 1,
-                entity.Transform.Position,
-                collision.Radius,
-                node.MaxAmount,
-                node.Amount,
-                source.Accent.ToColor());
-            _resourceFields.Add(field);
-            _resourceFieldEntityIds[field.Id] = entity.Id;
         }
     }
 

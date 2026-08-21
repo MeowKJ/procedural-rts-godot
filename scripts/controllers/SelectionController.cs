@@ -29,7 +29,7 @@ public partial class SelectionController : Node2D
     private bool _dragStartedAsDoubleClick;
     private UnitInstance? _hoveredUnitInstance;
     private BuildingHoverProjection? _hoveredBuildingProjection;
-    private ResourceFieldModel? _hoveredResourceField;
+    private UnitBattlefieldResourceNodeProjection? _hoveredResourceNode;
     private readonly List<UnitInstance> _runtimeCommandLineUnitBuffer = [];
     private readonly List<int> _selectionHotkeyUnitIdBuffer = [];
     private readonly Dictionary<(int X, int Y), (Vector2 Position, Color Accent, float Pulse)> _commandLineTargetMarkers = [];
@@ -46,8 +46,8 @@ public partial class SelectionController : Node2D
         _hoveredBuildingProjection = _hoveredUnitInstance is null
             ? UnitBattlefield.PickAnyBuildingHoverProjection(worldPosition, LocalPlayerSlotId, PickPaddingWorld())
             : null;
-        _hoveredResourceField = _hoveredUnitInstance is null && _hoveredBuildingProjection is null
-            ? PickResourceField(worldPosition)
+        _hoveredResourceNode = _hoveredUnitInstance is null && _hoveredBuildingProjection is null
+            ? PickResourceNode(worldPosition)
             : null;
         PreviewState = CreatePreviewState(mousePosition, worldPosition);
         _redrawTimer -= (float)delta;

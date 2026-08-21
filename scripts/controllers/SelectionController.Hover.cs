@@ -13,7 +13,7 @@ public partial class SelectionController
             return;
         }
 
-        if (_hoveredBuildingProjection is null && _hoveredResourceField is null && _hoveredUnitInstance is null)
+        if (_hoveredBuildingProjection is null && _hoveredResourceNode is null && _hoveredUnitInstance is null)
         {
             return;
         }
@@ -24,9 +24,9 @@ public partial class SelectionController
             return;
         }
 
-        if (_hoveredResourceField is not null)
+        if (_hoveredResourceNode is { } resourceNode)
         {
-            DrawResourceHoverAffordance(_hoveredResourceField);
+            DrawResourceHoverAffordance(resourceNode);
             return;
         }
 
@@ -64,13 +64,13 @@ public partial class SelectionController
         DrawLine(center + new Vector2(-bracket, radius), center + new Vector2(bracket, radius), color, 2.2f, true);
     }
 
-    private void DrawResourceHoverAffordance(ResourceFieldModel field)
+    private void DrawResourceHoverAffordance(UnitBattlefieldResourceNodeProjection resource)
     {
-        var fullness = field.MaxAmount <= 0 ? 0 : Mathf.Clamp((float)field.Amount / field.MaxAmount, 0, 1);
-        var color = new Color(field.Accent, 0.72f);
-        var radius = field.Radius + 22;
-        var center = field.Position;
-        DrawArc(center, radius, 0, Mathf.Tau, 128, new Color(field.Accent, 0.24f + fullness * 0.22f), 2.2f, true);
+        var fullness = resource.MaxAmount <= 0 ? 0 : Mathf.Clamp((float)resource.Amount / resource.MaxAmount, 0, 1);
+        var color = new Color(resource.Accent, 0.72f);
+        var radius = resource.Radius + 22;
+        var center = resource.Position;
+        DrawArc(center, radius, 0, Mathf.Tau, 128, new Color(resource.Accent, 0.24f + fullness * 0.22f), 2.2f, true);
         DrawArc(center, radius + 12, -Mathf.Pi / 2f, -Mathf.Pi / 2f + Mathf.Tau * fullness, 96, new Color("#ffffff", 0.52f), 2.4f, true);
 
         if (!HasSelectedHarvester())

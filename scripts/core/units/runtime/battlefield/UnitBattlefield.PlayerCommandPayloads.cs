@@ -23,11 +23,6 @@ public sealed partial class UnitBattlefield
         return _selectedBuildingEntityIdBuffer.ToArray();
     }
 
-    public bool TryGetResourceEntityId(ResourceFieldModel field, out EntityId entityId)
-    {
-        return _resourceFieldEntityIds.TryGetValue(field.Id, out entityId);
-    }
-
     public bool TryCreateProductionDesignPayload(
         string designId,
         PlayerSlotId playerSlotId,

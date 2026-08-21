@@ -36,7 +36,7 @@ public sealed class UnitInstance
     public float AlertPulse { get; internal set; }
     public float HitPulse { get; internal set; }
     public HarvesterMode HarvesterMode { get; internal set; } = HarvesterMode.Idle;
-    public int? HarvestFieldId { get; internal set; }
+    public EntityId? HarvestResourceEntityId { get; internal set; }
     public int? HarvestRefineryId { get; internal set; }
     public float HarvestPulse { get; internal set; }
     public bool HarvesterRetreating { get; internal set; }

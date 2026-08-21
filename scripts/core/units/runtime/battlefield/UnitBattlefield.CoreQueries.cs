@@ -12,13 +12,6 @@ public sealed partial class UnitBattlefield
             : null;
     }
 
-    public EntityInstance? ResourceEntityByFieldId(int id)
-    {
-        return _resourceFieldEntityIds.TryGetValue(id, out var entityId) && _entityWorld.TryGet(entityId, out var entity)
-            ? entity
-            : null;
-    }
-
     public EntityProjection? UnitProjection(int id)
     {
         var unit = UnitById(id);
@@ -164,9 +157,9 @@ public sealed partial class UnitBattlefield
         ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
     }
 
-    public ResourceFieldModel? PickResourceField(Vector2 worldPoint, float pickPadding = 8)
+    public UnitBattlefieldResourceNodeProjection? PickResourceNode(Vector2 worldPoint, float pickPadding = 8)
     {
-        return NearestResourceField(worldPoint, pickPadding);
+        return NearestResourceNode(worldPoint, pickPadding);
     }
 
     public IReadOnlyList<UnitBattlefieldVisionSource> VisionSources(PlayerSlotId viewer)
@@ -187,7 +180,7 @@ public sealed partial class UnitBattlefield
     public IReadOnlyList<UnitBattlefieldResourcePip> ResourcePips(Func<Vector2, bool>? isExplored = null)
     {
         var result = NextResourcePipBuffer();
-        foreach (var field in ResourceFields)
+        foreach (var field in ResourceNodeProjections())
         {
             if (field.Amount <= 0 || !(isExplored?.Invoke(field.Position) ?? true))
             {

@@ -4,13 +4,6 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    private int? ResourceFieldEntityId(int? fieldId)
-    {
-        return fieldId is int id && _resourceFieldEntityIds.TryGetValue(id, out var entityId)
-            ? entityId.Value
-            : null;
-    }
-
     private int? BuildingTargetEntityId(int? buildingId)
     {
         return buildingId is int id && _buildingTargetEntityIds.TryGetValue(id, out var entityId)
@@ -34,7 +27,6 @@ public sealed partial class UnitBattlefield
 
         CollectResourceCreditsBefore(_resourceCreditsBefore);
         _resourceSystem.Step(new SimContext(_entityWorld, _inputCommandTick, dt, []));
-        RefreshResourceFieldProjections();
         UpdateDockDeliveryPulses();
         NotifyCreditChanges(_resourceCreditsBefore);
     }

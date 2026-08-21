@@ -77,7 +77,7 @@ internal static partial class AiOpponentLoopQaProgram
         var assignments = AssignIdleHarvesters(
             battlefield,
             PlayerSlotId.Two,
-            runtime.EnemyResource,
+            runtime.EnemyResourceEntityId,
             metrics.AssignedHarvesters);
         metrics.HarvestAssignments += assignments;
         metrics.HarvestAppliedCommands += battlefield.AppliedInputCommandCount - beforeCommands;

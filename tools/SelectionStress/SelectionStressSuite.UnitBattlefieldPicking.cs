@@ -71,7 +71,8 @@ internal static partial class SelectionStressSuite
             throw new InvalidOperationException("hostile building pick should ignore dead building targets");
         }
 
-        if (battlefield.PickResourceField(new Vector2(501, 500))?.Id != 2)
+        var resources = battlefield.ResourceNodeProjections();
+        if (battlefield.PickResourceNode(new Vector2(501, 500))?.EntityId != resources[1].EntityId)
         {
             throw new InvalidOperationException("resource pick should ignore depleted fields and choose nearest live field");
         }

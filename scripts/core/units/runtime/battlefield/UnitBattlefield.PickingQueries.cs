@@ -128,11 +128,11 @@ public sealed partial class UnitBattlefield
         return bestId;
     }
 
-    private ResourceFieldModel? NearestResourceField(Vector2 worldPoint, float pickPadding)
+    private UnitBattlefieldResourceNodeProjection? NearestResourceNode(Vector2 worldPoint, float pickPadding)
     {
-        ResourceFieldModel? best = null;
+        UnitBattlefieldResourceNodeProjection? best = null;
         var bestDistanceSquared = float.PositiveInfinity;
-        foreach (var field in ResourceFields)
+        foreach (var field in ResourceNodeProjections())
         {
             if (field.Amount <= 0)
             {

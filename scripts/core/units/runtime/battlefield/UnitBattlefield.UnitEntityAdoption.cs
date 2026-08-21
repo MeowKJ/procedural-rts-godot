@@ -31,7 +31,7 @@ public sealed partial class UnitBattlefield
             MoveMode = commandable?.MoveMode ?? MoveCommandMode.Direct,
             Stance = entity.Components.TryGet<StanceComponentState>(out var stance) ? stance.Stance : spec.Weapons.Count > 0 ? UnitStance.Aggressive : UnitStance.Ignore,
             HarvesterMode = entity.Components.TryGet<HarvesterComponentState>(out var harvester) ? harvester.Mode : HarvesterMode.Idle,
-            HarvestFieldId = harvester is null ? null : ResourceFieldIdForEntity(harvester.FieldId),
+            HarvestResourceEntityId = harvester?.FieldId is int fieldId ? new EntityId(fieldId) : null,
             HarvestRefineryId = harvester is null ? null : BuildingIdForEntity(harvester.RefineryId),
             HarvestPulse = harvester?.HarvestPulse ?? 0,
             HarvesterRetreating = harvester?.Retreating ?? false,

@@ -102,6 +102,7 @@ public static partial class EntityStateHash
             HarvesterComponentState harvester => AddHarvester(hash, harvester),
             ResourceCargoComponentState cargo => Add(Add(hash, cargo.Cargo), cargo.Capacity),
             ResourceNodeComponentState node => AddResourceNode(hash, node),
+            ResourcePresentationComponentState presentation => AddColor(hash, presentation.Accent),
             ResourceRegenerationAuraComponentState aura => AddResourceRegenerationAura(hash, aura),
             SignalNetworkComponentState signal => AddSignalNetwork(hash, signal),
             ProductionQueueComponentState production => AddProduction(hash, production, productionQueueOrder),
@@ -267,6 +268,14 @@ public static partial class EntityStateHash
         hash = Add(hash, (int)state.VisibilityRule);
         hash = Add(hash, (int)state.CorruptionState);
         return Add(hash, state.RegenerationProgress);
+    }
+
+    private static ulong AddColor(ulong hash, Color color)
+    {
+        hash = Add(hash, color.R);
+        hash = Add(hash, color.G);
+        hash = Add(hash, color.B);
+        return Add(hash, color.A);
     }
 
     private static ulong AddResourceRegenerationAura(ulong hash, ResourceRegenerationAuraComponentState state)

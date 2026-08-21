@@ -135,6 +135,7 @@ public static class MapLoader
             new EntityComponentState[]
             {
                 new ResourceNodeComponentState(resource.Amount, resource.Amount),
+                new ResourcePresentationComponentState(resource.Accent.ToColor()),
                 new CollisionComponentState(resource.Radius, 10, 0, BlocksMovement: false),
             });
     }

@@ -70,20 +70,20 @@ public partial class SelectionController
             return new CommandPreviewState(CommandPreviewKind.TargetHover, isEnemy ? GameText.T("preview.enemyStructure") : GameText.T("preview.structure"), screenPosition, buildingProjection.Position, true);
         }
 
-        if (_hoveredResourceField is { } resourceField)
+        if (_hoveredResourceNode is { } resourceNode)
         {
             var hasHarvester = HasSelectedHarvester();
             if (hasHarvester)
             {
-                return new CommandPreviewState(CommandPreviewKind.Harvest, GameText.T("preview.harvest"), screenPosition, resourceField.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Harvest, GameText.T("preview.harvest"), screenPosition, resourceNode.Position, true);
             }
 
             if (HasSelectedBuildingForPreview())
             {
-                return new CommandPreviewState(CommandPreviewKind.Rally, GameText.T("preview.setRally"), screenPosition, resourceField.Position, true);
+                return new CommandPreviewState(CommandPreviewKind.Rally, GameText.T("preview.setRally"), screenPosition, resourceNode.Position, true);
             }
 
-            return new CommandPreviewState(CommandPreviewKind.TargetHover, GameText.T("preview.resource"), screenPosition, resourceField.Position, true);
+            return new CommandPreviewState(CommandPreviewKind.TargetHover, GameText.T("preview.resource"), screenPosition, resourceNode.Position, true);
         }
 
         if (UnitBattlefield.SelectedCount(LocalPlayerSlotId) > 0)

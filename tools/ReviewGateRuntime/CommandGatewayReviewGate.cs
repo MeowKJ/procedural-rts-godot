@@ -7,6 +7,11 @@ static class CommandGatewayReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "PlayerCommandPayload.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "runtime", "UnitBattlefieldScriptedCommandDriver.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "runtime", "UnitBattlefieldResourceNodeProjection.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "world", "ResourceNodeView.cs");
+        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "economy", "Resource" + "FieldModel.cs");
+        ReviewGateSource.ForbidFile(root, result, "scripts", "world", "Resource" + "FieldView.cs");
+        ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Resource" + "FieldProjections.cs");
         ReviewGateSource.ForbidFile(
             root,
             result,
@@ -33,6 +38,10 @@ static class CommandGatewayReviewGate
         var qaDriver = ReviewGateSource.Read(root, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
         var battlefield = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs");
         var scriptedDriver = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldScriptedCommandDriver.cs");
+        var resourceProjection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldResourceNodeProjection.cs");
+        var resourceQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ResourceNodeProjections.cs");
+        var mapLoader = ReviewGateSource.Read(root, "scripts", "core", "map", "MapLoader.cs");
+        var resourceView = ReviewGateSource.Read(root, "scripts", "world", "ResourceNodeView.cs");
 
         RequireText(contracts, "PlayerCommandPayload Payload", "PlayerCommand must carry a value payload for gateway shape validation.", result);
         RequireText(gateway, "public sealed partial class CommandGateway", "CommandGateway shell must exist as a core type.", result);
@@ -58,11 +67,30 @@ static class CommandGatewayReviewGate
         RequireText(qaDriver, "PlayerCommandPayload.ForEntityTarget(", "QA target commands must use typed entity payloads.", result);
         RequireText(scriptedDriver, "PlayerControllerKind.ScriptedBot", "Runtime AI commands must identify scripted-bot authority explicitly.", result);
         RequireText(scriptedDriver, "SubmitLivePlayerCommand(", "Runtime AI commands must share the live CommandGateway entry point.", result);
+        RequireText(resourceProjection, "EntityId EntityId", "Resource projections must expose EntityWorld identity directly.", result);
+        RequireText(resourceProjection, "int Amount", "Resource projections must expose current resource-node amount.", result);
+        RequireText(resourceProjection, "public readonly record struct", "Resource projections must be immutable query values rather than mutable compatibility models.", result);
+        RequireText(resourceQueries, "ResourceNodeComponentState", "Resource projection queries must read amount authority from EntityWorld components.", result);
+        RequireText(resourceQueries, "ResourcePresentationComponentState", "Resource projection queries must read visual metadata from the resource entity.", result);
+        RequireText(mapLoader, "new ResourcePresentationComponentState(resource.Accent.ToColor())", "Map loading must install resource visual metadata on the entity.", result);
+        RequireText(resourceView, "UnitBattlefield.ResourceNodeProjection(ResourceEntityId)", "Resource views must refresh from immutable EntityWorld projections.", result);
+        ForbidText(resourceQueries, ".Amount =", "Resource projection queries must not write simulation amount back into sidecar state.", result);
         RequireText(battlefield, "_entityWorld.WorldWidth = value.X;", "UnitBattlefield WorldSize must synchronize EntityWorld width at the property boundary.", result);
         RequireText(battlefield, "_entityWorld.WorldHeight = value.Y;", "UnitBattlefield WorldSize must synchronize EntityWorld height at the property boundary.", result);
         ForbidText(payload, "CanonicalRadians =>", "Build facing must not expose an unconditional radians conversion that bypasses schema validation.", result);
         ReviewGateSource.ForbidTextInSources(root, result, "_entityWorld.WorldWidth = WorldSize.X", "scripts/core/units/runtime/battlefield");
         ReviewGateSource.ForbidTextInSources(root, result, "_entityWorld.WorldHeight = WorldSize.Y", "scripts/core/units/runtime/battlefield");
+        foreach (var retiredResourceSurface in new[]
+        {
+            "Resource" + "FieldModel",
+            "Resource" + "Fields",
+            "TryGet" + "ResourceEntityId",
+            "Pick" + "ResourceField",
+            "NearestVisible" + "ResourceField",
+        })
+        {
+            ReviewGateSource.ForbidTextInSources(root, result, retiredResourceSurface, "scripts", "tools");
+        }
 
         foreach (var retiredEntryPoint in new[]
         {

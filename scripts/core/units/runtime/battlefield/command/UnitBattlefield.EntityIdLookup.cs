@@ -21,24 +21,6 @@ public sealed partial class UnitBattlefield
         return UnitByEntityId(entityId)?.Id;
     }
 
-    private int? ResourceFieldIdForEntity(int? entityId)
-    {
-        if (entityId is not int id)
-        {
-            return null;
-        }
-
-        foreach (var pair in _resourceFieldEntityIds)
-        {
-            if (pair.Value.Value == id)
-            {
-                return pair.Key;
-            }
-        }
-
-        return null;
-    }
-
     private int? BuildingIdForEntity(int? entityId)
     {
         if (entityId is not int id)
@@ -61,11 +43,6 @@ public sealed partial class UnitBattlefield
         return _buildingTargetIdsByEntityId.TryGetValue(entityId, out var buildingId)
             ? buildingId
             : null;
-    }
-
-    private ResourceFieldModel? ResourceFieldById(int id)
-    {
-        return ResourceFields.FirstOrDefault(field => field.Id == id);
     }
 
     private void ClearRefineryDockClaim(int harvesterId)

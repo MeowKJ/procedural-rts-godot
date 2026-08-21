@@ -31,9 +31,13 @@ internal static partial class AiOpponentLoopQaProgram
 
         var playerBase = BuildRuntimeBase(battlefield, PlayerSlotId.One, leftFaction, leftStart, 0, 100);
         var enemyBase = BuildRuntimeBase(battlefield, PlayerSlotId.Two, rightFaction, rightStart, MathF.PI, 200);
-        var resourceFields = battlefield.ResourceFields;
-        var enemyResource = resourceFields.MinBy(field => field.Position.DistanceSquaredTo(rightStart))
-            ?? throw new InvalidOperationException($"seed {tournamentCase.Seed} generated no enemy resource field");
+        var resources = battlefield.ResourceNodeProjections();
+        if (resources.Count == 0)
+        {
+            throw new InvalidOperationException($"seed {tournamentCase.Seed} generated no enemy resource node");
+        }
+
+        var enemyResource = resources.MinBy(resource => resource.Position.DistanceSquaredTo(rightStart));
 
         SpawnMapRoster(battlefield, map, new OwnerId(2), PlayerSlotId.Two);
         var raiders = SpawnPlayerRaiders(battlefield, leftFaction, rightStart + new Vector2(280, 260));
@@ -63,8 +67,7 @@ internal static partial class AiOpponentLoopQaProgram
             map,
             playerBase,
             enemyBase,
-            resourceFields,
-            enemyResource,
+            enemyResource.EntityId,
             raiders,
             production,
             waves,
@@ -81,8 +84,7 @@ internal sealed record OpponentLoopRuntime(
     MapSpec Map,
     BaseRuntime PlayerBase,
     BaseRuntime EnemyBase,
-    IReadOnlyList<ResourceFieldModel> ResourceFields,
-    ResourceFieldModel EnemyResource,
+    EntityId EnemyResourceEntityId,
     IReadOnlyList<UnitInstance> Raiders,
     UnitBattlefieldEnemyProductionAi Production,
     UnitBattlefieldEnemyAttackWaveAi Waves,

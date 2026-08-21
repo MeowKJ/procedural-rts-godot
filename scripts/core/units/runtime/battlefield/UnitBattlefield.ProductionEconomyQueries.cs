@@ -62,7 +62,7 @@ public sealed partial class UnitBattlefield
             if (unit.PlayerSlotId == playerSlotId
                 && unit.Hp > 0
                 && unit.Spec.RoleTags.Contains(UnitRoleTag.Economy)
-                && (unit.HarvesterMode == HarvesterMode.Idle || unit.HarvestFieldId is null))
+                && (unit.HarvesterMode == HarvesterMode.Idle || unit.HarvestResourceEntityId is null))
             {
                 result.Add(unit);
             }
@@ -71,15 +71,14 @@ public sealed partial class UnitBattlefield
         result.Sort(CompareUnitIds);
     }
 
-    public ResourceFieldModel? NearestVisibleResourceField(OwnerId owner, Vector2 origin)
+    public UnitBattlefieldResourceNodeProjection? NearestVisibleResourceNode(OwnerId owner, Vector2 origin)
     {
-        ResourceFieldModel? best = null;
+        UnitBattlefieldResourceNodeProjection? best = null;
         var bestDistance = float.PositiveInfinity;
-        foreach (var resource in ResourceFields)
+        foreach (var resource in ResourceNodeProjections())
         {
             if (resource.Amount <= 0
-                || ResourceEntityByFieldId(resource.Id) is not { } entity
-                || !EntityWorld.Visibility.IsVisible(owner, entity.Id))
+                || !EntityWorld.Visibility.IsVisible(owner, resource.EntityId))
             {
                 continue;
             }

@@ -188,20 +188,22 @@ static void AssertHarvestAndBank()
         8_000,
         new MapColor("#f6c55c"));
     var battlefield = NewBattlefield(resource: resource);
-    var field = battlefield.ResourceFields[0];
+    var resourceProjection = battlefield.ResourceNodeProjections()[0];
     AddBuilding(battlefield, 1, BuildingDesignIds.Refinery, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(620, 700));
     var harvester = battlefield.Spawn("dog.harvester", PlayerSlotId.One, new Vector2(690, 665));
     battlefield.SelectUnitsByIds(PlayerSlotId.One, [harvester.Id]);
 
     var creditsBefore = battlefield.Credits(PlayerSlotId.One);
-    var harvestResult = QaPlayerCommandDriver.HarvestSelection(battlefield, PlayerSlotId.One, field);
+    var harvestResult = QaPlayerCommandDriver.HarvestSelection(battlefield, PlayerSlotId.One, resourceProjection.EntityId);
     Require(
         harvestResult.AcceptedCount == 1,
         $"player loop should accept harvest command: {string.Join("; ", harvestResult.Commands.Select(command => command.Message))}");
     Advance(battlefield, 28);
 
     Require(battlefield.Credits(PlayerSlotId.One) > creditsBefore, "player loop should bank credits after harvesting");
-    Require(field.Amount < field.MaxAmount, "player loop harvesting should reduce the selected resource node");
+    var updatedResource = battlefield.ResourceNodeProjection(resourceProjection.EntityId)
+        ?? throw new InvalidOperationException("harvest resource projection should remain available");
+    Require(updatedResource.Amount < updatedResource.MaxAmount, "player loop harvesting should reduce the selected resource node");
 }
 
 static void AssertProductionRallyAndTiers()

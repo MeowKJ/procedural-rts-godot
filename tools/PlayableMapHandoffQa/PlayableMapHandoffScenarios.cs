@@ -33,7 +33,7 @@ internal static class PlayableMapHandoffScenarios
             "UnitBattlefield should observe loaded owner credits.", failures);
         Require(battlefield.Units.Count == map.Units.Count
             && battlefield.BuildingSnapshots().Count == map.Buildings.Count
-            && battlefield.ResourceFields.Count == map.Resources.Count,
+            && battlefield.ResourceNodeProjections().Count == map.Resources.Count,
             "UnitBattlefield should adopt every loaded gameplay entity without respawning it.", failures);
         Require(battlefield.Units.Zip(map.Units).All(pair =>
                 pair.First.Spec.Id == pair.Second.DesignId
