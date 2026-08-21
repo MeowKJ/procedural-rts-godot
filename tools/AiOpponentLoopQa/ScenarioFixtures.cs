@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Tools.Qa;
 
 namespace ProceduralRts.Tools.AiOpponentLoopQa;
 
@@ -99,7 +100,7 @@ internal static partial class AiOpponentLoopQaProgram
         foreach (var harvester in candidates)
         {
             battlefield.SelectUnitsByIds(slot, [harvester.Id]);
-            if (battlefield.CommandHarvestSelected(slot, field, out _))
+            if (QaPlayerCommandDriver.HarvestSelection(battlefield, slot, field).AcceptedCount == 1)
             {
                 assignedHarvesters.Add(harvester.Id);
                 assignments++;

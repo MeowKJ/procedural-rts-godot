@@ -5,11 +5,32 @@ static class CommandGatewayReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "CommandGateway.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "CommandGatewayResults.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "PlayerCommandPayload.cs");
+        ReviewGateSource.RequireFile(root, result, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
+        ReviewGateSource.RequireFile(
+            root,
+            result,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.ExplicitCommandSubjects.cs");
+        ReviewGateSource.ForbidFile(
+            root,
+            result,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.CommandSubjectBuffers.cs");
 
         var gateway = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.cs");
         var results = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGatewayResults.cs");
         var payload = ReviewGateSource.Read(root, "scripts", "core", "players", "PlayerCommandPayload.cs");
         var contracts = ReviewGateSource.Read(root, "scripts", "core", "players", "PlayerControllerContracts.cs");
+        var qaDriver = ReviewGateSource.Read(root, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
+        var battlefield = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs");
 
         RequireText(contracts, "PlayerCommandPayload Payload", "PlayerCommand must carry a value payload for gateway shape validation.", result);
         RequireText(gateway, "public sealed partial class CommandGateway", "CommandGateway shell must exist as a core type.", result);
@@ -29,7 +50,30 @@ static class CommandGatewayReviewGate
         RequireText(payload, "QuarterTurns is < 0 or > 3", "Shared Build-facing resolver must reject non-cardinal values.", result);
         RequireText(payload, "PlayerCommandBuildFacing BuildFacing = default", "Non-build payload factories may leave the trailing build-facing field unset.", result);
         RequireText(payload, "PlayerCommandPayload ForBuild(string specId, float x, float y, int quarterTurns)", "Build payloads must expose a focused quarter-turn writer factory.", result);
+        RequireText(qaDriver, "SubmitLivePlayerCommand(", "QA player commands must share the live CommandGateway entry point.", result);
+        RequireText(qaDriver, "PlayerControllerKind.QaAgent", "QA player commands must identify their controller kind explicitly.", result);
+        RequireText(qaDriver, "PlayerCommandPayload.ForPoint(", "QA movement commands must use typed point payloads.", result);
+        RequireText(qaDriver, "PlayerCommandPayload.ForEntityTarget(", "QA target commands must use typed entity payloads.", result);
+        RequireText(battlefield, "_entityWorld.WorldWidth = value.X;", "UnitBattlefield WorldSize must synchronize EntityWorld width at the property boundary.", result);
+        RequireText(battlefield, "_entityWorld.WorldHeight = value.Y;", "UnitBattlefield WorldSize must synchronize EntityWorld height at the property boundary.", result);
         ForbidText(payload, "CanonicalRadians =>", "Build facing must not expose an unconditional radians conversion that bypasses schema validation.", result);
+        ReviewGateSource.ForbidTextInSources(root, result, "_entityWorld.WorldWidth = WorldSize.X", "scripts/core/units/runtime/battlefield");
+        ReviewGateSource.ForbidTextInSources(root, result, "_entityWorld.WorldHeight = WorldSize.Y", "scripts/core/units/runtime/battlefield");
+
+        foreach (var retiredEntryPoint in new[]
+        {
+            "Command" + "MoveSelected(",
+            "Command" + "AttackSelected(",
+            "Command" + "StopSelected(",
+            "Command" + "SetSelectedStance(",
+            "Command" + "HarvestSelected(",
+            "Command" + "RepairSelected(",
+            "Command" + "RepairSelectedBuilding(",
+        })
+        {
+            ReviewGateSource.ForbidTextInSources(root, result, retiredEntryPoint, "scripts", "tools");
+        }
+
         var payloadValidation = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.PayloadValidation.cs");
         RequireText(payloadValidation, "ContainsInvalidSubject(subjects)", "CommandGateway payload validation must use an explicit subject scan.", result);
         RequireText(payloadValidation, "private static bool ContainsInvalidSubject(IReadOnlyList<EntityId> subjects)", "CommandGateway invalid-subject scan must be reusable and allocation-free.", result);

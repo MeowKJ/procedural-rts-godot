@@ -4,38 +4,6 @@ namespace ProceduralRts.Core;
 
 public sealed partial class UnitBattlefield
 {
-    public bool CommandHarvestSelected(PlayerSlotId playerSlotId, ResourceFieldModel field, out string status)
-    {
-        CollectSelectedCommandUnits(playerSlotId, IsHarvester, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            status = GameText.T("harvest.selectHarvester");
-            return false;
-        }
-
-        if (field.Amount <= 0)
-        {
-            status = GameText.T("harvest.depleted");
-            return false;
-        }
-
-        KeepUnitsWithRefinery(_unitCommandBuffer, field.Position);
-        if (_unitCommandBuffer.Count > 0)
-        {
-            CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-            SubmitAndApplyInputCommand(new HarvestEntityCommand(
-                OwnerId.FromPlayerSlot(playerSlotId),
-                _unitCommandEntityBuffer,
-                NextInputCommandTick(),
-                _resourceFieldEntityIds[field.Id]));
-        }
-
-        status = _unitCommandBuffer.Count == 0
-            ? GameText.T("harvest.needRefinery")
-            : GameText.Format("harvest.assigned", _unitCommandBuffer.Count, _unitCommandBuffer.Count == 1 ? "" : "s", field.Id);
-        return _unitCommandBuffer.Count > 0;
-    }
-
     public bool CommandHarvestUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, ResourceFieldModel field, out string status)
     {
         CollectRequestedCommandUnits(playerSlotId, unitIds, IsHarvester, _unitCommandBuffer);
@@ -110,75 +78,6 @@ public sealed partial class UnitBattlefield
         }
 
         return _repairOrderProjectionBuffer;
-    }
-
-    public bool CommandRepairSelected(PlayerSlotId playerSlotId, UnitInstance target, out string status)
-    {
-        status = GameText.T("ui.context.repair");
-        if (!IsRepairableTarget(playerSlotId, target))
-        {
-            return false;
-        }
-
-        CollectSelectedCommandUnits(playerSlotId, IsRepairer, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return false;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new RepairEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            target.EntityId));
-        return true;
-    }
-
-    public bool CommandRepairSelectedBuilding(PlayerSlotId playerSlotId, int buildingId, out string status)
-    {
-        status = GameText.T("ui.context.repair");
-        var targetEntity = BuildingEntityByTargetId(buildingId);
-        if (targetEntity is null)
-        {
-            return false;
-        }
-
-        if (!IsRepairableBuildingTargetCore(playerSlotId, buildingId))
-        {
-            return false;
-        }
-
-        CollectSelectedCommandUnits(playerSlotId, IsRepairer, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return false;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new RepairEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            targetEntity.Id));
-        return true;
-    }
-
-    private void CollectSelectedCommandUnits(
-        PlayerSlotId playerSlotId,
-        Predicate<UnitInstance> predicate,
-        List<UnitInstance> result)
-    {
-        result.Clear();
-        foreach (var unit in Units)
-        {
-            if (unit.PlayerSlotId == playerSlotId && unit.Selected && predicate(unit))
-            {
-                result.Add(unit);
-            }
-        }
-
-        result.Sort(CompareUnitInstanceIds);
     }
 
     private void CollectRequestedCommandUnits(

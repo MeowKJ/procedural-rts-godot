@@ -1,4 +1,5 @@
 using System.Text;
+using ProceduralRts.Tools.Qa;
 
 static partial class Program
 {
@@ -23,7 +24,7 @@ static partial class Program
         Assert(selected == MovementFeelSubjectCount, $"movement-feel attack-move selected {selected}/{MovementFeelSubjectCount}: {MovementFeelTrace(battlefield, subjects, -1, 0, MovementFeelAttackMoveTarget, [])}");
 
         var commandTick = battlefield.AppliedInputCommandCount + 1;
-        battlefield.CommandMoveSelected(PlayerSlotId.One, MovementFeelAttackMoveTarget, MovementFeelWorldSize, MoveCommandMode.Attack);
+        QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, MovementFeelAttackMoveTarget, MoveCommandMode.Attack);
         Assert(
             battlefield.AppliedInputCommandCount == commandTick,
             $"movement-feel attack-move command was not accepted: expected commandTick {commandTick}, applied {battlefield.AppliedInputCommandCount}, target={FormatVector(MovementFeelAttackMoveTarget)}, trace={MovementFeelTrace(battlefield, subjects, commandTick, 0, MovementFeelAttackMoveTarget, [])}");
@@ -74,17 +75,17 @@ static partial class Program
 
         var firstMoveTarget = new Vector2(900, 760);
         var firstMoveTick = battlefield.AppliedInputCommandCount + 1;
-        battlefield.CommandMoveSelected(PlayerSlotId.One, firstMoveTarget, MovementFeelWorldSize, MoveCommandMode.Direct);
+        QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, firstMoveTarget, MoveCommandMode.Direct);
         Assert(battlefield.AppliedInputCommandCount == firstMoveTick, $"movement-feel replacement first move ignored: commandTick={firstMoveTick}, trace={MovementFeelTrace(battlefield, subjects, firstMoveTick, 0, firstMoveTarget, [])}");
         StepMovementFeelBattlefield(battlefield, 18);
 
         var attackMoveTick = battlefield.AppliedInputCommandCount + 1;
-        battlefield.CommandMoveSelected(PlayerSlotId.One, MovementFeelAttackMoveTarget, MovementFeelWorldSize, MoveCommandMode.Attack);
+        QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, MovementFeelAttackMoveTarget, MoveCommandMode.Attack);
         Assert(battlefield.AppliedInputCommandCount == attackMoveTick, $"movement-feel replacement attack-move ignored: commandTick={attackMoveTick}, trace={MovementFeelTrace(battlefield, subjects, attackMoveTick, 18, MovementFeelAttackMoveTarget, [])}");
         StepMovementFeelBattlefield(battlefield, 72);
 
         var finalMoveTick = battlefield.AppliedInputCommandCount + 1;
-        battlefield.CommandMoveSelected(PlayerSlotId.One, MovementFeelReplacementFinalTarget, MovementFeelWorldSize, MoveCommandMode.Direct);
+        QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, MovementFeelReplacementFinalTarget, MoveCommandMode.Direct);
         Assert(
             battlefield.AppliedInputCommandCount == finalMoveTick,
             $"movement-feel replacement final move ignored: commandTick={finalMoveTick}, trace={MovementFeelTrace(battlefield, subjects, finalMoveTick, 90, MovementFeelReplacementFinalTarget, [])}");

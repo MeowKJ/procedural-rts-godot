@@ -12,8 +12,6 @@ public sealed partial class UnitBattlefield
         }
 
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
 
         var context = new SimContext(_entityWorld, _inputCommandTick, dt, []);
         _pathfindingSystem.Step(context);

@@ -1,4 +1,5 @@
 using ProceduralRts.Core;
+using ProceduralRts.Tools.Qa;
 
 namespace ProceduralRts.Tools.AiOpponentLoopQa;
 
@@ -56,7 +57,7 @@ internal static partial class AiOpponentLoopQaProgram
         var battlefield = runtime.Battlefield;
         var beforeCommands = battlefield.AppliedInputCommandCount;
         battlefield.SelectUnitsByIds(PlayerSlotId.One, runtime.Raiders.Select(unit => unit.Id));
-        battlefield.CommandAttackSelected(PlayerSlotId.One, runtime.EnemyBase.GroundTurret.Id);
+        QaPlayerCommandDriver.AttackBuildingSelection(battlefield, PlayerSlotId.One, runtime.EnemyBase.GroundTurret.Id);
         metrics.LeftAttackCommands += battlefield.AppliedInputCommandCount - beforeCommands;
         metrics.RaidCommanded = true;
     }

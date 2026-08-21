@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\ProceduralRts.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\QaCommon\QaPlayerCommandDriver.cs" Link="QaCommon\QaPlayerCommandDriver.cs" />
     <Compile Include="..\SelectionStressPathing\**\*.cs" Link="SelectionStressPathing\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

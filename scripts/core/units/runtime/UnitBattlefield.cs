@@ -97,6 +97,7 @@ public sealed partial class UnitBattlefield
     private readonly List<int> _selectedProductionProducerIdBuffer = [];
     private readonly List<UnitInstance> _units = [];
     private readonly List<ResourceFieldModel> _resourceFields = [];
+    private Vector2 _worldSize = new(3600, 2400);
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
     private bool _useSecondaryBuildingMinimapProjectionBuffer;
@@ -111,7 +112,16 @@ public sealed partial class UnitBattlefield
     public int LastDroppedSimulationTicks => _simulationClock.LastDroppedBacklogTicks;
     public double LastDroppedSimulationSeconds => _simulationClock.LastDroppedBacklogSeconds;
     public int AppliedInputCommandCount { get; private set; }
-    public Vector2 WorldSize { get; set; } = new(3600, 2400);
+    public Vector2 WorldSize
+    {
+        get => _worldSize;
+        set
+        {
+            _worldSize = value;
+            _entityWorld.WorldWidth = value.X;
+            _entityWorld.WorldHeight = value.Y;
+        }
+    }
     public PlayerSlotId OutcomeViewer { get; set; } = PlayerSlotId.One;
     public GameOutcome Outcome { get; private set; } = GameOutcome.InProgress;
     public event Action<IReadOnlyList<UnitInstanceDeathInfo>>? UnitsRemoved;
@@ -134,6 +144,7 @@ public sealed partial class UnitBattlefield
     private UnitBattlefield(EntityWorld entityWorld)
     {
         _entityWorld = entityWorld ?? throw new ArgumentNullException(nameof(entityWorld));
+        _worldSize = new Vector2(entityWorld.WorldWidth, entityWorld.WorldHeight);
     }
 
     public UnitInstance Spawn<TDesign>(PlayerSlotId playerSlotId, Vector2 position, float facing = 0)

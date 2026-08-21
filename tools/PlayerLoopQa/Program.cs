@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Tools.Qa;
 
 static void Require(bool condition, string message)
 {
@@ -193,7 +194,10 @@ static void AssertHarvestAndBank()
     battlefield.SelectUnitsByIds(PlayerSlotId.One, [harvester.Id]);
 
     var creditsBefore = battlefield.Credits(PlayerSlotId.One);
-    Require(battlefield.CommandHarvestSelected(PlayerSlotId.One, field, out var harvestStatus), $"player loop should accept harvest command: {harvestStatus}");
+    var harvestResult = QaPlayerCommandDriver.HarvestSelection(battlefield, PlayerSlotId.One, field);
+    Require(
+        harvestResult.AcceptedCount == 1,
+        $"player loop should accept harvest command: {string.Join("; ", harvestResult.Commands.Select(command => command.Message))}");
     Advance(battlefield, 28);
 
     Require(battlefield.Credits(PlayerSlotId.One) > creditsBefore, "player loop should bank credits after harvesting");
@@ -252,17 +256,17 @@ static void AssertSelectionCommandsAndStance()
     var selected = battlefield.SelectRect(PlayerSlotId.One, new Rect2(460, 455, 220, 100), additive: false);
     Require(selected == units.Length, "player loop should group-select combat units with a selection rectangle");
 
-    var changed = battlefield.CommandSetSelectedStance(PlayerSlotId.One, UnitStance.Hold);
-    Require(changed == units.Length && units.All(unit => unit.Stance == UnitStance.Hold), "player loop should change selected unit stance");
+    var stanceResult = QaPlayerCommandDriver.SetSelectionStance(battlefield, PlayerSlotId.One, UnitStance.Hold);
+    Require(stanceResult.AcceptedCount == 1 && units.All(unit => unit.Stance == UnitStance.Hold), "player loop should change selected unit stance");
 
     var moveTarget = new Vector2(700, 540);
-    battlefield.CommandMoveSelected(PlayerSlotId.One, moveTarget, MatchConfig.DefaultWorldSize);
+    QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, moveTarget);
     Advance(battlefield, 1.5f);
     Require(units.Any(unit => unit.Position.DistanceTo(moveTarget) < 180 || unit.MoveTarget is not null), "player loop should move selected units toward command target");
 
     battlefield.SelectUnitsByIds(PlayerSlotId.One, units.Select(unit => unit.Id));
     var hpBefore = enemy.Hp;
-    battlefield.CommandAttackSelected(PlayerSlotId.One, enemy.Id);
+    QaPlayerCommandDriver.AttackBuildingSelection(battlefield, PlayerSlotId.One, enemy.Id);
     Advance(battlefield, 8);
     Require((battlefield.BuildingSnapshot(enemy.Id)?.Hp ?? 0) < hpBefore, "player loop should damage an attacked enemy building");
 }
@@ -292,7 +296,7 @@ static void AssertLiveSharedCorridorPathing()
     }
 
     battlefield.SelectUnitsByIds(PlayerSlotId.One, units.Select(unit => unit.Id));
-    battlefield.CommandMoveSelected(PlayerSlotId.One, new Vector2(608, 280), battlefield.WorldSize);
+    QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, new Vector2(608, 280));
     battlefield.Update(0.1);
 
     var paths = units
@@ -334,7 +338,7 @@ static void AssertVictoryAndDefeat()
     };
     var enemyHq = AddBuilding(victory, 20, BuildingDesignIds.Headquarters, PlayerSlotId.Two, UnitFactionId.Cat, new Vector2(830, 720), Mathf.Pi, hp: 90);
     victory.SelectUnitsByIds(PlayerSlotId.One, attackers.Select(unit => unit.Id));
-    victory.CommandAttackSelected(PlayerSlotId.One, enemyHq.Id);
+    QaPlayerCommandDriver.AttackBuildingSelection(victory, PlayerSlotId.One, enemyHq.Id);
     Advance(victory, 12);
     Require(victory.Outcome == GameOutcome.Victory, "player loop should win after destroying enemy HQ");
 
@@ -350,7 +354,7 @@ static void AssertVictoryAndDefeat()
     };
     var playerHq = AddBuilding(defeat, 30, BuildingDesignIds.Headquarters, PlayerSlotId.One, UnitFactionId.Dog, new Vector2(720, 740), hp: 90);
     defeat.SelectUnitsByIds(PlayerSlotId.Two, enemyAttackers.Select(unit => unit.Id));
-    defeat.CommandAttackSelected(PlayerSlotId.Two, playerHq.Id);
+    QaPlayerCommandDriver.AttackBuildingSelection(defeat, PlayerSlotId.Two, playerHq.Id);
     Advance(defeat, 12);
     var playerHqAfterAttack = defeat.BuildingSnapshot(playerHq.Id);
     Require(defeat.Outcome == GameOutcome.Defeat,

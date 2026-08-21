@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\ProceduralRts.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\QaCommon\QaPlayerCommandDriver.cs" Link="QaCommon\QaPlayerCommandDriver.cs" />
     <Compile Include="..\AiOpponentLoopScenarios\**\*.cs" Link="AiOpponentLoopScenarios\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

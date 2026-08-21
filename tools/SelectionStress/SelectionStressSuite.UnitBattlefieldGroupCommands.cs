@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Tools.Qa;
 
 internal static partial class SelectionStressSuite
 {
@@ -19,7 +20,7 @@ internal static partial class SelectionStressSuite
             500);
 
         battlefield.SelectUnitsByIds(PlayerSlotId.One, [attackerB.Id, hostileUnit.Id, attackerA.Id, attackerA.Id]);
-        RequireCommandDelta(battlefield, 1, () => battlefield.CommandMoveSelected(PlayerSlotId.One, new Vector2(220, 220), new Vector2(1000, 1000)), "selected move");
+        RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, new Vector2(220, 220)), "selected move");
 
         var movedCount = battlefield.CommandMoveUnits(
             PlayerSlotId.One,
@@ -31,14 +32,14 @@ internal static partial class SelectionStressSuite
             throw new InvalidOperationException($"explicit move should submit two owned subjects, got {movedCount}");
         }
 
-        RequireCommandDelta(battlefield, 1, () => battlefield.CommandAttackSelected(PlayerSlotId.One, hostileUnit), "selected unit attack");
+        RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.AttackSelection(battlefield, PlayerSlotId.One, hostileUnit), "selected unit attack");
         var explicitAttackCount = battlefield.CommandAttackUnits(PlayerSlotId.One, [attackerB.Id, hostileUnit.Id, attackerA.Id], hostileUnit);
         if (explicitAttackCount != 2)
         {
             throw new InvalidOperationException($"explicit unit attack should submit two owned attackers, got {explicitAttackCount}");
         }
 
-        if (!battlefield.CommandAttackSelected(PlayerSlotId.One, hostileBuilding.Id))
+        if (QaPlayerCommandDriver.AttackBuildingSelection(battlefield, PlayerSlotId.One, hostileBuilding.Id).AcceptedCount != 1)
         {
             throw new InvalidOperationException("selected building attack should find buffered attackers");
         }
@@ -49,11 +50,11 @@ internal static partial class SelectionStressSuite
             throw new InvalidOperationException($"explicit building attack should submit two owned attackers, got {explicitBuildingAttackCount}");
         }
 
-        RequireCommandDelta(battlefield, 1, () => battlefield.CommandStopSelected(PlayerSlotId.One), "selected stop");
-        var stanceCount = battlefield.CommandSetSelectedStance(PlayerSlotId.One, UnitStance.Hold);
-        if (stanceCount != 2)
+        RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.StopSelection(battlefield, PlayerSlotId.One), "selected stop");
+        var stanceResult = QaPlayerCommandDriver.SetSelectionStance(battlefield, PlayerSlotId.One, UnitStance.Hold);
+        if (stanceResult.AcceptedCount != 1 || attackerA.Stance != UnitStance.Hold || attackerB.Stance != UnitStance.Hold)
         {
-            throw new InvalidOperationException($"selected stance should submit two armed units, got {stanceCount}");
+            throw new InvalidOperationException($"selected stance should submit two armed units through one gateway command, accepted {stanceResult.AcceptedCount}");
         }
 
         return 8;
