@@ -55,7 +55,6 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield harvest/repair commands must reuse entity subject storage.", result);
 
         var harvestRepair = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.HarvestRepair.cs");
-        RequireText(harvestRepair, "CollectSelectedCommandUnits(playerSlotId, IsHarvester, _unitCommandBuffer)", "Selected harvest commands must fill the reusable unit buffer.", result);
         RequireText(harvestRepair, "CollectRequestedCommandUnits(playerSlotId, unitIds, IsHarvester, _unitCommandBuffer)", "Explicit harvest commands must fill the reusable unit buffer.", result);
         RequireText(harvestRepair, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Harvest/repair commands must fill reusable entity subject storage.", result);
         ForbidText(harvestRepair, ".ToHashSet()", "Harvest/repair commands must not allocate requested-id sets.", result);
@@ -72,16 +71,14 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield group commands must reuse entity subject storage.", result);
 
         var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
-        var buffers = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandSubjectBuffers.cs");
-        RequireText(commands, "CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer)", "Selected move/stop commands must fill the reusable unit buffer.", result);
-        RequireText(commands, "CollectSelectedArmedCommandUnits(playerSlotId, _unitCommandBuffer)", "Selected stance commands must fill the reusable armed-unit buffer.", result);
-        RequireText(commands, "CollectSelectedCommandUnitsTargeting(playerSlotId, target, _unitCommandBuffer)", "Selected unit attacks must fill the reusable target-filtered buffer.", result);
-        RequireText(commands, "CollectSelectedCommandUnitsTargeting(playerSlotId, targetSpec, _unitCommandBuffer)", "Selected building attacks must fill the reusable target-filtered buffer.", result);
+        var subjects = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ExplicitCommandSubjects.cs");
         RequireText(commands, "CollectRequestedCommandUnits(playerSlotId, unitIds, _unitCommandBuffer)", "Explicit move commands must fill the reusable unit buffer.", result);
         RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, target, _unitCommandBuffer)", "Explicit unit attacks must fill the reusable target-filtered buffer.", result);
         RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, targetSpec, _unitCommandBuffer)", "Explicit building attacks must fill the reusable target-filtered buffer.", result);
         RequireText(commands, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Group commands must fill reusable entity subject storage.", result);
-        RequireText(buffers, "CollectRequestedCommandIds(unitIds)", "Explicit group commands must reuse requested-id storage.", result);
+        RequireText(subjects, "CollectRequestedCommandIds(unitIds)", "Explicit group commands must reuse requested-id storage.", result);
+        ForbidText(subjects, ".ToHashSet()", "Explicit group command subjects must not allocate requested-id sets.", result);
+        ForbidText(subjects, ".OrderBy(unit => unit.Id)", "Explicit group command subjects must sort reusable buffers in place.", result);
         ForbidText(commands, "var requestedIds = unitIds.ToHashSet();", "Group commands must not allocate requested-id sets.", result);
         ForbidText(commands, ".Select(unit => unit.EntityId).ToList()", "Group commands must not allocate entity subject lists.", result);
         ForbidText(commands, ".OrderBy(unit => unit.Id)", "Group commands must sort reusable buffers in place.", result);

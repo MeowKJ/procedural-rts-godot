@@ -21,8 +21,6 @@ public sealed partial class UnitBattlefield
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var spec = BuildSpecCatalog.For(kind);
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
         var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
         if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
         {
@@ -85,8 +83,6 @@ public sealed partial class UnitBattlefield
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         var spec = BuildSpecCatalog.For(ticket.Kind);
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
         CollectEntityIds(_constructionEntityIdsBefore);
         var command = new StartConstructionEntityCommand(
             owner,
@@ -136,8 +132,6 @@ public sealed partial class UnitBattlefield
 
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
         _constructionSubjectEntityBuffer.Clear();
         _constructionSubjectEntityBuffer.Add(ticketId);
         var command = new CancelConstructionEntityCommand(

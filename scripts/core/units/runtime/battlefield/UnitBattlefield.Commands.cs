@@ -148,26 +148,6 @@ public sealed partial class UnitBattlefield
         return count;
     }
 
-    public void CommandMoveSelected(PlayerSlotId playerSlotId, Vector2 target, Vector2 worldSize, MoveCommandMode mode = MoveCommandMode.Direct)
-    {
-        CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return;
-        }
-
-        WorldSize = worldSize;
-        _entityWorld.WorldWidth = worldSize.X;
-        _entityWorld.WorldHeight = worldSize.Y;
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new GroupMoveEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            target,
-            mode));
-    }
-
     public int CommandMoveUnits(
         PlayerSlotId playerSlotId,
         IEnumerable<int> unitIds,
@@ -182,8 +162,6 @@ public sealed partial class UnitBattlefield
         }
 
         WorldSize = worldSize;
-        _entityWorld.WorldWidth = worldSize.X;
-        _entityWorld.WorldHeight = worldSize.Y;
         CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
         SubmitAndApplyInputCommand(new GroupMoveEntityCommand(
             OwnerId.FromPlayerSlot(playerSlotId),
@@ -201,90 +179,6 @@ public sealed partial class UnitBattlefield
             && IsHarvester(unit)
             && unit.HarvesterMode == HarvesterMode.Idle
             && unit.MoveTarget is null;
-    }
-
-    public void CommandAttackSelected(PlayerSlotId playerSlotId, UnitInstance target)
-    {
-        if (!Relations.CanAttack(playerSlotId, target.PlayerSlotId))
-        {
-            return;
-        }
-
-        CollectSelectedCommandUnitsTargeting(playerSlotId, target, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            target.EntityId,
-            CombatTargetKind.Unit));
-    }
-
-    public bool CommandAttackSelected(PlayerSlotId playerSlotId, int buildingId)
-    {
-        if (BuildingSnapshot(buildingId) is not { } target
-            || BuildingEntityByTargetId(buildingId) is not { } targetEntity)
-        {
-            return false;
-        }
-
-        if (!Relations.CanAttack(playerSlotId, target.PlayerSlotId))
-        {
-            return false;
-        }
-
-        var targetSpec = BuildSpecCatalog.For(target.Kind);
-        CollectSelectedCommandUnitsTargeting(playerSlotId, targetSpec, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return false;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new GroupAttackEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            targetEntity.Id,
-            CombatTargetKind.Building));
-        return true;
-    }
-
-    public void CommandStopSelected(PlayerSlotId playerSlotId)
-    {
-        CollectSelectedCommandUnits(playerSlotId, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new StopEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick()));
-    }
-
-    public int CommandSetSelectedStance(PlayerSlotId playerSlotId, UnitStance stance)
-    {
-        CollectSelectedArmedCommandUnits(playerSlotId, _unitCommandBuffer);
-        if (_unitCommandBuffer.Count == 0)
-        {
-            return 0;
-        }
-
-        CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer);
-        SubmitAndApplyInputCommand(new SetStanceEntityCommand(
-            OwnerId.FromPlayerSlot(playerSlotId),
-            _unitCommandEntityBuffer,
-            NextInputCommandTick(),
-            stance));
-        return _unitCommandBuffer.Count;
     }
 
     public int CommandAttackUnits(PlayerSlotId playerSlotId, IEnumerable<int> unitIds, UnitInstance target)

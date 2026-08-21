@@ -1,3 +1,5 @@
+using ProceduralRts.Tools.Qa;
+
 static partial class Program
 {
     private static readonly Vector2 MovementFeelContinuationTarget = new(1480, 820);
@@ -18,7 +20,7 @@ static partial class Program
         Assert(selected == 1, $"movement-feel continuation selected {selected}/1: {MovementFeelTrace(battlefield, subjects, -1, 0, MovementFeelContinuationTarget, [])}");
 
         var commandTick = battlefield.AppliedInputCommandCount + 1;
-        battlefield.CommandMoveSelected(PlayerSlotId.One, MovementFeelContinuationTarget, MovementFeelWorldSize, MoveCommandMode.Attack);
+        QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, MovementFeelContinuationTarget, MoveCommandMode.Attack);
         Assert(
             battlefield.AppliedInputCommandCount == commandTick,
             $"movement-feel continuation attack-move ignored: commandTick={commandTick}, trace={MovementFeelTrace(battlefield, subjects, commandTick, 0, MovementFeelContinuationTarget, [])}");

@@ -1,3 +1,5 @@
+using ProceduralRts.Tools.Qa;
+
 static partial class Program
 {
     private static void AssertUnitBattlefieldCommandsAndCombat()
@@ -124,7 +126,7 @@ static partial class Program
         var firstBeforeMove = selectedBeforeMove[0].Position;
         newUnitBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Allied);
         var commandsBeforeMove = newUnitBattlefield.AppliedInputCommandCount;
-        newUnitBattlefield.CommandMoveSelected(PlayerSlotId.One, new Vector2(440, 300), new Vector2(900, 700), MoveCommandMode.Direct);
+        QaPlayerCommandDriver.MoveSelection(newUnitBattlefield, PlayerSlotId.One, new Vector2(440, 300), MoveCommandMode.Direct);
         var movedEntityBeforeTick = newUnitBattlefield.UnitEntityByInstanceId(selectedBeforeMove[0].Id);
         if (newUnitBattlefield.AppliedInputCommandCount != commandsBeforeMove + 1
             || movedEntityBeforeTick is null
@@ -177,7 +179,7 @@ static partial class Program
         }
 
         var commandsBeforeStop = newUnitBattlefield.AppliedInputCommandCount;
-        newUnitBattlefield.CommandStopSelected(PlayerSlotId.One);
+        QaPlayerCommandDriver.StopSelection(newUnitBattlefield, PlayerSlotId.One);
         var stoppedEntity = newUnitBattlefield.UnitEntityByInstanceId(selectedBeforeMove[0].Id);
         if (newUnitBattlefield.AppliedInputCommandCount != commandsBeforeStop + 1
             || stoppedEntity is null
@@ -190,9 +192,9 @@ static partial class Program
         }
 
         var commandsBeforeStance = newUnitBattlefield.AppliedInputCommandCount;
-        var stanceChanged = newUnitBattlefield.CommandSetSelectedStance(PlayerSlotId.One, UnitStance.Hold);
+        var stanceResult = QaPlayerCommandDriver.SetSelectionStance(newUnitBattlefield, PlayerSlotId.One, UnitStance.Hold);
         var stanceEntity = newUnitBattlefield.UnitEntityByInstanceId(selectedBeforeMove[0].Id);
-        if (stanceChanged != selectedBeforeMove.Count
+        if (stanceResult.AcceptedCount != 1
             || newUnitBattlefield.AppliedInputCommandCount != commandsBeforeStance + 1
             || stanceEntity is null
             || !stanceEntity.Components.TryGet<StanceComponentState>(out var bufferedStance)
@@ -208,7 +210,7 @@ static partial class Program
         var newCombatTarget = newCombatBattlefield.Spawn("cat.tank", PlayerSlotId.Two, new Vector2(430, 300), Mathf.Pi);
         newCombatBattlefield.SelectUnitsByIds(PlayerSlotId.One, [newCombatAttacker.Id]);
         var commandsBeforeAttack = newCombatBattlefield.AppliedInputCommandCount;
-        newCombatBattlefield.CommandAttackSelected(PlayerSlotId.One, newCombatTarget);
+        QaPlayerCommandDriver.AttackSelection(newCombatBattlefield, PlayerSlotId.One, newCombatTarget);
         var attackEntityBeforeTick = newCombatBattlefield.UnitEntityByInstanceId(newCombatAttacker.Id);
         if (newCombatBattlefield.AppliedInputCommandCount != commandsBeforeAttack + 1
             || attackEntityBeforeTick is null
@@ -256,7 +258,7 @@ static partial class Program
         deathTargetEntity.Components.Set(deathTargetEntity.Components.Require<HealthComponentState>() with { Hp = 2 });
         unitInstanceDeathBattlefield.Update(0);
         unitInstanceDeathBattlefield.SelectUnitsByIds(PlayerSlotId.One, [unitInstanceDeathAttacker.Id]);
-        unitInstanceDeathBattlefield.CommandAttackSelected(PlayerSlotId.One, unitInstanceDeathTarget);
+        QaPlayerCommandDriver.AttackSelection(unitInstanceDeathBattlefield, PlayerSlotId.One, unitInstanceDeathTarget);
         for (var step = 0; step < 90; step++)
         {
             unitInstanceDeathBattlefield.Update(1 / 30.0);
@@ -295,7 +297,7 @@ static partial class Program
         buildingTargetBattlefield.BuildingsRemoved += deaths => buildingDeathEvents.AddRange(deaths);
         buildingTargetBattlefield.OutcomeChanged += outcome => unitBattlefieldOutcomeEvents.Add(outcome);
         buildingTargetBattlefield.SelectUnitsByIds(PlayerSlotId.One, [buildingTargetAttacker.Id]);
-        buildingTargetBattlefield.CommandAttackSelected(PlayerSlotId.One, buildingTarget.Id);
+        QaPlayerCommandDriver.AttackBuildingSelection(buildingTargetBattlefield, PlayerSlotId.One, buildingTarget.Id);
         for (var step = 0; step < 180; step++)
         {
             buildingTargetBattlefield.Update(1 / 30.0);

@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\ProceduralRts.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\QaCommon\QaPlayerCommandDriver.cs" Link="QaCommon\QaPlayerCommandDriver.cs" />
     <Compile Include="..\CombatBehaviorCatalogs\**\*.cs" Link="CombatBehaviorCatalogs\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\CombatBehaviorCatalogDefinitions\**\*.cs" Link="CombatBehaviorCatalogDefinitions\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\CombatBehaviorBuildings\**\*.cs" Link="CombatBehaviorBuildings\%(RecursiveDir)%(Filename)%(Extension)" />

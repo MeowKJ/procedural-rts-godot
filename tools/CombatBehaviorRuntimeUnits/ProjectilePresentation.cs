@@ -1,3 +1,5 @@
+using ProceduralRts.Tools.Qa;
+
 static partial class Program
 {
     private static void AssertUnitBattlefieldProjectilePresentation()
@@ -13,7 +15,7 @@ static partial class Program
             Mathf.Pi,
             BuildSpecCatalog.For(BuildingDesignIds.Headquarters).MaxHp);
         projectilePresentationBattlefield.SelectUnitsByIds(PlayerSlotId.One, [rocketAttacker.Id]);
-        projectilePresentationBattlefield.CommandAttackSelected(PlayerSlotId.One, projectileTarget.Id);
+        QaPlayerCommandDriver.AttackBuildingSelection(projectilePresentationBattlefield, PlayerSlotId.One, projectileTarget.Id);
         projectilePresentationBattlefield.Update(1 / 30.0);
         var projectileProjections = projectilePresentationBattlefield.ProjectileProjections();
         var ordinaryProjectileStyle = ProjectileVfxMath.StyleFor(AmmoIds.NeedleDart);
@@ -38,7 +40,7 @@ static partial class Program
         var tankShotEvents = new List<WeaponFiredEvent>();
         tankProjectileBattlefield.WeaponFired += fired => tankShotEvents.Add(fired);
         tankProjectileBattlefield.SelectUnitsByIds(PlayerSlotId.One, [tankProjectileAttacker.Id]);
-        tankProjectileBattlefield.CommandAttackSelected(PlayerSlotId.One, tankProjectileTarget);
+        QaPlayerCommandDriver.AttackSelection(tankProjectileBattlefield, PlayerSlotId.One, tankProjectileTarget);
         tankProjectileBattlefield.Update(1 / 30.0);
 
         var tankShot = tankShotEvents.FirstOrDefault(fired => fired.WeaponId == WeaponIds.VectorCannon);

@@ -35,8 +35,6 @@ public sealed partial class UnitBattlefield
         var spec = BuildSpecCatalog.For(kind);
         var owner = OwnerId.FromPlayerSlot(playerSlotId);
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
         return _constructionSystem.QueryBuildingPlacement(
             _entityWorld,
             owner,
@@ -67,8 +65,6 @@ public sealed partial class UnitBattlefield
         }
 
         SyncOwnerRelations();
-        _entityWorld.WorldWidth = WorldSize.X;
-        _entityWorld.WorldHeight = WorldSize.Y;
         var subjects = ConstructionSubjectEntities(playerSlotId, spec, constructionProviderId);
         if (constructionProviderId is not null && spec.RequiredProducer is not null && subjects.Count == 0)
         {
