@@ -58,9 +58,9 @@ public partial class SelectionController
         return new Rect2(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
-    private ResourceFieldModel? PickResourceField(Vector2 worldPosition)
+    private UnitBattlefieldResourceNodeProjection? PickResourceNode(Vector2 worldPosition)
     {
-        return UnitBattlefield.PickResourceField(worldPosition, PickPaddingWorld());
+        return UnitBattlefield.PickResourceNode(worldPosition, PickPaddingWorld());
     }
 
     private bool HasSelectedHarvester()

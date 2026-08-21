@@ -37,7 +37,8 @@ internal static partial class AiOpponentLoopQaProgram
             ProducedInfantry: producedCombatSpecs.Count(spec => spec.RoleTags.Contains(UnitRoleTag.Infantry)),
             ProducedVehicles: producedCombatSpecs.Count(spec => spec.RoleTags.Contains(UnitRoleTag.Vehicle)),
             HarvestAssignments: metrics.HarvestAssignments,
-            EnemyFieldDepleted: runtime.InitialEnemyFieldAmount - runtime.EnemyResource.Amount,
+            EnemyFieldDepleted: runtime.InitialEnemyFieldAmount
+                - (battlefield.ResourceNodeProjection(runtime.EnemyResourceEntityId)?.Amount ?? 0),
             EnemyCreditsStart: runtime.InitialEnemyCredits,
             EnemyCreditsPeak: metrics.MaxEnemyCredits,
             ResourceEvents: metrics.ResourceEvents,

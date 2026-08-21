@@ -67,13 +67,13 @@ public partial class SelectionController
 
     private CommandPreviewState ArmedRallyPreview(Vector2 screenPosition, Vector2 worldPosition)
     {
-        if (PickResourceField(worldPosition) is { } resourceField)
+        if (PickResourceNode(worldPosition) is { } resourceNode)
         {
             return new CommandPreviewState(
                 CommandPreviewKind.Rally,
                 GameText.T("preview.rally.resource"),
                 screenPosition,
-                resourceField.Position,
+                resourceNode.Position,
                 true,
                 CommandPreviewPhase.ArmedCommand);
         }
@@ -101,7 +101,7 @@ public partial class SelectionController
     private void FinishArmedRallyCommand(Vector2 screenPoint)
     {
         var worldPoint = ScreenToWorld(screenPoint);
-        if (PickResourceField(worldPoint) is { } rallyResource
+        if (PickResourceNode(worldPoint) is { } rallyResource
             && UnitBattlefield!.HasSelectedBuildings(LocalPlayerSlotId))
         {
             FinishSelectedBuildingRallyCommand(rallyResource);

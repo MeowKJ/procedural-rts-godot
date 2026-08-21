@@ -86,7 +86,7 @@ internal static partial class AiOpponentLoopQaProgram
     private static int AssignIdleHarvesters(
         UnitBattlefield battlefield,
         PlayerSlotId slot,
-        ResourceFieldModel field,
+        EntityId resourceEntityId,
         HashSet<int> assignedHarvesters)
     {
         var candidates = battlefield.Units
@@ -100,7 +100,7 @@ internal static partial class AiOpponentLoopQaProgram
         foreach (var harvester in candidates)
         {
             battlefield.SelectUnitsByIds(slot, [harvester.Id]);
-            if (QaPlayerCommandDriver.HarvestSelection(battlefield, slot, field).AcceptedCount == 1)
+            if (QaPlayerCommandDriver.HarvestSelection(battlefield, slot, resourceEntityId).AcceptedCount == 1)
             {
                 assignedHarvesters.Add(harvester.Id);
                 assignments++;

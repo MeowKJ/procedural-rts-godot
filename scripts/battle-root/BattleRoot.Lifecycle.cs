@@ -49,11 +49,16 @@ public partial class BattleRoot
         var resourceRoot = new Node2D { Name = "Resources" };
         AddChild(resourceRoot);
 
-        foreach (var field in _unitBattlefield.ResourceFields)
+        foreach (var resource in _unitBattlefield.ResourceNodeProjections())
         {
-            var view = new ResourceFieldView { Name = $"ResourceField_{field.Id}", Field = field };
+            var view = new ResourceNodeView
+            {
+                Name = $"ResourceNode_{resource.EntityId.Value}",
+                UnitBattlefield = _unitBattlefield,
+                ResourceEntityId = resource.EntityId,
+            };
             resourceRoot.AddChild(view);
-            _resourceViews[field.Id] = view;
+            _resourceViews[resource.EntityId] = view;
         }
 
         _footprints = new FootprintLayer

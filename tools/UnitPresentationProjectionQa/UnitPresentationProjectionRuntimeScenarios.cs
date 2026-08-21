@@ -61,12 +61,11 @@ static class UnitPresentationProjectionRuntimeScenarios
                 battlefield.BuildingEntityIdByTargetId(enemyHeadquarters.Id) ?? default,
                 CombatTargetKind.Building).AcceptedCount == 1,
             "vehicle attack against a hostile structure must be accepted through the runtime owner", failures);
-        Require(battlefield.TryGetResourceEntityId(battlefield.ResourceFields[0], out var resourceEntityId)
-            && QaPlayerCommandDriver.HarvestSubjects(
+        Require(QaPlayerCommandDriver.HarvestSubjects(
                 battlefield,
                 PlayerSlotId.One,
                 [harvester.EntityId],
-                resourceEntityId).AcceptedCount == 1,
+                battlefield.ResourceNodeProjections()[0].EntityId).AcceptedCount == 1,
             "economy command must be accepted through the runtime owner", failures);
 
         AssertProjected(battlefield, infantry, "infantry", failures);

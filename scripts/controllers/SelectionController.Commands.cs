@@ -64,19 +64,18 @@ public partial class SelectionController
             else if (FinishRuntimeRepairCommand(worldPoint))
             {
             }
-            else if (PickResourceField(worldPoint) is { } resourceField && HasSelectedHarvester())
+            else if (PickResourceNode(worldPoint) is { } resourceNode && HasSelectedHarvester())
             {
                 var subjects = SelectedRuntimeUnitSubjects();
-                var accepted = UnitBattlefield.TryGetResourceEntityId(resourceField, out var resourceEntity)
-                    && SubmitRuntimeCommand(
-                        PlayerCommandKind.Harvest,
-                        PlayerCommandPayload.ForEntityTarget(subjects, resourceEntity));
+                var accepted = SubmitRuntimeCommand(
+                    PlayerCommandKind.Harvest,
+                    PlayerCommandPayload.ForEntityTarget(subjects, resourceNode.EntityId));
                 StatusChanged?.Invoke(accepted
-                    ? GameText.Format("harvest.assigned", subjects.Count, subjects.Count == 1 ? "" : "s", resourceField.Id)
+                    ? GameText.Format("harvest.assigned", subjects.Count, subjects.Count == 1 ? "" : "s", resourceNode.EntityId.Value)
                     : GatewayRejectedStatus(GameText.T("harvest.selectHarvester")));
                 AcknowledgeCommand(
                     accepted ? CommandAcknowledgementKind.Harvest : CommandAcknowledgementKind.Invalid,
-                    resourceField.Position,
+                    resourceNode.Position,
                     accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
             }
             else
@@ -99,7 +98,7 @@ public partial class SelectionController
             return;
         }
 
-        else if (PickResourceField(worldPoint) is { } rallyResource
+        else if (PickResourceNode(worldPoint) is { } rallyResource
             && UnitBattlefield.HasSelectedBuildings(LocalPlayerSlotId))
         {
             FinishSelectedBuildingRallyCommand(rallyResource);
@@ -131,13 +130,12 @@ public partial class SelectionController
         return accepted;
     }
 
-    private bool CommandUnitBattlefieldSelectedBuildingRally(ResourceFieldModel field, out string status)
+    private bool CommandUnitBattlefieldSelectedBuildingRally(UnitBattlefieldResourceNodeProjection resource, out string status)
     {
         var subjects = UnitBattlefield.SelectedBuildingEntityIds(LocalPlayerSlotId);
-        var accepted = UnitBattlefield.TryGetResourceEntityId(field, out var resourceEntity)
-            && SubmitRuntimeCommand(
-                PlayerCommandKind.Rally,
-                PlayerCommandPayload.ForPoint(subjects, field.Position.X, field.Position.Y) with { TargetEntity = resourceEntity });
+        var accepted = SubmitRuntimeCommand(
+            PlayerCommandKind.Rally,
+            PlayerCommandPayload.ForPoint(subjects, resource.Position.X, resource.Position.Y) with { TargetEntity = resource.EntityId });
         status = accepted ? GameText.T("rally.set") : GatewayRejectedStatus(GameText.T("rally.selectProducer"));
         return accepted;
     }
@@ -152,13 +150,13 @@ public partial class SelectionController
         return accepted;
     }
 
-    private void FinishSelectedBuildingRallyCommand(ResourceFieldModel resourceField)
+    private void FinishSelectedBuildingRallyCommand(UnitBattlefieldResourceNodeProjection resource)
     {
-        var accepted = CommandUnitBattlefieldSelectedBuildingRally(resourceField, out var status);
+        var accepted = CommandUnitBattlefieldSelectedBuildingRally(resource, out var status);
         StatusChanged?.Invoke(status);
         AcknowledgeCommand(
             accepted ? CommandAcknowledgementKind.Rally : CommandAcknowledgementKind.Invalid,
-            resourceField.Position,
+            resource.Position,
             accepted ? CommandAcknowledgementAudioCue.Move : CommandAcknowledgementAudioCue.Invalid);
     }
 

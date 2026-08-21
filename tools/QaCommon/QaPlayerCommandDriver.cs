@@ -104,14 +104,13 @@ public static class QaPlayerCommandDriver
     public static CommandGatewayResult HarvestSelection(
         UnitBattlefield battlefield,
         PlayerSlotId playerSlotId,
-        ResourceFieldModel field)
+        EntityId resourceEntityId)
     {
-        battlefield.TryGetResourceEntityId(field, out var target);
         return HarvestSubjects(
             battlefield,
             playerSlotId,
             battlefield.SelectedUnitEntityIds(playerSlotId),
-            target);
+            resourceEntityId);
     }
 
     public static CommandGatewayResult HarvestSubjects(

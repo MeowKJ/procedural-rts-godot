@@ -109,6 +109,8 @@ public sealed record ResourceNodeComponentState(
     ResourceCorruptionState CorruptionState = ResourceCorruptionState.Clean,
     float RegenerationProgress = 0) : EntityComponentState;
 
+public sealed record ResourcePresentationComponentState(Color Accent) : EntityComponentState;
+
 public sealed record ResourceRegenerationAuraComponentState(
     float Radius,
     float Multiplier = 1,

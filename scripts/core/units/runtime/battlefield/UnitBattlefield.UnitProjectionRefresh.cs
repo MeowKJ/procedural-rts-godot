@@ -110,7 +110,7 @@ public sealed partial class UnitBattlefield
         if (entity.Components.TryGet<HarvesterComponentState>(out var harvester))
         {
             unit.HarvesterMode = harvester.Mode;
-            unit.HarvestFieldId = ResourceFieldIdForEntity(harvester.FieldId);
+            unit.HarvestResourceEntityId = harvester.FieldId is int fieldId ? new EntityId(fieldId) : null;
             unit.HarvestRefineryId = BuildingIdForEntity(harvester.RefineryId);
             unit.HarvestPulse = Mathf.Clamp(harvester.HarvestPulse, 0, 1);
             unit.HarvesterRetreating = harvester.Retreating;
@@ -118,7 +118,7 @@ public sealed partial class UnitBattlefield
         else
         {
             unit.HarvesterMode = HarvesterMode.Idle;
-            unit.HarvestFieldId = null;
+            unit.HarvestResourceEntityId = null;
             unit.HarvestRefineryId = null;
             unit.HarvestPulse = 0;
             unit.HarvesterRetreating = false;

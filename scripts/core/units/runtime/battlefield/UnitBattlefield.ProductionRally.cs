@@ -9,9 +9,9 @@ public sealed partial class UnitBattlefield
         return SetRallyPoint(buildingId, target, default, out status);
     }
 
-    public bool SetRallyPoint(int buildingId, ResourceFieldModel field, out string status)
+    public bool SetRallyPoint(int buildingId, UnitBattlefieldResourceNodeProjection resource, out string status)
     {
-        return SetRallyPoint(buildingId, field.Position, _resourceFieldEntityIds[field.Id], out status);
+        return SetRallyPoint(buildingId, resource.Position, resource.EntityId, out status);
     }
 
     public bool SetRallyPoint(int buildingId, UnitInstance unit, out string status)
@@ -82,7 +82,7 @@ public sealed partial class UnitBattlefield
         return true;
     }
 
-    public bool SetSelectedBuildingRallyPoints(PlayerSlotId playerSlotId, ResourceFieldModel field, out string status)
+    public bool SetSelectedBuildingRallyPoints(PlayerSlotId playerSlotId, UnitBattlefieldResourceNodeProjection resource, out string status)
     {
         var hasSelected = CollectSelectedBuildingRallyProducerIds(playerSlotId, _selectedBuildingRallyProducerIds);
         if (!hasSelected)
@@ -97,11 +97,10 @@ public sealed partial class UnitBattlefield
             return false;
         }
 
-        var clamped = ClampInsideWorld(field.Position, 80);
-        var targetEntity = _resourceFieldEntityIds[field.Id];
+        var clamped = ClampInsideWorld(resource.Position, 80);
         foreach (var producerId in _selectedBuildingRallyProducerIds)
         {
-            SetRallyPoint(producerId, clamped, targetEntity, out _);
+            SetRallyPoint(producerId, clamped, resource.EntityId, out _);
         }
 
         status = _selectedBuildingRallyProducerIds.Count == 1

@@ -71,7 +71,7 @@ public partial class BattleRoot : Node2D
     private readonly Stopwatch _simStepStopwatch = new();
     private readonly Dictionary<int, BuildingView> _buildingViews = [];
     private readonly Dictionary<int, UnitInstanceView> _unitInstanceViews = [];
-    private readonly Dictionary<int, ResourceFieldView> _resourceViews = [];
+    private readonly Dictionary<EntityId, ResourceNodeView> _resourceViews = [];
     private readonly List<AlertEntry> _alerts = [];
     private readonly Dictionary<string, float> _alertCooldowns = [];
     private GridLayer _grid = null!;

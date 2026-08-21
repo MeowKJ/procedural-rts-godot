@@ -98,12 +98,12 @@ public partial class BattleRoot
 
         foreach (var (id, view) in _resourceViews)
         {
-            var field = view.Field;
-            var shouldShow = field.Amount > 0
-                && visibleRect.Intersects(new Rect2(field.Position - Vector2.One * field.Radius, Vector2.One * field.Radius * 2f));
+            var resource = _unitBattlefield.ResourceNodeProjection(id);
+            var shouldShow = resource is { Amount: > 0 }
+                && visibleRect.Intersects(new Rect2(resource.Value.Position - Vector2.One * resource.Value.Radius, Vector2.One * resource.Value.Radius * 2f));
             if (shouldShow)
             {
-                view.Position = field.Position;
+                view.Position = resource!.Value.Position;
             }
 
             SetPresentationViewActive(view, shouldShow);

@@ -27,7 +27,7 @@ public sealed partial class UnitBattlefield
     private readonly SimClock _simulationClock = new();
     private readonly Dictionary<int, EntityId> _buildingTargetEntityIds = [];
     private readonly Dictionary<EntityId, int> _buildingTargetIdsByEntityId = [];
-    private readonly Dictionary<int, EntityId> _resourceFieldEntityIds = [];
+    private readonly List<UnitBattlefieldResourceNodeProjection> _resourceNodeProjectionBuffer = [];
     private readonly Dictionary<int, int?> _lastDockedHarvesterIds = [];
     private readonly HashSet<int> _constructionEntityIdsBefore = [];
     private readonly List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer = [];
@@ -94,7 +94,6 @@ public sealed partial class UnitBattlefield
     private readonly HashSet<string> _constructionProviderKinds = [];
     private readonly List<int> _selectedProductionProducerIdBuffer = [];
     private readonly List<UnitInstance> _units = [];
-    private readonly List<ResourceFieldModel> _resourceFields = [];
     private Vector2 _worldSize = new(3600, 2400);
     private int _inputCommandTick;
     private int _nextBuildingTargetId = 1;
@@ -103,7 +102,6 @@ public sealed partial class UnitBattlefield
     private bool _useSecondaryUnitMinimapPipBuffer;
 
     public IReadOnlyList<UnitInstance> Units => _units;
-    public IReadOnlyList<ResourceFieldModel> ResourceFields => _resourceFields;
     public PlayerRelationTable Relations { get; } = new();
     public EntityWorld EntityWorld => _entityWorld;
     public int SimulationTick => _simulationClock.CurrentTick;

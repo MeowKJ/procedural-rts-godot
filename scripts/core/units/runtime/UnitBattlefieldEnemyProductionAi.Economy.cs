@@ -13,13 +13,8 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         }
 
         var baseCenter = EnemyBaseCenter(battlefield, enemyPlayerSlotId);
-        var field = battlefield.NearestVisibleResourceField(OwnerId.FromPlayerSlot(enemyPlayerSlotId), baseCenter);
-        if (field is null)
-        {
-            return;
-        }
-
-        if (!battlefield.TryGetResourceEntityId(field, out var resourceEntityId))
+        var resource = battlefield.NearestVisibleResourceNode(OwnerId.FromPlayerSlot(enemyPlayerSlotId), baseCenter);
+        if (resource is not { } resourceNode)
         {
             return;
         }
@@ -30,7 +25,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             "enemy-economy",
             enemyPlayerSlotId,
             PlayerCommandKind.Harvest,
-            PlayerCommandPayload.ForEntityTarget(_idleHarvesterEntityIds, resourceEntityId));
+            PlayerCommandPayload.ForEntityTarget(_idleHarvesterEntityIds, resourceNode.EntityId));
     }
 
     private void SetEnemyRallyPoints(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)

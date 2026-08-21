@@ -49,7 +49,7 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PickingQueries.cs");
         RequireText(picking, "NearestOwnedUnit", "UnitBattlefield cursor pick queries must use explicit nearest-unit scans.", result);
         RequireText(picking, "NearestBuildingTargetId", "UnitBattlefield cursor pick queries must use an explicit nearest-building scan.", result);
-        RequireText(picking, "NearestResourceField", "UnitBattlefield resource pick queries must use an explicit nearest-field scan.", result);
+        RequireText(picking, "NearestResourceNode", "UnitBattlefield resource pick queries must use an explicit nearest-node scan.", result);
         ForbidText(picking, ".OrderBy(", "UnitBattlefield cursor pick helpers must not allocate ordered LINQ queries.", result);
         ForbidText(picking, ".Where(", "UnitBattlefield cursor pick helpers must not allocate LINQ filters.", result);
         ForbidText(picking, "Mathf.Pow", "UnitBattlefield cursor pick helpers must square radii directly.", result);
