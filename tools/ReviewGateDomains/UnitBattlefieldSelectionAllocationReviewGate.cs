@@ -2,8 +2,49 @@ static class UnitBattlefieldSelectionAllocationReviewGate
 {
     public static void Check(string root, GateResult result)
     {
+        RequireSelectionControllerModules(root, result);
         RequireUnitBattlefieldSelectionBuffers(root, result);
         RequireUnitBattlefieldCursorPickLoops(root, result);
+    }
+    private static void RequireSelectionControllerModules(string root, GateResult result)
+    {
+        foreach (var module in new[]
+        {
+            "AbilityCommand.cs",
+            "CommandLineBuffers.cs",
+            "CommandLines.cs",
+            "Commands.cs",
+            "DragFeedback.cs",
+            "Hotkeys.cs",
+            "Hover.cs",
+            "HoverTooltips.cs",
+            "Preview.cs",
+            "RallyCommand.cs",
+            "RepairCommand.cs",
+            "Utilities.cs",
+        })
+        {
+            ReviewGateSource.RequireFile(root, result, "scripts", "controllers", "selection", module);
+        }
+
+        foreach (var retiredFlatModule in new[]
+        {
+            "AbilityCommand",
+            "CommandLineBuffers",
+            "CommandLines",
+            "Commands",
+            "DragFeedback",
+            "Hotkeys",
+            "Hover",
+            "HoverTooltips",
+            "Preview",
+            "RallyCommand",
+            "RepairCommand",
+            "Utilities",
+        })
+        {
+            ReviewGateSource.ForbidFile(root, result, "scripts", "controllers", $"SelectionController.{retiredFlatModule}.cs");
+        }
     }
     private static void RequireUnitBattlefieldSelectionBuffers(string root, GateResult result)
     {

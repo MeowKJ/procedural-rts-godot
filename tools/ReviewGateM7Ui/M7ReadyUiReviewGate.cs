@@ -7,8 +7,8 @@ static class M7ReadyUiReviewGate
         var providerSummary = Read(root, "scripts", "ui", "hud", "HudLayer.ProviderLaneSummary.cs");
         var hudSync = Read(root, "scripts", "battle-root", "BattleRoot.HudSync.cs");
         var settings = Read(root, "scripts", "ui", "SettingsOverlayLayer.cs");
-        var preview = Read(root, "scripts", "controllers", "SelectionController.Preview.cs");
-        var repairCommand = Read(root, "scripts", "controllers", "SelectionController.RepairCommand.cs");
+        var preview = Read(root, "scripts", "controllers", "selection", "Preview.cs");
+        var repairCommand = Read(root, "scripts", "controllers", "selection", "RepairCommand.cs");
         var harvestRepair = Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.HarvestRepair.cs");
         var repairProjection = Read(root, "scripts", "core", "sim", "RepairOrderProjection.cs");
         var english = Read(root, "scripts", "core", "localization", "GameText.English.cs");
