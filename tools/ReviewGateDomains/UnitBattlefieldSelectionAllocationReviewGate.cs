@@ -87,7 +87,7 @@ static class UnitBattlefieldSelectionAllocationReviewGate
     }
     private static void RequireUnitBattlefieldCursorPickLoops(string root, GateResult result)
     {
-        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.PickingQueries.cs");
+        var picking = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "query", "UnitBattlefield.PickingQueries.cs");
         RequireText(picking, "NearestOwnedUnit", "UnitBattlefield cursor pick queries must use explicit nearest-unit scans.", result);
         RequireText(picking, "NearestBuildingTargetId", "UnitBattlefield cursor pick queries must use an explicit nearest-building scan.", result);
         RequireText(picking, "NearestResourceNode", "UnitBattlefield resource pick queries must use an explicit nearest-node scan.", result);
@@ -98,7 +98,7 @@ static class UnitBattlefieldSelectionAllocationReviewGate
         ForbidText(selectionPicking, ".OrderBy(unit => unit.Position.DistanceSquaredTo(worldPoint))", "Unit pick methods must not allocate sorting chains.", result);
         ForbidText(selectionPicking, ".Select(BuildingSnapshot)", "Building pick methods must not allocate snapshot projection chains.", result);
         ForbidText(selectionPicking, "SelectedUnits(playerSlotId).Count()", "Runtime selected-count queries must scan units explicitly.", result);
-        var coreQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CoreQueries.cs");
+        var coreQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "query", "UnitBattlefield.CoreQueries.cs");
         ForbidText(coreQueries, ".OrderBy(field => field.Position.DistanceSquaredTo(worldPoint))", "Resource pick must not allocate sorting chains.", result);
     }
 }
