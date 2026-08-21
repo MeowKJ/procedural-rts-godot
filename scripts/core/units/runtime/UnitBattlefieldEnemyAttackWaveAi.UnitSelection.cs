@@ -43,12 +43,12 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         TrimToMax(result, maximumWaveUnits);
     }
 
-    private static void CollectUnitIds(IReadOnlyList<UnitInstance> units, List<int> result)
+    private static void CollectEntityIds(IReadOnlyList<UnitInstance> units, List<EntityId> result)
     {
         result.Clear();
         foreach (var unit in units)
         {
-            result.Add(unit.Id);
+            result.Add(unit.EntityId);
         }
     }
 

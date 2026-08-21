@@ -6,15 +6,7 @@ static class CommandGatewayReviewGate
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "CommandGatewayResults.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "core", "players", "PlayerCommandPayload.cs");
         ReviewGateSource.RequireFile(root, result, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
-        ReviewGateSource.RequireFile(
-            root,
-            result,
-            "scripts",
-            "core",
-            "units",
-            "runtime",
-            "battlefield",
-            "UnitBattlefield.ExplicitCommandSubjects.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "runtime", "UnitBattlefieldScriptedCommandDriver.cs");
         ReviewGateSource.ForbidFile(
             root,
             result,
@@ -24,6 +16,15 @@ static class CommandGatewayReviewGate
             "runtime",
             "battlefield",
             "UnitBattlefield.CommandSubjectBuffers.cs");
+        ReviewGateSource.ForbidFile(
+            root,
+            result,
+            "scripts",
+            "core",
+            "units",
+            "runtime",
+            "battlefield",
+            "UnitBattlefield.ExplicitCommandSubjects.cs");
 
         var gateway = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.cs");
         var results = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGatewayResults.cs");
@@ -31,6 +32,7 @@ static class CommandGatewayReviewGate
         var contracts = ReviewGateSource.Read(root, "scripts", "core", "players", "PlayerControllerContracts.cs");
         var qaDriver = ReviewGateSource.Read(root, "tools", "QaCommon", "QaPlayerCommandDriver.cs");
         var battlefield = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs");
+        var scriptedDriver = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldScriptedCommandDriver.cs");
 
         RequireText(contracts, "PlayerCommandPayload Payload", "PlayerCommand must carry a value payload for gateway shape validation.", result);
         RequireText(gateway, "public sealed partial class CommandGateway", "CommandGateway shell must exist as a core type.", result);
@@ -54,6 +56,8 @@ static class CommandGatewayReviewGate
         RequireText(qaDriver, "PlayerControllerKind.QaAgent", "QA player commands must identify their controller kind explicitly.", result);
         RequireText(qaDriver, "PlayerCommandPayload.ForPoint(", "QA movement commands must use typed point payloads.", result);
         RequireText(qaDriver, "PlayerCommandPayload.ForEntityTarget(", "QA target commands must use typed entity payloads.", result);
+        RequireText(scriptedDriver, "PlayerControllerKind.ScriptedBot", "Runtime AI commands must identify scripted-bot authority explicitly.", result);
+        RequireText(scriptedDriver, "SubmitLivePlayerCommand(", "Runtime AI commands must share the live CommandGateway entry point.", result);
         RequireText(battlefield, "_entityWorld.WorldWidth = value.X;", "UnitBattlefield WorldSize must synchronize EntityWorld width at the property boundary.", result);
         RequireText(battlefield, "_entityWorld.WorldHeight = value.Y;", "UnitBattlefield WorldSize must synchronize EntityWorld height at the property boundary.", result);
         ForbidText(payload, "CanonicalRadians =>", "Build facing must not expose an unconditional radians conversion that bypasses schema validation.", result);
@@ -69,6 +73,9 @@ static class CommandGatewayReviewGate
             "Command" + "HarvestSelected(",
             "Command" + "RepairSelected(",
             "Command" + "RepairSelectedBuilding(",
+            "Command" + "MoveUnits(",
+            "Command" + "AttackUnits(",
+            "Command" + "HarvestUnits(",
         })
         {
             ReviewGateSource.ForbidTextInSources(root, result, retiredEntryPoint, "scripts", "tools");
@@ -77,6 +84,8 @@ static class CommandGatewayReviewGate
         var payloadValidation = ReviewGateSource.Read(root, "scripts", "core", "players", "CommandGateway.PayloadValidation.cs");
         RequireText(payloadValidation, "ContainsInvalidSubject(subjects)", "CommandGateway payload validation must use an explicit subject scan.", result);
         RequireText(payloadValidation, "private static bool ContainsInvalidSubject(IReadOnlyList<EntityId> subjects)", "CommandGateway invalid-subject scan must be reusable and allocation-free.", result);
+        RequireText(payloadValidation, "ContainsDuplicateSubject(subjects)", "CommandGateway payload validation must reject duplicate subjects.", result);
+        RequireText(payloadValidation, "private static bool ContainsDuplicateSubject(IReadOnlyList<EntityId> subjects)", "CommandGateway duplicate-subject scan must be allocation-free.", result);
         RequireText(payloadValidation, "command.Kind != PlayerCommandKind.Build && payload.BuildFacing != default", "Non-Build commands must reject non-default Build-facing pollution.", result);
         RequireText(payloadValidation, "PlayerCommandKind.Build => RequireBuild(payload", "Build payloads must use the ordered spec-point-facing validator.", result);
         RequireText(payloadValidation, "facing.TryResolveCanonicalRadians(out _)", "Gateway Build-facing validation must use the shared canonical resolver.", result);
@@ -92,6 +101,10 @@ static class CommandGatewayReviewGate
             "runtime",
             "battlefield",
             "UnitBattlefield.PlayerCommandGateway.cs");
+        RequireText(battlefieldGateway, "_entityWorld.Relations.CanAttack(OwnerId.FromPlayerSlot(command.IssuerSlotId), target.OwnerId)", "Attack gateway commands must reject non-hostile targets before enqueueing.", result);
+        var combatOrders = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "command", "CommandSystem.CombatOrders.cs");
+        RequireText(combatOrders, "KeepSubjectsThatCanAttackTarget(world, target, _groupOrderMembers)", "Group attacks must filter subjects through simulation weapon-target authority.", result);
+        RequireText(combatOrders, "WeaponEngagementQueries.CanAnyMountTarget(world, weapon, target)", "Group attack subject filtering must use shared weapon engagement rules.", result);
         var buildStart = battlefieldGateway.IndexOf("private bool TryApplyBuildCommand(", StringComparison.Ordinal);
         var buildEnd = battlefieldGateway.IndexOf("private static bool TryGetProductionSpec(", buildStart, StringComparison.Ordinal);
         if (buildStart < 0 || buildEnd <= buildStart)

@@ -3,8 +3,7 @@ static class UnitBattlefieldAllocationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireBuildingTargetIdBuffers(root, result);
-        RequireHarvestRepairCommandBuffers(root, result);
-        RequireGroupCommandSubjectBuffers(root, result);
+        RequireSelectionSubjectBuffer(root, result);
         RequireDeathRemovalBuffers(root, result);
         RequireProductionSyncBuffers(root, result);
         RequireConstructionSubjectBuffers(root, result);
@@ -46,44 +45,16 @@ static class UnitBattlefieldAllocationReviewGate
         ForbidText(battlefield, ".Select(BuildingHitPulseProjection)", "Building hit-pulse projections must not allocate LINQ result chains.", result);
         ForbidText(battlefield, ".Select(buildingId => BuildingMinimapProjection", "Building minimap projections must not allocate LINQ result chains.", result);
     }
-    private static void RequireHarvestRepairCommandBuffers(string root, GateResult result)
+    private static void RequireSelectionSubjectBuffer(string root, GateResult result)
     {
         var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(battlefield, "HashSet<int> _unitCommandIdBuffer", "UnitBattlefield harvest/repair commands must reuse requested-id storage.", result);
-        RequireText(battlefield, "List<UnitInstance> _unitCommandBuffer", "UnitBattlefield harvest/repair commands must reuse unit storage.", result);
-        RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield harvest/repair commands must reuse entity subject storage.", result);
-
-        var harvestRepair = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.HarvestRepair.cs");
-        RequireText(harvestRepair, "CollectRequestedCommandUnits(playerSlotId, unitIds, IsHarvester, _unitCommandBuffer)", "Explicit harvest commands must fill the reusable unit buffer.", result);
-        RequireText(harvestRepair, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Harvest/repair commands must fill reusable entity subject storage.", result);
-        ForbidText(harvestRepair, ".ToHashSet()", "Harvest/repair commands must not allocate requested-id sets.", result);
-        ForbidText(harvestRepair, ".ToList()", "Harvest/repair commands must not allocate unit or subject lists.", result);
-        ForbidText(harvestRepair, ".OrderBy(unit => unit.Id)", "Harvest/repair commands must sort reusable buffers in place.", result);
-        ForbidText(harvestRepair, ".Select(unit => unit.EntityId)", "Harvest/repair commands must fill entity subjects with an explicit loop.", result);
-    }
-
-    private static void RequireGroupCommandSubjectBuffers(string root, GateResult result)
-    {
-        var battlefield = ReviewGateEvidence.ReadSourceWithPartials(
-            Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
-        RequireText(battlefield, "List<UnitInstance> _unitCommandBuffer", "UnitBattlefield group commands must reuse unit subject storage.", result);
-        RequireText(battlefield, "List<EntityId> _unitCommandEntityBuffer", "UnitBattlefield group commands must reuse entity subject storage.", result);
+        RequireText(battlefield, "HashSet<int> _selectionUnitIdBuffer", "UnitBattlefield selection commands must reuse requested-id storage.", result);
 
         var commands = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.Commands.cs");
-        var subjects = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ExplicitCommandSubjects.cs");
-        RequireText(commands, "CollectRequestedCommandUnits(playerSlotId, unitIds, _unitCommandBuffer)", "Explicit move commands must fill the reusable unit buffer.", result);
-        RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, target, _unitCommandBuffer)", "Explicit unit attacks must fill the reusable target-filtered buffer.", result);
-        RequireText(commands, "CollectRequestedCommandUnitsTargeting(playerSlotId, unitIds, targetSpec, _unitCommandBuffer)", "Explicit building attacks must fill the reusable target-filtered buffer.", result);
-        RequireText(commands, "CollectCommandEntityIds(_unitCommandBuffer, _unitCommandEntityBuffer)", "Group commands must fill reusable entity subject storage.", result);
-        RequireText(subjects, "CollectRequestedCommandIds(unitIds)", "Explicit group commands must reuse requested-id storage.", result);
-        ForbidText(subjects, ".ToHashSet()", "Explicit group command subjects must not allocate requested-id sets.", result);
-        ForbidText(subjects, ".OrderBy(unit => unit.Id)", "Explicit group command subjects must sort reusable buffers in place.", result);
-        ForbidText(commands, "var requestedIds = unitIds.ToHashSet();", "Group commands must not allocate requested-id sets.", result);
-        ForbidText(commands, ".Select(unit => unit.EntityId).ToList()", "Group commands must not allocate entity subject lists.", result);
-        ForbidText(commands, ".OrderBy(unit => unit.Id)", "Group commands must sort reusable buffers in place.", result);
-        ForbidText(commands, ".Where(unit => CanUnitTarget(unit, target))", "Group attack commands must not allocate LINQ targeting filters.", result);
-        ForbidText(commands, ".Where(unit => CanUnitTarget(unit, targetSpec))", "Group attack commands must not allocate LINQ targeting filters.", result);
+        RequireText(commands, "CollectRequestedSelectionUnits(playerSlotId, unitIds, _selectionUnitBuffer)", "Selection commands must fill reusable unit storage.", result);
+        RequireText(commands, "_selectionUnitIdBuffer.Add(unitId)", "Selection commands must reuse requested-id storage.", result);
+        ForbidText(commands, "unitIds.ToHashSet()", "Selection commands must not allocate requested-id sets.", result);
     }
 
     private static void RequireDeathRemovalBuffers(string root, GateResult result)

@@ -35,8 +35,8 @@ static class BattleRootHudAllocationReviewGate
         ForbidText(battleRoot, "CommandAcknowledged = AddCommandAcknowledgement", "BattleRoot command acknowledgement callbacks must not draw rings directly.", result);
         RequireText(battleRoot, "List<UnitInstance> _sandboxLaunchUnitBuffer", "BattleRoot sandbox launch selection must reuse unit storage.", result);
         RequireText(battleRoot, "List<int> _sandboxLaunchUnitIdBuffer", "BattleRoot sandbox launch selection must reuse id storage.", result);
-        RequireText(battleRoot, "List<int> _debugPlayerAttackerIds", "Active battle perf setup must reuse player attacker id storage.", result);
-        RequireText(battleRoot, "List<int> _debugEnemyAttackerIds", "Active battle perf setup must reuse enemy attacker id storage.", result);
+        RequireText(battleRoot, "List<EntityId> _debugPlayerAttackerEntityIds", "Active battle perf setup must reuse player attacker entity-id storage.", result);
+        RequireText(battleRoot, "List<EntityId> _debugEnemyAttackerEntityIds", "Active battle perf setup must reuse enemy attacker entity-id storage.", result);
         RequireText(process, "LiveUnitBattlefieldUnitCount()", "PerfHudCounts must use explicit runtime unit counting.", result);
         var presentationEnvironment = ReviewGateSource.Read(root, "scripts", "core", "presentation", "WorldPresentationEnvironment.cs");
         RequireText(presentationEnvironment, "_visionSources.Clear();", "World presentation fog must clear and reuse vision-source storage.", result);
@@ -272,8 +272,8 @@ static class BattleRootHudAllocationReviewGate
         RequireText(alerts, "building.Kind == BuildingDesignIds.PowerPlant", "Power alert position must prefer a live player PowerPlant.", result);
         RequireText(unitBattlefieldCommands, "public int IdleHarvesterCount(PlayerSlotId playerSlotId, out Vector2? firstWorldPosition)", "UnitBattlefield must expose an allocation-free idle harvester alert snapshot.", result);
         RequireText(unitBattlefieldCommands, "firstWorldPosition ??= unit.Position;", "Runtime idle harvester snapshots must capture the first alert jump position.", result);
-        RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds)", "Active battle perf setup must fill player attacker ids explicitly.", result);
-        RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerIds)", "Active battle perf setup must fill enemy attacker ids explicitly.", result);
+        RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerEntityIds)", "Active battle perf setup must fill player attacker entity ids explicitly.", result);
+        RequireText(battleRoot, "CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerEntityIds)", "Active battle perf setup must fill enemy attacker entity ids explicitly.", result);
         RequireText(battleRoot, "var designIds = new string[count];", "BattleRoot debug design-id readout must build an explicit stable snapshot.", result);
         RequireText(battleRoot, "designIds[index++] = unit.Spec.Id;", "BattleRoot debug design-id readout must fill snapshots with an explicit scan.", result);
         RequireText(sandbox, "CollectSandboxLaunchSelectionIds();", "Sandbox launch must fill reusable selected-unit id storage.", result);

@@ -16,7 +16,7 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
     private readonly List<ProductionOptionState> _queueableDesignOptions = [];
     private readonly List<UnitBattlefieldBuildingSnapshot> _ownedBuildingBuffer = [];
     private readonly List<UnitInstance> _idleHarvesterBuffer = [];
-    private readonly List<int> _idleHarvesterIds = [];
+    private readonly List<EntityId> _idleHarvesterEntityIds = [];
     private float _decisionTimer;
     private int _mixCursor;
 

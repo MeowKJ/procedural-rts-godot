@@ -68,33 +68,6 @@ public sealed partial class UnitBattlefield
         return ResourceFields.FirstOrDefault(field => field.Id == id);
     }
 
-    private int? FindBestRefineryIdForHarvester(PlayerSlotId playerSlotId, Vector2 position)
-    {
-        int? bestId = null;
-        var bestDistance = 0f;
-        foreach (var entity in _entityWorld.OrderedEntities)
-        {
-            if (!entity.Components.TryGet<BuildingIdentityComponentState>(out var identity)
-                || identity.PlayerSlotId != playerSlotId
-                || identity.Kind != BuildingDesignIds.Refinery
-                || BuildingSnapshot(identity.BuildingId) is not { } building
-                || building.Hp <= 0
-                || BuildingBuildProgress(building.Id) < 1)
-            {
-                continue;
-            }
-
-            var distance = building.Position.DistanceTo(position);
-            if (bestId is null || distance < bestDistance)
-            {
-                bestId = building.Id;
-                bestDistance = distance;
-            }
-        }
-
-        return bestId;
-    }
-
     private void ClearRefineryDockClaim(int harvesterId)
     {
         var harvesterEntityId = UnitEntityId(harvesterId);

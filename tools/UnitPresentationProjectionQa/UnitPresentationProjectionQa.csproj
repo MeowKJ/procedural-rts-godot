@@ -8,4 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ProceduralRts.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\QaCommon\QaPlayerCommandDriver.cs" Link="QaCommon\QaPlayerCommandDriver.cs" />
+  </ItemGroup>
 </Project>

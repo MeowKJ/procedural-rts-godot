@@ -19,6 +19,11 @@ public sealed partial class CommandGateway
             return Reject(CommandGatewayValidationError.InvalidSubject, "Subject ids must be valid entity ids.", out error, out message);
         }
 
+        if (ContainsDuplicateSubject(subjects))
+        {
+            return Reject(CommandGatewayValidationError.InvalidSubject, "Subject ids must be unique.", out error, out message);
+        }
+
         if (command.Kind != PlayerCommandKind.Build && payload.BuildFacing != default)
         {
             return Reject(CommandGatewayValidationError.InvalidPayloadShape, "Build facing is only valid for Build commands.", out error, out message);
@@ -53,6 +58,22 @@ public sealed partial class CommandGateway
             if (!subjects[index].IsValid)
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsDuplicateSubject(IReadOnlyList<EntityId> subjects)
+    {
+        for (var index = 0; index < subjects.Count; index++)
+        {
+            for (var candidate = index + 1; candidate < subjects.Count; candidate++)
+            {
+                if (subjects[index] == subjects[candidate])
+                {
+                    return true;
+                }
             }
         }
 

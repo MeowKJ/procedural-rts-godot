@@ -63,11 +63,13 @@ static class EnemyProductionAiReviewGate
     {
         var ai = ReviewGateEvidence.ReadSourceWithPartials(ProductionAiPath(root, "UnitBattlefieldEnemyProductionAi.cs"));
         RequireText(ai, "List<UnitInstance> _idleHarvesterBuffer", "Enemy economy must reuse idle harvester storage.", result);
-        RequireText(ai, "List<int> _idleHarvesterIds", "Enemy economy must reuse harvester command id storage.", result);
+        RequireText(ai, "List<EntityId> _idleHarvesterEntityIds", "Enemy economy must reuse harvester entity-id storage.", result);
 
         var economy = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyProductionAi.Economy.cs"); var queries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ProductionEconomyQueries.cs");
         RequireText(economy, "battlefield.CollectIdleEconomyUnits(", "Enemy economy must fill idle harvester storage through the UnitBattlefield query routing.", result); RequireText(economy, "battlefield.NearestVisibleResourceField(", "Enemy economy must choose resources through the UnitBattlefield visibility query routing.", result);
-        RequireText(economy, "CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds)", "Enemy economy harvest commands must reuse id storage.", result); RequireText(economy, "battlefield.CollectOwnedBuildings(", "Enemy economy/base helpers must use the UnitBattlefield owned-building query routing.", result);
+        RequireText(economy, "CollectEntityIds(_idleHarvesterBuffer, _idleHarvesterEntityIds)", "Enemy economy harvest commands must reuse entity-id storage.", result); RequireText(economy, "battlefield.CollectOwnedBuildings(", "Enemy economy/base helpers must use the UnitBattlefield owned-building query routing.", result);
+        RequireText(economy, "UnitBattlefieldScriptedCommandDriver.Submit(", "Enemy harvest intent must enter the scripted-bot CommandGateway path.", result);
+        RequireText(economy, "PlayerCommandPayload.ForEntityTarget(", "Enemy harvest intent must use a typed entity-target payload.", result);
         RequireText(economy, "SetMissingProducerRallyPoints(", "Enemy economy rally setup must use the UnitBattlefield rally command routing.", result); RequireText(economy, "LiveBuildingCenterOrFallback(", "Enemy base center must use the UnitBattlefield building-center query routing.", result); RequireText(economy, "FirstOwnedBuildingFactionOrDefault(", "Enemy faction lookup must use the UnitBattlefield building-faction query routing.", result);
         RequireText(queries, "CollectIdleEconomyUnits(", "UnitBattlefield must own idle economy-unit collection.", result); RequireText(queries, "NearestVisibleResourceField(", "UnitBattlefield must own visible resource-field selection.", result);
         ForbidProductionLinq(economy, "Enemy economy", result);

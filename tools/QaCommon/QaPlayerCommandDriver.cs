@@ -11,6 +11,21 @@ public static class QaPlayerCommandDriver
         Vector2 target,
         MoveCommandMode mode = MoveCommandMode.Direct)
     {
+        return MoveSubjects(
+            battlefield,
+            playerSlotId,
+            battlefield.SelectedUnitEntityIds(playerSlotId),
+            target,
+            mode);
+    }
+
+    public static CommandGatewayResult MoveSubjects(
+        UnitBattlefield battlefield,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<EntityId> subjects,
+        Vector2 target,
+        MoveCommandMode mode = MoveCommandMode.Direct)
+    {
         var kind = mode == MoveCommandMode.Attack
             ? PlayerCommandKind.AttackMove
             : PlayerCommandKind.Move;
@@ -18,11 +33,7 @@ public static class QaPlayerCommandDriver
             battlefield,
             playerSlotId,
             kind,
-            PlayerCommandPayload.ForPoint(
-                battlefield.SelectedUnitEntityIds(playerSlotId),
-                target.X,
-                target.Y,
-                mode));
+            PlayerCommandPayload.ForPoint(subjects, target.X, target.Y, mode));
     }
 
     public static CommandGatewayResult AttackSelection(
@@ -30,13 +41,11 @@ public static class QaPlayerCommandDriver
         PlayerSlotId playerSlotId,
         UnitInstance target)
     {
-        return Submit(
+        return AttackSubjects(
             battlefield,
             playerSlotId,
-            PlayerCommandKind.Attack,
-            PlayerCommandPayload.ForEntityTarget(
-                battlefield.SelectedUnitEntityIds(playerSlotId),
-                target.EntityId));
+            battlefield.SelectedUnitEntityIds(playerSlotId),
+            target.EntityId);
     }
 
     public static CommandGatewayResult AttackBuildingSelection(
@@ -44,14 +53,26 @@ public static class QaPlayerCommandDriver
         PlayerSlotId playerSlotId,
         int buildingId)
     {
+        return AttackSubjects(
+            battlefield,
+            playerSlotId,
+            battlefield.SelectedUnitEntityIds(playerSlotId),
+            battlefield.BuildingEntityIdByTargetId(buildingId) ?? default,
+            CombatTargetKind.Building);
+    }
+
+    public static CommandGatewayResult AttackSubjects(
+        UnitBattlefield battlefield,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<EntityId> subjects,
+        EntityId target,
+        CombatTargetKind targetKind = CombatTargetKind.Unit)
+    {
         return Submit(
             battlefield,
             playerSlotId,
             PlayerCommandKind.Attack,
-            PlayerCommandPayload.ForEntityTarget(
-                battlefield.SelectedUnitEntityIds(playerSlotId),
-                battlefield.BuildingEntityIdByTargetId(buildingId) ?? default,
-                CombatTargetKind.Building));
+            PlayerCommandPayload.ForEntityTarget(subjects, target, targetKind));
     }
 
     public static CommandGatewayResult StopSelection(
@@ -86,13 +107,24 @@ public static class QaPlayerCommandDriver
         ResourceFieldModel field)
     {
         battlefield.TryGetResourceEntityId(field, out var target);
+        return HarvestSubjects(
+            battlefield,
+            playerSlotId,
+            battlefield.SelectedUnitEntityIds(playerSlotId),
+            target);
+    }
+
+    public static CommandGatewayResult HarvestSubjects(
+        UnitBattlefield battlefield,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<EntityId> subjects,
+        EntityId target)
+    {
         return Submit(
             battlefield,
             playerSlotId,
             PlayerCommandKind.Harvest,
-            PlayerCommandPayload.ForEntityTarget(
-                battlefield.SelectedUnitEntityIds(playerSlotId),
-                target));
+            PlayerCommandPayload.ForEntityTarget(subjects, target));
     }
 
     private static CommandGatewayResult Submit(

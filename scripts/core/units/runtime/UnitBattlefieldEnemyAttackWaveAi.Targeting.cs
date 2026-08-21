@@ -50,24 +50,24 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
         UnitBattlefield battlefield,
         PlayerSlotId enemyPlayerSlotId,
         IReadOnlyList<UnitInstance> waveUnits,
-        List<int> unitIds,
+        List<EntityId> entityIds,
         out string status)
     {
         status = string.Empty;
         var scoutPoint = ScoutPoint(battlefield, enemyPlayerSlotId);
-        CollectUnitIds(waveUnits, unitIds);
-        var moved = battlefield.CommandMoveUnits(
+        CollectEntityIds(waveUnits, entityIds);
+        var result = UnitBattlefieldScriptedCommandDriver.Submit(
+            battlefield,
+            "enemy-scout",
             enemyPlayerSlotId,
-            unitIds,
-            scoutPoint,
-            battlefield.WorldSize,
-            MoveCommandMode.Attack);
-        if (moved == 0)
+            PlayerCommandKind.AttackMove,
+            PlayerCommandPayload.ForPoint(entityIds, scoutPoint.X, scoutPoint.Y, MoveCommandMode.Attack));
+        if (result.AcceptedCount != 1)
         {
             return false;
         }
 
-        status = $"Enemy scout wave launched ({moved} units)";
+        status = $"Enemy scout wave launched ({entityIds.Count} units)";
         return true;
     }
 

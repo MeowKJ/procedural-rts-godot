@@ -64,9 +64,7 @@ public sealed partial class UnitBattlefield
     private readonly List<UnitMinimapPip> _unitMinimapPipSecondaryBuffer = [];
     private readonly List<UnitSelectionSummaryItem> _selectionSummaryBuffer = [];
     private readonly List<int> _productionCandidateProducerIds = [];
-    private readonly HashSet<int> _unitCommandIdBuffer = [];
-    private readonly List<UnitInstance> _unitCommandBuffer = [];
-    private readonly List<EntityId> _unitCommandEntityBuffer = [];
+    private readonly HashSet<int> _selectionUnitIdBuffer = [];
     private readonly List<UnitInstanceDeathInfo> _unitDeathBuffer = [];
     private readonly List<UnitBattlefieldBuildingDeathInfo> _buildingDeathBuffer = [];
     private readonly List<int> _deadBuildingIdBuffer = [];

@@ -31,7 +31,10 @@ public partial class BattleRoot
             targetEntity.Components.Set(targetCommandable with { MoveMode = MoveCommandMode.Ignore });
             AddUnitInstanceView(shooter);
             AddUnitInstanceView(target);
-            _unitBattlefield.CommandAttackUnits(PlayerSlotId.One, [shooter.Id], target);
+            SubmitQaPlayerCommand(
+                PlayerSlotId.One,
+                PlayerCommandKind.Attack,
+                PlayerCommandPayload.ForEntityTarget([shooter.EntityId], target.EntityId));
         }
 
         _camera.InputEnabled = false;

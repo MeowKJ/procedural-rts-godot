@@ -132,10 +132,21 @@ static partial class Program
             CommandGatewayValidationError.InvalidSubject,
             "gateway should reject payloads with invalid subject ids");
 
+        var duplicateSubject = new PlayerCommand(
+            PlayerSlotId.One,
+            7,
+            12,
+            PlayerCommandKind.Stop,
+            PlayerCommandPayload.ForSubjects(new[] { subjects[0], subjects[0] }));
+        AssertRejected(
+            gateway.Submit(submission, new[] { duplicateSubject }, sink),
+            CommandGatewayValidationError.InvalidSubject,
+            "gateway should reject payloads with duplicate subject ids");
+
         var rejectingSink = new RecordingGatewaySink(reject: true);
         var sinkRejected = new PlayerCommand(
             PlayerSlotId.One,
-            7,
+            8,
             12,
             PlayerCommandKind.Stop,
             PlayerCommandPayload.ForSubjects(subjects));

@@ -64,8 +64,8 @@ public partial class BattleRoot : Node2D
     private readonly List<UnitBattlefieldBuildingSnapshot> _buildingViewSnapshotBuffer = [];
     private readonly List<UnitInstance> _sandboxLaunchUnitBuffer = [];
     private readonly List<int> _sandboxLaunchUnitIdBuffer = [];
-    private readonly List<int> _debugPlayerAttackerIds = [];
-    private readonly List<int> _debugEnemyAttackerIds = [];
+    private readonly List<EntityId> _debugPlayerAttackerEntityIds = [];
+    private readonly List<EntityId> _debugEnemyAttackerEntityIds = [];
     private readonly PresentationMetrics _presentationMetrics = new();
     private readonly Stopwatch _processStopwatch = new();
     private readonly Stopwatch _simStepStopwatch = new();
@@ -151,15 +151,23 @@ public partial class BattleRoot : Node2D
                 facing: Mathf.Pi,
                 count: 24);
 
-            CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerIds);
-            CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerIds);
+            CollectActiveBattlePerfAttackers(PlayerSlotId.One, _debugPlayerAttackerEntityIds);
+            CollectActiveBattlePerfAttackers(PlayerSlotId.Two, _debugEnemyAttackerEntityIds);
             var playerTarget = enemyWave.FirstOrDefault(unit => unit.Hp > 0)
                 ?? _unitBattlefield.Units.First(unit => unit.PlayerSlotId == PlayerSlotId.Two && unit.Hp > 0);
             var enemyTarget = playerWave.FirstOrDefault(unit => unit.Hp > 0)
                 ?? _unitBattlefield.Units.First(unit => unit.PlayerSlotId == PlayerSlotId.One && unit.Hp > 0);
 
-            _debugPlayerCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.One, _debugPlayerAttackerIds, playerTarget);
-            _debugEnemyCommandedUnitCount = _unitBattlefield.CommandAttackUnits(PlayerSlotId.Two, _debugEnemyAttackerIds, enemyTarget);
+            var playerAttack = SubmitQaPlayerCommand(
+                PlayerSlotId.One,
+                PlayerCommandKind.Attack,
+                PlayerCommandPayload.ForEntityTarget(_debugPlayerAttackerEntityIds, playerTarget.EntityId));
+            var enemyAttack = SubmitQaPlayerCommand(
+                PlayerSlotId.Two,
+                PlayerCommandKind.Attack,
+                PlayerCommandPayload.ForEntityTarget(_debugEnemyAttackerEntityIds, enemyTarget.EntityId));
+            _debugPlayerCommandedUnitCount = playerAttack.AcceptedCount == 1 ? _debugPlayerAttackerEntityIds.Count : 0;
+            _debugEnemyCommandedUnitCount = enemyAttack.AcceptedCount == 1 ? _debugEnemyAttackerEntityIds.Count : 0;
             _camera.InputEnabled = false;
             _camera.SnapToWorldPoint(focus);
             _debugActiveBattlePerfScenarioConfigured = true;
@@ -184,7 +192,7 @@ public partial class BattleRoot : Node2D
             counts.LastFogUpdateMs);
     }
 
-    private void CollectActiveBattlePerfAttackers(PlayerSlotId playerSlotId, List<int> result)
+    private void CollectActiveBattlePerfAttackers(PlayerSlotId playerSlotId, List<EntityId> result)
     {
         result.Clear();
         foreach (var unit in _unitBattlefield.Units)
@@ -193,7 +201,7 @@ public partial class BattleRoot : Node2D
                 && unit.Hp > 0
                 && unit.WeaponMounts.Count > 0)
             {
-                result.Add(unit.Id);
+                result.Add(unit.EntityId);
             }
         }
     }

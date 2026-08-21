@@ -234,18 +234,41 @@ static partial class Program
 
         var explicitAttackBattlefield = new UnitBattlefield();
         var explicitAttacker = explicitAttackBattlefield.Spawn<DogGuardTank>(PlayerSlotId.One, new Vector2(300, 330));
+        var explicitUnarmed = explicitAttackBattlefield.Spawn<DogHarvester>(PlayerSlotId.One, new Vector2(270, 360));
+        var explicitUnarmedEntity = explicitAttackBattlefield.UnitEntityByInstanceId(explicitUnarmed.Id)
+            ?? throw new InvalidOperationException("explicit unarmed subject entity should exist");
+        explicitUnarmedEntity.Components.Remove<WeaponUserComponentState>();
         var explicitTarget = explicitAttackBattlefield.Spawn("cat.tank", PlayerSlotId.Two, new Vector2(455, 330), Mathf.Pi);
         var explicitCommandsBefore = explicitAttackBattlefield.AppliedInputCommandCount;
-        var explicitCommanded = explicitAttackBattlefield.CommandAttackUnits(PlayerSlotId.One, [explicitAttacker.Id], explicitTarget);
+        var explicitAttackResult = QaPlayerCommandDriver.AttackSubjects(
+            explicitAttackBattlefield,
+            PlayerSlotId.One,
+            [explicitAttacker.EntityId, explicitUnarmed.EntityId],
+            explicitTarget.EntityId);
         var explicitAttackerEntity = explicitAttackBattlefield.UnitEntityByInstanceId(explicitAttacker.Id);
-        if (explicitCommanded != 1
+        if (explicitAttackResult.AcceptedCount != 1
             || explicitAttackBattlefield.AppliedInputCommandCount != explicitCommandsBefore + 1
             || explicitAttackerEntity is null
             || !explicitAttackerEntity.Components.TryGet<WeaponUserComponentState>(out var explicitBufferedAttack)
             || explicitBufferedAttack.AttackTarget != explicitTarget.EntityId
-            || explicitAttacker.AttackTargetId != explicitTarget.Id)
+            || explicitAttacker.AttackTargetId != explicitTarget.Id
+            || explicitUnarmed.AttackTargetId is not null)
         {
-            throw new InvalidOperationException("UnitBattlefield explicit attack-units API should route through EntityCommandBuffer instead of directly mutating UnitInstance attack state");
+            throw new InvalidOperationException("Explicit typed attack payload should route through CommandGateway while CommandSystem filters subjects that cannot attack the target");
+        }
+
+        explicitAttackBattlefield.Relations.Set(PlayerSlotId.One, PlayerSlotId.Two, PlayerRelation.Allied);
+        var commandsBeforeAlliedAttack = explicitAttackBattlefield.AppliedInputCommandCount;
+        var alliedAttackResult = QaPlayerCommandDriver.AttackSubjects(
+            explicitAttackBattlefield,
+            PlayerSlotId.One,
+            [explicitAttacker.EntityId],
+            explicitTarget.EntityId);
+        if (alliedAttackResult.AcceptedCount != 0
+            || alliedAttackResult.Commands[0].Error != CommandGatewayValidationError.InvalidTarget
+            || explicitAttackBattlefield.AppliedInputCommandCount != commandsBeforeAlliedAttack)
+        {
+            throw new InvalidOperationException("CommandGateway should reject non-hostile attack targets before enqueueing an EntityCommand");
         }
 
         var unitInstanceDeathBattlefield = new UnitBattlefield();
