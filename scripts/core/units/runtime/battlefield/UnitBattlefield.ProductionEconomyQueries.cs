@@ -71,29 +71,6 @@ public sealed partial class UnitBattlefield
         result.Sort(CompareUnitIds);
     }
 
-    public UnitBattlefieldResourceNodeProjection? NearestVisibleResourceNode(OwnerId owner, Vector2 origin)
-    {
-        UnitBattlefieldResourceNodeProjection? best = null;
-        var bestDistance = float.PositiveInfinity;
-        foreach (var resource in ResourceNodeProjections())
-        {
-            if (resource.Amount <= 0
-                || !EntityWorld.Visibility.IsVisible(owner, resource.EntityId))
-            {
-                continue;
-            }
-
-            var distance = resource.Position.DistanceSquaredTo(origin);
-            if (distance < bestDistance)
-            {
-                best = resource;
-                bestDistance = distance;
-            }
-        }
-
-        return best;
-    }
-
     public void CollectOwnedBuildings(PlayerSlotId playerSlotId, List<UnitBattlefieldBuildingSnapshot> result, bool liveOnly)
     {
         result.Clear();

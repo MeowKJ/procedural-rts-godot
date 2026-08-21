@@ -48,16 +48,6 @@ public sealed partial class UnitBattlefield
         return _unitProjectionBuffer;
     }
 
-    public ResourceInventory ResourceInventory(PlayerSlotId playerSlotId)
-    {
-        return _entityWorld.ResourceInventory(OwnerId.FromPlayerSlot(playerSlotId));
-    }
-
-    public int Credits(PlayerSlotId playerSlotId)
-    {
-        return ResourceInventory(playerSlotId).Credits;
-    }
-
     public int LiveUnitDesignCount(PlayerSlotId playerSlotId, string designId)
     {
         var count = 0;
@@ -150,18 +140,6 @@ public sealed partial class UnitBattlefield
             && (unit.AttackTargetId is null || !unit.AttackTargetIsManual);
     }
 
-    public void SetCredits(PlayerSlotId playerSlotId, int credits)
-    {
-        var inventory = ResourceInventory(playerSlotId);
-        inventory.Credits = Mathf.Max(0, credits);
-        ResourceInventoryChanged?.Invoke(playerSlotId, inventory);
-    }
-
-    public UnitBattlefieldResourceNodeProjection? PickResourceNode(Vector2 worldPoint, float pickPadding = 8)
-    {
-        return NearestResourceNode(worldPoint, pickPadding);
-    }
-
     public IReadOnlyList<UnitBattlefieldVisionSource> VisionSources(PlayerSlotId viewer)
     {
         _visionSourceBuffer.Clear();
@@ -175,33 +153,6 @@ public sealed partial class UnitBattlefield
         }
 
         return _visionSourceBuffer;
-    }
-
-    public IReadOnlyList<UnitBattlefieldResourcePip> ResourcePips(Func<Vector2, bool>? isExplored = null)
-    {
-        var result = NextResourcePipBuffer();
-        foreach (var field in ResourceNodeProjections())
-        {
-            if (field.Amount <= 0 || !(isExplored?.Invoke(field.Position) ?? true))
-            {
-                continue;
-            }
-
-            result.Add(new UnitBattlefieldResourcePip(
-                field.Position,
-                field.Radius,
-                field.MaxAmount <= 0 ? 0 : Mathf.Clamp((float)field.Amount / field.MaxAmount, 0, 1)));
-        }
-
-        return result;
-    }
-
-    private List<UnitBattlefieldResourcePip> NextResourcePipBuffer()
-    {
-        _useSecondaryResourcePipBuffer = !_useSecondaryResourcePipBuffer;
-        var result = _useSecondaryResourcePipBuffer ? _resourcePipSecondaryBuffer : _resourcePipBuffer;
-        result.Clear();
-        return result;
     }
 
     private static int CompareEntityProjectionIds(EntityProjection left, EntityProjection right)

@@ -3,6 +3,7 @@ static class UnitBattlefieldAllocationReviewGate
     public static void Check(string root, GateResult result)
     {
         RequireQueryDomainModules(root, result);
+        RequireResourceDomainModules(root, result);
         RequireBuildingTargetIdBuffers(root, result);
         RequireSelectionSubjectBuffer(root, result);
         RequireDeathRemovalBuffers(root, result);
@@ -11,6 +12,21 @@ static class UnitBattlefieldAllocationReviewGate
         RequireSelectedBuildingRallyBuffers(root, result);
         RequireBuildingProjectionBuffers(root, result);
         RequireUnitResourceProjectionBuffers(root, result);
+    }
+
+    private static void RequireResourceDomainModules(string root, GateResult result)
+    {
+        foreach (var module in new[]
+        {
+            "UnitBattlefield.ResourceHarvestRuntime.cs",
+            "UnitBattlefield.ResourceNodeProjections.cs",
+            "UnitBattlefield.ResourceNotificationBuffers.cs",
+            "UnitBattlefield.ResourceQueries.cs",
+        })
+        {
+            ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "runtime", "battlefield", "resource", module);
+            ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "runtime", "battlefield", module);
+        }
     }
 
     private static void RequireQueryDomainModules(string root, GateResult result)
@@ -148,9 +164,12 @@ static class UnitBattlefieldAllocationReviewGate
         RequireText(battlefield, "var units = new List<UnitInstance>(designs.Count)", "SpawnRoster must pre-size and fill its result list explicitly.", result);
         RequireText(battlefield, "units.Add(Spawn(designs[index].ToSpec(), playerSlotId, start + spacing * index, facing))", "SpawnRoster must preserve roster order through an indexed loop.", result);
         var core = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "query", "UnitBattlefield.CoreQueries.cs");
+        var resourceQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "resource", "UnitBattlefield.ResourceQueries.cs");
         ForbidText(battlefield, ".Select((design, index) => Spawn", "SpawnRoster must not allocate LINQ projection iterators.", result);
         ForbidText(core, ".OrderBy(unit => unit.EntityId.Value)", "UnitProjections must sort reusable storage in place.", result);
-        ForbidText(core, ".ToList()", "Unit/resource projection paths must not allocate result lists.", result);
+        ForbidText(core, ".ToList()", "Unit projection paths must not allocate result lists.", result);
+        ForbidText(resourceQueries, ".OrderBy(", "Resource query paths must not allocate ordered LINQ queries.", result);
+        ForbidText(resourceQueries, ".ToList()", "Resource query paths must not allocate result lists.", result);
         var visibility = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.VisibilityCombat.cs");
         ForbidText(visibility, ".GroupBy(unit =>", "SelectionSummary must not allocate grouping enumerables.", result);
         ForbidText(visibility, ".ToList()", "Unit minimap and selection summary paths must not allocate result lists.", result);

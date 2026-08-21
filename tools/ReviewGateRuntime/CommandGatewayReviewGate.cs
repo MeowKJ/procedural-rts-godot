@@ -39,7 +39,7 @@ static class CommandGatewayReviewGate
         var battlefield = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs");
         var scriptedDriver = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldScriptedCommandDriver.cs");
         var resourceProjection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldResourceNodeProjection.cs");
-        var resourceQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ResourceNodeProjections.cs");
+        var resourceQueries = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "resource", "UnitBattlefield.ResourceNodeProjections.cs");
         var mapLoader = ReviewGateSource.Read(root, "scripts", "core", "map", "MapLoader.cs");
         var resourceView = ReviewGateSource.Read(root, "scripts", "world", "ResourceNodeView.cs");
 
