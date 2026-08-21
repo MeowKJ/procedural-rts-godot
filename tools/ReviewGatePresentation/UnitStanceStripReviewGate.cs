@@ -7,7 +7,8 @@ static class UnitStanceStripReviewGate
         var hudBuild = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Build.cs");
         var hudIconCallers = string.Concat(
             ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandControls.cs"),
-            ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.NestedControls.cs"),
+            ReviewGateSource.Read(root, "scripts", "ui", "hud", "controls", "HudLayer.CatalogControls.cs"),
+            ReviewGateSource.Read(root, "scripts", "ui", "hud", "controls", "HudLayer.SelectionControls.cs"),
             ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.ProviderLaneControls.cs"));
         var hudContext = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.CommandRibbonContext.cs");
         var iconRenderer = ReviewGateSource.Read(root, "scripts", "ui", "hud", "HudLayer.Icons.cs");
