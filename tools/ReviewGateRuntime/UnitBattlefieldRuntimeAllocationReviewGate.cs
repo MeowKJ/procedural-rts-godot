@@ -19,7 +19,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefield.cs"));
         RequireText(battlefield, "HashSet<int> _constructionEntityIdsBefore", "Direct construction adoption must reuse the construction entity-id snapshot buffer.", result);
 
-        var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingLifecycle.cs");
+        var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.BuildingLifecycle.cs");
         RequireText(lifecycle, "CollectEntityIds(_constructionEntityIdsBefore)", "ConstructBuilding must fill the reusable before-entity snapshot.", result);
         RequireText(lifecycle, "LastNewConstructedEntity(owner, kind, _constructionEntityIdsBefore)", "ConstructBuilding must reuse the explicit constructed-entity scan.", result);
         RequireText(lifecycle, "DrainConstructionRejection(command.Tick, owner, kind)", "ConstructBuilding must reuse the shared construction rejection drain.", result);
@@ -109,7 +109,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
 
         var buildingCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CombatEvents.Buildings.cs");
         var turretCombat = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CombatEvents.Units.cs");
-        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
+        var constructionTickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.ConstructionTickets.cs");
         var runtimeSources = buildingCombat + turretCombat + constructionTickets;
         RequireText(runtimeSources, "_entityWorld.Events.DrainInto(_simEventDrainBuffer)", "UnitBattlefield routing paths must drain sim events into reusable storage.", result);
         RequireText(constructionTickets, "for (var index = _simEventDrainBuffer.Count - 1; index >= 0; index--)", "Construction rejection drain must preserve last-match semantics with an explicit reverse scan.", result);
@@ -120,7 +120,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
 
     private static void RequireExplicitUnitRoutingFilters(string root, GateResult result)
     {
-        var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.BuildingLifecycle.cs");
+        var lifecycle = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.BuildingLifecycle.cs");
         var removal = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.CommandApplyRemoval.cs");
         ForbidText(lifecycle, "Units.Where(unit => unit.AttackTargetKind == CombatTargetKind.Building && unit.AttackTargetId == id)", "Building removal must scan units explicitly.", result);
         ForbidText(removal, "Units.Where(unit => unit.PlayerSlotId == command.Issuer.ToPlayerSlot())", "Selection command state sync must scan units explicitly.", result);
@@ -140,6 +140,7 @@ static class UnitBattlefieldRuntimeAllocationReviewGate
             "units",
             "runtime",
             "battlefield",
+            "construction",
             "UnitBattlefield.BuildingLifecycle.cs");
         RequireText(lifecycle, "_constructionSystem.QueryBuildingPlacement(", "ValidateBuildingPlacement must delegate to the shared ConstructionSystem spatial authority.", result);
 

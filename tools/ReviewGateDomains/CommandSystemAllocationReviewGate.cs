@@ -106,7 +106,7 @@ static class CommandSystemAllocationReviewGate
         RequireText(battlefield, "HashSet<int> _constructionEntityIdsBefore", "UnitBattlefield construction commands must reuse the before-entity id set.", result);
         RequireText(battlefield, "List<UnitBattlefieldConstructionTicketSnapshot> _constructionTicketBuffer", "UnitBattlefield construction tickets must reuse ticket snapshot storage.", result);
 
-        var tickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "UnitBattlefield.ConstructionTickets.cs");
+        var tickets = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "battlefield", "construction", "UnitBattlefield.ConstructionTickets.cs");
         RequireText(tickets, "CollectEntityIds(_constructionEntityIdsBefore)", "Construction queue/place paths must fill the reusable before-entity id set.", result);
         RequireText(tickets, "LastNewConstructionTicket(playerSlotId, kind, _constructionEntityIdsBefore)", "Queued tickets must be found through the reusable ticket buffer.", result);
         RequireText(tickets, "LastNewConstructedEntity(owner, ticket.Kind, _constructionEntityIdsBefore)", "Placed buildings must be found without LINQ chains.", result);

@@ -4,6 +4,7 @@ static class UnitBattlefieldAllocationReviewGate
     {
         RequireQueryDomainModules(root, result);
         RequireResourceDomainModules(root, result);
+        RequireConstructionDomainModules(root, result);
         RequireBuildingTargetIdBuffers(root, result);
         RequireSelectionSubjectBuffer(root, result);
         RequireDeathRemovalBuffers(root, result);
@@ -12,6 +13,23 @@ static class UnitBattlefieldAllocationReviewGate
         RequireSelectedBuildingRallyBuffers(root, result);
         RequireBuildingProjectionBuffers(root, result);
         RequireUnitResourceProjectionBuffers(root, result);
+    }
+
+    private static void RequireConstructionDomainModules(string root, GateResult result)
+    {
+        foreach (var module in new[]
+        {
+            "UnitBattlefield.BuildingEntityCreation.cs",
+            "UnitBattlefield.BuildingLifecycle.cs",
+            "UnitBattlefield.BuildingSell.cs",
+            "UnitBattlefield.BuildingState.cs",
+            "UnitBattlefield.ConstructionProviderLanes.cs",
+            "UnitBattlefield.ConstructionTickets.cs",
+        })
+        {
+            ReviewGateSource.RequireFile(root, result, "scripts", "core", "units", "runtime", "battlefield", "construction", module);
+            ReviewGateSource.ForbidFile(root, result, "scripts", "core", "units", "runtime", "battlefield", module);
+        }
     }
 
     private static void RequireResourceDomainModules(string root, GateResult result)
