@@ -128,6 +128,7 @@ static class CommandGatewayReviewGate
             "units",
             "runtime",
             "battlefield",
+            "command",
             "UnitBattlefield.PlayerCommandGateway.cs");
         RequireText(battlefieldGateway, "_entityWorld.Relations.CanAttack(OwnerId.FromPlayerSlot(command.IssuerSlotId), target.OwnerId)", "Attack gateway commands must reject non-hostile targets before enqueueing.", result);
         var combatOrders = ReviewGateSource.Read(root, "scripts", "core", "sim", "systems", "command", "CommandSystem.CombatOrders.cs");
