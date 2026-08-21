@@ -19,6 +19,11 @@ static class PresentationReviewGate
     private static void RequireHudAndTheme(string root, GateResult result)
     {
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "HudLayer.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.State.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.ContextState.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.FeedbackState.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.CatalogState.cs");
+        ReviewGateSource.RequireFile(root, result, "scripts", "ui", "hud", "HudLayer.CatalogCardRefresh.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFactory.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "UiFontProfile.cs");
         ReviewGateSource.RequireFile(root, result, "scripts", "ui", "SoftOldCityTheme.cs");
