@@ -35,6 +35,7 @@ public sealed partial class CommandSystem
         }
 
         CollectOwnedSubjects(world, command.Issuer, command.Subjects, _groupOrderMembers);
+        KeepSubjectsThatCanAttackTarget(world, target, _groupOrderMembers);
         if (_groupOrderMembers.Count == 0)
         {
             return;
@@ -100,6 +101,30 @@ public sealed partial class CommandSystem
         _groupAttackSlotUnits.Clear();
         _groupAttackAssignmentResults.Clear();
         _groupAttackAssignments.Clear();
+    }
+
+    private static void KeepSubjectsThatCanAttackTarget(
+        EntityWorld world,
+        EntityInstance target,
+        List<EntityInstance> subjects)
+    {
+        var write = 0;
+        for (var read = 0; read < subjects.Count; read++)
+        {
+            var subject = subjects[read];
+            if (!subject.Components.TryGet<WeaponUserComponentState>(out var weapon)
+                || !WeaponEngagementQueries.CanAnyMountTarget(world, weapon, target))
+            {
+                continue;
+            }
+
+            subjects[write++] = subject;
+        }
+
+        if (write < subjects.Count)
+        {
+            subjects.RemoveRange(write, subjects.Count - write);
+        }
     }
 
     private void ApplyAttackGround(EntityWorld world, AttackGroundEntityCommand command)

@@ -118,10 +118,20 @@ public sealed partial class UnitBattlefield : ICommandGatewayEntityCommandSink
         out CommandGatewayValidationError error,
         out string message)
     {
-        if (!_entityWorld.TryGet(command.Payload.TargetEntity, out _))
+        if (!_entityWorld.TryGet(command.Payload.TargetEntity, out var target))
         {
             envelope = null;
             return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Target entity is not present in the live battlefield.", out error, out message);
+        }
+
+        if (command.Kind == PlayerCommandKind.Attack)
+        {
+            SyncOwnerRelations();
+            if (!_entityWorld.Relations.CanAttack(OwnerId.FromPlayerSlot(command.IssuerSlotId), target.OwnerId))
+            {
+                envelope = null;
+                return RejectGatewaySink(CommandGatewayValidationError.InvalidTarget, "Attack target is not hostile to the issuer.", out error, out message);
+            }
         }
 
         error = CommandGatewayValidationError.None;

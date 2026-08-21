@@ -19,8 +19,18 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
             return;
         }
 
-        CollectUnitIds(_idleHarvesterBuffer, _idleHarvesterIds);
-        battlefield.CommandHarvestUnits(enemyPlayerSlotId, _idleHarvesterIds, field, out _);
+        if (!battlefield.TryGetResourceEntityId(field, out var resourceEntityId))
+        {
+            return;
+        }
+
+        CollectEntityIds(_idleHarvesterBuffer, _idleHarvesterEntityIds);
+        UnitBattlefieldScriptedCommandDriver.Submit(
+            battlefield,
+            "enemy-economy",
+            enemyPlayerSlotId,
+            PlayerCommandKind.Harvest,
+            PlayerCommandPayload.ForEntityTarget(_idleHarvesterEntityIds, resourceEntityId));
     }
 
     private void SetEnemyRallyPoints(UnitBattlefield battlefield, PlayerSlotId enemyPlayerSlotId)
@@ -44,12 +54,12 @@ public sealed partial class UnitBattlefieldEnemyProductionAi
         battlefield.CollectIdleEconomyUnits(enemyPlayerSlotId, result);
     }
 
-    private static void CollectUnitIds(IReadOnlyList<UnitInstance> units, List<int> result)
+    private static void CollectEntityIds(IReadOnlyList<UnitInstance> units, List<EntityId> result)
     {
         result.Clear();
         for (var index = 0; index < units.Count; index++)
         {
-            result.Add(units[index].Id);
+            result.Add(units[index].EntityId);
         }
     }
 

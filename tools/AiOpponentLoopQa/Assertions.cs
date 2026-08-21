@@ -99,7 +99,7 @@ internal static partial class AiOpponentLoopQaProgram
 
         if (report.WaveAppliedCommands < report.WavesLaunched)
         {
-            failures.Add($"AI attack waves should enter through CommandAttackUnits/command buffer; routing/waves = {report.WaveAppliedCommands}/{report.WavesLaunched}.");
+            failures.Add($"AI attack waves should enter through typed CommandGateway payloads; routing/waves = {report.WaveAppliedCommands}/{report.WavesLaunched}.");
         }
 
         if (report.LeftAttackCommands < 1 || report.WaveAppliedCommands < 1)

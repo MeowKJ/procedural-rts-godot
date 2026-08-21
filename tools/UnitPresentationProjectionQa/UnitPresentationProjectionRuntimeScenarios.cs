@@ -1,5 +1,6 @@
 using Godot;
 using ProceduralRts.Core;
+using ProceduralRts.Tools.Qa;
 
 static class UnitPresentationProjectionRuntimeScenarios
 {
@@ -47,19 +48,25 @@ static class UnitPresentationProjectionRuntimeScenarios
             PlayerSlotId.One,
             [infantry.Id, vehicle.Id, aircraft.Id, harvester.Id]);
         Require(selected.Count == 4, "runtime projection scenario must select its full representative roster", failures);
-        Require(battlefield.CommandMoveUnits(
+        Require(QaPlayerCommandDriver.MoveSubjects(
+                battlefield,
                 PlayerSlotId.One,
-                [infantry.Id, aircraft.Id],
-                new Vector2(840, 420),
-                battlefield.WorldSize) == 2,
+                [infantry.EntityId, aircraft.EntityId],
+                new Vector2(840, 420)).AcceptedCount == 1,
             "infantry and aircraft move commands must be accepted through the runtime owner", failures);
-        Require(battlefield.CommandAttackUnits(PlayerSlotId.One, [vehicle.Id], enemyHeadquarters.Id) == 1,
-            "vehicle attack against a hostile structure must be accepted through the runtime owner", failures);
-        Require(battlefield.CommandHarvestUnits(
+        Require(QaPlayerCommandDriver.AttackSubjects(
+                battlefield,
                 PlayerSlotId.One,
-                [harvester.Id],
-                battlefield.ResourceFields[0],
-                out _),
+                [vehicle.EntityId],
+                battlefield.BuildingEntityIdByTargetId(enemyHeadquarters.Id) ?? default,
+                CombatTargetKind.Building).AcceptedCount == 1,
+            "vehicle attack against a hostile structure must be accepted through the runtime owner", failures);
+        Require(battlefield.TryGetResourceEntityId(battlefield.ResourceFields[0], out var resourceEntityId)
+            && QaPlayerCommandDriver.HarvestSubjects(
+                battlefield,
+                PlayerSlotId.One,
+                [harvester.EntityId],
+                resourceEntityId).AcceptedCount == 1,
             "economy command must be accepted through the runtime owner", failures);
 
         AssertProjected(battlefield, infantry, "infantry", failures);
@@ -78,11 +85,11 @@ static class UnitPresentationProjectionRuntimeScenarios
             "accepted economy command must produce projected feedback", failures);
 
         var replacementTarget = new Vector2(1_080, 520);
-        Require(battlefield.CommandMoveUnits(
+        Require(QaPlayerCommandDriver.MoveSubjects(
+                battlefield,
                 PlayerSlotId.One,
-                [infantry.Id],
-                replacementTarget,
-                battlefield.WorldSize) == 1,
+                [infantry.EntityId],
+                replacementTarget).AcceptedCount == 1,
             "replacement command must be accepted", failures);
         var replaced = RequiredProjection(battlefield, infantry, failures, "replacement move");
         Require(replaced.MoveTarget is { } moveTarget && moveTarget.DistanceSquaredTo(replacementTarget) < 1,

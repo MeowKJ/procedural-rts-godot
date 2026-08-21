@@ -10,9 +10,9 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
     private readonly EnemyDifficultyProfile _profile;
     private readonly List<UnitInstance> _waveCandidateUnits = new();
     private readonly List<UnitInstance> _waveUnits = new();
-    private readonly List<int> _waveUnitIds = new();
+    private readonly List<EntityId> _waveEntityIds = new();
     private readonly List<UnitInstance> _defenseUnits = new();
-    private readonly List<int> _defenseUnitIds = new();
+    private readonly List<EntityId> _defenseEntityIds = new();
     private readonly UnitDistanceComparer _unitDistanceComparer = new();
     private float _waveTimer;
     private float _defenseTimer;
@@ -68,7 +68,7 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 
         if (!TryFindTarget(battlefield, enemyPlayerSlotId, _profile.AggressionRadius, out var targetKind, out var targetUnit, out var targetBuilding, out _))
         {
-            if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds, out var scoutStatus))
+            if (TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveEntityIds, out var scoutStatus))
             {
                 WavesLaunched++;
                 _waveTimer = Math.Min(_profile.AttackWaveInterval, 6f);
@@ -81,11 +81,11 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return;
         }
 
-        CollectUnitIds(_waveUnits, _waveUnitIds);
+        CollectEntityIds(_waveUnits, _waveEntityIds);
         var commanded = targetKind == CombatTargetKind.Building && targetBuilding is { } buildingTarget
-            ? battlefield.CommandAttackUnits(enemyPlayerSlotId, _waveUnitIds, buildingTarget.Id)
+            ? SubmitAttackCommand(battlefield, enemyPlayerSlotId, _waveEntityIds, buildingTarget)
             : targetUnit is not null
-                ? battlefield.CommandAttackUnits(enemyPlayerSlotId, _waveUnitIds, targetUnit)
+                ? SubmitAttackCommand(battlefield, enemyPlayerSlotId, _waveEntityIds, targetUnit)
                 : 0;
         if (commanded == 0)
         {
@@ -119,11 +119,11 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
             return false;
         }
 
-        CollectUnitIds(_defenseUnits, _defenseUnitIds);
+        CollectEntityIds(_defenseUnits, _defenseEntityIds);
         var commanded = targetKind == CombatTargetKind.Building && targetBuilding is { } buildingTarget
-            ? battlefield.CommandAttackUnits(playerSlotId, _defenseUnitIds, buildingTarget.Id)
+            ? SubmitAttackCommand(battlefield, playerSlotId, _defenseEntityIds, buildingTarget)
             : targetUnit is not null
-                ? battlefield.CommandAttackUnits(playerSlotId, _defenseUnitIds, targetUnit)
+                ? SubmitAttackCommand(battlefield, playerSlotId, _defenseEntityIds, targetUnit)
                 : 0;
         if (commanded == 0)
         {
@@ -132,5 +132,40 @@ public sealed partial class UnitBattlefieldEnemyAttackWaveAi
 
         status = $"Enemy defense ordered ({commanded} units)";
         return true;
+    }
+
+    private static int SubmitAttackCommand(
+        UnitBattlefield battlefield,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<EntityId> subjects,
+        UnitInstance target)
+    {
+        var result = UnitBattlefieldScriptedCommandDriver.Submit(
+            battlefield,
+            "enemy-attack",
+            playerSlotId,
+            PlayerCommandKind.Attack,
+            PlayerCommandPayload.ForEntityTarget(subjects, target.EntityId));
+        return result.AcceptedCount == 1 ? subjects.Count : 0;
+    }
+
+    private static int SubmitAttackCommand(
+        UnitBattlefield battlefield,
+        PlayerSlotId playerSlotId,
+        IReadOnlyList<EntityId> subjects,
+        UnitBattlefieldBuildingSnapshot target)
+    {
+        if (battlefield.BuildingEntityIdByTargetId(target.Id) is not { } targetEntityId)
+        {
+            return 0;
+        }
+
+        var result = UnitBattlefieldScriptedCommandDriver.Submit(
+            battlefield,
+            "enemy-attack",
+            playerSlotId,
+            PlayerCommandKind.Attack,
+            PlayerCommandPayload.ForEntityTarget(subjects, targetEntityId, CombatTargetKind.Building));
+        return result.AcceptedCount == 1 ? subjects.Count : 0;
     }
 }

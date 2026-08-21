@@ -66,7 +66,7 @@ static class RegressionReviewGate
         ReviewGateSource.RequireAnyText(root, result, "AssertDeterministic", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "upgrade-progression", "tools/SimReplay");
         ReviewGateSource.RequireAnyText(root, result, "DeterministicStateHash", "scripts/core/entities", "tools/SimReplay", "tools/CombatBehavior");
-        ReviewGateSource.RequireAnyText(root, result, "CommandAttackUnits", "tools/AiOpponentLoopQa", "tools/CombatBehavior", "scripts");
+        ReviewGateSource.RequireAnyText(root, result, "PlayerCommandPayload.ForEntityTarget", "tools/AiOpponentLoopQa", "tools/CombatBehavior", "scripts");
     }
     private static void RequireSimHotAllocationEvidence(string root, GateResult result)
     {

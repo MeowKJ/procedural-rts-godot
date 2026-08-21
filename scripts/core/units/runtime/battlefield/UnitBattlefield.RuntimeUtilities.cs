@@ -67,27 +67,6 @@ public sealed partial class UnitBattlefield
         return WeaponCatalog.WeaponDefinitions[unit.Spec.PrimaryWeapon.WeaponId];
     }
 
-    private static bool CanUnitTarget(UnitInstance unit, UnitInstance target)
-    {
-        return CanWeaponTarget(PrimaryWeapon(unit), target.Spec);
-    }
-
-    private static bool CanUnitTarget(UnitInstance unit, BuildSpec targetSpec)
-    {
-        return CanWeaponTarget(PrimaryWeapon(unit), targetSpec);
-    }
-
-    private static bool CanWeaponTarget(WeaponDefinition weapon, UnitSpec target)
-    {
-        return weapon.TargetProfile.AllowedDomains.Contains(target.Movement.Domain)
-            && weapon.TargetProfile.AllowedArmorTags.Contains(target.Stats.ArmorTag);
-    }
-
-    private static bool CanWeaponTarget(WeaponDefinition weapon, BuildSpec targetSpec)
-    {
-        return weapon.TargetProfile.CanTarget(targetSpec);
-    }
-
     private void ClearEntityAttackTarget(UnitInstance unit)
     {
         if (!_entityWorld.TryGet(unit.EntityId, out var entity)

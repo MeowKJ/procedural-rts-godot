@@ -36,20 +36,21 @@ static class EnemyAttackWaveAiReviewGate
             Path.Combine(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs"));
         RequireText(ai, "List<UnitInstance> _waveCandidateUnits", "Enemy attack wave AI must reuse wave candidate storage.", result);
         RequireText(ai, "List<UnitInstance> _waveUnits", "Enemy attack wave AI must reuse wave unit storage.", result);
-        RequireText(ai, "List<int> _waveUnitIds", "Enemy attack wave AI must reuse wave command id storage.", result);
+        RequireText(ai, "List<EntityId> _waveEntityIds", "Enemy attack wave AI must reuse wave entity-id storage.", result);
         RequireText(ai, "List<UnitInstance> _defenseUnits", "Enemy attack wave AI must reuse defense unit storage.", result);
-        RequireText(ai, "List<int> _defenseUnitIds", "Enemy attack wave AI must reuse defense command id storage.", result);
+        RequireText(ai, "List<EntityId> _defenseEntityIds", "Enemy attack wave AI must reuse defense entity-id storage.", result);
         RequireText(ai, "UnitDistanceComparer _unitDistanceComparer", "Enemy attack wave AI must reuse distance sort comparison state.", result);
-        RequireText(ai, "battlefield.CommandAttackUnits(", "Runtime enemy attack waves must submit attack commands through UnitBattlefield.", result);
-        RequireText(ai, "battlefield.CommandMoveUnits(", "Runtime enemy scout waves must submit move commands through UnitBattlefield.", result);
+        RequireText(ai, "UnitBattlefieldScriptedCommandDriver.Submit(", "Runtime enemy attack and scout intents must enter the scripted-bot CommandGateway path.", result);
+        RequireText(ai, "PlayerCommandPayload.ForEntityTarget(", "Runtime enemy attacks must use typed entity-target payloads.", result);
+        RequireText(ai, "PlayerCommandPayload.ForPoint(", "Runtime enemy scout moves must use typed point payloads.", result);
         foreach (var stateWrite in new[] { "PlayerIntentTarget =", "CommandVisualTarget =", "CommandPulse =" }) ForbidText(ai, stateWrite, "Runtime enemy attack-wave AI must not write command presentation state directly.", result);
 
         var main = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.cs");
         RequireText(main, "CollectAvailableWaveUnits(", "Enemy wave selection must fill the reusable wave unit buffer.", result);
-        RequireText(main, "CollectUnitIds(_waveUnits, _waveUnitIds)", "Enemy wave attack commands must fill reusable id storage.", result);
-        RequireText(main, "TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveUnitIds", "Enemy scout waves must reuse the wave id storage.", result);
+        RequireText(main, "CollectEntityIds(_waveUnits, _waveEntityIds)", "Enemy wave attack commands must fill reusable entity-id storage.", result);
+        RequireText(main, "TryIssueScoutWave(battlefield, enemyPlayerSlotId, _waveUnits, _waveEntityIds", "Enemy scout waves must reuse wave entity-id storage.", result);
         RequireText(main, "CollectAvailableDefenseUnits(", "Enemy defense selection must fill reusable defender storage.", result);
-        RequireText(main, "CollectUnitIds(_defenseUnits, _defenseUnitIds)", "Enemy defense commands must fill reusable id storage.", result);
+        RequireText(main, "CollectEntityIds(_defenseUnits, _defenseEntityIds)", "Enemy defense commands must fill reusable entity-id storage.", result);
         ForbidText(main, "var waveUnits = AvailableWaveUnits(", "Enemy wave selection must not allocate via enumerable ToList.", result);
         ForbidText(main, "var defenders = AvailableDefenseUnits(", "Enemy defense selection must not allocate via enumerable Take/ToList.", result);
         ForbidText(main, ".Select(unit => unit.Id).ToList()", "Enemy attack wave AI must not allocate command id lists.", result);
@@ -58,13 +59,13 @@ static class EnemyAttackWaveAiReviewGate
         var selection = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.UnitSelection.cs");
         RequireText(selection, "CollectAvailableWaveUnits(", "Enemy wave unit selection must use a caller-owned buffer helper.", result); RequireText(selection, "battlefield.CollectAvailableCombatUnits(playerSlotId, _waveCandidateUnits)", "Enemy wave unit selection must use UnitBattlefield available-combat query helper.", result);
         RequireText(selection, "CollectAvailableDefenseUnits(", "Enemy defense unit selection must use a caller-owned buffer helper.", result); RequireText(selection, "battlefield.CollectAvailableCombatUnitsNearEither(playerSlotId, baseCenter, targetPosition, DefenseRadius, result)", "Enemy defense unit selection must use UnitBattlefield near-combat query helper.", result);
-        RequireText(selection, "CollectUnitIds(IReadOnlyList<UnitInstance> units, List<int> result)", "Enemy attack wave AI must centralize id buffer fills.", result);
+        RequireText(selection, "CollectEntityIds(IReadOnlyList<UnitInstance> units, List<EntityId> result)", "Enemy attack wave AI must centralize entity-id buffer fills.", result);
         ForbidText(selection, ".ToList()", "Enemy unit selection must not materialize LINQ lists.", result); ForbidText(selection, "battlefield.Units", "Enemy unit selection must not scan the UnitBattlefield unit list directly.", result);
         ForbidText(selection, ".ToHashSet()", "Enemy wave reserve must not allocate HashSets.", result);
         ForbidText(selection, "IEnumerable<UnitInstance> Available", "Enemy unit selection helpers must not return allocating enumerables.", result);
 
         var targeting = ReviewGateSource.Read(root, "scripts", "core", "units", "runtime", "UnitBattlefieldEnemyAttackWaveAi.Targeting.cs");
-        RequireText(targeting, "CollectUnitIds(waveUnits, unitIds)", "Enemy scout waves must fill the reusable id buffer.", result);
+        RequireText(targeting, "CollectEntityIds(waveUnits, entityIds)", "Enemy scout waves must fill the reusable entity-id buffer.", result);
         ForbidText(targeting, "waveUnits.Select(unit => unit.Id)", "Enemy scout waves must not allocate id enumerables.", result);
     }
 

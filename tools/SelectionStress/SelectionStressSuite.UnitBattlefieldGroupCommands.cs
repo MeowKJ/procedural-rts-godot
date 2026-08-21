@@ -22,21 +22,35 @@ internal static partial class SelectionStressSuite
         battlefield.SelectUnitsByIds(PlayerSlotId.One, [attackerB.Id, hostileUnit.Id, attackerA.Id, attackerA.Id]);
         RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.MoveSelection(battlefield, PlayerSlotId.One, new Vector2(220, 220)), "selected move");
 
-        var movedCount = battlefield.CommandMoveUnits(
+        var invalidMove = QaPlayerCommandDriver.MoveSubjects(
+            battlefield,
             PlayerSlotId.One,
-            [hostileUnit.Id, attackerB.Id, attackerA.Id, attackerA.Id],
-            new Vector2(240, 240),
-            new Vector2(1000, 1000));
-        if (movedCount != 2)
+            [hostileUnit.EntityId, attackerB.EntityId, attackerA.EntityId, attackerA.EntityId],
+            new Vector2(240, 240));
+        if (invalidMove.AcceptedCount != 0 || invalidMove.Commands[0].Error != CommandGatewayValidationError.InvalidSubject)
         {
-            throw new InvalidOperationException($"explicit move should submit two owned subjects, got {movedCount}");
+            throw new InvalidOperationException("explicit move payload should reject duplicate subjects at the gateway boundary");
+        }
+
+        var moveResult = QaPlayerCommandDriver.MoveSubjects(
+            battlefield,
+            PlayerSlotId.One,
+            [attackerB.EntityId, attackerA.EntityId],
+            new Vector2(240, 240));
+        if (moveResult.AcceptedCount != 1)
+        {
+            throw new InvalidOperationException($"explicit move should submit two owned subjects through one gateway command, accepted {moveResult.AcceptedCount}");
         }
 
         RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.AttackSelection(battlefield, PlayerSlotId.One, hostileUnit), "selected unit attack");
-        var explicitAttackCount = battlefield.CommandAttackUnits(PlayerSlotId.One, [attackerB.Id, hostileUnit.Id, attackerA.Id], hostileUnit);
-        if (explicitAttackCount != 2)
+        var explicitAttackResult = QaPlayerCommandDriver.AttackSubjects(
+            battlefield,
+            PlayerSlotId.One,
+            [attackerB.EntityId, hostileUnit.EntityId, attackerA.EntityId],
+            hostileUnit.EntityId);
+        if (explicitAttackResult.AcceptedCount != 1)
         {
-            throw new InvalidOperationException($"explicit unit attack should submit two owned attackers, got {explicitAttackCount}");
+            throw new InvalidOperationException($"explicit unit attack should submit through one gateway command, accepted {explicitAttackResult.AcceptedCount}");
         }
 
         if (QaPlayerCommandDriver.AttackBuildingSelection(battlefield, PlayerSlotId.One, hostileBuilding.Id).AcceptedCount != 1)
@@ -44,10 +58,15 @@ internal static partial class SelectionStressSuite
             throw new InvalidOperationException("selected building attack should find buffered attackers");
         }
 
-        var explicitBuildingAttackCount = battlefield.CommandAttackUnits(PlayerSlotId.One, [attackerA.Id, attackerB.Id], hostileBuilding.Id);
-        if (explicitBuildingAttackCount != 2)
+        var explicitBuildingAttackResult = QaPlayerCommandDriver.AttackSubjects(
+            battlefield,
+            PlayerSlotId.One,
+            [attackerA.EntityId, attackerB.EntityId],
+            battlefield.BuildingEntityIdByTargetId(hostileBuilding.Id) ?? default,
+            CombatTargetKind.Building);
+        if (explicitBuildingAttackResult.AcceptedCount != 1)
         {
-            throw new InvalidOperationException($"explicit building attack should submit two owned attackers, got {explicitBuildingAttackCount}");
+            throw new InvalidOperationException($"explicit building attack should submit through one gateway command, accepted {explicitBuildingAttackResult.AcceptedCount}");
         }
 
         RequireCommandDelta(battlefield, 1, () => QaPlayerCommandDriver.StopSelection(battlefield, PlayerSlotId.One), "selected stop");
